@@ -9,7 +9,6 @@ export function handleZodError(error: ZodError): ApiError {
     path: err.path.join('.'),
     message: err.message,
   }));
-  console.log('error :>> ', error);
 
   const message = `Validation failed: ${errors.map((e) => `${e.path}: ${e.message}`).join(', ')}`;
 

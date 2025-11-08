@@ -2,6 +2,7 @@ import { createApp } from './app';
 import { connectDB } from './config/db';
 import { env } from './config/env';
 import { connectRedis } from './config/redis';
+import { logger } from './utils/logger';
 
 const start = async () => {
   try {
@@ -17,9 +18,9 @@ const start = async () => {
     const app = await createApp();
     await app.listen({ port: env.PORT });
 
-    console.log(`🚀 Server running on http://localhost:${env.PORT}`);
+    logger.info(`🚀 Server running on http://localhost:${env.PORT}`);
   } catch (error) {
-    console.error('❌ Failed to start server:', error);
+    logger.error('❌ Failed to start server:', error);
     process.exit(1);
   }
 };

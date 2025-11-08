@@ -174,7 +174,6 @@ export class PRPublishHandler extends BaseHandler {
 
   async handle(data: IChapterPRPublishHandler): Promise<IChapterPullRequestResponse> {
     const { chapter, story, parentChapter, userId, content, title } = data;
-    console.log('data :>> ', data.title);
     // Create pull request
     const pullRequest = await this.pullRequestRepo.create({
       title: title,
