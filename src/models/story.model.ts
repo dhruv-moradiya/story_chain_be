@@ -1,0 +1,126 @@
+import mongoose, { Schema } from 'mongoose';
+import { IStoryDoc } from '../features/story/story.types';
+
+const storySchema = new Schema<IStoryDoc>(
+  {
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+      minlength: 3,
+      maxlength: 200,
+      index: 'text',
+    },
+    slug: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      index: true,
+    },
+    description: {
+      type: String,
+      required: true,
+      maxlength: 2000,
+      index: 'text',
+    },
+    coverImage: {
+      url: String,
+      publicId: String,
+    },
+
+    // Creator
+    creatorId: {
+      type: String,
+      ref: 'User',
+      required: true,
+      index: true,
+    },
+
+    // Settings
+    settings: {
+      isPublic: { type: Boolean, default: false },
+      allowBranching: { type: Boolean, default: false },
+      requireApproval: { type: Boolean, default: true },
+      allowComments: { type: Boolean, default: false },
+      allowVoting: { type: Boolean, default: false },
+      genre: {
+        type: String,
+        enum: [
+          'FANTASY',
+          'SCI_FI',
+          'MYSTERY',
+          'ROMANCE',
+          'HORROR',
+          'THRILLER',
+          'ADVENTURE',
+          'DRAMA',
+          'COMEDY',
+          'OTHER',
+        ],
+        default: 'OTHER',
+      },
+      contentRating: {
+        type: String,
+        enum: ['GENERAL', 'TEEN', 'MATURE'],
+        default: 'GENERAL',
+      },
+    },
+
+    // Statistics
+    stats: {
+      totalChapters: { type: Number, default: 1 },
+      totalBranches: { type: Number, default: 0 },
+      totalReads: { type: Number, default: 0 },
+      totalVotes: { type: Number, default: 0 },
+      uniqueContributors: { type: Number, default: 1 },
+      averageRating: { type: Number, default: 0, min: 0, max: 5 },
+    },
+
+    // Tags
+    tags: [
+      {
+        type: String,
+        trim: true,
+        lowercase: true,
+      },
+    ],
+
+    // Status
+    status: {
+      type: String,
+      enum: ['DRAFT', 'PUBLISHED', 'ARCHIVED', 'DELETED'],
+      default: 'DRAFT',
+    },
+
+    // Trending
+    trendingScore: {
+      type: Number,
+      default: 0,
+      index: -1,
+    },
+    lastActivityAt: {
+      type: Date,
+      default: Date.now,
+      index: -1,
+    },
+    publishedAt: {
+      type: Date,
+      default: Date.now,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+// Indexes
+storySchema.index({ creatorId: 1, createdAt: -1 });
+storySchema.index({ trendingScore: -1, publishedAt: -1 });
+storySchema.index({ 'stats.totalReads': -1 });
+storySchema.index({ tags: 1 });
+storySchema.index({ title: 'text', description: 'text' });
+
+const Story = mongoose.model('Story', storySchema);
+
+export { Story };
