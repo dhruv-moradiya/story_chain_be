@@ -1,6 +1,7 @@
 import { ZodSchema } from 'zod';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { Webhook } from 'svix';
+import { logger } from '../utils/logger';
 
 type ValidationResult<T> =
   | { success: true; data: T }
@@ -12,7 +13,6 @@ export function validateRequest<T>(schema: ZodSchema<T>) {
     reply: FastifyReply
   ): Promise<ValidationResult<T> | void> => {
     if (!request.body) {
-      console.log('NO BODY');
       reply.code(400).send({ error: 'Request body is required' });
       return;
     }
@@ -25,7 +25,6 @@ export function validateRequest<T>(schema: ZodSchema<T>) {
       return;
     }
 
-    console.log('ATTACH');
     // attach validated data to request for route use
     return { success: true, data: result.data };
   };
@@ -35,7 +34,7 @@ export async function validateWebhook(request: FastifyRequest, reply: FastifyRep
   try {
     const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
     if (!WEBHOOK_SECRET) {
-      console.error('Missing Clerk Webhook Secret');
+      logger.error('Missing Clerk Webhook Secret');
       return reply.code(500).send('Server misconfigured');
     }
 
@@ -44,7 +43,7 @@ export async function validateWebhook(request: FastifyRequest, reply: FastifyRep
     const svixSignature = request.headers['svix-signature'];
 
     if (!svixId || !svixTimestamp || !svixSignature) {
-      console.error('Missing svix headers');
+      logger.error('Missing svix headers');
       return reply.code(400).send({ error: 'Missing svix headers' });
     }
 
@@ -66,7 +65,7 @@ export async function validateWebhook(request: FastifyRequest, reply: FastifyRep
     (request as any).clerkEvent = event;
     return;
   } catch (error) {
-    console.error('Webhook verification failed:', error);
+    logger.error('Webhook verification failed:', error);
     return reply.code(400).send({ error: 'Invalid webhook signature' });
   }
 }

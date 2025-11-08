@@ -1,7 +1,8 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { ApiError, ApiResponse } from '../../utils/apiResponse';
 import { catchAsync } from '../../utils/catchAsync';
-import { chapterService } from './chapter.ser';
+import { chapterService } from './chapter.service';
+import { logger } from '../../utils/logger';
 
 export class ChapterController {
   static createChapter = catchAsync(
@@ -56,39 +57,13 @@ export class ChapterController {
     return ChapterController.fail(reply, 401, 'Unauthorized');
   }
 
-  // ========== ERROR HANDLER ==========
-  // private static handleError(error: unknown, reply: FastifyReply) {
-  //   switch (true) {
-  //     case error instanceof ValidationError:
-  //       return this.fail(reply, 400, error.message);
-
-  //     case error instanceof NotFoundError:
-  //       return this.fail(reply, 404, error.message);
-
-  //     case error instanceof ForbiddenError:
-  //       return this.fail(reply, 403, error.message);
-
-  //     case error instanceof GoneError:
-  //       return this.fail(reply, 410, error.message);
-
-  //     case error instanceof ChapterError:
-  //       return this.fail(reply, error.statusCode, error.message);
-
-  //     default:
-  //       console.error('Unexpected error in ChapterController:', error);
-  //       const devInfo =
-  //         process.env.NODE_ENV === 'development' ? { error: String(error) } : undefined;
-  //       return this.fail(reply, 500, 'An unexpected error occurred', devInfo);
-  //   }
-  // }
-
   private static handleError(error: unknown, reply: FastifyReply) {
     if (error instanceof ApiError) {
       return this.fail(reply, error.statusCode, error.message);
     }
 
     // Fallback for unexpected errors: log and return 500 with optional dev info
-    console.error('Unexpected error in ChapterController.handleError:', error);
+    logger.error('Unexpected error in ChapterController.handleError:', error);
     const devInfo = process.env.NODE_ENV === 'development' ? { error: String(error) } : undefined;
     return this.fail(reply, 500, 'An unexpected error occurred', devInfo);
   }
