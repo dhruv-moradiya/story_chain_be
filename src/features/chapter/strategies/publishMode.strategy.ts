@@ -1,3 +1,4 @@
+import { ClientSession } from 'mongoose';
 import { XP_REWARDS } from '../../../constants';
 import { Chapter } from '../../../models/chapter.model';
 import { PRNotification } from '../../../models/prNotification.model';
@@ -18,6 +19,7 @@ import {
   IChapterPRPublishHandler,
   INotifyModeratorsParams,
   IChapterPullRequestResponse,
+  IPRTitleInput,
 } from '../chapter.types';
 import { ChapterRepository } from '../repositories/chapter.repository';
 
@@ -40,15 +42,14 @@ export class DirectPublishHandler extends BaseHandler<
     this.userRepo = userRepo;
   }
 
-  async handle({
-    chapter,
-    story,
-    treeData,
-    userId,
-    parentChapterId,
-  }: IChapterDirectPublishInput): Promise<IChapterDirectPublishResult> {
+  async handle(
+    data: IChapterDirectPublishInput,
+    session?: ClientSession
+  ): Promise<IChapterDirectPublishResult> {
+    const { chapter, story, treeData, userId, parentChapterId } = data;
+
     if (parentChapterId) {
-      await this.chapterRepo.incrementBranches(parentChapterId);
+      await this.chapterRepo.incrementBranches(parentChapterId, session);
     }
 
     await this._updateStoryStats(String(story._id), parentChapterId);
@@ -162,44 +163,68 @@ export class DirectPublishHandler extends BaseHandler<
 export class PRPublishHandler extends BaseHandler {
   protected pullRequestRepo: PullRequestRepository;
   protected collaboratorRepo: StoryCollaboratorRepository;
+  protected chapterRepo: ChapterRepository;
 
   constructor(
     collaboratorRepo: StoryCollaboratorRepository,
-    pullRequestRepo: PullRequestRepository
+    pullRequestRepo: PullRequestRepository,
+    chapterRepo: ChapterRepository
   ) {
     super();
     this.collaboratorRepo = collaboratorRepo;
     this.pullRequestRepo = pullRequestRepo;
+    this.chapterRepo = chapterRepo;
   }
 
-  async handle(data: IChapterPRPublishHandler): Promise<IChapterPullRequestResponse> {
+  async handle(
+    data: IChapterPRPublishHandler,
+    session?: ClientSession
+  ): Promise<IChapterPullRequestResponse> {
     const { chapter, story, parentChapter, userId, content, title } = data;
-    // Create pull request
-    const pullRequest = await this.pullRequestRepo.create({
-      title: title,
-      description: `New chapter continuation from Chapter ${parentChapter.depth + 1}`,
-      storyId: story._id,
-      chapterId: chapter._id,
-      parentChapterId: parentChapter._id,
-      authorId: userId,
+
+    const prTitle = this._generatePRTitle({
       prType: 'NEW_CHAPTER',
-      changes: { proposed: content },
-      status: 'OPEN',
+      chapterTitle: title,
+      chapterNumber: chapter.depth,
     });
 
-    // Link PR to chapter
-    await Chapter.findByIdAndUpdate(chapter._id, { 'pullRequest.prId': pullRequest._id });
-
-    // Notify moderators
-    await this._notifyModerators({ story, pullRequestId: pullRequest._id, userId });
-
-    // Return response
-    const populatedPR = await PullRequest.findById(pullRequest._id).populate(
-      'parentChapterId',
-      'title depth'
+    // Create PR inside transaction
+    const pullRequest = await this.pullRequestRepo.create(
+      {
+        title: prTitle,
+        // Use the canonical chapter.depth stored on the new chapter document instead of
+        // computing from the parent. This avoids off-by-one or mismatches when depth is
+        // managed elsewhere.
+        description: `New chapter continuation from Chapter ${chapter.depth}`,
+        storyId: story._id,
+        chapterId: chapter._id,
+        parentChapterId: parentChapter._id,
+        authorId: userId,
+        prType: 'NEW_CHAPTER',
+        changes: { proposed: content },
+        status: 'OPEN',
+      },
+      { session }
     );
 
+    // Update chapter link
+    await this.chapterRepo.findOneAndUpdate(
+      { _id: chapter._id },
+      { 'pullRequest.prId': pullRequest._id },
+      { session }
+    );
+
+    // Notify moderators
+    await this._notifyModerators({ story, pullRequestId: pullRequest._id, userId }, session);
+
+    // Read inside the same session
+    const populatedPR = await PullRequest.findById(pullRequest._id)
+      .populate('parentChapterId', 'title depth')
+      .session(session ?? null)
+      .lean();
+
     if (!populatedPR) {
+      this.logger.error('❌ Could not find PR in current session');
       throw new Error('Failed to retrieve the created pull request');
     }
 
@@ -212,7 +237,34 @@ export class PRPublishHandler extends BaseHandler {
     };
   }
 
-  async _notifyModerators(data: INotifyModeratorsParams) {
+  private _generatePRTitle(input: IPRTitleInput): string {
+    const { prType, chapterNumber, chapterTitle, summary } = input;
+
+    const chapterRef = this._formatChapterReference(chapterNumber, chapterTitle);
+
+    switch (prType) {
+      case 'NEW_CHAPTER':
+        return `[NEW] ${chapterRef}${summary ? `: ${summary}` : ''}`;
+
+      case 'EDIT_CHAPTER':
+        return `[EDIT] ${chapterRef}${summary ? `: ${summary}` : ''}`;
+
+      case 'DELETE_CHAPTER':
+        return `[DELETE] ${chapterRef}${summary ? `: ${summary}` : ''}`;
+
+      default:
+        return `[PR] ${chapterRef}`;
+    }
+  }
+
+  private _formatChapterReference(chapterNumber?: number, chapterTitle?: string): string {
+    if (chapterNumber && chapterTitle) return `Chapter ${chapterNumber}: ${chapterTitle}`;
+    if (chapterNumber) return `Chapter ${chapterNumber}`;
+    if (chapterTitle) return chapterTitle;
+    return 'Chapter';
+  }
+
+  private async _notifyModerators(data: INotifyModeratorsParams, session?: ClientSession) {
     const { story, pullRequestId, userId } = data;
     const moderators = await this.collaboratorRepo.findModerators(story._id.toString());
     const moderatorIds = moderators.map((m) => m.userId.toString());
@@ -230,6 +282,6 @@ export class PRPublishHandler extends BaseHandler {
       message: `New pull request submitted for "${story.title}"`,
     }));
 
-    await PRNotification.insertMany(notifications);
+    await PRNotification.insertMany(notifications, { session });
   }
 }

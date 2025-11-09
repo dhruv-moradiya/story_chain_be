@@ -1,4 +1,4 @@
-import { QueryOptions, UpdateQuery } from 'mongoose';
+import { ClientSession, QueryOptions, UpdateQuery } from 'mongoose';
 
 import { BaseRepository } from '../../../utils';
 import { Chapter } from '../../../models/chapter.model';
@@ -25,9 +25,18 @@ export class ChapterRepository extends BaseRepository<IChapter, IChapterDoc> {
     return this.model.findByIdAndUpdate(id, updates, options).lean<IChapter>().exec();
   }
 
-  async incrementBranches(parentChapterId: string): Promise<IChapter | null> {
-    return this.updateById(parentChapterId, {
-      $inc: { 'stats.childBranches': 1 },
-    });
+  async incrementBranches(
+    parentChapterId: string,
+    session?: ClientSession
+  ): Promise<IChapter | null> {
+    return this.updateById(
+      parentChapterId,
+      {
+        $inc: { 'stats.childBranches': 1 },
+      },
+      { session }
+    );
   }
 }
+
+export const chapterRepository = new ChapterRepository();

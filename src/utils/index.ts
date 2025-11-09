@@ -1,4 +1,11 @@
-import { Document, FilterQuery, ProjectionType, QueryOptions, UpdateQuery } from 'mongoose';
+import {
+  ClientSession,
+  Document,
+  FilterQuery,
+  ProjectionType,
+  QueryOptions,
+  UpdateQuery,
+} from 'mongoose';
 import { ApiError } from './apiResponse';
 import { logger } from './logger';
 import { Model } from 'mongoose';
@@ -44,7 +51,12 @@ export abstract class BaseRepository<TEntity, TDocument extends Document> extend
   }
 
   // 🧠 CREATE
-  async create(data: Partial<TEntity>): Promise<TEntity> {
+  async create(data: Partial<TEntity>, options?: { session?: ClientSession }): Promise<TEntity> {
+    if (options?.session) {
+      const [doc] = await this.model.create([data], { session: options.session });
+      return doc.toObject() as TEntity;
+    }
+
     const doc = new this.model(data);
     const saved = await doc.save();
     return saved.toObject() as TEntity;
@@ -53,31 +65,56 @@ export abstract class BaseRepository<TEntity, TDocument extends Document> extend
   // 🔍 FIND ONE
   async findOne(
     filter: FilterQuery<TDocument>,
-    projection?: ProjectionType<TDocument> | null
+    projection?: ProjectionType<TDocument> | null,
+    options?: { session?: ClientSession }
   ): Promise<TEntity | null> {
-    return this.model.findOne(filter, projection).lean<TEntity>().exec();
+    const query = this.model.findOne(filter, projection);
+
+    // If a session is provided, attach it to the query so the execution
+    // will participate in the given transaction/session. Do not execute
+    // the query twice — call `.lean().exec()` once and return its promise.
+    if (options?.session) query.session(options.session);
+
+    return query.lean<TEntity>().exec();
   }
 
   // 🔍 FIND BY ID
   async findById(
     id: string,
-    projection?: ProjectionType<TDocument> | null
+    projection?: ProjectionType<TDocument> | null,
+    options?: { session?: ClientSession }
   ): Promise<TEntity | null> {
-    return this.model.findById(id, projection).lean<TEntity>().exec();
+    const query = this.model.findById(id, projection);
+
+    if (options?.session) query.session(options.session);
+
+    return query.lean<TEntity>().exec();
   }
 
   // 🔁 UPDATE ONE
   async findOneAndUpdate(
     filter: FilterQuery<TDocument>,
     update: UpdateQuery<TDocument>,
-    options: QueryOptions = { new: true }
+    options: QueryOptions & { session?: ClientSession } = { new: true }
   ): Promise<TEntity | null> {
-    return this.model.findOneAndUpdate(filter, update, options).lean<TEntity>().exec();
+    const query = this.model.findOneAndUpdate(filter, update, options);
+
+    if (options.session) query.session(options.session);
+
+    return query.lean<TEntity>().exec();
   }
 
   // ❌ DELETE ONE
-  async deleteOne(filter: FilterQuery<TDocument>): Promise<boolean> {
-    const result = await this.model.deleteOne(filter).exec();
+  async deleteOne(
+    filter: FilterQuery<TDocument>,
+    options?: { session?: ClientSession }
+  ): Promise<boolean> {
+    const query = this.model.deleteOne(filter);
+
+    if (options?.session) query.session(options.session);
+
+    const result = await query.exec();
+
     return result.deletedCount === 1;
   }
 
@@ -85,18 +122,42 @@ export abstract class BaseRepository<TEntity, TDocument extends Document> extend
   async findMany(
     filter: FilterQuery<TDocument>,
     projection?: ProjectionType<TDocument> | null,
-    options?: QueryOptions & { limit?: number; skip?: number }
+    options?: QueryOptions & { limit?: number; skip?: number; session?: ClientSession }
   ): Promise<TEntity[]> {
-    return this.model.find(filter, projection, options).lean<TEntity[]>().exec();
+    const query = this.model.find(filter, projection, options);
+
+    if (options?.session) query.session(options.session);
+
+    return query.lean<TEntity[]>().exec();
   }
 
+  // ======================================================
   // 🧾 COUNT
-  async count(filter: FilterQuery<TDocument>): Promise<number> {
-    return this.model.countDocuments(filter).exec();
+  // ======================================================
+  async count(
+    filter: FilterQuery<TDocument>,
+    options?: { session?: ClientSession }
+  ): Promise<number> {
+    const query = this.model.countDocuments(filter);
+
+    if (options?.session) query.session(options.session);
+
+    return query.exec();
   }
 
-  async softDelete(filter: FilterQuery<TDocument>): Promise<boolean> {
-    const result = await this.model.updateOne(filter, { $set: { deletedAt: new Date() } }).exec();
+  // ======================================================
+  // 🧹 SOFT DELETE
+  // ======================================================
+  async softDelete(
+    filter: FilterQuery<TDocument>,
+    options?: { session?: ClientSession }
+  ): Promise<boolean> {
+    const query = this.model.updateOne(filter, { $set: { deletedAt: new Date() } });
+
+    if (options?.session) query.session(options.session);
+
+    const result = await query.exec();
+
     return result.modifiedCount > 0;
   }
 }

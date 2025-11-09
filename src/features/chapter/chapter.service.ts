@@ -1,23 +1,13 @@
-// External Dependencies
-
-// Constants
-
-// Models
-
-// Utilities
-import { logger } from '../../utils/logger';
-
-// Services
 import { StoryRepository } from '../story/story.service';
 
-// Types
+import { withTransaction } from '../../utils/withTransaction';
+import { ChapterVersionRepository } from '../chapterVersion/repositories/chapterVersion.repository';
 import { PullRequestRepository } from '../pullRequest/repositories/pullRequest.repository';
-import { IStory } from '../story/story.types';
 import { StoryCollaboratorRepository } from '../storyCollaborator/storyCollaborator.service';
 import { UserRepository } from '../user/user.service';
 import { ChapterDocumentBuilder } from './builders/document.builder';
 import { ChapterTreeBuilder } from './builders/tree.builder';
-import { CreateChapterResponse, IChapter, IChapterTreeMetadata } from './chapter.types';
+import { CreateChapterResponse, IChapter } from './chapter.types';
 import { ChapterRepository } from './repositories/chapter.repository';
 import { PublishModeResolver } from './strategies/publishMode.resolver';
 import { DirectPublishHandler, PRPublishHandler } from './strategies/publishMode.strategy';
@@ -38,8 +28,6 @@ export interface IChapterCreateInput {
   userId: string;
 }
 
-// Return type for createChapter
-
 export class ChapterService {
   private readonly chapterRepo: ChapterRepository;
   private readonly storyRepo: StoryRepository;
@@ -56,8 +44,9 @@ export class ChapterService {
 
   private readonly directPublishHandler: DirectPublishHandler;
   private readonly prPublishHandler: PRPublishHandler;
-
   private readonly pullRequestRepo: PullRequestRepository;
+
+  private readonly chapterVersionRepo: ChapterVersionRepository;
 
   constructor() {
     // Repositories
@@ -83,31 +72,40 @@ export class ChapterService {
       this.storyRepo,
       this.userRepo
     );
-    this.prPublishHandler = new PRPublishHandler(this.collaboratorRepo, this.pullRequestRepo);
+    this.prPublishHandler = new PRPublishHandler(
+      this.collaboratorRepo,
+      this.pullRequestRepo,
+      this.chapterRepo
+    );
+
+    this.chapterVersionRepo = new ChapterVersionRepository();
   }
 
   // 🧩 Fully typed, safe method
   async createChapter(input: IChapterCreateInput): Promise<CreateChapterResponse> {
-    try {
+    return await withTransaction('Creating new chapter', async (session) => {
       const { storyId, parentChapterId, content, title, userId } = input;
 
       // 1️⃣ Validate input
       await this.inputValidator.validate(input);
 
       // 2️⃣ Validate story
-      const story: IStory = await this.storyValidator.validate(storyId);
+      const story = await this.storyValidator.validate(storyId);
 
       // 3️⃣ Build chapter tree
-      const treeData: IChapterTreeMetadata = await this.treeBuilder.build({
+      const treeData = await this.treeBuilder.build({
         storyId,
         parentChapterId,
         userId,
         storyCreatorId: story.creatorId.toString(),
       });
 
-      // 4️⃣ Validate branching rules
+      // 4️⃣ Validate branching
       if (!treeData.isRootChapter && treeData.parentChapter) {
-        await this.branchingValidator.validate({ story, parentChapter: treeData.parentChapter });
+        await this.branchingValidator.validate({
+          story,
+          parentChapter: treeData.parentChapter,
+        });
       }
 
       // 5️⃣ Resolve publish mode
@@ -118,43 +116,73 @@ export class ChapterService {
       );
 
       // 6️⃣ Build chapter document
-      const chapter: IChapter = await this.docBuilder.build({
+      const chapter = await this.docBuilder.build({
         storyId,
         parentChapterId: parentChapterId || null,
         ancestorIds: treeData.ancestorIds,
         depth: treeData.depth,
         userId,
         content: content.trim(),
-        title: title,
+        title,
         chapterStatus: publishMode.chapterStatus,
         isPR: publishMode.isPR,
         isRootChapter: treeData.isRootChapter,
         parentChapter: treeData.parentChapter || null,
       });
 
-      // 7️⃣ Handle based on publish mode
+      // 7️⃣ Branch based on publish mode
       if (publishMode.isPR) {
-        return await this.prPublishHandler.handle({
-          chapter,
-          story,
-          parentChapter: treeData.parentChapter!,
-          userId,
-          content: content.trim(),
-          title,
-        });
+        // Create PR (this returns a pullRequest object)
+        const prResponse = await this.prPublishHandler.handle(
+          {
+            chapter,
+            story,
+            parentChapter: treeData.parentChapter!,
+            userId,
+            content: content.trim(),
+            title,
+          },
+          session
+        );
+
+        // 8️⃣ Create version *after* PR is created (using the actual prId)
+        await this.chapterVersionRepo.create(
+          {
+            chapterId: chapter._id,
+            version: 1,
+            content: chapter.content,
+            changesSummary: 'First Chapter',
+            editedBy: chapter.authorId,
+            title: chapter.title,
+            prId: prResponse.pullRequest._id,
+          },
+          { session }
+        );
+
+        return prResponse;
       }
 
-      return await this.directPublishHandler.handle({
-        chapter,
-        story,
-        treeData,
-        userId,
-        parentChapterId,
-      });
-    } catch (error: unknown) {
-      logger.error('Error in ChapterService.createChapter:', error);
-      throw error;
-    }
+      // If direct publish
+      const directResponse = await this.directPublishHandler.handle(
+        { chapter, story, treeData, userId, parentChapterId },
+        session
+      );
+
+      // 9️⃣ Create version for direct publish
+      await this.chapterVersionRepo.create(
+        {
+          chapterId: chapter._id,
+          version: 1,
+          content: chapter.content,
+          changesSummary: 'First Chapter',
+          editedBy: chapter.authorId,
+          title: chapter.title,
+        },
+        { session }
+      );
+
+      return directResponse;
+    });
   }
 
   // 🪄 Future methods: typed placeholders for next handlers

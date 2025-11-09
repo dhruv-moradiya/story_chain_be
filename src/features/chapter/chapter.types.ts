@@ -1,9 +1,9 @@
 import { Document, Types } from 'mongoose';
-import { IPullRequest } from '../pullRequest/pullRequest.types';
 import { z } from 'zod';
-import { createChapterSchema } from './chapter.validation';
+import { IPullRequest, PRType } from '../pullRequest/pullRequest.types';
 import { IStory } from '../story/story.types';
 import { Badge } from '../user/user.types';
+import { createChapterSchema } from './chapter.validation';
 
 // ========================================
 // MODEL TYPES
@@ -116,6 +116,13 @@ export interface IChapterDirectPublishInput {
   treeData: IChapterTreeMetadata;
   userId: string;
   parentChapterId?: string;
+}
+
+export interface IPRTitleInput {
+  prType: PRType;
+  chapterTitle?: string;
+  chapterNumber?: number;
+  summary?: string;
 }
 
 /**
