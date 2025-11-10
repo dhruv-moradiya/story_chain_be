@@ -1,7 +1,5 @@
 import { ClientSession } from 'mongoose';
 import { XP_REWARDS } from '../../../constants';
-import { Chapter } from '../../../models/chapter.model';
-import { PRNotification } from '../../../models/prNotification.model';
 import { PullRequest } from '../../../models/pullRequest.model';
 import { BaseHandler } from '../../../utils';
 import { notificationService } from '../../notification/notification.service';
@@ -22,6 +20,7 @@ import {
   IPRTitleInput,
 } from '../chapter.types';
 import { ChapterRepository } from '../repositories/chapter.repository';
+import { Notification } from '../../../models/notification.model';
 
 export class DirectPublishHandler extends BaseHandler<
   IChapterDirectPublishInput,
@@ -282,6 +281,6 @@ export class PRPublishHandler extends BaseHandler {
       message: `New pull request submitted for "${story.title}"`,
     }));
 
-    await PRNotification.insertMany(notifications, { session });
+    await Notification.insertMany(notifications, { session });
   }
 }

@@ -37,6 +37,10 @@ export class ChapterRepository extends BaseRepository<IChapter, IChapterDoc> {
       { session }
     );
   }
+
+  // async canUserEditChapter(userId: string, chapterId: string): Promise<boolean> {
+
+  // }
 }
 
 export const chapterRepository = new ChapterRepository();

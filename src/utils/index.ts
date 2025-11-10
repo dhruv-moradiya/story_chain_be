@@ -25,7 +25,7 @@ export class BaseModule {
     this.logger.info(`[ChapterModule] ${message}`, data);
   }
 
-  protected throwValidationError(message: string) {
+  protected throwValidationError(message: string): never {
     throw ApiError.validationError(message);
   }
 

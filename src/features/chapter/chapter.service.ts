@@ -7,13 +7,20 @@ import { StoryCollaboratorRepository } from '../storyCollaborator/storyCollabora
 import { UserRepository } from '../user/user.service';
 import { ChapterDocumentBuilder } from './builders/document.builder';
 import { ChapterTreeBuilder } from './builders/tree.builder';
-import { CreateChapterResponse, IChapter } from './chapter.types';
+import {
+  CreateChapterResponse,
+  IChapter,
+  IChapterContentUpdateInput,
+  IChapterTitleUpdateInput,
+} from './chapter.types';
 import { ChapterRepository } from './repositories/chapter.repository';
 import { PublishModeResolver } from './strategies/publishMode.resolver';
 import { DirectPublishHandler, PRPublishHandler } from './strategies/publishMode.strategy';
 import { BranchingValidator } from './validators/branching.validator';
 import { InputValidator } from './validators/input.validator';
 import { StoryValidator } from './validators/story.validator';
+import { ChapterValidator } from './validators/chapter.validator';
+import { ApiError } from '../../utils/apiResponse';
 
 // ========================================
 // MAIN SERVICE CLASS
@@ -37,6 +44,7 @@ export class ChapterService {
   private readonly inputValidator: InputValidator;
   private readonly storyValidator: StoryValidator;
   private readonly branchingValidator: BranchingValidator;
+  private readonly chapterValidator: ChapterValidator;
 
   private readonly treeBuilder: ChapterTreeBuilder;
   private readonly publishModeResolver: PublishModeResolver;
@@ -60,6 +68,7 @@ export class ChapterService {
     this.inputValidator = new InputValidator();
     this.storyValidator = new StoryValidator();
     this.branchingValidator = new BranchingValidator();
+    this.chapterValidator = new ChapterValidator();
 
     // Builders
     this.treeBuilder = new ChapterTreeBuilder(this.chapterRepo);
@@ -194,8 +203,68 @@ export class ChapterService {
     // Implementation TBD
   }
 
-  async updateChapter(_chapterId: string, _updates: Partial<IChapter>): Promise<void> {
-    // Implementation TBD
+  async updateChapterTitle(input: IChapterTitleUpdateInput): Promise<IChapter> {
+    return await withTransaction('Updating chapter title', async (session) => {
+      const { chapterId, userId, title } = input;
+
+      const chapter = await this.chapterValidator.authorizeChapterEdit(userId, chapterId);
+
+      const updatedChapter = await this.chapterRepo.updateById(
+        chapterId,
+        { title: title.trim() },
+        { new: true, session }
+      );
+
+      if (!updatedChapter) {
+        throw ApiError.internalError('Failed to update chapter title');
+      }
+
+      await this.chapterVersionRepo.create(
+        {
+          chapterId: chapter._id,
+          version: (chapter.version || 1) + 1,
+          content: updatedChapter.content,
+          title: updatedChapter.title,
+          changesSummary: 'Title updated',
+          editedBy: userId,
+        },
+        { session }
+      );
+
+      return updatedChapter;
+    });
+  }
+
+  async updateChapterContent(input: IChapterContentUpdateInput): Promise<IChapter> {
+    return await withTransaction('Updating chapter title', async (session) => {
+      const { chapterId, userId, content } = input;
+
+      const chapter = await this.chapterValidator.authorizeChapterEdit(userId, chapterId);
+
+      const updatedChapter = await this.chapterRepo.updateById(
+        chapterId,
+        { content: content.trim() },
+        { new: true, session }
+      );
+
+      if (!updatedChapter) {
+        throw ApiError.internalError('Failed to update chapter title');
+      }
+
+      await this.chapterVersionRepo.create(
+        {
+          chapterId: chapter._id,
+          version: (chapter.version || 1) + 1,
+          content: updatedChapter.content,
+          title: updatedChapter.title,
+          changesSummary: 'Title updated',
+          editedBy: userId,
+        },
+        { session }
+      );
+
+      return updatedChapter;
+    });
   }
 }
 

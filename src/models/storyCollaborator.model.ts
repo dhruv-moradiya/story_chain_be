@@ -17,15 +17,38 @@ const storyCollaboratorSchema = new Schema<IStoryCollaboratorDoc>(
     },
     role: {
       type: String,
-      enum: ['OWNER', 'MODERATOR', 'REVIEWER', 'CONTRIBUTOR'],
+      enum: ['OWNER', 'CO_AUTHOR', 'MODERATOR', 'REVIEWER', 'CONTRIBUTOR'],
       default: 'CONTRIBUTOR',
     },
     permissions: {
-      canApprove: { type: Boolean, default: false },
-      canReject: { type: Boolean, default: false },
-      canEdit: { type: Boolean, default: false },
-      canDelete: { type: Boolean, default: false },
-      canModerate: { type: Boolean, default: false },
+      // Story management
+      canEditStorySettings: { type: Boolean, default: false },
+      canDeleteStory: { type: Boolean, default: false },
+      canArchiveStory: { type: Boolean, default: false },
+
+      // Chapters
+      canWriteChapters: { type: Boolean, default: true },
+      canEditAnyChapter: { type: Boolean, default: false },
+      canDeleteAnyChapter: { type: Boolean, default: false },
+
+      // PR system
+      canApprovePRs: { type: Boolean, default: false },
+      canRejectPRs: { type: Boolean, default: false },
+      canReviewPRs: { type: Boolean, default: false },
+      canMergePRs: { type: Boolean, default: false },
+
+      // Collaborators
+      canInviteCollaborators: { type: Boolean, default: false },
+      canRemoveCollaborators: { type: Boolean, default: false },
+      canChangePermissions: { type: Boolean, default: false },
+
+      // Moderation
+      canModerateComments: { type: Boolean, default: false },
+      canDeleteComments: { type: Boolean, default: false },
+      canBanFromStory: { type: Boolean, default: false },
+
+      // Analytics
+      canViewStoryAnalytics: { type: Boolean, default: false },
     },
     invitedBy: {
       type: String,

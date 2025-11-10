@@ -4,6 +4,220 @@
 // ========================================
 
 // ========================================
+// ROLE DEFINITIONS & PERMISSIONS
+// ========================================
+
+// Platform Role Definitions
+export const PLATFORM_ROLES = {
+  SUPER_ADMIN: {
+    name: 'Super Administrator',
+    description: 'Full platform control',
+    permissions: {
+      canBanUsers: true,
+      canUnbanUsers: true,
+      canViewAllReports: true,
+      canDeleteAnyContent: true,
+      canReviewAppeals: true,
+      canApproveAppeals: true,
+      canRejectAppeals: true,
+      canEscalateAppeals: true,
+      canManageRoles: true,
+      canAssignModerators: true,
+      canAccessAdminPanel: true,
+      canViewPlatformAnalytics: true,
+      canManageSettings: true,
+      canManageFeaturedContent: true,
+    },
+  },
+
+  PLATFORM_MODERATOR: {
+    name: 'Platform Moderator',
+    description: 'Moderate content across all stories',
+    permissions: {
+      canBanUsers: true,
+      canUnbanUsers: false,
+      canViewAllReports: true,
+      canDeleteAnyContent: true,
+      canReviewAppeals: true,
+      canApproveAppeals: false,
+      canRejectAppeals: true,
+      canEscalateAppeals: true,
+      canManageRoles: false,
+      canAssignModerators: false,
+      canAccessAdminPanel: true,
+      canViewPlatformAnalytics: false,
+      canManageSettings: false,
+      canManageFeaturedContent: false,
+    },
+  },
+
+  APPEAL_MODERATOR: {
+    name: 'Appeal Moderator',
+    description: 'Review and decide on ban appeals',
+    permissions: {
+      canBanUsers: false,
+      canUnbanUsers: true,
+      canViewAllReports: true,
+      canDeleteAnyContent: false,
+      canReviewAppeals: true,
+      canApproveAppeals: true,
+      canRejectAppeals: true,
+      canEscalateAppeals: true,
+      canManageRoles: false,
+      canAssignModerators: false,
+      canAccessAdminPanel: true,
+      canViewPlatformAnalytics: false,
+      canManageSettings: false,
+      canManageFeaturedContent: false,
+    },
+  },
+
+  USER: {
+    name: 'Regular User',
+    description: 'Standard user account',
+    permissions: {
+      canBanUsers: false,
+      canUnbanUsers: false,
+      canViewAllReports: false,
+      canDeleteAnyContent: false,
+      canReviewAppeals: false,
+      canApproveAppeals: false,
+      canRejectAppeals: false,
+      canEscalateAppeals: false,
+      canManageRoles: false,
+      canAssignModerators: false,
+      canAccessAdminPanel: false,
+      canViewPlatformAnalytics: false,
+      canManageSettings: false,
+      canManageFeaturedContent: false,
+    },
+  },
+} as const;
+
+// Story Role Definitions
+export const STORY_ROLES = {
+  OWNER: {
+    name: 'Story Owner',
+    description: 'Creator of the story, full control',
+    permissions: {
+      canEditStorySettings: true,
+      canDeleteStory: true,
+      canArchiveStory: true,
+      canWriteChapters: true,
+      canEditAnyChapter: true,
+      canDeleteAnyChapter: true,
+      canApprovePRs: true,
+      canRejectPRs: true,
+      canReviewPRs: true,
+      canMergePRs: true,
+      canInviteCollaborators: true,
+      canRemoveCollaborators: true,
+      canChangePermissions: true,
+      canModerateComments: true,
+      canDeleteComments: true,
+      canBanFromStory: true,
+      canViewStoryAnalytics: true,
+    },
+  },
+
+  CO_AUTHOR: {
+    name: 'Co-Author',
+    description: 'Equal partner in story creation',
+    permissions: {
+      canEditStorySettings: true,
+      canDeleteStory: false, // Only owner can delete
+      canArchiveStory: true,
+      canWriteChapters: true,
+      canEditAnyChapter: true,
+      canDeleteAnyChapter: true,
+      canApprovePRs: true,
+      canRejectPRs: true,
+      canReviewPRs: true,
+      canMergePRs: true,
+      canInviteCollaborators: true,
+      canRemoveCollaborators: false, // Only owner
+      canChangePermissions: false, // Only owner
+      canModerateComments: true,
+      canDeleteComments: true,
+      canBanFromStory: true,
+      canViewStoryAnalytics: true,
+    },
+  },
+
+  MODERATOR: {
+    name: 'Story Moderator',
+    description: 'Manage PRs and moderate content',
+    permissions: {
+      canEditStorySettings: false,
+      canDeleteStory: false,
+      canArchiveStory: false,
+      canWriteChapters: true,
+      canEditAnyChapter: false,
+      canDeleteAnyChapter: false,
+      canApprovePRs: true,
+      canRejectPRs: true,
+      canReviewPRs: true,
+      canMergePRs: true,
+      canInviteCollaborators: false,
+      canRemoveCollaborators: false,
+      canChangePermissions: false,
+      canModerateComments: true,
+      canDeleteComments: true,
+      canBanFromStory: true,
+      canViewStoryAnalytics: false,
+    },
+  },
+
+  REVIEWER: {
+    name: 'Reviewer',
+    description: 'Review PRs but cannot approve/reject',
+    permissions: {
+      canEditStorySettings: false,
+      canDeleteStory: false,
+      canArchiveStory: false,
+      canWriteChapters: true,
+      canEditAnyChapter: false,
+      canDeleteAnyChapter: false,
+      canApprovePRs: false,
+      canRejectPRs: false,
+      canReviewPRs: true, // Can comment on PRs
+      canMergePRs: false,
+      canInviteCollaborators: false,
+      canRemoveCollaborators: false,
+      canChangePermissions: false,
+      canModerateComments: false,
+      canDeleteComments: false,
+      canBanFromStory: false,
+      canViewStoryAnalytics: false,
+    },
+  },
+
+  CONTRIBUTOR: {
+    name: 'Trusted Contributor',
+    description: 'Can write chapters directly without PR',
+    permissions: {
+      canEditStorySettings: false,
+      canDeleteStory: false,
+      canArchiveStory: false,
+      canWriteChapters: true,
+      canEditAnyChapter: false,
+      canDeleteAnyChapter: false,
+      canApprovePRs: false,
+      canRejectPRs: false,
+      canReviewPRs: false,
+      canMergePRs: false,
+      canInviteCollaborators: false,
+      canRemoveCollaborators: false,
+      canChangePermissions: false,
+      canModerateComments: false,
+      canDeleteComments: false,
+      canBanFromStory: false,
+      canViewStoryAnalytics: false,
+    },
+  },
+} as const;
+
+// ========================================
 // CHAPTER VALIDATION
 // ========================================
 export const CHAPTER_LIMITS = {

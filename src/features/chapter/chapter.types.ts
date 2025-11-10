@@ -3,7 +3,11 @@ import { z } from 'zod';
 import { IPullRequest, PRType } from '../pullRequest/pullRequest.types';
 import { IStory } from '../story/story.types';
 import { Badge } from '../user/user.types';
-import { createChapterSchema } from './chapter.validation';
+import {
+  createChapterSchema,
+  updateChapterContentSchema,
+  updateChapterTitleSchema,
+} from './chapter.validation';
 
 // ========================================
 // MODEL TYPES
@@ -68,6 +72,16 @@ export interface IChapterDoc extends IChapter, Document<Types.ObjectId> {}
  * Input data for creating a new chapter.
  */
 export type IChapterCreateInput = z.infer<typeof createChapterSchema> & { userId: string };
+
+export type IChapterTitleUpdateInput = z.infer<typeof updateChapterTitleSchema> & {
+  userId: string;
+  chapterId: string;
+};
+
+export type IChapterContentUpdateInput = z.infer<typeof updateChapterContentSchema> & {
+  userId: string;
+  chapterId: string;
+};
 
 /**
  * Tree data used to define a chapter’s position in the story.
@@ -163,10 +177,6 @@ export interface INotifyModeratorsParams {
 // ========================================
 // RESPONSE TYPES
 // ========================================
-
-/**
- * Response sent when a chapter is successfully published (not via PR).
- */
 
 /**
  * Response sent when a chapter is submitted as a Pull Request.

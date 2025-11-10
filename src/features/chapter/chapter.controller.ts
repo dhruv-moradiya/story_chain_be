@@ -3,6 +3,7 @@ import { ApiError, ApiResponse } from '../../utils/apiResponse';
 import { catchAsync } from '../../utils/catchAsync';
 import { chapterService } from './chapter.service';
 import { logger } from '../../utils/logger';
+import { HTTP_STATUS } from '../../constants/httpStatus';
 
 export class ChapterController {
   static createChapter = catchAsync(
@@ -19,28 +20,48 @@ export class ChapterController {
       const { storyId } = request.params;
       const { parentChapterId, content, title } = request.body;
 
-      try {
-        const result = await chapterService.createChapter({
-          storyId,
-          parentChapterId,
-          content,
-          title,
-          userId,
-        });
+      const result = await chapterService.createChapter({
+        storyId,
+        parentChapterId,
+        content,
+        title,
+        userId,
+      });
 
-        const payload = result.isPR
-          ? { pullRequest: result.isPR, chapter: result.chapter }
-          : {
-              chapter: result.chapter,
-              xpAwarded: result.xpAwarded,
-              badgesEarned: result.badgesEarned,
-              stats: result.stats,
-            };
+      const payload = result.isPR
+        ? { pullRequest: result.isPR, chapter: result.chapter }
+        : {
+            chapter: result.chapter,
+            xpAwarded: result.xpAwarded,
+            badgesEarned: result.badgesEarned,
+            stats: result.stats,
+          };
 
-        return ChapterController.success(reply, 201, result.message, payload);
-      } catch (error) {
-        return ChapterController.handleError(error, reply);
-      }
+      return reply
+        .code(HTTP_STATUS.CREATED.code)
+        .send(new ApiResponse(true, result.message, payload));
+    }
+  );
+
+  static updateChapterTitle = catchAsync(
+    async (
+      request: FastifyRequest<{
+        Params: { chapterId: string };
+        Body: { title: string };
+      }>,
+      reply: FastifyReply
+    ) => {
+      const userId = request.userId;
+      if (!userId) return ChapterController.unauthorized(reply);
+
+      const { chapterId } = request.params;
+      const { title } = request.body;
+
+      const result = await chapterService.updateChapterTitle({
+        chapterId,
+        userId,
+        title,
+      });
     }
   );
 
