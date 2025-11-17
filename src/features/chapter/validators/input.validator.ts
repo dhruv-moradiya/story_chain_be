@@ -3,7 +3,7 @@ import { BaseValidator } from '../../../utils';
 import { IChapterCreateInput } from '../chapter.types';
 import { CHAPTER_LIMITS } from '../../../constants';
 
-export class InputValidator extends BaseValidator<IChapterCreateInput> {
+export class InputValidator extends BaseValidator {
   async validate(input: IChapterCreateInput) {
     const { storyId, parentChapterId, content } = input;
 

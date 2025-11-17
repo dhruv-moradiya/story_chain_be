@@ -2,7 +2,7 @@ import { BaseValidator } from '../../../utils';
 import { storyService } from '../../story/story.service';
 import { IStory } from '../../story/story.types';
 
-export class StoryValidator extends BaseValidator<string, IStory> {
+export class StoryValidator extends BaseValidator {
   async validate(storyId: string): Promise<IStory> {
     const story = (await storyService.getStoryById(storyId)).toObject();
 

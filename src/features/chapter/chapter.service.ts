@@ -4,7 +4,6 @@ import { withTransaction } from '../../utils/withTransaction';
 import { ChapterVersionRepository } from '../chapterVersion/repositories/chapterVersion.repository';
 import { PullRequestRepository } from '../pullRequest/repositories/pullRequest.repository';
 import { StoryCollaboratorRepository } from '../storyCollaborator/storyCollaborator.service';
-import { UserRepository } from '../user/user.service';
 import { ChapterDocumentBuilder } from './builders/document.builder';
 import { ChapterTreeBuilder } from './builders/tree.builder';
 import {
@@ -21,6 +20,9 @@ import { InputValidator } from './validators/input.validator';
 import { StoryValidator } from './validators/story.validator';
 import { ChapterValidator } from './validators/chapter.validator';
 import { ApiError } from '../../utils/apiResponse';
+import { UserRepository } from '../user/repository/user.repository';
+import { BaseModule } from '../../utils';
+import { IChapterCreateDTO } from './dto/chapter.dto';
 
 // ========================================
 // MAIN SERVICE CLASS
@@ -35,7 +37,7 @@ export interface IChapterCreateInput {
   userId: string;
 }
 
-export class ChapterService {
+export class ChapterService extends BaseModule {
   private readonly chapterRepo: ChapterRepository;
   private readonly storyRepo: StoryRepository;
   private readonly userRepo: UserRepository;
@@ -57,6 +59,8 @@ export class ChapterService {
   private readonly chapterVersionRepo: ChapterVersionRepository;
 
   constructor() {
+    super();
+
     // Repositories
     this.chapterRepo = new ChapterRepository();
     this.storyRepo = new StoryRepository();
@@ -91,7 +95,7 @@ export class ChapterService {
   }
 
   // 🧩 Fully typed, safe method
-  async createChapter(input: IChapterCreateInput): Promise<CreateChapterResponse> {
+  async createChapter(input: IChapterCreateDTO): Promise<CreateChapterResponse> {
     return await withTransaction('Creating new chapter', async (session) => {
       const { storyId, parentChapterId, content, title, userId } = input;
 
@@ -207,7 +211,7 @@ export class ChapterService {
     return await withTransaction('Updating chapter title', async (session) => {
       const { chapterId, userId, title } = input;
 
-      const chapter = await this.chapterValidator.authorizeChapterEdit(userId, chapterId);
+      const chapter = await this.chapterValidator.validateChapterOwnership(userId, chapterId);
 
       const updatedChapter = await this.chapterRepo.updateById(
         chapterId,
@@ -239,7 +243,7 @@ export class ChapterService {
     return await withTransaction('Updating chapter title', async (session) => {
       const { chapterId, userId, content } = input;
 
-      const chapter = await this.chapterValidator.authorizeChapterEdit(userId, chapterId);
+      const chapter = await this.chapterValidator.validateChapterOwnership(userId, chapterId);
 
       const updatedChapter = await this.chapterRepo.updateById(
         chapterId,

@@ -13,6 +13,9 @@ import { Model } from 'mongoose';
 export class BaseModule {
   protected logger = logger;
 
+  // ===========================================
+  // 🧱 Lifecycle Hooks
+  // ===========================================
   async initialize() {
     // Override in subclasses if needed
   }
@@ -21,16 +24,70 @@ export class BaseModule {
     // Override in subclasses if needed
   }
 
-  protected logInfo(message: string, data: unknown) {
-    this.logger.info(`[ChapterModule] ${message}`, data);
+  // ===========================================
+  // 🧾 Logging Helpers
+  // ===========================================
+  protected logInfo(message: string, data?: unknown) {
+    this.logger.info(`[${this.constructor.name}] ${message}`, data);
   }
 
-  protected throwValidationError(message: string): never {
+  protected logError(message: string, error?: unknown) {
+    this.logger.error(`[${this.constructor.name}] ${message}`, error);
+  }
+
+  protected logDebug(message: string, data?: unknown) {
+    this.logger.debug?.(`[${this.constructor.name}] ${message}`, data);
+  }
+
+  // ===========================================
+  // 🚨 Error Throw Helpers (Integrated from ApiError)
+  // ===========================================
+  protected throwBadRequest(message?: string): never {
+    throw ApiError.badRequest(message);
+  }
+
+  protected throwValidationError(message?: string): never {
     throw ApiError.validationError(message);
   }
 
-  protected throwForbiddenError(message: string) {
+  protected throwUnauthorizedError(message?: string): never {
+    throw ApiError.unauthorized(message);
+  }
+
+  protected throwForbiddenError(message?: string): never {
     throw ApiError.forbidden(message);
+  }
+
+  protected throwNotFoundError(message?: string): never {
+    throw ApiError.notFound(message);
+  }
+
+  protected throwMethodNotAllowedError(message?: string): never {
+    throw ApiError.methodNotAllowed(message);
+  }
+
+  protected throwConflictError(message?: string): never {
+    throw ApiError.conflict(message);
+  }
+
+  protected throwUnprocessableEntityError(message?: string): never {
+    throw ApiError.unprocessableEntity(message);
+  }
+
+  protected throwTooManyRequestsError(message?: string): never {
+    throw ApiError.tooManyRequests(message);
+  }
+
+  protected throwBadGatewayError(message?: string): never {
+    throw ApiError.badGateway(message);
+  }
+
+  protected throwInternalError(message?: string): never {
+    throw ApiError.internalError(message);
+  }
+
+  protected throwServiceUnavailableError(message?: string): never {
+    throw ApiError.serviceUnavailable(message);
   }
 }
 
@@ -38,9 +95,7 @@ export abstract class BaseHandler<Input = unknown, Output = unknown> extends Bas
   abstract handle(input: Input): Promise<Output>;
 }
 
-export abstract class BaseValidator<Input = unknown, Output = void> extends BaseModule {
-  abstract validate(input: Input): Promise<Output>;
-}
+export class BaseValidator extends BaseModule {}
 
 export abstract class BaseRepository<TEntity, TDocument extends Document> extends BaseModule {
   protected model: Model<TDocument>;

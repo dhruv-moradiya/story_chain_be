@@ -7,7 +7,6 @@ import { PullRequestRepository } from '../../pullRequest/repositories/pullReques
 import { StoryRepository } from '../../story/story.service';
 import { IStory } from '../../story/story.types';
 import { StoryCollaboratorRepository } from '../../storyCollaborator/storyCollaborator.service';
-import { UserRepository } from '../../user/user.service';
 import { Badge } from '../../user/user.types';
 import {
   IChapterTreeMetadata,
@@ -21,6 +20,7 @@ import {
 } from '../chapter.types';
 import { ChapterRepository } from '../repositories/chapter.repository';
 import { Notification } from '../../../models/notification.model';
+import { UserRepository } from '../../user/repository/user.repository';
 
 export class DirectPublishHandler extends BaseHandler<
   IChapterDirectPublishInput,

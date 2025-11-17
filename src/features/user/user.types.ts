@@ -1,6 +1,5 @@
 import { Document } from 'mongoose';
 
-// 🔹 Enums
 export enum Badge {
   STORY_STARTER = 'STORY_STARTER',
   BRANCH_CREATOR = 'BRANCH_CREATOR',
@@ -13,7 +12,6 @@ export enum Badge {
   QUALITY_CURATOR = 'QUALITY_CURATOR',
 }
 
-// 🔹 Sub-interfaces
 export interface UserPreferences {
   emailNotifications: boolean;
   pushNotifications: boolean;
@@ -28,7 +26,6 @@ export interface UserStats {
   branchesCreated: number;
 }
 
-// 🔹 Main interfaces
 export interface IUser {
   clerkId: string;
   username: string;
@@ -67,13 +64,61 @@ export interface ISession {
   abandonAt?: Date;
 }
 
-// 🔹 Document types
 export interface IUserDoc extends Document, IUser {}
 export interface ISessionDoc extends Document, ISession {}
 
-// 🔹 DTOs
-export interface SaveNewUser {
+export interface ICreateNewUser {
   clerkId: string;
   username: string;
   email: string;
 }
+
+export interface IUserUpdateInput {
+  clerkId: string;
+  username: string;
+  email: string;
+}
+
+// DTOs
+export interface ClerkUserCreatedEventDTO {
+  clerkId: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  username?: string;
+  profileImage?: string;
+}
+
+export interface ClerkSessionCreatedEventDTO {
+  sessionId: string;
+  userId: string;
+  clientId: string;
+  ip: string | null;
+  userAgent: string | null;
+  createdAt: Date;
+  lastActiveAt: Date;
+}
+
+// With validation
+import { z } from 'zod';
+
+export const clerkUserCreatedSchema = z.object({
+  clerkId: z.string(),
+  email: z.string().email(),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  username: z.string().optional(),
+  profileImage: z.string().url().optional(),
+});
+
+export const clerkSessionCreatedSchema = z.object({
+  sessionId: z.string(),
+  userId: z.string(),
+  clientId: z.string(),
+  ip: z.string().nullable(),
+  userAgent: z.string().nullable(),
+  createdAt: z.date(),
+  lastActiveAt: z.date(),
+});
+
+//

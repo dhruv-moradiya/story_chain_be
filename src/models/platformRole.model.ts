@@ -4,7 +4,7 @@ import { IPlatformRoleDoc } from '../features/platformRole/platformRole.types';
 const platformRoleSchema = new Schema<IPlatformRoleDoc>(
   {
     userId: {
-      type: Schema.Types.ObjectId,
+      type: String,
       ref: 'User',
       required: true,
       unique: true,
@@ -16,32 +16,8 @@ const platformRoleSchema = new Schema<IPlatformRoleDoc>(
       default: 'USER',
       index: true,
     },
-    permissions: {
-      // Platform moderation
-      canBanUsers: { type: Boolean, default: false },
-      canUnbanUsers: { type: Boolean, default: false },
-      canViewAllReports: { type: Boolean, default: false },
-      canDeleteAnyContent: { type: Boolean, default: false },
-
-      // Appeals
-      canReviewAppeals: { type: Boolean, default: false },
-      canApproveAppeals: { type: Boolean, default: false },
-      canRejectAppeals: { type: Boolean, default: false },
-      canEscalateAppeals: { type: Boolean, default: false },
-
-      // Role management
-      canManageRoles: { type: Boolean, default: false },
-      canAssignModerators: { type: Boolean, default: false },
-
-      // Administration
-      canAccessAdminPanel: { type: Boolean, default: false },
-      canViewPlatformAnalytics: { type: Boolean, default: false },
-      canManageSettings: { type: Boolean, default: false },
-      canManageFeaturedContent: { type: Boolean, default: false },
-    },
-    assignedBy: Schema.Types.ObjectId,
+    assignedBy: String,
     assignedAt: Date,
-    isActive: { type: Boolean, default: true },
   },
   { timestamps: true }
 );

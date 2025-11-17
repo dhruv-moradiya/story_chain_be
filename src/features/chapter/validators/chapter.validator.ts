@@ -2,7 +2,7 @@ import { BaseValidator } from '../../../utils';
 import { IChapter } from '../chapter.types';
 import { ChapterRepository } from '../repositories/chapter.repository';
 
-export class ChapterValidator extends BaseValidator<string, IChapter | null> {
+export class ChapterValidator extends BaseValidator {
   private readonly chapterRepo: ChapterRepository;
 
   constructor() {
@@ -21,7 +21,7 @@ export class ChapterValidator extends BaseValidator<string, IChapter | null> {
     return chapter;
   }
 
-  async authorizeChapterEdit(userId: string, chapterId: string): Promise<IChapter> {
+  async validateChapterOwnership(userId: string, chapterId: string): Promise<IChapter> {
     const chapter = await this.chapterRepo.findById(chapterId);
 
     if (!chapter) {
@@ -35,3 +35,5 @@ export class ChapterValidator extends BaseValidator<string, IChapter | null> {
     return chapter;
   }
 }
+
+export const chapterValidator = new ChapterValidator();

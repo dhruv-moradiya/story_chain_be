@@ -3,7 +3,7 @@ import { BaseValidator } from '../../../utils';
 import { IStory } from '../../story/story.types';
 import { IChapter } from '../chapter.types';
 
-export class BranchingValidator extends BaseValidator<{ story: IStory; parentChapter: IChapter }> {
+export class BranchingValidator extends BaseValidator {
   async validate({ story, parentChapter }: { story: IStory; parentChapter: IChapter }) {
     if (!story.settings.allowBranching) {
       this.throwForbiddenError('Branching is not allowed for this story');

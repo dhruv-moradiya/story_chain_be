@@ -4,19 +4,19 @@ import { catchAsync } from '../../utils/catchAsync';
 import { chapterService } from './chapter.service';
 import { logger } from '../../utils/logger';
 import { HTTP_STATUS } from '../../constants/httpStatus';
+import { ICreateChapterSchema } from './dto/chapter.schema';
 
 export class ChapterController {
-  static createChapter = catchAsync(
+  createChapter = catchAsync(
     async (
       request: FastifyRequest<{
         Params: { storyId: string };
-        Body: { parentChapterId?: string; content: string; title: string };
+        Body: ICreateChapterSchema;
       }>,
       reply: FastifyReply
     ) => {
       const userId = request.userId;
       if (!userId) return ChapterController.unauthorized(reply);
-
       const { storyId } = request.params;
       const { parentChapterId, content, title } = request.body;
 
@@ -43,7 +43,7 @@ export class ChapterController {
     }
   );
 
-  static updateChapterTitle = catchAsync(
+  updateChapterTitle = catchAsync(
     async (
       request: FastifyRequest<{
         Params: { chapterId: string };
@@ -66,19 +66,18 @@ export class ChapterController {
   );
 
   // ========== RESPONSE HELPERS ==========
-  private static success(reply: FastifyReply, status: number, message: string, data?: unknown) {
+  private success(reply: FastifyReply, status: number, message: string, data?: unknown) {
     return reply.code(status).send(new ApiResponse(true, message, data));
   }
 
-  private static fail(reply: FastifyReply, status: number, message: string, data?: unknown) {
+  private fail(reply: FastifyReply, status: number, message: string, data?: unknown) {
     return reply.code(status).send(new ApiResponse(false, message, data));
   }
 
-  private static unauthorized(reply: FastifyReply) {
+  private unauthorized(reply: FastifyReply) {
     return ChapterController.fail(reply, 401, 'Unauthorized');
   }
-
-  private static handleError(error: unknown, reply: FastifyReply) {
+  private handleError(error: unknown, reply: FastifyReply) {
     if (error instanceof ApiError) {
       return this.fail(reply, error.statusCode, error.message);
     }
