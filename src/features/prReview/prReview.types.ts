@@ -1,4 +1,5 @@
 import { Document, Types } from 'mongoose';
+import { ID } from '../../types';
 
 export type PRDecisionType = 'APPROVE' | 'REQUEST_CHANGES' | 'COMMENT';
 
@@ -9,8 +10,8 @@ export interface IPRFeedback {
 }
 
 export interface IPRReview {
-  _id: Types.ObjectId;
-  pullRequestId: Types.ObjectId;
+  _id: ID;
+  pullRequestId: ID;
   reviewerId: string;
   decision: PRDecisionType;
   summary?: string;
@@ -20,4 +21,6 @@ export interface IPRReview {
   updatedAt: Date;
 }
 
-export interface IPRReviewDoc extends Document<Types.ObjectId>, IPRReview {}
+export interface IPRReviewDoc extends Document, IPRReview {
+  _id: Types.ObjectId;
+}

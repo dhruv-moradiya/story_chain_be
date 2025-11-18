@@ -1,9 +1,12 @@
 import { StoryRepository } from '../story/story.service';
 
+import { BaseModule, toId } from '../../utils';
+import { ApiError } from '../../utils/apiResponse';
 import { withTransaction } from '../../utils/withTransaction';
 import { ChapterVersionRepository } from '../chapterVersion/repositories/chapterVersion.repository';
 import { PullRequestRepository } from '../pullRequest/repositories/pullRequest.repository';
 import { StoryCollaboratorRepository } from '../storyCollaborator/storyCollaborator.service';
+import { UserRepository } from '../user/repository/user.repository';
 import { ChapterDocumentBuilder } from './builders/document.builder';
 import { ChapterTreeBuilder } from './builders/tree.builder';
 import {
@@ -12,18 +15,14 @@ import {
   IChapterContentUpdateInput,
   IChapterTitleUpdateInput,
 } from './chapter.types';
+import { IChapterCreateDTO } from './dto/chapter.dto';
 import { ChapterRepository } from './repositories/chapter.repository';
 import { PublishModeResolver } from './strategies/publishMode.resolver';
 import { DirectPublishHandler, PRPublishHandler } from './strategies/publishMode.strategy';
 import { BranchingValidator } from './validators/branching.validator';
+import { ChapterValidator } from './validators/chapter.validator';
 import { InputValidator } from './validators/input.validator';
 import { StoryValidator } from './validators/story.validator';
-import { ChapterValidator } from './validators/chapter.validator';
-import { ApiError } from '../../utils/apiResponse';
-import { UserRepository } from '../user/repository/user.repository';
-import { BaseModule } from '../../utils';
-import { IChapterCreateDTO } from './dto/chapter.dto';
-import { ObjectId, Types } from 'mongoose';
 
 // ========================================
 // MAIN SERVICE CLASS
@@ -162,13 +161,13 @@ export class ChapterService extends BaseModule {
         // 8️⃣ Create version *after* PR is created (using the actual prId)
         await this.chapterVersionRepo.create(
           {
-            chapterId: chapter._id,
+            chapterId: toId(chapter._id),
             version: 1,
             content: chapter.content,
             changesSummary: 'First Chapter',
             editedBy: chapter.authorId,
             title: chapter.title,
-            prId: new Types.ObjectId(prResponse.pullRequestId),
+            prId: toId(prResponse.pullRequestId),
           },
           { session }
         );
@@ -185,7 +184,7 @@ export class ChapterService extends BaseModule {
       // 9️⃣ Create version for direct publish
       await this.chapterVersionRepo.create(
         {
-          chapterId: chapter._id,
+          chapterId: toId(chapter._id),
           version: 1,
           content: chapter.content,
           changesSummary: 'First Chapter',
@@ -226,7 +225,7 @@ export class ChapterService extends BaseModule {
 
       await this.chapterVersionRepo.create(
         {
-          chapterId: chapter._id,
+          chapterId: toId(chapter._id),
           version: (chapter.version || 1) + 1,
           content: updatedChapter.content,
           title: updatedChapter.title,
@@ -258,7 +257,7 @@ export class ChapterService extends BaseModule {
 
       await this.chapterVersionRepo.create(
         {
-          chapterId: chapter._id,
+          chapterId: toId(chapter._id),
           version: (chapter.version || 1) + 1,
           content: updatedChapter.content,
           title: updatedChapter.title,

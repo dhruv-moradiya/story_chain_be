@@ -1,4 +1,5 @@
 import { Document, Types } from 'mongoose';
+import { ID } from '../../types';
 
 export type NotificationType =
   | 'NEW_BRANCH'
@@ -17,14 +18,14 @@ export type NotificationType =
   | 'BADGE_EARNED';
 
 export interface INotification {
-  _id: Types.ObjectId;
+  _id: ID;
   userId: string; // Receiver of the notification
   type: NotificationType;
 
-  relatedStoryId?: Types.ObjectId;
-  relatedChapterId?: Types.ObjectId;
-  relatedPullRequestId?: Types.ObjectId;
-  relatedCommentId?: Types.ObjectId;
+  relatedStoryId?: ID;
+  relatedChapterId?: ID;
+  relatedPullRequestId?: ID;
+  relatedCommentId?: ID;
   relatedUserId?: string; // Who triggered it
 
   title: string;
@@ -39,4 +40,6 @@ export interface INotification {
   updatedAt?: Date;
 }
 
-export interface INotificationDoc extends Document<Types.ObjectId>, INotification {}
+export interface INotificationDoc extends Document, INotification {
+  _id: Types.ObjectId;
+}

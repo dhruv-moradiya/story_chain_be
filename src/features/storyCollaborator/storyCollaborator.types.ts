@@ -1,8 +1,9 @@
 import { Document, Types } from 'mongoose';
+import { ID } from '../../types';
 
 export interface IStoryCollaborator {
-  _id: Types.ObjectId;
-  storyId: Types.ObjectId;
+  _id: ID;
+  storyId: ID;
   userId: string;
   role: 'OWNER' | 'CO_AUTHOR' | 'MODERATOR' | 'REVIEWER' | 'CONTRIBUTOR';
   invitedBy?: string;
@@ -13,4 +14,6 @@ export interface IStoryCollaborator {
   updatedAt?: Date;
 }
 
-export interface IStoryCollaboratorDoc extends IStoryCollaborator, Document<Types.ObjectId> {}
+export interface IStoryCollaboratorDoc extends IStoryCollaborator, Document {
+  _id: Types.ObjectId;
+}

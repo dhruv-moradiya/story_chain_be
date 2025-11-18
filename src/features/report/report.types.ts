@@ -1,13 +1,14 @@
 import { Document, Types } from 'mongoose';
+import { ID } from '../../types';
 
 export interface IReport {
-  _id: Types.ObjectId;
+  _id: ID;
   reporterId: string;
   reportType: 'CHAPTER' | 'COMMENT' | 'USER' | 'STORY';
-  relatedChapterId?: Types.ObjectId;
-  relatedCommentId?: Types.ObjectId;
+  relatedChapterId?: ID;
+  relatedCommentId?: ID;
   relatedUserId?: string;
-  relatedStoryId?: Types.ObjectId;
+  relatedStoryId?: ID;
   reason: 'SPAM' | 'HARASSMENT' | 'INAPPROPRIATE_CONTENT' | 'COPYRIGHT' | 'OFF_TOPIC' | 'OTHER';
   description: string;
   status: 'PENDING' | 'REVIEWED' | 'RESOLVED' | 'DISMISSED';
@@ -18,4 +19,6 @@ export interface IReport {
   updatedAt?: Date;
 }
 
-export interface IReportDoc extends IReport, Document<Types.ObjectId> {}
+export interface IReportDoc extends IReport, Document {
+  _id: Types.ObjectId;
+}

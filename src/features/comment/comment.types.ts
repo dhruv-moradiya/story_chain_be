@@ -1,10 +1,11 @@
 import { Document, Types } from 'mongoose';
+import { ID } from '../../types';
 
 export interface IComment {
-  _id: Types.ObjectId;
-  chapterId: Types.ObjectId;
+  _id: ID;
+  chapterId: ID;
   userId: string;
-  parentCommentId?: Types.ObjectId | null;
+  parentCommentId?: ID | null;
   content: string;
   votes: {
     upvotes: number;
@@ -19,4 +20,6 @@ export interface IComment {
   updatedAt: Date;
 }
 
-export interface ICommentDoc extends Document<Types.ObjectId>, IComment {}
+export interface ICommentDoc extends Document, IComment {
+  _id: Types.ObjectId;
+}

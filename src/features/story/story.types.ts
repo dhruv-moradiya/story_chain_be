@@ -1,4 +1,5 @@
 import { Document, Types } from 'mongoose';
+import { ID } from '../../types';
 
 export interface IStorySettings {
   isPublic: boolean;
@@ -30,7 +31,7 @@ export interface IStoryStats {
 }
 
 export interface IStory {
-  _id: Types.ObjectId;
+  _id: ID;
   title: string;
   slug: string;
   description: string;
@@ -57,4 +58,6 @@ export interface IStory {
   updatedAt: Date;
 }
 
-export interface IStoryDoc extends Document<Types.ObjectId>, IStory {}
+export interface IStoryDoc extends Document, IStory {
+  _id: Types.ObjectId;
+}

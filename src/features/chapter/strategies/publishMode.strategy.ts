@@ -1,26 +1,25 @@
 import { ClientSession } from 'mongoose';
 import { XP_REWARDS } from '../../../constants';
-import { PullRequest } from '../../../models/pullRequest.model';
-import { BaseHandler } from '../../../utils';
+import { Notification } from '../../../models/notification.model';
+import { BaseHandler, toId } from '../../../utils';
 import { notificationService } from '../../notification/notification.service';
 import { PullRequestRepository } from '../../pullRequest/repositories/pullRequest.repository';
 import { StoryRepository } from '../../story/story.service';
 import { IStory } from '../../story/story.types';
 import { StoryCollaboratorRepository } from '../../storyCollaborator/storyCollaborator.service';
+import { UserRepository } from '../../user/repository/user.repository';
 import { Badge } from '../../user/user.types';
 import {
-  IChapterTreeMetadata,
+  IChapter,
   IChapterDirectPublishInput,
   IChapterDirectPublishResult,
-  IChapter,
   IChapterPRPublishHandler,
-  INotifyModeratorsParams,
   IChapterPullRequestResponse,
+  IChapterTreeMetadata,
+  INotifyModeratorsParams,
   IPRTitleInput,
 } from '../chapter.types';
 import { ChapterRepository } from '../repositories/chapter.repository';
-import { Notification } from '../../../models/notification.model';
-import { UserRepository } from '../../user/repository/user.repository';
 
 export class DirectPublishHandler extends BaseHandler<
   IChapterDirectPublishInput,
@@ -53,11 +52,11 @@ export class DirectPublishHandler extends BaseHandler<
 
     await this._updateStoryStats(String(story._id), parentChapterId);
 
-    const { badges, xpAwarded } = await this._awardXPAndBadges(userId, treeData.isRootChapter);
+    const { badges } = await this._awardXPAndBadges(userId, treeData.isRootChapter);
 
     await this._createNotifications(chapter, story, treeData, userId, badges);
 
-    return this._buildResponse(chapter, story, treeData, xpAwarded, badges);
+    return this._buildResponse(chapter);
   }
 
   private async _updateStoryStats(storyId: string, parentChapterId?: string): Promise<void> {
@@ -129,18 +128,7 @@ export class DirectPublishHandler extends BaseHandler<
     await notificationService.notifyBranchCreation(chapter, story, treeData, userId, badges);
   }
 
-  private async _buildResponse(
-    chapter: IChapter,
-    story: IStory,
-    treeData: IChapterTreeMetadata,
-    xpAwarded: number,
-    badges: Badge[]
-  ): Promise<IChapterDirectPublishResult> {
-    const author = await this.userRepo.findByClerkId(
-      chapter.authorId,
-      'username avatarUrl xp level badges'
-    );
-
+  private async _buildResponse(chapter: IChapter): Promise<IChapterDirectPublishResult> {
     return {
       _id: chapter._id.toString(),
       storyId: chapter.storyId.toString(),
@@ -186,8 +174,8 @@ export class PRPublishHandler extends BaseHandler {
         // managed elsewhere.
         description: `New chapter continuation from Chapter ${chapter.depth}`,
         storyId: story._id,
-        chapterId: chapter._id,
-        parentChapterId: parentChapter._id,
+        chapterId: toId(chapter._id),
+        parentChapterId: toId(parentChapter._id),
         authorId: userId,
         prType: 'NEW_CHAPTER',
         changes: { proposed: content },
@@ -204,18 +192,7 @@ export class PRPublishHandler extends BaseHandler {
     );
 
     // Notify moderators
-    await this._notifyModerators({ story, pullRequestId: pullRequest._id, userId }, session);
-
-    // Read inside the same session
-    const populatedPR = await PullRequest.findById(pullRequest._id)
-      .populate('parentChapterId', 'title depth')
-      .session(session ?? null)
-      .lean();
-
-    if (!populatedPR) {
-      this.logger.error('❌ Could not find PR in current session');
-      throw new Error('Failed to retrieve the created pull request');
-    }
+    await this._notifyModerators({ story, pullRequestId: toId(pullRequest._id), userId }, session);
 
     return {
       _id: chapter._id.toString(),
