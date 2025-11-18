@@ -1,12 +1,13 @@
 import { Document, Types } from 'mongoose';
+import { ID } from '../../types';
 
 export interface IReadingHistory {
-  _id: Types.ObjectId;
+  _id: ID;
   userId: string;
-  storyId: Types.ObjectId;
-  currentChapterId: Types.ObjectId;
+  storyId: ID;
+  currentChapterId: ID;
   chaptersRead: {
-    chapterId: Types.ObjectId;
+    chapterId: ID;
     readAt: Date;
   }[];
   lastReadAt: Date;
@@ -16,4 +17,6 @@ export interface IReadingHistory {
   updatedAt?: Date;
 }
 
-export interface IReadingHistoryDoc extends IReadingHistory, Document<Types.ObjectId> {}
+export interface IReadingHistoryDoc extends IReadingHistory, Document {
+  _id: Types.ObjectId;
+}

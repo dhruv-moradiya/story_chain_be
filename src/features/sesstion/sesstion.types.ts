@@ -1,7 +1,8 @@
 import { Document, Types } from 'mongoose';
+import { ID } from '../../types';
 
 export interface ISession {
-  _id: Types.ObjectId;
+  _id: ID;
   sessionId: string;
   userId: string;
   clientId?: string;
@@ -14,4 +15,6 @@ export interface ISession {
   abandonAt?: Date;
 }
 
-export interface ISessionDoc extends ISession, Document<Types.ObjectId> {}
+export interface ISessionDoc extends ISession, Document {
+  _id: Types.ObjectId;
+}

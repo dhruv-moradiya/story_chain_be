@@ -1,16 +1,19 @@
 import { Document, Types } from 'mongoose';
+import { ID } from '../../types';
 
 export interface IBookmark {
-  _id: Types.ObjectId;
+  _id: ID;
   userId: String;
-  storyId: Types.ObjectId;
-  chapterId?: Types.ObjectId;
+  storyId: ID;
+  chapterId?: ID;
   note?: string;
   createdAt: Date;
   updatedAt: Date;
 }
 
-export interface IBookmarkDoc extends Document<Types.ObjectId>, IBookmark {}
+export interface IBookmarkDoc extends Document, IBookmark {
+  _id: Types.ObjectId;
+}
 
 export type CreateBookmarkInput = Omit<IBookmark, '_id' | 'createdAt' | 'updatedAt'>;
 export type UpdateBookmarkInput = Partial<Omit<CreateBookmarkInput, 'userId' | 'storyId'>>;

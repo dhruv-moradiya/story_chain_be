@@ -4,11 +4,15 @@ import {
   FilterQuery,
   ProjectionType,
   QueryOptions,
+  Types,
   UpdateQuery,
 } from 'mongoose';
 import { ApiError } from './apiResponse';
 import { logger } from './logger';
 import { Model } from 'mongoose';
+import { ID } from '../types';
+
+const toId = (id: ID) => (typeof id === 'string' ? new Types.ObjectId(id) : id);
 
 export class BaseModule {
   protected logger = logger;
@@ -216,3 +220,5 @@ export abstract class BaseRepository<TEntity, TDocument extends Document> extend
     return result.modifiedCount > 0;
   }
 }
+
+export { toId };

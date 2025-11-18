@@ -1,18 +1,19 @@
 import { Document, Types } from 'mongoose';
+import { ID } from '../../types';
 
 /**
  * Represents a single version (revision) of a chapter.
  */
 export interface IChapterVersion {
-  _id: Types.ObjectId;
-  chapterId: Types.ObjectId;
+  _id: ID;
+  chapterId: ID;
   version: number;
   content: string;
   title?: string;
   editedBy: string;
   editReason?: string;
   changesSummary?: string;
-  prId?: Types.ObjectId;
+  prId?: ID;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -20,4 +21,6 @@ export interface IChapterVersion {
 /**
  * Mongoose Document type for ChapterVersion.
  */
-export interface IChapterVersionDoc extends Document<Types.ObjectId>, IChapterVersion {}
+export interface IChapterVersionDoc extends Document, IChapterVersion {
+  _id: Types.ObjectId;
+}

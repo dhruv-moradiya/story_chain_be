@@ -1,4 +1,5 @@
 import mongoose, { Document, Model, Schema, Types } from 'mongoose';
+import { ID } from '../../types';
 
 // ===========================
 // ENUMS
@@ -48,13 +49,13 @@ export interface PRStats {
 // MAIN DOCUMENT INTERFACE
 // ===========================
 export interface IPullRequest {
-  _id: Types.ObjectId;
+  _id: ID;
   title: string;
   description?: string;
 
-  storyId: Types.ObjectId;
-  chapterId: Types.ObjectId;
-  parentChapterId: Types.ObjectId;
+  storyId: ID;
+  chapterId: ID;
+  parentChapterId: ID;
   authorId: string;
 
   prType: PRType;
@@ -84,4 +85,6 @@ export interface IPullRequest {
   updatedAt: Date;
 }
 
-export interface IPullRequestDoc extends IPullRequest, Document<Types.ObjectId> {}
+export interface IPullRequestDoc extends IPullRequest, Document {
+  _id: Types.ObjectId;
+}

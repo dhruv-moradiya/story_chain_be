@@ -1,13 +1,13 @@
 import { Document, Types } from 'mongoose';
 import { z } from 'zod';
-import { IPullRequest, PRType } from '../pullRequest/pullRequest.types';
+import { PRType } from '../pullRequest/pullRequest.types';
 import { IStory } from '../story/story.types';
-import { Badge } from '../user/user.types';
 import {
   createChapterSchema,
   updateChapterContentSchema,
   updateChapterTitleSchema,
 } from './chapter.validation';
+import { ID } from '../../types';
 
 // ========================================
 // MODEL TYPES
@@ -17,11 +17,11 @@ import {
  * Represents a single chapter within a story.
  */
 export interface IChapter {
-  _id: Types.ObjectId;
-  storyId: Types.ObjectId;
+  _id: ID;
+  storyId: ID;
 
-  parentChapterId?: Types.ObjectId | null;
-  ancestorIds: Types.ObjectId[];
+  parentChapterId?: ID | null;
+  ancestorIds: ID[];
   depth: number;
   authorId: string;
   content: string;
@@ -39,21 +39,21 @@ export interface IChapter {
 
   pullRequest: {
     isPR: boolean;
-    prId?: Types.ObjectId;
+    prId?: ID;
     status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'MERGED';
     submittedAt?: Date;
-    reviewedBy?: Types.ObjectId;
+    reviewedBy?: ID;
     reviewedAt?: Date;
     rejectionReason?: string;
   };
 
   version: number;
-  previousVersionId?: Types.ObjectId;
+  previousVersionId?: ID;
 
   stats: {
     reads: number;
     comments: number;
-    childBranches: number; // Number of child chapters (forks)
+    childBranches: number;
   };
 
   reportCount: number;
@@ -62,7 +62,9 @@ export interface IChapter {
   updatedAt: Date;
 }
 
-export interface IChapterDoc extends IChapter, Document<Types.ObjectId> {}
+export interface IChapterDoc extends IChapter, Document {
+  _id: Types.ObjectId;
+}
 
 // ========================================
 // SERVICE TYPES
