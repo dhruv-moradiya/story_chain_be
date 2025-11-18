@@ -143,17 +143,9 @@ export interface IPRTitleInput {
  * Response object returned after successful direct publish.
  */
 export interface IChapterDirectPublishResult {
-  success: boolean;
+  _id: string;
+  storyId: string;
   isPR: boolean;
-  message: string;
-  chapter: Record<string, unknown>;
-  xpAwarded: number;
-  badgesEarned: Badge[];
-  stats: {
-    totalChapters: number;
-    depth: number;
-    isRoot: boolean;
-  };
 }
 
 /**
@@ -182,14 +174,10 @@ export interface INotifyModeratorsParams {
  * Response sent when a chapter is submitted as a Pull Request.
  */
 export interface IChapterPullRequestResponse {
-  success: true;
+  _id: string;
+  storyId: string;
   isPR: true;
-  message: string;
-  pullRequest: IPullRequest;
-  chapter: {
-    _id: Types.ObjectId;
-    status: 'PENDING_APPROVAL';
-  };
+  pullRequestId: string;
 }
 
 /**

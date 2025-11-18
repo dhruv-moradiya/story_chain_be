@@ -23,6 +23,7 @@ import { ApiError } from '../../utils/apiResponse';
 import { UserRepository } from '../user/repository/user.repository';
 import { BaseModule } from '../../utils';
 import { IChapterCreateDTO } from './dto/chapter.dto';
+import { ObjectId, Types } from 'mongoose';
 
 // ========================================
 // MAIN SERVICE CLASS
@@ -167,7 +168,7 @@ export class ChapterService extends BaseModule {
             changesSummary: 'First Chapter',
             editedBy: chapter.authorId,
             title: chapter.title,
-            prId: prResponse.pullRequest._id,
+            prId: new Types.ObjectId(prResponse.pullRequestId),
           },
           { session }
         );

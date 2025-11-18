@@ -1,12 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { validateWebhook } from '../../middlewares/validateRequest';
-import { UserController } from './user.controller';
-import { validateAuth } from '../../middlewares/authHandler';
+import { userWebhookController } from './user.webhook.controller';
 
 export async function userRoutes(fastify: FastifyInstance) {
-  fastify.post('/webhook', { preHandler: [validateWebhook] }, UserController.handleWebhookEvents);
-
-  fastify.get('/me', { preHandler: [validateAuth] }, UserController.getCurrentUserProfile);
-
-  fastify.get('/:id', { preHandler: [validateAuth] }, UserController.getUserProfile);
+  fastify.post('/webhook', { preHandler: [validateWebhook] }, userWebhookController.handle);
 }

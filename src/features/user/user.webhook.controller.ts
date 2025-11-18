@@ -9,9 +9,9 @@ import { WebhookEvent } from '@clerk/fastify';
 
 export class UserWebhookController {
   private logger = logger;
-  private static transformer = new WebhookTransformer();
+  private transformer = new WebhookTransformer();
 
-  static handle = catchAsync(async (req: FastifyRequest, reply: FastifyReply) => {
+  handle = catchAsync(async (req: FastifyRequest, reply: FastifyReply) => {
     const event = (req as any).clerkEvent as WebhookEvent;
 
     if (!event?.type) {
@@ -25,7 +25,7 @@ export class UserWebhookController {
       // USER CREATED
       // ----------------------------
       case 'user.created': {
-        const parsed = UserWebhookController.transformer.transformUserCreated(event.data);
+        const parsed = this.transformer.transformUserCreated(event.data);
 
         await userService.createUser(parsed);
 
@@ -36,7 +36,7 @@ export class UserWebhookController {
       // SESSION CREATED
       // ----------------------------
       case 'session.created': {
-        const parsed = UserWebhookController.transformer.transformSessionCreated(event.data);
+        const parsed = this.transformer.transformSessionCreated(event.data);
 
         await userService.createSession(parsed);
 
@@ -50,3 +50,5 @@ export class UserWebhookController {
     }
   });
 }
+
+export const userWebhookController = new UserWebhookController();

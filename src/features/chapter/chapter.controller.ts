@@ -16,7 +16,7 @@ export class ChapterController {
       reply: FastifyReply
     ) => {
       const userId = request.userId;
-      if (!userId) return ChapterController.unauthorized(reply);
+      if (!userId) return this.unauthorized(reply);
       const { storyId } = request.params;
       const { parentChapterId, content, title } = request.body;
 
@@ -28,18 +28,9 @@ export class ChapterController {
         userId,
       });
 
-      const payload = result.isPR
-        ? { pullRequest: result.isPR, chapter: result.chapter }
-        : {
-            chapter: result.chapter,
-            xpAwarded: result.xpAwarded,
-            badgesEarned: result.badgesEarned,
-            stats: result.stats,
-          };
+      const message = result.isPR ? 'Pull request' : 'Chapter created';
 
-      return reply
-        .code(HTTP_STATUS.CREATED.code)
-        .send(new ApiResponse(true, result.message, payload));
+      return reply.code(HTTP_STATUS.CREATED.code).send(new ApiResponse(true, message, result));
     }
   );
 
@@ -52,7 +43,7 @@ export class ChapterController {
       reply: FastifyReply
     ) => {
       const userId = request.userId;
-      if (!userId) return ChapterController.unauthorized(reply);
+      if (!userId) return this.unauthorized(reply);
 
       const { chapterId } = request.params;
       const { title } = request.body;
@@ -75,7 +66,7 @@ export class ChapterController {
   }
 
   private unauthorized(reply: FastifyReply) {
-    return ChapterController.fail(reply, 401, 'Unauthorized');
+    return this.fail(reply, 401, 'Unauthorized');
   }
   private handleError(error: unknown, reply: FastifyReply) {
     if (error instanceof ApiError) {
@@ -88,3 +79,5 @@ export class ChapterController {
     return this.fail(reply, 500, 'An unexpected error occurred', devInfo);
   }
 }
+
+export const chapterController = new ChapterController();

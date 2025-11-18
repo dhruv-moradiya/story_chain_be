@@ -142,19 +142,9 @@ export class DirectPublishHandler extends BaseHandler<
     );
 
     return {
-      success: true,
+      _id: chapter._id.toString(),
+      storyId: chapter.storyId.toString(),
       isPR: false,
-      message: treeData.isRootChapter
-        ? 'Root chapter created successfully'
-        : 'Chapter published successfully',
-      chapter: { ...chapter, authorId: author },
-      xpAwarded,
-      badgesEarned: badges,
-      stats: {
-        totalChapters: story.stats.totalChapters + 1,
-        depth: treeData.depth,
-        isRoot: treeData.isRootChapter,
-      },
     };
   }
 }
@@ -228,11 +218,10 @@ export class PRPublishHandler extends BaseHandler {
     }
 
     return {
-      success: true,
+      _id: chapter._id.toString(),
+      storyId: chapter.storyId.toString(),
       isPR: true,
-      message: 'Chapter submitted for review',
-      pullRequest: populatedPR,
-      chapter: { _id: chapter._id, status: 'PENDING_APPROVAL' },
+      pullRequestId: pullRequest._id.toString(),
     };
   }
 
