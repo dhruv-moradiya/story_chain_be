@@ -2,6 +2,7 @@ import { BaseRepository } from '../../../utils';
 import { PlatformRole } from '../../../models/platformRole.model';
 import { IPlatformRole, IPlatformRoleDoc } from '../platformRole.types';
 import { ApiError } from '../../../utils/apiResponse';
+import { ClientSession } from 'mongoose';
 
 export class PlatformRoleRepository extends BaseRepository<IPlatformRole, IPlatformRoleDoc> {
   constructor() {
@@ -12,7 +13,7 @@ export class PlatformRoleRepository extends BaseRepository<IPlatformRole, IPlatf
     return PlatformRole.findOne({ userId });
   }
 
-  async createOrUpdate(data: IPlatformRole, options?: { session?: any }) {
+  async createOrUpdate(data: IPlatformRole, options?: { session?: ClientSession }) {
     return PlatformRole.findOneAndUpdate(
       { userId: data.userId },
       { $set: data },
@@ -20,7 +21,7 @@ export class PlatformRoleRepository extends BaseRepository<IPlatformRole, IPlatf
     );
   }
 
-  async deleteByUserId(userId: string, options?: { session?: any }) {
+  async deleteByUserId(userId: string, options?: { session?: ClientSession }) {
     const result = await PlatformRole.deleteOne({ userId }, options);
     if (result.deletedCount === 0) throw ApiError.notFound('Platform role not found');
   }
