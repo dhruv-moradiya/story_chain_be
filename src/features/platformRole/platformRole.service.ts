@@ -32,3 +32,5 @@ export class PlatformRoleService {
     });
   }
 }
+
+export const platformRoleService = new PlatformRoleService();

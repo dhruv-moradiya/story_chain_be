@@ -1,4 +1,4 @@
-import { Types } from 'mongoose';
+import { ClientSession, Types } from 'mongoose';
 
 export type ID = string | Types.ObjectId;
 
@@ -15,4 +15,12 @@ export enum StoryRole {
   MODERATOR = 'MODERATOR',
   REVIEWER = 'REVIEWER',
   CONTRIBUTOR = 'CONTRIBUTOR',
+}
+
+export interface IOperationOptions {
+  session?: ClientSession;
+  // Add more optional shared flags later here
+  // traceId?: string;
+  // actorId?: string;
+  // requestId?: string;
 }

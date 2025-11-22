@@ -1,10 +1,9 @@
-import { StoryRepository } from '../story/story.service';
-
 import { BaseModule, toId } from '../../utils';
 import { ApiError } from '../../utils/apiResponse';
 import { withTransaction } from '../../utils/withTransaction';
 import { ChapterVersionRepository } from '../chapterVersion/repositories/chapterVersion.repository';
 import { PullRequestRepository } from '../pullRequest/repositories/pullRequest.repository';
+import { StoryRepository } from '../story/repository/story.repository';
 import { StoryCollaboratorRepository } from '../storyCollaborator/storyCollaborator.service';
 import { UserRepository } from '../user/repository/user.repository';
 import { ChapterDocumentBuilder } from './builders/document.builder';

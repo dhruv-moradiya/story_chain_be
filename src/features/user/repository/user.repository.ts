@@ -35,7 +35,7 @@ export class UserRepository extends BaseRepository<IUser, IUserDoc> {
     return this.findOneAndUpdate({ clerkId }, { $push: { badges: badge } });
   }
 
-  async countAllUsers() {
-    return this.count({});
+  async countAllUsers(options?: { session?: any }) {
+    return this.count({}, options);
   }
 }

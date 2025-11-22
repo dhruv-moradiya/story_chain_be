@@ -15,7 +15,7 @@ export class ChapterController {
       }>,
       reply: FastifyReply
     ) => {
-      const userId = request.userId;
+      const userId = request.user.clerkId;
       if (!userId) return this.unauthorized(reply);
       const { storyId } = request.params;
       const { parentChapterId, content, title } = request.body;
@@ -42,7 +42,7 @@ export class ChapterController {
       }>,
       reply: FastifyReply
     ) => {
-      const userId = request.userId;
+      const userId = request.user.clerkId;
       if (!userId) return this.unauthorized(reply);
 
       const { chapterId } = request.params;

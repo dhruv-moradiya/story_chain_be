@@ -61,3 +61,7 @@ export interface IStory {
 export interface IStoryDoc extends Document, IStory {
   _id: Types.ObjectId;
 }
+
+// ---------------------------------
+// Service
+// ---------------------------------

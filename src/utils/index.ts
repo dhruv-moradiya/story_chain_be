@@ -101,11 +101,10 @@ export abstract class BaseHandler<Input = unknown, Output = unknown> extends Bas
 
 export class BaseValidator extends BaseModule {}
 
-export abstract class BaseRepository<TEntity, TDocument extends Document> extends BaseModule {
+export abstract class BaseRepository<TEntity, TDocument extends Document> {
   protected model: Model<TDocument>;
 
   constructor(model: Model<TDocument>) {
-    super();
     this.model = model;
   }
 

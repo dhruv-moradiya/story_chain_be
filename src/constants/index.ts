@@ -671,7 +671,7 @@ export const RATE_LIMITS = {
     CHAPTER_CREATE: 60, // 1 minute between chapters
     COMMENT_CREATE: 10, // 10 seconds between comments
     PR_SUBMIT: 300, // 5 minutes between PRs
-    STORY_CREATE: 300, // 5 minutes between stories
+    STORY_CREATE: 60 * 60 * 24, // 1 day between stories
   },
 } as const;
 

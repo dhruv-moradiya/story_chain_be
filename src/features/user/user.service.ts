@@ -14,10 +14,8 @@ export class UserService {
 
       const totalUsers = await this.userRepo.count({}, { session });
 
-      // pure domain logic
       const role = UserRules.determineInitialRole(totalUsers);
 
-      // call another service inside same TX
       await this.platformRoleService.assignRole({ userId: newUser.clerkId, role }, { session });
 
       return newUser;

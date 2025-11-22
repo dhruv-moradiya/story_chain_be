@@ -1,52 +1,39 @@
-import { Story } from '../../models/story.model';
-import { BaseRepository } from '../../utils';
-import { logger } from '../../utils/logger';
-import { IStory, IStoryDoc } from './story.types';
-import { CreateStoryInput } from './story.validation';
+import { IOperationOptions } from '../../types';
+import { BaseModule } from '../../utils';
+import { IStoryCreateDTO } from './dto/story.dto';
+import { StoryRepository } from './repository/story.repository';
+import { StoryRules } from './roles/story.roles';
+import { IStory } from './story.types';
 
-export class StoryRepository extends BaseRepository<IStory, IStoryDoc> {
-  constructor() {
-    super(Story);
-  }
+export class StoryService extends BaseModule {
+  private readonly storyRepository = new StoryRepository();
 
-  async updateStatistics(
-    storyId: string,
-    updates: Partial<IStory['stats']>
-  ): Promise<IStory | null> {
-    return this.findOneAndUpdate({ _id: storyId }, { $set: { stats: updates } });
-  }
-}
-
-export class StoryService {
-  /**
-   * Creates a new story in the database.
-   */
-  async createStory(data: CreateStoryInput & { creatorId: string }) {
-    try {
-      const story = await Story.create(data);
-      return story;
-    } catch (error) {
-      logger.error('Error creating story:', error);
-      throw new Error('Something went wrong while creating your story. Please try again later.');
+  async createStory(
+    input: IStoryCreateDTO & { creatorId: string },
+    options: IOperationOptions = {}
+  ): Promise<IStory> {
+    const todayCount = await this.storyRepository.countStoriesCreatedToday(input.creatorId);
+    if (!StoryRules.canCreateStory(todayCount)) {
+      this.throwTooManyRequestsError('Daily story creation limit reached. Try again tomorrow.');
     }
+
+    const story = this.storyRepository.create(input, options);
+    return story;
   }
 
-  /**
-   * Fetches a story by its ID.
-   */
-  async getStoryById(storyId: string) {
-    try {
-      const story = await Story.findById(storyId);
+  async getStoryById(storyId: string): Promise<IStory | null> {
+    const story = await this.storyRepository.findById(storyId);
+    return story;
+  }
 
-      if (!story) {
-        throw new Error('Story not found.');
-      }
+  async getStories(): Promise<IStory[]> {
+    const stories = await this.storyRepository.findAll();
+    return stories;
+  }
 
-      return story;
-    } catch (error) {
-      logger.error('Error fetching story by ID:', error);
-      throw new Error('Failed to fetch the story. Please try again later.');
-    }
+  async getNewStories(): Promise<IStory[]> {
+    const stories = await this.storyRepository.getNewStories();
+    return stories;
   }
 }
 
