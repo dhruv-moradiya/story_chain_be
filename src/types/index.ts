@@ -19,8 +19,4 @@ export enum StoryRole {
 
 export interface IOperationOptions {
   session?: ClientSession;
-  // Add more optional shared flags later here
-  // traceId?: string;
-  // actorId?: string;
-  // requestId?: string;
 }

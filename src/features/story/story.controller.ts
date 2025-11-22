@@ -8,9 +8,11 @@ import { storyService } from './story.service';
 import { BaseModule } from '../../utils';
 
 export class StoryController extends BaseModule {
+  // Handles creation of a new story for the authenticated user.
   createStory = catchAsync(
     async (request: FastifyRequest<{ Body: IStoryCreateDTO }>, reply: FastifyReply) => {
       const { body, user } = request;
+
       const userId = user.clerkId;
 
       const newStory = await storyService.createStory({
@@ -26,6 +28,7 @@ export class StoryController extends BaseModule {
     }
   );
 
+  // Fetch a single story by its ID for viewing and for public access.
   getStoryById = catchAsync(
     async (request: FastifyRequest<{ Params: { storyId: string } }>, reply: FastifyReply) => {
       const { storyId } = request.params;
@@ -40,9 +43,9 @@ export class StoryController extends BaseModule {
     }
   );
 
-  // TODO: Only SUPER_ADMIN can access + Pagination
+  // List all stories with pagination support only for SUPER_ADMIN.
   getStories = catchAsync(async (_request: FastifyRequest, reply: FastifyReply) => {
-    const stories = await storyService.getStories();
+    const stories = await storyService.listStories();
 
     this.logInfo(`Fetched stories`);
     return reply
@@ -57,6 +60,32 @@ export class StoryController extends BaseModule {
     return reply
       .code(HTTP_STATUS.OK.code)
       .send(new ApiResponse(true, 'New stories fetched successfully', stories));
+  });
+
+  // Get all stories created by the authenticated user.
+  getMyStories = catchAsync(async (request: FastifyRequest, reply: FastifyReply) => {
+    const { user } = request;
+    const userId = user.clerkId;
+
+    const stories = await storyService.getStoriesByCreatorId(userId);
+
+    this.logInfo(`Fetched stories for user ${userId}`);
+    return reply
+      .code(HTTP_STATUS.OK.code)
+      .send(new ApiResponse(true, 'Stories fetched successfully', stories));
+  });
+
+  // Get all draft stories created by the authenticated user.
+  getDraftStories = catchAsync(async (request: FastifyRequest, reply: FastifyReply) => {
+    const { user } = request;
+    const userId = user.clerkId;
+
+    const stories = await storyService.getDraftStoriesByCreatorId(userId);
+
+    this.logInfo(`Fetched draft stories for user ${userId}`);
+    return reply
+      .code(HTTP_STATUS.OK.code)
+      .send(new ApiResponse(true, 'Draft stories fetched successfully', stories));
   });
 }
 

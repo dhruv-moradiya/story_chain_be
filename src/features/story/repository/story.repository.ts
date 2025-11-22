@@ -1,6 +1,7 @@
+import { PipelineStage } from 'mongoose';
 import { Story } from '../../../models/story.model';
 import { BaseRepository } from '../../../utils';
-import { StoryPipelineBuilder } from '../pipelines/storyPipeline.builder';
+import { IOperationOptions } from '../../../types';
 import { IStory, IStoryDoc } from '../story.types';
 
 export class StoryRepository extends BaseRepository<IStory, IStoryDoc> {
@@ -8,26 +9,92 @@ export class StoryRepository extends BaseRepository<IStory, IStoryDoc> {
     super(Story);
   }
 
-  async countStoriesCreatedToday(userId: string): Promise<number> {
-    const startOfToday = new Date();
-    startOfToday.setHours(0, 0, 0, 0);
-
-    const endOfToday = new Date();
-    endOfToday.setHours(23, 59, 59, 999);
-
-    return this.model.countDocuments({
-      creatorId: userId,
-      createdAt: { $gte: startOfToday, $lte: endOfToday },
-    });
+  /**
+   * Count stories by creatorId within a date range.
+   * (Service will decide what date range to pass)
+   */
+  async countByCreatorInDateRange(
+    creatorId: string,
+    start: Date,
+    end: Date,
+    options: IOperationOptions = {}
+  ): Promise<number> {
+    return this.model.countDocuments(
+      {
+        creatorId,
+        createdAt: { $gte: start, $lte: end },
+      },
+      { session: options.session }
+    );
   }
 
-  async getNewStories(): Promise<IStory[]> {
-    const pipeline = new StoryPipelineBuilder().lastSevenDaysStories().build();
-
-    return this.model.aggregate(pipeline).exec();
+  /**
+   * Generic aggregation executor (with session support)
+   */
+  async aggregateStories<T = IStory>(
+    pipeline: PipelineStage[],
+    options: IOperationOptions = {}
+  ): Promise<T[]> {
+    return this.model
+      .aggregate<T>(pipeline)
+      .session(options.session ?? null)
+      .exec();
   }
 
-  async findAll(): Promise<IStory[]> {
-    return this.model.find().lean();
+  /**
+   * Find all stories by creatorId
+   */
+  async findByCreatorId(creatorId: string, options: IOperationOptions = {}): Promise<IStory[]> {
+    return this.model
+      .find({ creatorId })
+      .session(options.session ?? null)
+      .lean()
+      .exec();
+  }
+
+  /**
+   * Find story by slug
+   */
+  async findBySlug(slug: string, options: IOperationOptions = {}): Promise<IStory | null> {
+    return this.model
+      .findOne({ slug })
+      .session(options.session ?? null)
+      .lean()
+      .exec();
+  }
+
+  /**
+   * Paginated list (general feed/search)
+   */
+  async findPaged(
+    filter: Record<string, any> = {},
+    options: {
+      limit?: number;
+      skip?: number;
+      session?: any;
+    } = {}
+  ): Promise<IStory[]> {
+    return this.model
+      .find(filter)
+      .skip(options.skip ?? 0)
+      .limit(options.limit ?? 20)
+      .session(options.session ?? null)
+      .lean()
+      .exec();
+  }
+
+  /**
+   * Generic findAll (paginated version recommended)
+   */
+  async findAll(
+    options: IOperationOptions & { limit?: number; skip?: number } = {}
+  ): Promise<IStory[]> {
+    return this.model
+      .find()
+      .skip(options.skip ?? 0)
+      .limit(options.limit ?? 100)
+      .session(options.session ?? null)
+      .lean()
+      .exec();
   }
 }

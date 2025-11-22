@@ -1,5 +1,7 @@
+import { PipelineStage } from 'mongoose';
+
 class StoryPipelineBuilder {
-  private pipeline: any[] = [];
+  private pipeline: PipelineStage[] = [];
 
   lastSevenDaysStories() {
     const sevenDaysAgo = new Date();

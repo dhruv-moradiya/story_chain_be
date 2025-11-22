@@ -162,20 +162,6 @@ export abstract class BaseRepository<TEntity, TDocument extends Document> {
     return query.lean<TEntity>().exec();
   }
 
-  // ❌ DELETE ONE
-  async deleteOne(
-    filter: FilterQuery<TDocument>,
-    options?: { session?: ClientSession }
-  ): Promise<boolean> {
-    const query = this.model.deleteOne(filter);
-
-    if (options?.session) query.session(options.session);
-
-    const result = await query.exec();
-
-    return result.deletedCount === 1;
-  }
-
   // 📜 PAGINATION / FIND MANY
   async findMany(
     filter: FilterQuery<TDocument>,

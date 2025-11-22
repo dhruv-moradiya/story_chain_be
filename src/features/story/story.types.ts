@@ -30,6 +30,15 @@ export interface IStoryStats {
   averageRating: number;
 }
 
+export enum StoryStatus {
+  DRAFT = 'DRAFT',
+  PUBLISHED = 'PUBLISHED',
+  ARCHIVED = 'ARCHIVED',
+  DELETED = 'DELETED',
+}
+
+export type StoryStatusType = keyof typeof StoryStatus;
+
 export interface IStory {
   _id: ID;
   title: string;
@@ -48,7 +57,7 @@ export interface IStory {
 
   tags: string[];
 
-  status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED' | 'DELETED';
+  status: StoryStatusType;
 
   trendingScore: number;
   lastActivityAt: Date;

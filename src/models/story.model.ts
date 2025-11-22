@@ -69,7 +69,7 @@ const storySchema = new Schema<IStoryDoc>(
 
     // Statistics
     stats: {
-      totalChapters: { type: Number, default: 1 },
+      totalChapters: { type: Number, default: 0 },
       totalBranches: { type: Number, default: 0 },
       totalReads: { type: Number, default: 0 },
       totalVotes: { type: Number, default: 0 },
