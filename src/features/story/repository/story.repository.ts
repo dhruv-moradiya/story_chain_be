@@ -1,8 +1,8 @@
 import { PipelineStage } from 'mongoose';
 import { Story } from '../../../models/story.model';
-import { BaseRepository } from '../../../utils';
-import { IOperationOptions } from '../../../types';
+import { ID, IOperationOptions } from '../../../types';
 import { IStory, IStoryDoc } from '../story.types';
+import { BaseRepository } from '../../../utils/baseClass';
 
 export class StoryRepository extends BaseRepository<IStory, IStoryDoc> {
   constructor() {
@@ -25,6 +25,22 @@ export class StoryRepository extends BaseRepository<IStory, IStoryDoc> {
         createdAt: { $gte: start, $lte: end },
       },
       { session: options.session }
+    );
+  }
+
+  // Increment chapters
+  incrementTotalChapters(id: ID) {
+    return this.model.updateOne(
+      { _id: id },
+      { $inc: { 'stats.totalChapters': 1 }, $set: { lastActivityAt: new Date() } }
+    );
+  }
+
+  // Increment branches
+  incrementTotalBranches(id: ID) {
+    return this.model.updateOne(
+      { _id: id },
+      { $inc: { 'stats.totalBranches': 1 }, $set: { lastActivityAt: new Date() } }
     );
   }
 

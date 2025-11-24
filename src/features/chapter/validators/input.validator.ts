@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
-import { BaseValidator } from '../../../utils';
 import { IChapterCreateInput } from '../chapter.types';
 import { CHAPTER_LIMITS } from '../../../constants';
+import { BaseValidator } from '../../../utils/baseClass';
 
 export class InputValidator extends BaseValidator {
   async validate(input: IChapterCreateInput) {

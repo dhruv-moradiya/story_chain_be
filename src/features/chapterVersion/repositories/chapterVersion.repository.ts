@@ -1,5 +1,5 @@
 import { ChapterVersion } from '../../../models/chapterVersion.model';
-import { BaseRepository } from '../../../utils';
+import { BaseRepository } from '../../../utils/baseClass';
 import { IChapterVersion, IChapterVersionDoc } from '../chapterVersion.types';
 
 export class ChapterVersionRepository extends BaseRepository<IChapterVersion, IChapterVersionDoc> {

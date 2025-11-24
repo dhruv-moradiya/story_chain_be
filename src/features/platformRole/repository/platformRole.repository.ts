@@ -1,8 +1,8 @@
-import { BaseRepository } from '../../../utils';
 import { PlatformRole } from '../../../models/platformRole.model';
 import { IPlatformRole, IPlatformRoleDoc } from '../platformRole.types';
 import { ApiError } from '../../../utils/apiResponse';
 import { ClientSession } from 'mongoose';
+import { BaseRepository } from '../../../utils/baseClass';
 
 export class PlatformRoleRepository extends BaseRepository<IPlatformRole, IPlatformRoleDoc> {
   constructor() {

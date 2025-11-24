@@ -1,8 +1,8 @@
-import { BaseRepository } from '../../../utils';
 import { StoryCollaborator } from '../../../models/storyCollaborator.model';
 import { IStoryCollaborator, IStoryCollaboratorDoc } from '../storyCollaborator.types';
 import { ApiError } from '../../../utils/apiResponse';
 import { ClientSession } from 'mongoose';
+import { BaseRepository } from '../../../utils/baseClass';
 
 export class StoryCollaboratorRepository extends BaseRepository<
   IStoryCollaborator,

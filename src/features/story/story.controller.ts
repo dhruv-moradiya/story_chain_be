@@ -5,7 +5,8 @@ import { ApiResponse } from '../../utils/apiResponse';
 import { catchAsync } from '../../utils/catchAsync';
 import { IStoryCreateDTO } from './dto/story.dto';
 import { storyService } from './story.service';
-import { BaseModule } from '../../utils';
+import { BaseModule } from '../../utils/baseClass';
+import { TStoryAddChapterSchema } from '../../schema/story.schema';
 
 export class StoryController extends BaseModule {
   // Handles creation of a new story for the authenticated user.
@@ -87,6 +88,32 @@ export class StoryController extends BaseModule {
       .code(HTTP_STATUS.OK.code)
       .send(new ApiResponse(true, 'Draft stories fetched successfully', stories));
   });
+
+  // TODO: Add story tree fetching logic
+  getStoryTree = catchAsync(
+    async (request: FastifyRequest<{ Params: { storyId: string } }>, reply: FastifyReply) => {
+      const { storyId } = request.params;
+      const storyTree = await storyService.getStoryTree(storyId);
+
+      this.logInfo(`Fetched story tree for story ${storyId}`);
+      return reply
+        .code(HTTP_STATUS.OK.code)
+        .send(new ApiResponse(true, 'Story tree fetched successfully', storyTree));
+    }
+  );
+
+  addChapterToStory = catchAsync(
+    async (
+      request: FastifyRequest<{
+        Body: TStoryAddChapterSchema;
+        Params: { storyId: string };
+      }>,
+      reply: FastifyReply
+    ) => {
+      const { clerkId: userId } = request.user;
+      const { storyId } = request.params;
+    }
+  );
 }
 
 export const storyController = new StoryController();

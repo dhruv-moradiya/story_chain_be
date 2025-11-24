@@ -1,5 +1,5 @@
 import { StoryCollaborator } from '../../models/storyCollaborator.model';
-import { BaseRepository } from '../../utils';
+import { BaseRepository } from '../../utils/baseClass';
 import { IStoryCollaborator, IStoryCollaboratorDoc } from './storyCollaborator.types';
 
 export class StoryCollaboratorRepository extends BaseRepository<

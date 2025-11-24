@@ -1,6 +1,11 @@
 import { z } from 'zod';
+import { ObjectIdSchema } from '../utils';
+import mongoose from 'mongoose';
+import { CHAPTER_LIMITS } from '../constants';
 
-export const createStorySchema = z.object({
+const StoryIdSchema = ObjectIdSchema().transform((s) => s.trim());
+
+const StoryCreateSchema = z.object({
   title: z
     .string()
     .trim()
@@ -48,7 +53,7 @@ export const createStorySchema = z.object({
   status: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED', 'DELETED']).default('PUBLISHED'),
 });
 
-export const updateStorySchema = z.object({
+const StoryUpdateSchema = z.object({
   title: z
     .string()
     .trim()
@@ -107,6 +112,74 @@ export const updateStorySchema = z.object({
   publishedAt: z.date().optional(),
 });
 
-export type CreateStoryInput = z.infer<typeof createStorySchema>;
+const StoryAddChapterSchema = z.object({
+  storyId: ObjectIdSchema().transform((s) => s.trim()),
+  parentChapterId: ObjectIdSchema()
+    .transform((s) => s.trim())
+    .optional(),
+  title: z
+    .string()
+    .min(CHAPTER_LIMITS.TITLE.MIN_LENGTH, {
+      message: `Title must be at least ${CHAPTER_LIMITS.TITLE.MIN_LENGTH} characters`,
+    })
+    .max(CHAPTER_LIMITS.TITLE.MAX_LENGTH, {
+      message: `Title must be at most ${CHAPTER_LIMITS.TITLE.MAX_LENGTH} characters`,
+    })
+    .transform((s) => s.trim()),
+  content: z
+    .string()
+    .min(CHAPTER_LIMITS.CONTENT.MIN_LENGTH, {
+      message: `Content must be at least ${CHAPTER_LIMITS.CONTENT.MIN_LENGTH} characters`,
+    })
+    .max(CHAPTER_LIMITS.CONTENT.MAX_LENGTH, {
+      message: `Content must be at most ${CHAPTER_LIMITS.CONTENT.MAX_LENGTH} characters`,
+    })
+    .transform((s) => s.trim()),
+});
 
-export type UpdateStoryInput = z.infer<typeof updateStorySchema>;
+const StoryUpdateChapterTitleSchema = z.object({
+  title: z
+    .string()
+    .min(CHAPTER_LIMITS.TITLE.MIN_LENGTH, {
+      message: `Title must be at least ${CHAPTER_LIMITS.TITLE.MIN_LENGTH} characters`,
+    })
+    .max(CHAPTER_LIMITS.TITLE.MAX_LENGTH, {
+      message: `Title must be at most ${CHAPTER_LIMITS.TITLE.MAX_LENGTH} characters`,
+    })
+    .transform((s) => s.trim()),
+});
+
+const StoryUpdateChapterContentSchema = z.object({
+  content: z
+    .string()
+    .min(CHAPTER_LIMITS.CONTENT.MIN_LENGTH, {
+      message: `Content must be at least ${CHAPTER_LIMITS.CONTENT.MIN_LENGTH} characters`,
+    })
+    .max(CHAPTER_LIMITS.CONTENT.MAX_LENGTH, {
+      message: `Content must be at most ${CHAPTER_LIMITS.CONTENT.MAX_LENGTH} characters`,
+    })
+    .transform((s) => s.trim()),
+});
+
+type TStoryCreateSchema = z.infer<typeof StoryCreateSchema>;
+type TStoryUpdateSchema = z.infer<typeof StoryUpdateSchema>;
+type TStoryAddChapterSchema = z.infer<typeof StoryAddChapterSchema>;
+type TStoryUpdateChapterTitleSchema = z.infer<typeof StoryUpdateChapterTitleSchema>;
+type TStoryUpdateChapterContentSchema = z.infer<typeof StoryUpdateChapterContentSchema>;
+
+export {
+  StoryIdSchema,
+  StoryCreateSchema,
+  StoryUpdateSchema,
+  StoryAddChapterSchema,
+  StoryUpdateChapterTitleSchema,
+  StoryUpdateChapterContentSchema,
+};
+
+export type {
+  TStoryCreateSchema,
+  TStoryUpdateSchema,
+  TStoryAddChapterSchema,
+  TStoryUpdateChapterTitleSchema,
+  TStoryUpdateChapterContentSchema,
+};

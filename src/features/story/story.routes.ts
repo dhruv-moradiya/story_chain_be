@@ -1,21 +1,53 @@
 import { FastifyInstance } from 'fastify';
 import { validateAuth } from '../../middlewares/authHandler';
-import { validateRequest } from '../../middlewares/validateRequest';
-import { createStorySchema } from './story.validation';
-import { storyController } from './story.controller';
 import { validateSuperAdmin } from '../../middlewares/story/story.middleware';
+import { StoryAddChapterSchema, StoryCreateSchema, StoryIdSchema } from '../../schema/story.schema';
+import { storyController } from './story.controller';
+import zodToJsonSchema from 'zod-to-json-schema';
 
 export async function storyRoutes(fastify: FastifyInstance) {
+  // ---------------
+  // STORY ROUTES
+  // ---------------
+
+  // Create a new story
   fastify.post(
     '/',
-    { preHandler: [validateAuth, validateRequest(createStorySchema)] },
+    {
+      preHandler: [validateAuth],
+      schema: {
+        body: zodToJsonSchema(StoryCreateSchema),
+      },
+    },
     storyController.createStory
   );
 
+  // List all stories - SUPER_ADMIN only
   fastify.get('/', { preHandler: [validateAuth, validateSuperAdmin] }, storyController.getStories);
 
   // For public feed - only stories created in last 7 days
   fastify.get('/new', storyController.getNewStories);
 
+  // Get all stories created by the authenticated user.
+  fastify.get('/my', { preHandler: [validateAuth] }, storyController.getMyStories);
+
+  // Fetch a single story by its ID for viewing and for public access.
   fastify.get('/:storyId', storyController.getStoryById);
+
+  // ---------------
+  // CHAPTER ROUTES
+  // ---------------
+
+  // Add a chapter to a story
+  fastify.post(
+    '/:storyId/chapters',
+    {
+      preHandler: [validateAuth],
+      schema: {
+        body: zodToJsonSchema(StoryAddChapterSchema),
+        params: zodToJsonSchema(StoryIdSchema),
+      },
+    },
+    storyController.addChapterToStory
+  );
 }

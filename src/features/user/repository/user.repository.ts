@@ -1,7 +1,7 @@
 import { ProjectionType, UpdateQuery } from 'mongoose';
 import { User } from '../../../models/user.model';
-import { BaseRepository } from '../../../utils';
 import { ICreateNewUser, IUser, IUserDoc } from '../user.types';
+import { BaseRepository } from '../../../utils/baseClass';
 
 export class UserRepository extends BaseRepository<IUser, IUserDoc> {
   constructor() {

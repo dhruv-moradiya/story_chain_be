@@ -1,5 +1,6 @@
-import { BaseModule, toId } from '../../utils';
+import { buildChapterTree, toId } from '../../utils';
 import { ApiError } from '../../utils/apiResponse';
+import { BaseModule } from '../../utils/baseClass';
 import { withTransaction } from '../../utils/withTransaction';
 import { ChapterVersionRepository } from '../chapterVersion/repositories/chapterVersion.repository';
 import { PullRequestRepository } from '../pullRequest/repositories/pullRequest.repository';
@@ -94,7 +95,9 @@ export class ChapterService extends BaseModule {
   }
 
   // 🧩 Fully typed, safe method
-  async createChapter(input: IChapterCreateDTO): Promise<CreateChapterResponse> {
+  async createChapter(
+    input: IChapterCreateDTO & { storyId: string; userId: string }
+  ): Promise<CreateChapterResponse> {
     return await withTransaction('Creating new chapter', async (session) => {
       const { storyId, parentChapterId, content, title, userId } = input;
 
@@ -269,6 +272,31 @@ export class ChapterService extends BaseModule {
       return updatedChapter;
     });
   }
+
+  async getStoryTree(storyId: string): Promise<{ storyId: string; chapters: IChapter[] }> {
+    const story = await this.storyRepo.findById(storyId);
+    if (!story) {
+      throw ApiError.notFound('Story not found');
+    }
+
+    const chapters = await this.chapterRepo.findByStoryId(storyId);
+
+    if (!chapters || chapters.length === 0) {
+      return {
+        storyId: storyId,
+        chapters: [],
+      };
+    }
+
+    const tree = buildChapterTree(chapters);
+
+    return {
+      storyId: storyId,
+      chapters: tree,
+    };
+  }
+
+  async createRootChapter() {}
 }
 
 export const chapterService = new ChapterService();

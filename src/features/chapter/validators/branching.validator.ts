@@ -1,5 +1,5 @@
 import { CHAPTER_LIMITS } from '../../../constants';
-import { BaseValidator } from '../../../utils';
+import { BaseValidator } from '../../../utils/baseClass';
 import { IStory } from '../../story/story.types';
 import { IChapter } from '../chapter.types';
 

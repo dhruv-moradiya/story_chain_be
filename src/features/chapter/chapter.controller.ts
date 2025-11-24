@@ -1,17 +1,17 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
+import { HTTP_STATUS } from '../../constants/httpStatus';
 import { ApiError, ApiResponse } from '../../utils/apiResponse';
 import { catchAsync } from '../../utils/catchAsync';
-import { chapterService } from './chapter.service';
 import { logger } from '../../utils/logger';
-import { HTTP_STATUS } from '../../constants/httpStatus';
-import { ICreateChapterSchema } from './dto/chapter.schema';
+import { chapterService } from './chapter.service';
+import { IChapterCreateDTO } from './dto/chapter.dto';
 
 export class ChapterController {
   createChapter = catchAsync(
     async (
       request: FastifyRequest<{
         Params: { storyId: string };
-        Body: ICreateChapterSchema;
+        Body: IChapterCreateDTO;
       }>,
       reply: FastifyReply
     ) => {
@@ -53,6 +53,16 @@ export class ChapterController {
         userId,
         title,
       });
+    }
+  );
+
+  getStoryTree = catchAsync(
+    async (request: FastifyRequest<{ Params: { storyId: string } }>, reply: FastifyReply) => {
+      const { storyId } = request.params;
+
+      const tree = await chapterService.getStoryTree(storyId);
+
+      return this.success(reply, HTTP_STATUS.OK.code, 'Story tree fetched', tree);
     }
   );
 

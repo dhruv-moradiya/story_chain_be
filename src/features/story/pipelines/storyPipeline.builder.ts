@@ -1,4 +1,5 @@
 import { PipelineStage } from 'mongoose';
+import { ID } from '../../../types';
 
 class StoryPipelineBuilder {
   private pipeline: PipelineStage[] = [];
@@ -14,6 +15,16 @@ class StoryPipelineBuilder {
     });
     return this;
   }
+
+  storyById(storyId: ID) {
+    this.pipeline.push({
+      $match: {
+        _id: storyId,
+      },
+    });
+    return this;
+  }
+
   build() {
     return this.pipeline;
   }

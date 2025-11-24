@@ -66,6 +66,9 @@ export interface IChapterDoc extends IChapter, Document {
   _id: Types.ObjectId;
 }
 
+export type TChapterNode = IChapter & { children: TChapterNode[] };
+export type TChapterMap = Record<string, TChapterNode>;
+
 // ========================================
 // SERVICE TYPES
 // ========================================

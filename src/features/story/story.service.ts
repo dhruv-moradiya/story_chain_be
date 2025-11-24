@@ -1,14 +1,17 @@
 import { IOperationOptions } from '../../types';
-import { BaseModule } from '../../utils';
-import { IStoryCreateDTO } from './dto/story.dto';
-import { StoryRepository } from './repository/story.repository';
-import { StoryRules } from './roles/story.roles';
+import { IStoryCreateDTO, TStoryAddChapterDTO } from './dto/story.dto';
+import { StoryRules } from './rules/story.rules';
 import { IStory, StoryStatusType } from './story.types';
 import { StoryPipelineBuilder } from './pipelines/storyPipeline.builder';
 import { StoryStatus } from '../../constants';
+import { BaseModule } from '../../utils/baseClass';
+import { StoryRepository } from './repository/story.repository';
+import { withTransaction } from '../../utils/withTransaction';
+import { ChapterService } from '../chapter/chapter.service';
 
 export class StoryService extends BaseModule {
   private readonly storyRepo = new StoryRepository();
+  private readonly chapterService = new ChapterService();
 
   /**
    * Create new story (with rate limiting)
@@ -117,7 +120,29 @@ export class StoryService extends BaseModule {
       { new: true, session: options.session }
     );
 
-    return updated!;
+    if (!updated) {
+      this.throwInternalError('Failed to update story status');
+    }
+
+    return updated;
+  }
+
+  async getStoryTree(storyId: string, options: IOperationOptions = {}) {}
+
+  async addChapterToStory(input: TStoryAddChapterDTO, options: IOperationOptions = {}) {
+    return await withTransaction('Adding chapter to story', async (session) => {
+      const { storyId, userId, ...chapterData } = input;
+
+      const story = await this.getStoryById(storyId, { session });
+
+      if (!story) {
+        this.throwNotFoundError('Story not found');
+      }
+
+      if (!StoryRules.canEditStory(story, userId)) {
+        this.throwForbiddenError('You do not have permission to add chapters to this story.');
+      }
+    });
   }
 }
 

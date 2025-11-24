@@ -1,4 +1,4 @@
-import { BaseModule } from '../../../utils';
+import { BaseModule } from '../../../utils/baseClass';
 import { IChapterTreeBuilderParams, IChapterTreeMetadata } from '../chapter.types';
 import { ChapterRepository } from '../repositories/chapter.repository';
 

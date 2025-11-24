@@ -1,4 +1,4 @@
-import { BaseModule } from '../../../utils';
+import { BaseModule } from '../../../utils/baseClass';
 import { IStory } from '../../story/story.types';
 import { StoryCollaboratorRepository } from '../../storyCollaborator/storyCollaborator.service';
 import { IChapterPublishMode } from '../chapter.types';

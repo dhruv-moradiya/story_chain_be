@@ -1,8 +1,8 @@
 import { ClientSession, QueryOptions, UpdateQuery } from 'mongoose';
 
-import { BaseRepository } from '../../../utils';
 import { Chapter } from '../../../models/chapter.model';
 import { IChapter, IChapterDoc } from '../chapter.types';
+import { BaseRepository } from '../../../utils/baseClass';
 
 export class ChapterRepository extends BaseRepository<IChapter, IChapterDoc> {
   constructor() {
@@ -36,6 +36,10 @@ export class ChapterRepository extends BaseRepository<IChapter, IChapterDoc> {
       },
       { session }
     );
+  }
+
+  async findByStoryId(storyId: string): Promise<IChapter[]> {
+    return this.model.find({ storyId }).lean().exec();
   }
 
   // async canUserEditChapter(userId: string, chapterId: string): Promise<boolean> {

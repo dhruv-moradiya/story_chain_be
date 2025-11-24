@@ -1,8 +1,8 @@
-import { BaseModule } from '../../../utils';
 import { ChapterRepository } from '../repositories/chapter.repository';
 import { ChapterBuildContext } from '../chapter.types';
 import { IChapter } from '../chapter.types';
 import { Types } from 'mongoose';
+import { BaseModule } from '../../../utils/baseClass';
 
 export class ChapterDocumentBuilder extends BaseModule {
   private chapterRepo: ChapterRepository;

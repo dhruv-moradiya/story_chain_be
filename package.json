@@ -38,7 +38,8 @@
     "nodemailer": "^7.0.9",
     "svix": "^1.77.0",
     "winston": "^3.18.3",
-    "zod": "^3.25.67"
+    "zod": "^3.25.67",
+    "zod-to-json-schema": "^3.25.0"
   },
   "devDependencies": {
     "@types/node": "^24.8.1",

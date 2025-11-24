@@ -1,5 +1,5 @@
 import { Notification } from '../../models/notification.model';
-import { BaseModule } from '../../utils';
+import { BaseModule } from '../../utils/baseClass';
 
 export class NotificationService extends BaseModule {
   async notifyBranchCreation(chapter, story, treeData, userId, badges) {

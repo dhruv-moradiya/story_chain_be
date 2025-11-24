@@ -1,5 +1,5 @@
-import { BaseModule } from '../../../utils';
 import { ApiError } from '../../../utils/apiResponse';
+import { BaseModule } from '../../../utils/baseClass';
 import { PlatformRoleRepository } from '../repository/platformRole.repository';
 
 export class PlatformRoleValidator extends BaseModule {

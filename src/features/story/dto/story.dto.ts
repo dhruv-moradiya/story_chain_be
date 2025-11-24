@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { TStoryAddChapterSchema } from '../../../schema/story.schema';
+import { ID } from '../../../types';
 
 const StoryCreateDTO = z.object({
   title: z
@@ -111,5 +113,10 @@ type IStoryCreateDTO = z.infer<typeof StoryCreateDTO>;
 
 type IStoryUpdateDTO = z.infer<typeof StoryUpdateDTO>;
 
+type TStoryAddChapterDTO = TStoryAddChapterSchema & {
+  storyId: ID;
+  userId: string;
+};
+
 export { StoryCreateDTO, StoryUpdateDTO };
-export type { IStoryCreateDTO, IStoryUpdateDTO };
+export type { IStoryCreateDTO, IStoryUpdateDTO, TStoryAddChapterDTO };

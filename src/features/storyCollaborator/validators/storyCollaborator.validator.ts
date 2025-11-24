@@ -1,4 +1,4 @@
-import { BaseModule } from '../../../utils';
+import { BaseModule } from '../../../utils/baseClass';
 import { StoryCollaboratorRepository } from '../repository/storyCollaborator.repository';
 
 export class StoryCollaboratorValidator extends BaseModule {

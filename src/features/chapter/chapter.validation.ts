@@ -2,16 +2,16 @@ import { z } from 'zod';
 import mongoose from 'mongoose';
 import { CHAPTER_LIMITS } from '../../constants';
 
-const objectIdString = () =>
+const objectIdSchema = () =>
   z
     .string()
-    .min(1, { message: 'ObjectId is required' })
+    .min(1, { message: 'An ObjectId must be provided.' })
     .refine((val) => mongoose.Types.ObjectId.isValid(val), {
-      message: 'Invalid ObjectId',
+      message: 'Please provide a valid MongoDB ObjectId.',
     });
 
 export const createChapterSchema = z.object({
-  storyId: objectIdString().transform((s) => s.trim()),
+  storyId: objectIdSchema().transform((s) => s.trim()),
   parentChapterId: z
     .string()
     .optional()

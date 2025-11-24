@@ -1,4 +1,4 @@
-import { BaseValidator } from '../../../utils';
+import { BaseValidator } from '../../../utils/baseClass';
 import { IChapter } from '../chapter.types';
 import { ChapterRepository } from '../repositories/chapter.repository';
 

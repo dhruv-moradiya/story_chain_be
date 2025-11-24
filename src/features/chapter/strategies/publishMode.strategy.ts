@@ -1,10 +1,8 @@
 import { ClientSession } from 'mongoose';
 import { XP_REWARDS } from '../../../constants';
 import { Notification } from '../../../models/notification.model';
-import { BaseHandler, toId } from '../../../utils';
 import { notificationService } from '../../notification/notification.service';
 import { PullRequestRepository } from '../../pullRequest/repositories/pullRequest.repository';
-import { StoryRepository } from '../../story/story.service';
 import { IStory } from '../../story/story.types';
 import { StoryCollaboratorRepository } from '../../storyCollaborator/storyCollaborator.service';
 import { UserRepository } from '../../user/repository/user.repository';
@@ -20,6 +18,10 @@ import {
   IPRTitleInput,
 } from '../chapter.types';
 import { ChapterRepository } from '../repositories/chapter.repository';
+import { StoryRepository } from '../../story/repository/story.repository';
+import { ID } from '../../../types';
+import { BaseHandler } from '../../../utils/baseClass';
+import { toId } from '../../../utils';
 
 export class DirectPublishHandler extends BaseHandler<
   IChapterDirectPublishInput,
@@ -50,7 +52,7 @@ export class DirectPublishHandler extends BaseHandler<
       await this.chapterRepo.incrementBranches(parentChapterId, session);
     }
 
-    await this._updateStoryStats(String(story._id), parentChapterId);
+    await this.updateStatsOnChapterCreate(story._id, parentChapterId);
 
     const { badges } = await this._awardXPAndBadges(userId, treeData.isRootChapter);
 
@@ -59,20 +61,18 @@ export class DirectPublishHandler extends BaseHandler<
     return this._buildResponse(chapter);
   }
 
-  private async _updateStoryStats(storyId: string, parentChapterId?: string): Promise<void> {
-    const updates: Record<string, unknown> = {
-      $inc: { 'stats.totalChapters': 1 },
-      $set: { lastActivityAt: new Date() },
-    };
+  async updateStatsOnChapterCreate(storyId: ID, parentChapterId?: ID) {
+    // Always increment chapter count
+    await this.storyRepo.incrementTotalChapters(storyId);
 
+    // Branch increment logic
     if (parentChapterId) {
       const parent = await this.chapterRepo.findById(parentChapterId);
+
       if (parent && parent.stats.childBranches > 1) {
-        (updates.$inc as Record<string, number>)['stats.totalBranches'] = 1;
+        await this.storyRepo.incrementTotalBranches(storyId);
       }
     }
-
-    await this.storyRepo.updateStatistics(storyId, updates);
   }
 
   private async _awardXPAndBadges(
