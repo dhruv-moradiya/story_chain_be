@@ -8,11 +8,14 @@ import { BaseModule } from '../../utils/baseClass';
 import { StoryRepository } from './repository/story.repository';
 import { withTransaction } from '../../utils/withTransaction';
 import { ChapterService } from '../chapter/chapter.service';
-import { toId } from '../../utils';
+import { buildChapterTree, toId } from '../../utils';
+import { ChapterRepository } from '../chapter/repositories/chapter.repository';
+import { IChapter } from '../chapter/chapter.types';
 
 export class StoryService extends BaseModule {
   private readonly storyRepo = new StoryRepository();
   private readonly chapterService = new ChapterService();
+  private readonly chapterRepo = new ChapterRepository();
 
   /**
    * Create new story (with rate limiting)
@@ -128,8 +131,31 @@ export class StoryService extends BaseModule {
     return updated;
   }
 
-  async getStoryTree(storyId: string, options: IOperationOptions = {}) {}
+  async getStoryTree(storyId: string): Promise<{ storyId: string; chapters: IChapter[] }> {
+    const story = await this.storyRepo.findById(storyId);
+    if (!story) {
+      this.throwNotFoundError('Story not found.');
+    }
 
+    const chapters = await this.chapterRepo.findByStoryId(storyId);
+
+    if (!chapters || chapters.length === 0) {
+      return {
+        storyId: storyId,
+        chapters: [],
+      };
+    }
+
+    // TODO: Move to story rules
+    const tree = buildChapterTree(chapters);
+
+    return {
+      storyId: storyId,
+      chapters: tree,
+    };
+  }
+
+  // TODO: After creating new chapter versioning system, integrate versioning here
   async addChapterToStory(input: TStoryAddChapterDTO) {
     return await withTransaction('Adding chapter to story', async (session) => {
       const { storyId, userId, ...chapterData } = input;
