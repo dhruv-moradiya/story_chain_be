@@ -1,9 +1,10 @@
 import { z } from 'zod';
 import { ObjectIdSchema } from '../utils';
-import mongoose from 'mongoose';
 import { CHAPTER_LIMITS } from '../constants';
 
-const StoryIdSchema = ObjectIdSchema().transform((s) => s.trim());
+const StoryIdSchema = z.object({
+  storyId: ObjectIdSchema(),
+});
 
 const StoryCreateSchema = z.object({
   title: z
@@ -113,10 +114,10 @@ const StoryUpdateSchema = z.object({
 });
 
 const StoryAddChapterSchema = z.object({
-  storyId: ObjectIdSchema().transform((s) => s.trim()),
+  // storyId: ObjectIdSchema().transform((s) => s.trim()),
   parentChapterId: ObjectIdSchema()
     .transform((s) => s.trim())
-    .optional(),
+    .nullable(),
   title: z
     .string()
     .min(CHAPTER_LIMITS.TITLE.MIN_LENGTH, {

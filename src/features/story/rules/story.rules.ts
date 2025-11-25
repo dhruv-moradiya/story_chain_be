@@ -21,4 +21,22 @@ export class StoryRules {
 
     return allowedTransitions[current].includes(next);
   }
+
+  static canAddRootChapter(story: IStory, userId: string): boolean {
+    return story.creatorId === userId;
+  }
+
+  // TODO: expand with collaborator roles
+  static canAddChapter(story: IStory, userId: string): boolean {
+    return story.creatorId === userId;
+  }
+
+  // TODO: expand with collaborator roles
+  static canAddChapterDirectly(story: IStory, userId: string): boolean {
+    return story.creatorId === userId;
+  }
+
+  static mustUsePRForChapterAddition(story: IStory, userId: string): boolean {
+    return !this.canAddChapterDirectly(story, userId);
+  }
 }

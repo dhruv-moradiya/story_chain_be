@@ -39,11 +39,13 @@ const storySchema = new Schema<IStoryDoc>(
 
     // Settings
     settings: {
-      isPublic: { type: Boolean, default: false },
-      allowBranching: { type: Boolean, default: false },
-      requireApproval: { type: Boolean, default: true },
-      allowComments: { type: Boolean, default: false },
-      allowVoting: { type: Boolean, default: false },
+      isPublic: { type: Boolean, default: false }, // If false, only creator/collaborators can view
+      allowBranching: { type: Boolean, default: false }, // If true, readers can create branches
+      requireApproval: { type: Boolean, default: true }, // If true, branches need approval from creator/collaborators
+      allowComments: { type: Boolean, default: false }, // If true, readers can comment on chapters
+      allowVoting: { type: Boolean, default: false }, // If true, readers can vote on the story
+
+      // Metadata
       genre: {
         type: String,
         enum: [

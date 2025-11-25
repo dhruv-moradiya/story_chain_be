@@ -1,4 +1,4 @@
-import { IOperationOptions } from '../../types';
+import { ID, IOperationOptions } from '../../types';
 import { IStoryCreateDTO, TStoryAddChapterDTO } from './dto/story.dto';
 import { StoryRules } from './rules/story.rules';
 import { IStory, StoryStatusType } from './story.types';
@@ -8,6 +8,7 @@ import { BaseModule } from '../../utils/baseClass';
 import { StoryRepository } from './repository/story.repository';
 import { withTransaction } from '../../utils/withTransaction';
 import { ChapterService } from '../chapter/chapter.service';
+import { toId } from '../../utils';
 
 export class StoryService extends BaseModule {
   private readonly storyRepo = new StoryRepository();
@@ -46,7 +47,7 @@ export class StoryService extends BaseModule {
   /**
    * Get story by ID (with not found error)
    */
-  async getStoryById(storyId: string, options: IOperationOptions = {}): Promise<IStory> {
+  async getStoryById(storyId: ID, options: IOperationOptions = {}): Promise<IStory> {
     const story = await this.storyRepo.findById(storyId, {}, options);
 
     if (!story) {
@@ -129,19 +130,99 @@ export class StoryService extends BaseModule {
 
   async getStoryTree(storyId: string, options: IOperationOptions = {}) {}
 
-  async addChapterToStory(input: TStoryAddChapterDTO, options: IOperationOptions = {}) {
+  async addChapterToStory(input: TStoryAddChapterDTO) {
     return await withTransaction('Adding chapter to story', async (session) => {
       const { storyId, userId, ...chapterData } = input;
 
-      const story = await this.getStoryById(storyId, { session });
+      // -----------------------------------------
+      // 1. Validate story
+      // -----------------------------------------
+      const story = await this.getStoryById(toId(storyId), { session });
 
       if (!story) {
-        this.throwNotFoundError('Story not found');
+        this.throwNotFoundError('Story not found.');
       }
 
-      if (!StoryRules.canEditStory(story, userId)) {
+      // -----------------------------------------
+      // CASE 1 — ROOT CHAPTER
+      // -----------------------------------------
+      const isRootChapter = !chapterData.parentChapterId;
+
+      if (isRootChapter) {
+        // Permission check
+        if (!StoryRules.canAddRootChapter(story, userId)) {
+          this.throwForbiddenError('Only the creator of this story can add root-level chapters.');
+        }
+
+        const rootChapterInput = {
+          storyId,
+          userId,
+          title: chapterData.title,
+          content: chapterData.content,
+        };
+
+        const newChapter = await this.chapterService.createRootChapter(rootChapterInput, {
+          session,
+        });
+
+        return newChapter;
+      }
+
+      // -----------------------------------------
+      // CASE 2 — CHILD CHAPTER
+      // -----------------------------------------
+      const parentChapter = await this.chapterService.getChapterById(
+        chapterData.parentChapterId as string,
+        {
+          session,
+        }
+      );
+
+      // Validate parent
+      if (!parentChapter || parentChapter.storyId.toString() !== storyId) {
+        console.log('CONDITION MET');
+        this.throwBadRequest('Invalid parent chapter ID.');
+      }
+
+      // Permission check
+      if (!StoryRules.canAddChapter(story, userId)) {
         this.throwForbiddenError('You do not have permission to add chapters to this story.');
       }
+
+      // Publishing rules
+      const canAddDirect = StoryRules.canAddChapterDirectly(story, userId);
+      const mustPR = StoryRules.mustUsePRForChapterAddition(story, userId);
+
+      if (mustPR && !canAddDirect) {
+        this.throwForbiddenError('You must create a pull request to add chapters to this story.');
+      }
+
+      // Determine status
+      let status: StoryStatusType = StoryStatus.DRAFT;
+      if (canAddDirect && !mustPR) {
+        status = StoryStatus.PUBLISHED;
+      }
+
+      // Depth & ancestry
+      const depth = parentChapter.depth + 1;
+      const ancestorIds = [...parentChapter.ancestorIds, parentChapter._id];
+
+      const childChapterInput = {
+        storyId,
+        userId,
+        parentChapterId: parentChapter._id,
+        ancestorIds,
+        depth,
+        status,
+        title: chapterData.title,
+        content: chapterData.content,
+      };
+
+      const newChapter = await this.chapterService.createChildChapter(childChapterInput, {
+        session,
+      });
+
+      return newChapter;
     });
   }
 }

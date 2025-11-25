@@ -4,36 +4,8 @@ import { ApiError, ApiResponse } from '../../utils/apiResponse';
 import { catchAsync } from '../../utils/catchAsync';
 import { logger } from '../../utils/logger';
 import { chapterService } from './chapter.service';
-import { IChapterCreateDTO } from './dto/chapter.dto';
 
 export class ChapterController {
-  createChapter = catchAsync(
-    async (
-      request: FastifyRequest<{
-        Params: { storyId: string };
-        Body: IChapterCreateDTO;
-      }>,
-      reply: FastifyReply
-    ) => {
-      const userId = request.user.clerkId;
-      if (!userId) return this.unauthorized(reply);
-      const { storyId } = request.params;
-      const { parentChapterId, content, title } = request.body;
-
-      const result = await chapterService.createChapter({
-        storyId,
-        parentChapterId,
-        content,
-        title,
-        userId,
-      });
-
-      const message = result.isPR ? 'Pull request' : 'Chapter created';
-
-      return reply.code(HTTP_STATUS.CREATED.code).send(new ApiResponse(true, message, result));
-    }
-  );
-
   updateChapterTitle = catchAsync(
     async (
       request: FastifyRequest<{

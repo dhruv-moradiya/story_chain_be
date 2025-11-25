@@ -1,28 +1,14 @@
+import { ID, IOperationOptions } from '../../types';
 import { buildChapterTree, toId } from '../../utils';
 import { ApiError } from '../../utils/apiResponse';
 import { BaseModule } from '../../utils/baseClass';
 import { withTransaction } from '../../utils/withTransaction';
 import { ChapterVersionRepository } from '../chapterVersion/repositories/chapterVersion.repository';
-import { PullRequestRepository } from '../pullRequest/repositories/pullRequest.repository';
 import { StoryRepository } from '../story/repository/story.repository';
-import { StoryCollaboratorRepository } from '../storyCollaborator/storyCollaborator.service';
-import { UserRepository } from '../user/repository/user.repository';
-import { ChapterDocumentBuilder } from './builders/document.builder';
-import { ChapterTreeBuilder } from './builders/tree.builder';
-import {
-  CreateChapterResponse,
-  IChapter,
-  IChapterContentUpdateInput,
-  IChapterTitleUpdateInput,
-} from './chapter.types';
-import { IChapterCreateDTO } from './dto/chapter.dto';
+import { IChapter, IChapterContentUpdateInput, IChapterTitleUpdateInput } from './chapter.types';
+import { IChapterAddChildDTO, TChapterAddRootDTO } from './dto/chapter.dto';
 import { ChapterRepository } from './repositories/chapter.repository';
-import { PublishModeResolver } from './strategies/publishMode.resolver';
-import { DirectPublishHandler, PRPublishHandler } from './strategies/publishMode.strategy';
-import { BranchingValidator } from './validators/branching.validator';
 import { ChapterValidator } from './validators/chapter.validator';
-import { InputValidator } from './validators/input.validator';
-import { StoryValidator } from './validators/story.validator';
 
 // ========================================
 // MAIN SERVICE CLASS
@@ -40,21 +26,8 @@ export interface IChapterCreateInput {
 export class ChapterService extends BaseModule {
   private readonly chapterRepo: ChapterRepository;
   private readonly storyRepo: StoryRepository;
-  private readonly userRepo: UserRepository;
-  private readonly collaboratorRepo: StoryCollaboratorRepository;
 
-  private readonly inputValidator: InputValidator;
-  private readonly storyValidator: StoryValidator;
-  private readonly branchingValidator: BranchingValidator;
   private readonly chapterValidator: ChapterValidator;
-
-  private readonly treeBuilder: ChapterTreeBuilder;
-  private readonly publishModeResolver: PublishModeResolver;
-  private readonly docBuilder: ChapterDocumentBuilder;
-
-  private readonly directPublishHandler: DirectPublishHandler;
-  private readonly prPublishHandler: PRPublishHandler;
-  private readonly pullRequestRepo: PullRequestRepository;
 
   private readonly chapterVersionRepo: ChapterVersionRepository;
 
@@ -64,140 +37,11 @@ export class ChapterService extends BaseModule {
     // Repositories
     this.chapterRepo = new ChapterRepository();
     this.storyRepo = new StoryRepository();
-    this.userRepo = new UserRepository();
-    this.collaboratorRepo = new StoryCollaboratorRepository();
-    this.pullRequestRepo = new PullRequestRepository();
 
     // Validators
-    this.inputValidator = new InputValidator();
-    this.storyValidator = new StoryValidator();
-    this.branchingValidator = new BranchingValidator();
     this.chapterValidator = new ChapterValidator();
 
-    // Builders
-    this.treeBuilder = new ChapterTreeBuilder(this.chapterRepo);
-    this.publishModeResolver = new PublishModeResolver(this.collaboratorRepo);
-    this.docBuilder = new ChapterDocumentBuilder(this.chapterRepo);
-
-    // Handlers
-    this.directPublishHandler = new DirectPublishHandler(
-      this.chapterRepo,
-      this.storyRepo,
-      this.userRepo
-    );
-    this.prPublishHandler = new PRPublishHandler(
-      this.collaboratorRepo,
-      this.pullRequestRepo,
-      this.chapterRepo
-    );
-
     this.chapterVersionRepo = new ChapterVersionRepository();
-  }
-
-  // 🧩 Fully typed, safe method
-  async createChapter(
-    input: IChapterCreateDTO & { storyId: string; userId: string }
-  ): Promise<CreateChapterResponse> {
-    return await withTransaction('Creating new chapter', async (session) => {
-      const { storyId, parentChapterId, content, title, userId } = input;
-
-      // 1️⃣ Validate input
-      await this.inputValidator.validate(input);
-
-      // 2️⃣ Validate story
-      const story = await this.storyValidator.validate(storyId);
-
-      // 3️⃣ Build chapter tree
-      const treeData = await this.treeBuilder.build({
-        storyId,
-        parentChapterId,
-        userId,
-        storyCreatorId: story.creatorId.toString(),
-      });
-
-      // 4️⃣ Validate branching
-      if (!treeData.isRootChapter && treeData.parentChapter) {
-        await this.branchingValidator.validate({
-          story,
-          parentChapter: treeData.parentChapter,
-        });
-      }
-
-      // 5️⃣ Resolve publish mode
-      const publishMode = await this.publishModeResolver.resolve(
-        story,
-        userId,
-        treeData.isRootChapter
-      );
-
-      // 6️⃣ Build chapter document
-      const chapter = await this.docBuilder.build({
-        storyId,
-        parentChapterId: parentChapterId || null,
-        ancestorIds: treeData.ancestorIds,
-        depth: treeData.depth,
-        userId,
-        content: content.trim(),
-        title,
-        chapterStatus: publishMode.chapterStatus,
-        isPR: publishMode.isPR,
-        isRootChapter: treeData.isRootChapter,
-        parentChapter: treeData.parentChapter || null,
-      });
-
-      // 7️⃣ Branch based on publish mode
-      if (publishMode.isPR) {
-        // Create PR (this returns a pullRequest object)
-        const prResponse = await this.prPublishHandler.handle(
-          {
-            chapter,
-            story,
-            parentChapter: treeData.parentChapter!,
-            userId,
-            content: content.trim(),
-            title,
-          },
-          session
-        );
-
-        // 8️⃣ Create version *after* PR is created (using the actual prId)
-        await this.chapterVersionRepo.create(
-          {
-            chapterId: toId(chapter._id),
-            version: 1,
-            content: chapter.content,
-            changesSummary: 'First Chapter',
-            editedBy: chapter.authorId,
-            title: chapter.title,
-            prId: toId(prResponse.pullRequestId),
-          },
-          { session }
-        );
-
-        return prResponse;
-      }
-
-      // If direct publish
-      const directResponse = await this.directPublishHandler.handle(
-        { chapter, story, treeData, userId, parentChapterId },
-        session
-      );
-
-      // 9️⃣ Create version for direct publish
-      await this.chapterVersionRepo.create(
-        {
-          chapterId: toId(chapter._id),
-          version: 1,
-          content: chapter.content,
-          changesSummary: 'First Chapter',
-          editedBy: chapter.authorId,
-          title: chapter.title,
-        },
-        { session }
-      );
-
-      return directResponse;
-    });
   }
 
   // 🪄 Future methods: typed placeholders for next handlers
@@ -273,6 +117,11 @@ export class ChapterService extends BaseModule {
     });
   }
 
+  async getChapterById(chapterId: ID, options: IOperationOptions = {}): Promise<IChapter | null> {
+    const chapter = this.chapterRepo.findById(chapterId, {}, { session: options.session });
+    return chapter;
+  }
+
   async getStoryTree(storyId: string): Promise<{ storyId: string; chapters: IChapter[] }> {
     const story = await this.storyRepo.findById(storyId);
     if (!story) {
@@ -296,7 +145,48 @@ export class ChapterService extends BaseModule {
     };
   }
 
-  async createRootChapter() {}
+  async createRootChapter(
+    input: TChapterAddRootDTO,
+    options: IOperationOptions = {}
+  ): Promise<IChapter> {
+    const { storyId, userId, title, content } = input;
+
+    const chapter = this.chapterRepo.create(
+      {
+        storyId,
+        parentChapterId: null,
+        ancestorIds: [],
+        depth: 0,
+        authorId: userId,
+        title: title.trim(),
+        content: content.trim(),
+        status: 'PUBLISHED',
+      },
+      { session: options.session }
+    );
+
+    return chapter;
+  }
+
+  async createChildChapter(input: IChapterAddChildDTO, options: IOperationOptions = {}) {
+    const { storyId, userId, title, content, parentChapterId } = input;
+
+    const chapter = this.chapterRepo.create(
+      {
+        storyId,
+        parentChapterId,
+        ancestorIds: [],
+        depth: 0,
+        authorId: userId,
+        title: title.trim(),
+        content: content.trim(),
+        status: 'PUBLISHED',
+      },
+      { session: options.session }
+    );
+
+    return chapter;
+  }
 }
 
 export const chapterService = new ChapterService();

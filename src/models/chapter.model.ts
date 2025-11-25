@@ -79,7 +79,6 @@ const chapterSchema = new Schema<IChapterDoc>(
       status: {
         type: String,
         enum: ['PENDING', 'APPROVED', 'REJECTED', 'MERGED'],
-        default: 'PENDING',
       },
       submittedAt: Date,
       reviewedBy: { type: String, ref: 'User' },
@@ -116,15 +115,6 @@ const chapterSchema = new Schema<IChapterDoc>(
   },
   {
     timestamps: true,
-    versionKey: false,
-    toJSON: {
-      virtuals: true,
-      transform: (_doc, ret) => {
-        ret.id = ret._id;
-        delete ret._id;
-        return ret;
-      },
-    },
   }
 );
 

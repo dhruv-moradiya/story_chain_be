@@ -1,4 +1,4 @@
-import mongoose, { Document, Model, Schema, Types } from 'mongoose';
+import { Document, Types } from 'mongoose';
 import { ID } from '../../types';
 
 // ===========================

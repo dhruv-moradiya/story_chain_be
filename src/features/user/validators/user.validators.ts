@@ -1,7 +1,7 @@
-import { BaseValidator } from '../../../utils';
-import { UserRepository } from '../repository/user.repository';
-import { ICreateNewUser, IUserUpdateInput } from '../user.types';
 import { UserJSON } from '@clerk/fastify';
+import { BaseValidator } from '../../../utils/baseClass';
+import { UserRepository } from '../repository/user.repository';
+import { IUserUpdateInput } from '../user.types';
 
 export class UserValidator extends BaseValidator {
   private readonly userRepo: UserRepository;

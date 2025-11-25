@@ -102,6 +102,7 @@ export class StoryController extends BaseModule {
     }
   );
 
+  // Add a chapter to a story by the authenticated user.
   addChapterToStory = catchAsync(
     async (
       request: FastifyRequest<{
@@ -112,6 +113,22 @@ export class StoryController extends BaseModule {
     ) => {
       const { clerkId: userId } = request.user;
       const { storyId } = request.params;
+
+      const { title, content, parentChapterId } = request.body;
+
+      const newChapter = await storyService.addChapterToStory({
+        storyId,
+        userId,
+        title,
+        content,
+        parentChapterId,
+      });
+
+      this.logInfo(`Added chapter to story ${storyId} by user ${userId}`);
+
+      return reply
+        .code(HTTP_STATUS.CREATED.code)
+        .send(new ApiResponse(true, 'Chapter added successfully', newChapter));
     }
   );
 }

@@ -1,6 +1,8 @@
+import mongoose from 'mongoose';
 import { z } from 'zod';
 import { CHAPTER_LIMITS } from '../../../constants';
-import mongoose from 'mongoose';
+import { ID } from '../../../types';
+import { StoryStatusType } from '../../story/story.types';
 
 const ChapterCreateDTO = z.object({
   title: z
@@ -36,5 +38,23 @@ const ChapterCreateDTO = z.object({
 
 type IChapterCreateDTO = z.infer<typeof ChapterCreateDTO>;
 
+type TChapterAddRootDTO = {
+  storyId: ID;
+  userId: string;
+  title: string;
+  content: string;
+};
+
+type IChapterAddChildDTO = {
+  storyId: ID;
+  userId: string;
+  parentChapterId: ID;
+  title: string;
+  content: string;
+  ancestorIds: ID[];
+  depth: number;
+  status: StoryStatusType;
+};
+
 export { ChapterCreateDTO };
-export type { IChapterCreateDTO };
+export type { IChapterAddChildDTO, IChapterCreateDTO, TChapterAddRootDTO };
