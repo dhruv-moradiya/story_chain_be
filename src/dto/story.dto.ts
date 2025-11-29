@@ -1,6 +1,9 @@
 import { z } from 'zod';
 import { TStoryAddChapterSchema } from '../../../schema/story.schema';
-import { ID } from '../../../types';
+import { ID, StoryRole } from '../../../types';
+import { TStoryCollaboratorRole } from '../../storyCollaborator/storyCollaborator.types';
+
+// TODO: Remove zod schema in DTOs
 
 const StoryCreateDTO = z.object({
   title: z
@@ -118,5 +121,23 @@ type TStoryAddChapterDTO = TStoryAddChapterSchema & {
   userId: string;
 };
 
+type IPublishedStoryDTO = {
+  storyId: ID;
+  userId: string;
+};
+
+type TStoryCreateInviteLinkDTO = {
+  storyId: ID;
+  role: TStoryCollaboratorRole;
+  invitedUserId: string;
+  inviterUserId: string;
+};
+
 export { StoryCreateDTO, StoryUpdateDTO };
-export type { IStoryCreateDTO, IStoryUpdateDTO, TStoryAddChapterDTO };
+export type {
+  IStoryCreateDTO,
+  IStoryUpdateDTO,
+  TStoryAddChapterDTO,
+  IPublishedStoryDTO,
+  TStoryCreateInviteLinkDTO,
+};

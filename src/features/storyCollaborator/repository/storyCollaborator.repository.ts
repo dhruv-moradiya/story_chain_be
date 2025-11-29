@@ -3,11 +3,33 @@ import { IStoryCollaborator, IStoryCollaboratorDoc } from '../storyCollaborator.
 import { ApiError } from '../../../utils/apiResponse';
 import { ClientSession } from 'mongoose';
 import { BaseRepository } from '../../../utils/baseClass';
+import { IStoryCollaboratorInvitationDTO } from '../../../dto/storyCollaborator.dto';
+import { ID, IOperationOptions } from '../../../types';
 
 export class StoryCollaboratorRepository extends BaseRepository<
   IStoryCollaborator,
   IStoryCollaboratorDoc
 > {
+  constructor() {
+    super(StoryCollaborator);
+  }
+
+  async createInvitation(
+    input: IStoryCollaboratorInvitationDTO,
+    options: IOperationOptions = {}
+  ): Promise<IStoryCollaborator> {
+    const doc = new this.model({
+      storyId: input.storyId,
+      userId: input.invitedUserId,
+      invitedBy: input.inviterUserId,
+      role: input.role,
+    });
+
+    await doc.save({ session: options.session });
+
+    return doc.toObject();
+  }
+
   async findByStoryAndUser(storyId: string, userId: string) {
     return StoryCollaborator.findOne({ storyId, userId });
   }
@@ -33,7 +55,7 @@ export class StoryCollaboratorRepository extends BaseRepository<
     if (result.deletedCount === 0) throw ApiError.notFound('Collaborator not found');
   }
 
-  async findStoryCollaborators(storyId: string) {
+  async findStoryCollaborators(storyId: ID): Promise<IStoryCollaborator[]> {
     return StoryCollaborator.find({ storyId });
   }
 

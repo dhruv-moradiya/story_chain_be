@@ -1,5 +1,5 @@
 import { ID } from '../../../types';
-import { StoryStatusType } from '../../story/story.types';
+import { TStoryStatus } from '../../story/story.types';
 
 type TChapterAddRootDTO = {
   storyId: ID;
@@ -16,7 +16,7 @@ type IChapterAddChildDTO = {
   content: string;
   ancestorIds: ID[];
   depth: number;
-  status: StoryStatusType;
+  status: TStoryStatus;
 };
 
 export type { IChapterAddChildDTO, TChapterAddRootDTO };

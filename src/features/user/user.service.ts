@@ -2,7 +2,7 @@ import { withTransaction } from '../../utils/withTransaction';
 import { PlatformRoleService } from '../platformRole/platformRole.service';
 import { ISessionCreateDTO, IUserCreateDTO } from './dto/user.dto';
 import { UserRepository } from './repository/user.repository';
-import { UserRules } from './rules/user.rules';
+import { UserRules } from '../../domain/user.rules';
 
 export class UserService {
   private readonly userRepo = new UserRepository();

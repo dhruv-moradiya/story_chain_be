@@ -3,10 +3,14 @@ import { FastifyReply, FastifyRequest } from 'fastify';
 import { HTTP_STATUS } from '../../constants/httpStatus';
 import { ApiResponse } from '../../utils/apiResponse';
 import { catchAsync } from '../../utils/catchAsync';
-import { IStoryCreateDTO } from './dto/story.dto';
+import { IStoryCreateDTO, TStoryCreateInviteLinkDTO } from '../../dto/story.dto';
 import { storyService } from './story.service';
 import { BaseModule } from '../../utils/baseClass';
-import { TStoryAddChapterSchema } from '../../schema/story.schema';
+import {
+  TStoryAddChapterSchema,
+  TStoryCreateInviteLinkSchema,
+  TStoryIDSchema,
+} from '../../schema/story.schema';
 
 export class StoryController extends BaseModule {
   // Handles creation of a new story for the authenticated user.
@@ -40,7 +44,7 @@ export class StoryController extends BaseModule {
 
       return reply
         .code(HTTP_STATUS.OK.code)
-        .send(new ApiResponse(true, 'Story fetched successfully', story));
+        .send(new ApiResponse(true, 'Story retrieved successfully', story));
     }
   );
 
@@ -51,7 +55,7 @@ export class StoryController extends BaseModule {
     this.logInfo(`Fetched stories`);
     return reply
       .code(HTTP_STATUS.OK.code)
-      .send(new ApiResponse(true, 'Stories fetched successfully', stories));
+      .send(new ApiResponse(true, 'All stories fetched successfully', stories));
   });
 
   // For public feed - only stories created in last 7 days
@@ -60,7 +64,7 @@ export class StoryController extends BaseModule {
     this.logInfo(`Fetched new stories`);
     return reply
       .code(HTTP_STATUS.OK.code)
-      .send(new ApiResponse(true, 'New stories fetched successfully', stories));
+      .send(new ApiResponse(true, 'Latest stories fetched successfully', stories));
   });
 
   // Get all stories created by the authenticated user.
@@ -73,7 +77,7 @@ export class StoryController extends BaseModule {
     this.logInfo(`Fetched stories for user ${userId}`);
     return reply
       .code(HTTP_STATUS.OK.code)
-      .send(new ApiResponse(true, 'Stories fetched successfully', stories));
+      .send(new ApiResponse(true, 'Your stories fetched successfully', stories));
   });
 
   // Get all draft stories created by the authenticated user.
@@ -86,7 +90,7 @@ export class StoryController extends BaseModule {
     this.logInfo(`Fetched draft stories for user ${userId}`);
     return reply
       .code(HTTP_STATUS.OK.code)
-      .send(new ApiResponse(true, 'Draft stories fetched successfully', stories));
+      .send(new ApiResponse(true, 'Your draft stories fetched successfully', stories));
   });
 
   // TODO: Add story tree fetching logic
@@ -98,9 +102,30 @@ export class StoryController extends BaseModule {
       this.logInfo(`Fetched story tree for story ${storyId}`);
       return reply
         .code(HTTP_STATUS.OK.code)
-        .send(new ApiResponse(true, 'Story tree fetched successfully', storyTree));
+        .send(new ApiResponse(true, 'Story tree loaded successfully', storyTree));
     }
   );
+
+  // Publish a story by the authenticated user (DRAFT -> PUBLISHED).
+  publishStory = catchAsync(
+    (request: FastifyRequest<{ Params: TStoryIDSchema }>, reply: FastifyReply) => {
+      const { storyId } = request.params;
+
+      const { clerkId: userId } = request.user;
+
+      const publishedStory = storyService.publishStory({ storyId, userId });
+
+      this.logInfo(`Published story ${storyId} by user ${userId}`);
+
+      return reply
+        .code(HTTP_STATUS.OK.code)
+        .send(new ApiResponse(true, 'Story published successfully', publishedStory));
+    }
+  );
+
+  // --------------------
+  // CHAPTER RELATED METHODS
+  // --------------------
 
   // Add a chapter to a story by the authenticated user.
   addChapterToStory = catchAsync(
@@ -129,6 +154,30 @@ export class StoryController extends BaseModule {
       return reply
         .code(HTTP_STATUS.CREATED.code)
         .send(new ApiResponse(true, 'Chapter added successfully', newChapter));
+    }
+  );
+
+  createInvitation = catchAsync(
+    async (
+      request: FastifyRequest<{ Params: TStoryIDSchema; Body: TStoryCreateInviteLinkSchema }>,
+      reply: FastifyReply
+    ) => {
+      const { clerkId: userId } = request.user;
+      const { storyId } = request.params;
+      const { role, invitedUserId } = request.body;
+
+      const input: TStoryCreateInviteLinkDTO = {
+        storyId: storyId,
+        role: role,
+        invitedUserId,
+        inviterUserId: userId,
+      };
+
+      const invitation = await storyService.createInvitation(input);
+
+      return reply
+        .code(HTTP_STATUS.CREATED.code)
+        .send(new ApiResponse(true, 'Invitation created successfully', invitation));
     }
   );
 }

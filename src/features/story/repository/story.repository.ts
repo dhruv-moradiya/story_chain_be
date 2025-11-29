@@ -1,8 +1,8 @@
 import { PipelineStage } from 'mongoose';
 import { Story } from '../../../models/story.model';
 import { ID, IOperationOptions } from '../../../types';
-import { IStory, IStoryDoc } from '../story.types';
 import { BaseRepository } from '../../../utils/baseClass';
+import { IStory, IStoryDoc, StoryStatus } from '../story.types';
 
 export class StoryRepository extends BaseRepository<IStory, IStoryDoc> {
   constructor() {
@@ -82,22 +82,22 @@ export class StoryRepository extends BaseRepository<IStory, IStoryDoc> {
   /**
    * Paginated list (general feed/search)
    */
-  async findPaged(
-    filter: Record<string, any> = {},
-    options: {
-      limit?: number;
-      skip?: number;
-      session?: any;
-    } = {}
-  ): Promise<IStory[]> {
-    return this.model
-      .find(filter)
-      .skip(options.skip ?? 0)
-      .limit(options.limit ?? 20)
-      .session(options.session ?? null)
-      .lean()
-      .exec();
-  }
+  // async findPaged(
+  //   filter: Record<string, any> = {},
+  //   options: {
+  //     limit?: number;
+  //     skip?: number;
+  //     session?: ClientSession;
+  //   } = {}
+  // ): Promise<IStory[]> {
+  //   return this.model
+  //     .find(filter)
+  //     .skip(options.skip ?? 0)
+  //     .limit(options.limit ?? 20)
+  //     .session(options.session ?? null)
+  //     .lean()
+  //     .exec();
+  // }
 
   /**
    * Generic findAll (paginated version recommended)
@@ -112,5 +112,12 @@ export class StoryRepository extends BaseRepository<IStory, IStoryDoc> {
       .session(options.session ?? null)
       .lean()
       .exec();
+  }
+
+  async changeStoryStatusToPublished(storyId: ID) {
+    return this.model.updateOne(
+      { _id: storyId },
+      { $set: { status: StoryStatus.PUBLISHED, publishedAt: new Date() } }
+    );
   }
 }

@@ -1,21 +1,29 @@
-import { ID, IOperationOptions } from '../../types';
-import { IStoryCreateDTO, TStoryAddChapterDTO } from './dto/story.dto';
-import { StoryRules } from './rules/story.rules';
-import { IStory, StoryStatusType } from './story.types';
-import { StoryPipelineBuilder } from './pipelines/storyPipeline.builder';
 import { StoryStatus } from '../../constants';
+import { ID, IOperationOptions } from '../../types';
+import { buildChapterTree, toId } from '../../utils';
 import { BaseModule } from '../../utils/baseClass';
-import { StoryRepository } from './repository/story.repository';
 import { withTransaction } from '../../utils/withTransaction';
 import { ChapterService } from '../chapter/chapter.service';
-import { buildChapterTree, toId } from '../../utils';
-import { ChapterRepository } from '../chapter/repositories/chapter.repository';
 import { IChapter } from '../chapter/chapter.types';
+import { ChapterRepository } from '../chapter/repositories/chapter.repository';
+import { StoryCollaboratorSerice } from '../storyCollaborator/storyCollaborator.service';
+import { IStoryCollaborator } from '../storyCollaborator/storyCollaborator.types';
+import {
+  IPublishedStoryDTO,
+  IStoryCreateDTO,
+  TStoryAddChapterDTO,
+  TStoryCreateInviteLinkDTO,
+} from '../../dto/story.dto';
+import { StoryPipelineBuilder } from './pipelines/storyPipeline.builder';
+import { StoryRepository } from './repository/story.repository';
+import { IStory, TStoryStatus } from './story.types';
+import { StoryRules } from '../../domain/story.rules';
 
 export class StoryService extends BaseModule {
   private readonly storyRepo = new StoryRepository();
   private readonly chapterService = new ChapterService();
   private readonly chapterRepo = new ChapterRepository();
+  private readonly storyCollaboratorService = new StoryCollaboratorSerice();
 
   /**
    * Create new story (with rate limiting)
@@ -103,7 +111,7 @@ export class StoryService extends BaseModule {
   async updateStoryStatus(
     storyId: string,
     userId: string,
-    status: StoryStatusType,
+    status: TStoryStatus,
     options: IOperationOptions = {}
   ): Promise<IStory> {
     const story = await this.storyRepo.findById(storyId, {}, options);
@@ -224,7 +232,7 @@ export class StoryService extends BaseModule {
       }
 
       // Determine status
-      let status: StoryStatusType = StoryStatus.DRAFT;
+      let status: TStoryStatus = StoryStatus.DRAFT;
       if (canAddDirect && !mustPR) {
         status = StoryStatus.PUBLISHED;
       }
@@ -250,6 +258,41 @@ export class StoryService extends BaseModule {
 
       return newChapter;
     });
+  }
+
+  async publishStory(input: IPublishedStoryDTO) {
+    const { storyId } = input;
+
+    const story = await this.storyRepo.findById(storyId);
+
+    if (!story) {
+      this.throwNotFoundError('Story not found');
+    }
+
+    if (!StoryRules.canPublishStory(story, input.userId)) {
+      this.throwForbiddenError('You do not have permission to publish this story.');
+    }
+
+    const updatedStory = await this.storyRepo.changeStoryStatusToPublished(storyId);
+
+    if (!updatedStory) {
+      this.throwInternalError('Failed to publish story');
+    }
+
+    return updatedStory;
+  }
+
+  async createInvitation(
+    input: TStoryCreateInviteLinkDTO,
+    options: IOperationOptions = {}
+  ): Promise<IStoryCollaborator> {
+    const collaborator = await this.storyCollaboratorService.inviteCollaborator(input, options);
+
+    if (!collaborator) {
+      this.throwInternalError('Failed to create invite link');
+    }
+
+    return collaborator;
   }
 }
 

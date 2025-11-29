@@ -162,11 +162,18 @@ const StoryUpdateChapterContentSchema = z.object({
     .transform((s) => s.trim()),
 });
 
+const StoryCreateInviteLinkSchema = z.object({
+  role: z.enum(['CO_AUTHOR', 'MODERATOR', 'REVIEWER', 'CONTRIBUTOR']),
+  invitedUserId: z.string(),
+});
+
+type TStoryIDSchema = z.infer<typeof StoryIdSchema>;
 type TStoryCreateSchema = z.infer<typeof StoryCreateSchema>;
 type TStoryUpdateSchema = z.infer<typeof StoryUpdateSchema>;
 type TStoryAddChapterSchema = z.infer<typeof StoryAddChapterSchema>;
 type TStoryUpdateChapterTitleSchema = z.infer<typeof StoryUpdateChapterTitleSchema>;
 type TStoryUpdateChapterContentSchema = z.infer<typeof StoryUpdateChapterContentSchema>;
+type TStoryCreateInviteLinkSchema = z.infer<typeof StoryCreateInviteLinkSchema>;
 
 export {
   StoryIdSchema,
@@ -175,12 +182,15 @@ export {
   StoryAddChapterSchema,
   StoryUpdateChapterTitleSchema,
   StoryUpdateChapterContentSchema,
+  StoryCreateInviteLinkSchema,
 };
 
 export type {
+  TStoryIDSchema,
   TStoryCreateSchema,
   TStoryUpdateSchema,
   TStoryAddChapterSchema,
   TStoryUpdateChapterTitleSchema,
   TStoryUpdateChapterContentSchema,
+  TStoryCreateInviteLinkSchema,
 };

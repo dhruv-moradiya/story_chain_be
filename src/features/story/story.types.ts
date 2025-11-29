@@ -37,7 +37,7 @@ export enum StoryStatus {
   DELETED = 'DELETED',
 }
 
-export type StoryStatusType = keyof typeof StoryStatus;
+export type TStoryStatus = keyof typeof StoryStatus;
 
 export interface IStory {
   _id: ID;
@@ -57,7 +57,7 @@ export interface IStory {
 
   tags: string[];
 
-  status: StoryStatusType;
+  status: TStoryStatus;
 
   trendingScore: number;
   lastActivityAt: Date;
@@ -70,7 +70,3 @@ export interface IStory {
 export interface IStoryDoc extends Document, IStory {
   _id: Types.ObjectId;
 }
-
-// ---------------------------------
-// Service
-// ---------------------------------
