@@ -17,7 +17,7 @@ export interface IChapter {
   depth: number;
   authorId: string;
   content: string;
-  title?: string;
+  title: string;
   chapterNumber?: number;
 
   votes: {

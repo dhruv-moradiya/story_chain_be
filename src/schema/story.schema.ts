@@ -6,6 +6,10 @@ const StoryIdSchema = z.object({
   storyId: ObjectIdSchema(),
 });
 
+const StorySlugSchema = z.object({
+  slug: z.string(),
+});
+
 const StoryCreateSchema = z.object({
   title: z
     .string()
@@ -168,6 +172,7 @@ const StoryCreateInviteLinkSchema = z.object({
 });
 
 type TStoryIDSchema = z.infer<typeof StoryIdSchema>;
+type TStorySlugSchema = z.infer<typeof StorySlugSchema>;
 type TStoryCreateSchema = z.infer<typeof StoryCreateSchema>;
 type TStoryUpdateSchema = z.infer<typeof StoryUpdateSchema>;
 type TStoryAddChapterSchema = z.infer<typeof StoryAddChapterSchema>;
@@ -177,6 +182,7 @@ type TStoryCreateInviteLinkSchema = z.infer<typeof StoryCreateInviteLinkSchema>;
 
 export {
   StoryIdSchema,
+  StorySlugSchema,
   StoryCreateSchema,
   StoryUpdateSchema,
   StoryAddChapterSchema,
@@ -187,6 +193,7 @@ export {
 
 export type {
   TStoryIDSchema,
+  TStorySlugSchema,
   TStoryCreateSchema,
   TStoryUpdateSchema,
   TStoryAddChapterSchema,

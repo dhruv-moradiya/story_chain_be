@@ -105,16 +105,11 @@ const userSchema = new Schema<IUserDoc>(
   },
   {
     timestamps: true,
+    versionKey: false, // removes __v
+    toJSON: { virtuals: true, getters: true },
+    toObject: { virtuals: true, getters: true },
   }
 );
-
-userSchema.set('toJSON', {
-  transform: (_doc, ret: Record<string, any>) => {
-    // delete ret._id;
-    delete ret.__v;
-    return ret;
-  },
-});
 
 // Indexes
 userSchema.index({ xp: -1 });

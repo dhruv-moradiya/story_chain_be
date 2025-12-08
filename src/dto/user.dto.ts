@@ -16,8 +16,12 @@ const SessionCreateDTO = z.object({
   lastActiveAt: z.date(),
 });
 
+interface ISearchUserByUsernameDTO {
+  username: string;
+}
+
 type IUserCreateDTO = z.infer<typeof UserCreateDTO>;
 type ISessionCreateDTO = z.infer<typeof SessionCreateDTO>;
 
 export { UserCreateDTO, SessionCreateDTO };
-export type { IUserCreateDTO, ISessionCreateDTO };
+export type { IUserCreateDTO, ISessionCreateDTO, ISearchUserByUsernameDTO };

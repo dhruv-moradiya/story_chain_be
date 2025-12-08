@@ -1,52 +1,36 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
-import { catchAsync } from '../../utils/catchAsync';
+import { HTTP_STATUS } from '../../constants/httpStatus';
 import { ApiResponse } from '../../utils/apiResponse';
+import { BaseModule } from '../../utils/baseClass';
+import { catchAsync } from '../../utils/catchAsync';
+import { TSearchUserByUsernameSchema } from '../../schema/user.schema';
 import { userService } from './user.service';
-export class UserController {
-  // -------------------------------------------------------
-  // PROFILE (BY ID)
-  // -------------------------------------------------------
-  static getUserById = catchAsync(
-    async (req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
-      const id = req.params.id;
 
-      const user = await userService.getUserById(id);
-
-      return reply.code(200).send(new ApiResponse(true, 'User fetched', user));
-    }
-  );
-
-  // -------------------------------------------------------
-  // CURRENT PROFILE (AUTH)
-  // -------------------------------------------------------
-  static getCurrentUser = catchAsync(async (req: FastifyRequest, reply: FastifyReply) => {
-    const clerkId = (req as any).userId;
-    if (!clerkId) return reply.code(401).send(new ApiResponse(false, 'Unauthorized'));
-
-    const user = await userService.getUserByClerkId(clerkId);
-
-    return reply.code(200).send(new ApiResponse(true, 'User fetched', user));
+export class UserController extends BaseModule {
+  getCurrentUserDetails = catchAsync(async (request: FastifyRequest, reply: FastifyReply) => {
+    const user = request.user;
+    return reply
+      .code(HTTP_STATUS.OK.code)
+      .send(new ApiResponse(true, 'Your draft stories fetched successfully', user));
   });
 
-  // -------------------------------------------------------
-  // UPDATE PROFILE
-  // -------------------------------------------------------
-  static updateProfile = catchAsync(async (req: FastifyRequest, reply: FastifyReply) => {
-    const parsed = UpdateUserProfileDTO.parse(req.body);
+  searchUserByUsername = catchAsync(
+    async (request: FastifyRequest<{ Body: TSearchUserByUsernameSchema }>, reply: FastifyReply) => {
+      const username = request.body.username;
 
-    const user = await userService.updateProfile(parsed);
+      const users = await userService.searchUserByUsername({ username });
 
-    return reply.code(200).send(new ApiResponse(true, 'Profile updated', user));
-  });
-
-  // -------------------------------------------------------
-  // DELETE (SOFT)
-  // -------------------------------------------------------
-  static deleteUser = catchAsync(
-    async (req: FastifyRequest<{ Params: { clerkId: string } }>, reply: FastifyReply) => {
-      await userService.deleteUser(req.params.clerkId);
-
-      return reply.code(200).send(new ApiResponse(true, 'User deleted'));
+      return reply
+        .code(HTTP_STATUS.OK.code)
+        .send(
+          new ApiResponse(
+            true,
+            users.length === 0
+              ? `No users found matching “${username}”.`
+              : `${users.length} user${users.length > 1 ? 's' : ''} found.`,
+            users
+          )
+        );
     }
   );
 }

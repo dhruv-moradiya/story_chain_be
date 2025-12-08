@@ -51,36 +51,91 @@ export interface PRStats {
 export interface IPullRequest {
   _id: ID;
   title: string;
-  description?: string;
+  description: string;
 
-  storyId: ID;
-  chapterId: ID;
-  parentChapterId: ID;
+  // Story/Chapter References
+  storyId: Types.ObjectId;
+  chapterId: Types.ObjectId;
+  parentChapterId: Types.ObjectId;
   authorId: string;
 
-  prType: PRType;
-  changes: PRChanges;
+  // PR Type
+  prType: 'NEW_CHAPTER' | 'EDIT_CHAPTER' | 'DELETE_CHAPTER';
 
-  status: PRStatus;
+  // Changes
+  changes: {
+    original?: string;
+    proposed: string;
+    diff?: string;
+    lineCount?: number;
+    additionsCount?: number;
+    deletionsCount?: number;
+  };
 
-  reviewedBy?: string;
-  reviewedAt?: Date;
-  reviewNotes?: string;
-  rejectionReason?: string;
+  // Status
+  status: 'OPEN' | 'APPROVED' | 'REJECTED' | 'CLOSED' | 'MERGED';
 
-  votes: PRVotes;
+  // Voting Aggregate (counts only, actual votes in PRVote schema)
+  votes: {
+    upvotes: number;
+    downvotes: number;
+    score: number;
+  };
 
+  // Comment Count (actual comments in PRComment schema)
   commentCount: number;
 
-  autoApprove: PRAutoApprove;
+  // Auto-approve Config
+  autoApprove: {
+    enabled: boolean;
+    threshold: number; // votes needed
+    timeWindow: number; // days
+  };
 
-  labels: PRLabel[];
+  // Labels
+  labels: string[];
 
+  // Merge Info
   mergedAt?: Date;
   mergedBy?: string;
 
-  stats: PRStats;
+  closedAt?: Date;
+  closedBy?: string;
+  closeReason?: string;
 
+  isDraft: boolean;
+  draftReason: string;
+  draftedAt: Date;
+
+  approvalsStatus: {};
+
+  requiresModeration: boolean;
+  flaggedForReview: boolean;
+  moderationNotes: string;
+  reportIds: [ID];
+
+  // hasConflicts: boolean;
+
+  // conflictDescription: string;
+  // conflictResolvedAt: boolean;
+
+  // Timeline (high-level tracking)
+  timeline: Array<{
+    action: string;
+    performedBy?: string;
+    performedAt: Date;
+    metadata?: any;
+  }>;
+
+  // Stats
+  stats: {
+    views: number;
+    discussions: number;
+    reviewsReceived?: number;
+    timeToMerge?: number; // in minutes
+  };
+
+  // Timestamps
   createdAt: Date;
   updatedAt: Date;
 }

@@ -1,12 +1,15 @@
+import { STORY_ROLES } from '../../constants';
 import { StoryCollaboratorRules } from '../../domain/storyCollaborator.rules';
 import {
   IGetAllStoryMembers,
   IStoryCollaboratorCreateDTO,
   IStoryCollaboratorInvitationDTO,
+  IStoryCollaboratorUpdateStatusDTO,
 } from '../../dto/storyCollaborator.dto';
 import { ID, IOperationOptions } from '../../types';
 import { BaseModule } from '../../utils/baseClass';
 import { StoryRepository } from '../story/repository/story.repository';
+import { StoryCollaboratorPipelineBuilder } from './pipelines/storyCollaborator.pipeline';
 import { StoryCollaboratorRepository } from './repository/storyCollaborator.repository';
 import { IStoryCollaborator, StoryCollaboratorStatus } from './storyCollaborator.types';
 
@@ -28,7 +31,7 @@ export class StoryCollaboratorSerice extends BaseModule {
     input: IStoryCollaboratorCreateDTO,
     options: IOperationOptions = {}
   ): Promise<IStoryCollaborator> {
-    const { userId, role, storyId } = input;
+    const { userId, role, storyId, status } = input;
 
     await this.ensureStoryExists(storyId, this.storyRepo, options);
 
@@ -36,6 +39,7 @@ export class StoryCollaboratorSerice extends BaseModule {
       storyId,
       role,
       userId,
+      ...(status ? { status } : {}),
     });
 
     if (!collaborator) {
@@ -51,13 +55,17 @@ export class StoryCollaboratorSerice extends BaseModule {
   ): Promise<IStoryCollaborator> {
     await this.ensureStoryExists(input.storyId, this.storyRepo, options);
 
-    const inviter = await this.storyCollaboratorRepo.findOne({
-      storyId: input.storyId,
-      userId: input.inviterUserId,
-      status: StoryCollaboratorStatus.ACCEPTED,
-    });
+    const inviter = await this.storyCollaboratorRepo.findOne(
+      {
+        storyId: input.storyId,
+        userId: input.inviterUserId,
+        status: StoryCollaboratorStatus.ACCEPTED,
+      },
+      {},
+      { session: options.session }
+    );
 
-    if (!inviter || !['OWNER', 'CO_AUTHOR', 'MODERATOR'].includes(inviter.role)) {
+    if (!inviter) {
       throw new Error('You do not have permission to send invitations for this story.');
     }
 
@@ -84,9 +92,35 @@ export class StoryCollaboratorSerice extends BaseModule {
 
     const invitation = this.storyCollaboratorRepo.createInvitation(input, options);
 
-    this.throwInternalError('Invitation could not be created due to an unexpected error.');
+    if (!invitation) {
+      this.throwInternalError('Invitation could not be created due to an unexpected error.');
+    }
 
     return invitation;
+  }
+
+  async updateCollaboratorStatus(
+    input: IStoryCollaboratorUpdateStatusDTO,
+    options: IOperationOptions = {}
+  ): Promise<IStoryCollaborator> {
+    const { status, userId, stotyId } = input;
+
+    const updatePayload = {
+      status,
+      ...(status === StoryCollaboratorStatus.ACCEPTED ? { acceptedAt: Date.now() } : {}),
+    };
+
+    const collaborator = await this.storyCollaboratorRepo.findOneAndUpdate(
+      { userId, stotyId },
+      updatePayload,
+      options
+    );
+
+    if (!collaborator) {
+      this.throwNotFoundError('Collaborator not found or no update was applied.');
+    }
+
+    return collaborator;
   }
 
   async getAllStoryMembers(
@@ -95,7 +129,11 @@ export class StoryCollaboratorSerice extends BaseModule {
   ): Promise<IStoryCollaborator[]> {
     await this.ensureStoryExists(input.storyId, this.storyRepo, options);
 
-    const members = await this.storyCollaboratorRepo.findStoryCollaborators(input.storyId);
+    const pipeline = new StoryCollaboratorPipelineBuilder()
+      .allCollaboratorDetails(input.storyId)
+      .build();
+
+    const members = await this.storyCollaboratorRepo.aggregateStories(pipeline);
 
     if (!members) {
       this.throwNotFoundError('No collaborators found for this story');

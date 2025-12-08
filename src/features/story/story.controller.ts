@@ -1,16 +1,16 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
 
 import { HTTP_STATUS } from '../../constants/httpStatus';
-import { ApiResponse } from '../../utils/apiResponse';
-import { catchAsync } from '../../utils/catchAsync';
 import { IStoryCreateDTO, TStoryCreateInviteLinkDTO } from '../../dto/story.dto';
-import { storyService } from './story.service';
-import { BaseModule } from '../../utils/baseClass';
 import {
   TStoryAddChapterSchema,
   TStoryCreateInviteLinkSchema,
   TStoryIDSchema,
 } from '../../schema/story.schema';
+import { ApiResponse } from '../../utils/apiResponse';
+import { BaseModule } from '../../utils/baseClass';
+import { catchAsync } from '../../utils/catchAsync';
+import { storyService } from './story.service';
 
 export class StoryController extends BaseModule {
   // Handles creation of a new story for the authenticated user.
@@ -29,7 +29,7 @@ export class StoryController extends BaseModule {
 
       return reply
         .code(HTTP_STATUS.CREATED.code)
-        .send(new ApiResponse(true, 'Story created successfully', newStory));
+        .send(new ApiResponse(true, 'Story created successfully as a draft.', newStory));
     }
   );
 
@@ -41,6 +41,20 @@ export class StoryController extends BaseModule {
       const story = await storyService.getStoryById(storyId);
 
       this.logInfo(`Fetched story ${storyId}`);
+
+      return reply
+        .code(HTTP_STATUS.OK.code)
+        .send(new ApiResponse(true, 'Story retrieved successfully', story));
+    }
+  );
+
+  getStoryBySlug = catchAsync(
+    async (request: FastifyRequest<{ Params: { slug: string } }>, reply: FastifyReply) => {
+      const { slug } = request.params;
+
+      const story = await storyService.getStoryBySlug(slug);
+
+      this.logInfo(`Fetched story ${slug}`);
 
       return reply
         .code(HTTP_STATUS.OK.code)
@@ -92,6 +106,31 @@ export class StoryController extends BaseModule {
       .code(HTTP_STATUS.OK.code)
       .send(new ApiResponse(true, 'Your draft stories fetched successfully', stories));
   });
+
+  // TODO: Only valid user can do this
+  getStoryCollaborators = catchAsync(
+    async (request: FastifyRequest<{ Params: TStoryIDSchema }>, reply: FastifyReply) => {
+      const storyId = request.params.storyId;
+      const userId = request.user.clerkId;
+
+      const collaborators = await storyService.getAllCollaborators({
+        storyId,
+        userId,
+      });
+
+      return reply
+        .code(HTTP_STATUS.OK.code)
+        .send(
+          new ApiResponse(
+            true,
+            collaborators.length === 0
+              ? `No collaborators found for this story.`
+              : `${collaborators.length} user${collaborators.length > 1 ? 's' : ''} found.`,
+            collaborators
+          )
+        );
+    }
+  );
 
   // TODO: Add story tree fetching logic
   getStoryTree = catchAsync(

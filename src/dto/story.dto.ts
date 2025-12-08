@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { TStoryAddChapterSchema } from '../../../schema/story.schema';
-import { ID, StoryRole } from '../../../types';
-import { TStoryCollaboratorRole } from '../../storyCollaborator/storyCollaborator.types';
+import { ID } from '../types';
+import { TStoryAddChapterSchema } from '../schema/story.schema';
+import { TStoryCollaboratorRole } from '../features/storyCollaborator/storyCollaborator.types';
 
 // TODO: Remove zod schema in DTOs
 
@@ -133,6 +133,16 @@ type TStoryCreateInviteLinkDTO = {
   inviterUserId: string;
 };
 
+interface IGetAllCollaboratorsDTO {
+  storyId: ID;
+  userId: string;
+}
+
+interface IStoryCollaboratorAcceptInvitationDTO {
+  stotyId: ID;
+  userId: string;
+}
+
 export { StoryCreateDTO, StoryUpdateDTO };
 export type {
   IStoryCreateDTO,
@@ -140,4 +150,6 @@ export type {
   TStoryAddChapterDTO,
   IPublishedStoryDTO,
   TStoryCreateInviteLinkDTO,
+  IStoryCollaboratorAcceptInvitationDTO,
+  IGetAllCollaboratorsDTO,
 };

@@ -1,7 +1,7 @@
 import { StoryCollaborator } from '../../../models/storyCollaborator.model';
 import { IStoryCollaborator, IStoryCollaboratorDoc } from '../storyCollaborator.types';
 import { ApiError } from '../../../utils/apiResponse';
-import { ClientSession } from 'mongoose';
+import { ClientSession, PipelineStage } from 'mongoose';
 import { BaseRepository } from '../../../utils/baseClass';
 import { IStoryCollaboratorInvitationDTO } from '../../../dto/storyCollaborator.dto';
 import { ID, IOperationOptions } from '../../../types';
@@ -12,6 +12,16 @@ export class StoryCollaboratorRepository extends BaseRepository<
 > {
   constructor() {
     super(StoryCollaborator);
+  }
+
+  async aggregateStories<T = IStoryCollaborator>(
+    pipeline: PipelineStage[],
+    options: IOperationOptions = {}
+  ): Promise<T[]> {
+    return this.model
+      .aggregate<T>(pipeline)
+      .session(options.session ?? null)
+      .exec();
   }
 
   async createInvitation(

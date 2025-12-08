@@ -7,9 +7,15 @@ import { ChapterService } from '../chapter/chapter.service';
 import { IChapter } from '../chapter/chapter.types';
 import { ChapterRepository } from '../chapter/repositories/chapter.repository';
 import { StoryCollaboratorSerice } from '../storyCollaborator/storyCollaborator.service';
-import { IStoryCollaborator } from '../storyCollaborator/storyCollaborator.types';
 import {
+  IStoryCollaborator,
+  StoryCollaboratorRole,
+  StoryCollaboratorStatus,
+} from '../storyCollaborator/storyCollaborator.types';
+import {
+  IGetAllCollaboratorsDTO,
   IPublishedStoryDTO,
+  IStoryCollaboratorAcceptInvitationDTO,
   IStoryCreateDTO,
   TStoryAddChapterDTO,
   TStoryCreateInviteLinkDTO,
@@ -28,31 +34,42 @@ export class StoryService extends BaseModule {
   /**
    * Create new story (with rate limiting)
    */
-  async createStory(
-    input: IStoryCreateDTO & { creatorId: string },
-    options: IOperationOptions = {}
-  ): Promise<IStory> {
-    const { creatorId } = input;
+  async createStory(input: IStoryCreateDTO & { creatorId: string }): Promise<IStory> {
+    return await withTransaction('Creating new story', async (session) => {
+      const { creatorId } = input;
+      const options = { session };
 
-    const start = new Date();
-    start.setUTCHours(0, 0, 0, 0);
+      const start = new Date();
+      start.setUTCHours(0, 0, 0, 0);
 
-    const end = new Date();
-    end.setUTCHours(23, 59, 59, 999);
+      const end = new Date();
+      end.setUTCHours(23, 59, 59, 999);
 
-    const todayCount = await this.storyRepo.countByCreatorInDateRange(
-      creatorId,
-      start,
-      end,
-      options
-    );
+      const todayCount = await this.storyRepo.countByCreatorInDateRange(
+        creatorId,
+        start,
+        end,
+        options
+      );
 
-    if (!StoryRules.canCreateStory(todayCount)) {
-      this.throwTooManyRequestsError('Daily story creation limit reached. Try again tomorrow.');
-    }
+      if (!StoryRules.canCreateStory(todayCount)) {
+        this.throwTooManyRequestsError('Daily story creation limit reached. Try again tomorrow.');
+      }
 
-    const story = await this.storyRepo.create(input, options);
-    return story;
+      const story = await this.storyRepo.create({ ...input, status: StoryStatus.DRAFT }, options);
+
+      await this.storyCollaboratorService.createCollaborator(
+        {
+          userId: creatorId,
+          storyId: story._id,
+          role: StoryCollaboratorRole.OWNER,
+          status: StoryCollaboratorStatus.ACCEPTED,
+        },
+        options
+      );
+
+      return story;
+    });
   }
 
   /**
@@ -60,6 +77,19 @@ export class StoryService extends BaseModule {
    */
   async getStoryById(storyId: ID, options: IOperationOptions = {}): Promise<IStory> {
     const story = await this.storyRepo.findById(storyId, {}, options);
+
+    if (!story) {
+      this.throwNotFoundError('Story not found');
+    }
+
+    return story;
+  }
+
+  /**
+   * Get story by ID (with not found error)
+   */
+  async getStoryBySlug(slug: string, options: IOperationOptions = {}): Promise<IStory> {
+    const story = await this.storyRepo.findOne({ slug }, {}, options);
 
     if (!story) {
       this.throwNotFoundError('Story not found');
@@ -80,7 +110,6 @@ export class StoryService extends BaseModule {
    */
   async getNewStories(options: IOperationOptions = {}): Promise<IStory[]> {
     const pipeline = new StoryPipelineBuilder().lastSevenDaysStories().build();
-
     return this.storyRepo.aggregateStories(pipeline, options);
   }
 
@@ -133,7 +162,7 @@ export class StoryService extends BaseModule {
     );
 
     if (!updated) {
-      this.throwInternalError('Failed to update story status');
+      this.throwInternalError('Unable to update story status. Please try again.');
     }
 
     return updated;
@@ -141,51 +170,43 @@ export class StoryService extends BaseModule {
 
   async getStoryTree(storyId: string): Promise<{ storyId: string; chapters: IChapter[] }> {
     const story = await this.storyRepo.findById(storyId);
+
     if (!story) {
-      this.throwNotFoundError('Story not found.');
+      this.throwNotFoundError('Story not found. Unable to generate chapter tree.');
     }
 
     const chapters = await this.chapterRepo.findByStoryId(storyId);
 
     if (!chapters || chapters.length === 0) {
       return {
-        storyId: storyId,
+        storyId,
         chapters: [],
       };
     }
 
-    // TODO: Move to story rules
     const tree = buildChapterTree(chapters);
 
     return {
-      storyId: storyId,
+      storyId,
       chapters: tree,
     };
   }
 
-  // TODO: After creating new chapter versioning system, integrate versioning here
-  async addChapterToStory(input: TStoryAddChapterDTO) {
-    return await withTransaction('Adding chapter to story', async (session) => {
+  async addChapterToStory(input: TStoryAddChapterDTO): Promise<IChapter> {
+    return await withTransaction('Creating a new chapter', async (session) => {
       const { storyId, userId, ...chapterData } = input;
 
-      // -----------------------------------------
-      // 1. Validate story
-      // -----------------------------------------
       const story = await this.getStoryById(toId(storyId), { session });
 
       if (!story) {
         this.throwNotFoundError('Story not found.');
       }
 
-      // -----------------------------------------
-      // CASE 1 — ROOT CHAPTER
-      // -----------------------------------------
       const isRootChapter = !chapterData.parentChapterId;
 
       if (isRootChapter) {
-        // Permission check
         if (!StoryRules.canAddRootChapter(story, userId)) {
-          this.throwForbiddenError('Only the creator of this story can add root-level chapters.');
+          this.throwForbiddenError('Only the story creator is allowed to add root-level chapters.');
         }
 
         const rootChapterInput = {
@@ -195,49 +216,38 @@ export class StoryService extends BaseModule {
           content: chapterData.content,
         };
 
-        const newChapter = await this.chapterService.createRootChapter(rootChapterInput, {
-          session,
-        });
-
-        return newChapter;
+        return await this.chapterService.createRootChapter(rootChapterInput, { session });
       }
 
-      // -----------------------------------------
-      // CASE 2 — CHILD CHAPTER
-      // -----------------------------------------
       const parentChapter = await this.chapterService.getChapterById(
         chapterData.parentChapterId as string,
-        {
-          session,
-        }
+        { session }
       );
 
-      // Validate parent
       if (!parentChapter || parentChapter.storyId.toString() !== storyId) {
-        console.log('CONDITION MET');
-        this.throwBadRequest('Invalid parent chapter ID.');
+        this.throwBadRequest(
+          'The provided parent chapter ID is invalid or does not belong to this story.'
+        );
       }
 
-      // Permission check
       if (!StoryRules.canAddChapter(story, userId)) {
-        this.throwForbiddenError('You do not have permission to add chapters to this story.');
+        this.throwForbiddenError(
+          'You do not have the required permissions to add chapters to this story.'
+        );
       }
 
-      // Publishing rules
       const canAddDirect = StoryRules.canAddChapterDirectly(story, userId);
       const mustPR = StoryRules.mustUsePRForChapterAddition(story, userId);
 
       if (mustPR && !canAddDirect) {
-        this.throwForbiddenError('You must create a pull request to add chapters to this story.');
+        this.throwForbiddenError('A pull request is required to add new chapters to this story.');
       }
 
-      // Determine status
       let status: TStoryStatus = StoryStatus.DRAFT;
       if (canAddDirect && !mustPR) {
         status = StoryStatus.PUBLISHED;
       }
 
-      // Depth & ancestry
       const depth = parentChapter.depth + 1;
       const ancestorIds = [...parentChapter.ancestorIds, parentChapter._id];
 
@@ -252,11 +262,7 @@ export class StoryService extends BaseModule {
         content: chapterData.content,
       };
 
-      const newChapter = await this.chapterService.createChildChapter(childChapterInput, {
-        session,
-      });
-
-      return newChapter;
+      return await this.chapterService.createChildChapter(childChapterInput, { session });
     });
   }
 
@@ -276,23 +282,57 @@ export class StoryService extends BaseModule {
     const updatedStory = await this.storyRepo.changeStoryStatusToPublished(storyId);
 
     if (!updatedStory) {
-      this.throwInternalError('Failed to publish story');
+      this.throwInternalError('Unable to publish the story. Please try again.');
     }
 
     return updatedStory;
   }
 
-  async createInvitation(
-    input: TStoryCreateInviteLinkDTO,
-    options: IOperationOptions = {}
+  async createInvitation(input: TStoryCreateInviteLinkDTO): Promise<IStoryCollaborator> {
+    return withTransaction('Creating collaborator invitation', async (session) => {
+      const options = { session };
+
+      const collaborator = await this.storyCollaboratorService.inviteCollaborator(input, options);
+
+      if (!collaborator) {
+        this.throwInternalError('Unable to create invitation link. Please try again.');
+      }
+
+      return collaborator;
+    });
+  }
+
+  async acceptInvitation(
+    input: IStoryCollaboratorAcceptInvitationDTO
   ): Promise<IStoryCollaborator> {
-    const collaborator = await this.storyCollaboratorService.inviteCollaborator(input, options);
+    return withTransaction('Accepting collaborator invitation', async (session) => {
+      const { userId, stotyId } = input;
+      const options = { session };
 
-    if (!collaborator) {
-      this.throwInternalError('Failed to create invite link');
-    }
+      const collaborator = await this.storyCollaboratorService.updateCollaboratorStatus(
+        {
+          status: StoryCollaboratorStatus.ACCEPTED,
+          userId,
+          stotyId,
+        },
+        options
+      );
 
-    return collaborator;
+      if (!collaborator) {
+        this.throwInternalError('Unable to accept the invitation. Please try again.');
+      }
+
+      return collaborator;
+    });
+  }
+
+  async getAllCollaborators(input: IGetAllCollaboratorsDTO): Promise<IStoryCollaborator[]> {
+    const { storyId } = input;
+    console.log('storyId :>> ', storyId);
+
+    const collaborators = this.storyCollaboratorService.getAllStoryMembers({ storyId });
+
+    return collaborators;
   }
 }
 

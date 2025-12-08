@@ -15,10 +15,29 @@ const prReviewSchema = new Schema<IPRReviewDoc>(
       required: true,
       index: true,
     },
-    decision: {
+    /**
+     * REVIEW_STATUS: Detailed review progress (non-terminal, changes during process)
+     * VALUES:
+     *   - PENDING_REVIEW: Waiting for reviewers
+     *   - IN_REVIEW: At least one reviewer started
+     *   - CHANGES_REQUESTED: Reviewer(s) requested changes, author must update
+     *   - APPROVED: All reviews received, all approved
+     *   - NEEDS_WORK: Changes requested must be addressed
+     *   - DRAFT: Author paused review (uses isDraft field)
+     * USE: Show detailed progress in UI, determine next steps
+     * UPDATE:
+     *   - On creation: PENDING_REVIEW
+     *   - When review submitted: IN_REVIEW
+     *   - When REQUEST_CHANGES review added: CHANGES_REQUESTED
+     *   - When all approvals: APPROVED
+     *   - When author marks draft: DRAFT
+     * RELATIONSHIP: Works with status field for full state picture
+     */
+    reviewStatus: {
       type: String,
-      required: true,
-      enum: ['APPROVE', 'REQUEST_CHANGES', 'COMMENT'],
+      enum: ['PENDING_REVIEW', 'IN_REVIEW', 'CHANGES_REQUESTED', 'APPROVED', 'NEEDS_WORK', 'DRAFT'],
+      default: 'PENDING_REVIEW',
+      index: true,
     },
     summary: {
       type: String,

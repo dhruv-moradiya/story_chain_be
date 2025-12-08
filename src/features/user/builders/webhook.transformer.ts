@@ -4,7 +4,7 @@ import {
   IUserCreateDTO,
   SessionCreateDTO,
   UserCreateDTO,
-} from '../dto/user.dto';
+} from '../../../dto/user.dto';
 
 export class WebhookTransformer {
   transformUserCreated(raw: UserJSON): IUserCreateDTO {

@@ -23,6 +23,15 @@ export class UserRepository extends BaseRepository<IUser, IUserDoc> {
     return this.findOne({ email });
   }
 
+  async findByUsername(username: string): Promise<IUser[]> {
+    return this.findMany({
+      username: {
+        $regex: username,
+        $options: 'i',
+      },
+    });
+  }
+
   async updateByClerkId(id: string, update: UpdateQuery<IUser>): Promise<IUser | null> {
     return this.findOneAndUpdate({ clerkId: id }, { ...update }, { new: true });
   }

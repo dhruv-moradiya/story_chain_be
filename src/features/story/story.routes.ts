@@ -1,7 +1,12 @@
 import { FastifyInstance } from 'fastify';
 import { validateAuth } from '../../middlewares/authHandler';
 import { validateSuperAdmin } from '../../middlewares/story/story.middleware';
-import { StoryAddChapterSchema, StoryCreateSchema, StoryIdSchema } from '../../schema/story.schema';
+import {
+  StoryAddChapterSchema,
+  StoryCreateInviteLinkSchema,
+  StoryCreateSchema,
+  StoryIdSchema,
+} from '../../schema/story.schema';
 import { storyController } from './story.controller';
 import zodToJsonSchema from 'zod-to-json-schema';
 
@@ -32,7 +37,27 @@ export async function storyRoutes(fastify: FastifyInstance) {
   fastify.get('/my', { preHandler: [validateAuth] }, storyController.getMyStories);
 
   // Fetch a single story by its ID for viewing and for public access.
-  fastify.get('/:storyId', storyController.getStoryById);
+  fastify.get('/:slug', { preHandler: [validateAuth] }, storyController.getStoryBySlug);
+
+  fastify.get(
+    '/:storyId/collaborators',
+    { preHandler: [validateAuth] },
+    storyController.getStoryCollaborators
+  );
+
+  fastify.post(
+    '/:storyId/collaborators',
+    {
+      preHandler: [validateAuth],
+      schema: {
+        body: zodToJsonSchema(StoryCreateInviteLinkSchema),
+        params: zodToJsonSchema(StoryIdSchema),
+      },
+    },
+    storyController.createInvitation
+  );
+
+  // fastify.get('/:storyId', storyController.getStoryById);
 
   // ---------------
   // CHAPTER ROUTES

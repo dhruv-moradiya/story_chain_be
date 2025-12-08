@@ -1,0 +1,111 @@
+import { Types } from 'mongoose';
+import { IChapterAutoSave, IChapterAutoSaveDoc } from '../chapterAutoSave.types';
+import { BaseRepository } from '../../../utils/baseClass';
+import { ChapterAutoSave } from '../../../models/chapterAutoSave.modal';
+import { ID } from '../../../types';
+
+export class ChapterAutoSaveRepository extends BaseRepository<
+  IChapterAutoSave,
+  IChapterAutoSaveDoc
+> {
+  constructor() {
+    super(ChapterAutoSave);
+  }
+
+  // ───────────────────────────────────────────────
+  // Finds
+  // ───────────────────────────────────────────────
+  findByChapterIdAndUser(chapterId: ID, userId: string) {
+    return this.model.findOne({ chapterId, userId });
+  }
+
+  findByDraftIdAndUser(draftId: string, userId: string) {
+    return this.model.findOne({ draftId, userId });
+  }
+
+  disableAutoSaveForExistingChapter(chapterId: ID) {
+    return this.findOneAndUpdate({ chapterId: chapterId }, { isEnabled: false }, { new: true });
+  }
+
+  disableAutoSaveForSraftAutoSave(id: ID) {
+    return this.findOneAndUpdate({ _id: id }, { isEnabled: false }, { new: true });
+  }
+
+  // ───────────────────────────────────────────────
+  // Create autosave for NEW chapter
+  // ───────────────────────────────────────────────
+  enableAutoSaveForChapter(chapter: {
+    chapterId: Types.ObjectId;
+    userId: string;
+    title: string;
+    content: string;
+  }) {
+    const { chapterId, userId, title, content } = chapter;
+
+    return this.model.findOneAndUpdate(
+      { chapterId, userId },
+      {
+        $set: {
+          isEnabled: true,
+          lastSavedAt: new Date(),
+        },
+        $setOnInsert: {
+          chapterId,
+          userId,
+          title,
+          content,
+          saveCount: 0,
+        },
+      },
+      { new: true, upsert: true }
+    );
+  }
+
+  // ───────────────────────────────────────────────
+  // Create autosave for NEW draft (no chapter yet)
+  // ───────────────────────────────────────────────
+  enableAutoSaveForDraft(draft: { draftId: string; userId: string }) {
+    const { draftId, userId } = draft;
+
+    return this.model.findOneAndUpdate(
+      { draftId, userId },
+      {
+        $set: {
+          isEnabled: true,
+          lastSavedAt: new Date(),
+        },
+        $setOnInsert: {
+          draftId,
+          userId,
+          title: '',
+          content: '',
+          saveCount: 0,
+        },
+      },
+      { new: true, upsert: true }
+    );
+  }
+
+  // ───────────────────────────────────────────────
+  // Update existing autosave (after saving content)
+  // ───────────────────────────────────────────────
+  updateAutoSave(id: ID, update: Partial<IChapterAutoSave>) {
+    return this.model.findByIdAndUpdate(id, update, { new: true });
+  }
+
+  // ───────────────────────────────────────────────
+  // When chapter is officially created → attach draft
+  // ───────────────────────────────────────────────
+  linkDraftToChapter(userId: string, draftId: string, chapterId: Types.ObjectId) {
+    return this.model.findOneAndUpdate(
+      { userId, draftId },
+      {
+        $set: {
+          chapterId,
+          draftId: null,
+        },
+      },
+      { new: true }
+    );
+  }
+}

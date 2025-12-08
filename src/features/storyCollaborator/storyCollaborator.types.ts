@@ -26,7 +26,7 @@ export enum StoryCollaboratorStatus {
   REMOVED = 'REMOVED',
 }
 
-type TStoryAddChapterStatus = keyof typeof StoryCollaboratorStatus;
+export type TStoryCollaboratorStatus = keyof typeof StoryCollaboratorStatus;
 
 export interface IStoryCollaborator {
   _id: ID;
@@ -36,7 +36,7 @@ export interface IStoryCollaborator {
   invitedBy?: string;
   invitedAt: Date;
   acceptedAt?: Date;
-  status: TStoryAddChapterStatus;
+  status: TStoryCollaboratorStatus;
   createdAt?: Date;
   updatedAt?: Date;
 }

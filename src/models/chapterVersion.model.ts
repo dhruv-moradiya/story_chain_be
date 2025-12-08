@@ -27,10 +27,23 @@ const chapterVersionSchema = new Schema<IChapterVersionDoc>(
       type: String,
       maxlength: 500,
     },
-    changesSummary: String,
+    changesSummary: {
+      type: String,
+      maxLength: 1000,
+    },
+    editType: {
+      type: String,
+      enum: ['MANUAL_EDIT', 'PR_MERGE', 'ADMIN_ROLLBACK', 'MODERATION_REMOVAL', 'IMPORT'],
+      default: 'MANUAL_EDIT',
+      index: true,
+    },
     prId: {
       type: Schema.Types.ObjectId,
       ref: 'PullRequest',
+    },
+    previousVersionId: {
+      type: Schema.Types.ObjectId,
+      ref: 'ChapterVersion',
     },
   },
   {

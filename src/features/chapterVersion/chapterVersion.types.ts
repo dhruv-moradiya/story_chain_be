@@ -1,9 +1,16 @@
 import { Document, Types } from 'mongoose';
 import { ID } from '../../types';
 
-/**
- * Represents a single version (revision) of a chapter.
- */
+enum ChapterVersionEditType {
+  MANUAL_EDIT = 'MANUAL_EDIT',
+  PR_MERGE = 'PR_MERGE',
+  ADMIN_ROLLBACK = 'ADMIN_ROLLBACK',
+  MODERATION_REMOVAL = 'MODERATION_REMOVAL',
+  IMPORT = 'IMPORT',
+}
+
+type TChapterVersionEditType = keyof typeof ChapterVersionEditType;
+
 export interface IChapterVersion {
   _id: ID;
   chapterId: ID;
@@ -13,7 +20,9 @@ export interface IChapterVersion {
   editedBy: string;
   editReason?: string;
   changesSummary?: string;
+  editType: TChapterVersionEditType;
   prId?: ID;
+  previousVersionId: ID;
   createdAt: Date;
   updatedAt: Date;
 }
