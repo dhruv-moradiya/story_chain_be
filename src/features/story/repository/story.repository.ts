@@ -11,7 +11,6 @@ export class StoryRepository extends BaseRepository<IStory, IStoryDoc> {
 
   /**
    * Count stories by creatorId within a date range.
-   * (Service will decide what date range to pass)
    */
   async countByCreatorInDateRange(
     creatorId: string,
@@ -28,24 +27,32 @@ export class StoryRepository extends BaseRepository<IStory, IStoryDoc> {
     );
   }
 
-  // Increment chapters
-  incrementTotalChapters(id: ID) {
-    return this.model.updateOne(
-      { _id: id },
-      { $inc: { 'stats.totalChapters': 1 }, $set: { lastActivityAt: new Date() } }
-    );
+  /** Increment chapters counter */
+  incrementTotalChapters(
+    id: ID
+  ): Promise<{ acknowledged: boolean; modifiedCount: number; matchedCount: number }> {
+    return this.model
+      .updateOne(
+        { _id: id },
+        { $inc: { 'stats.totalChapters': 1 }, $set: { lastActivityAt: new Date() } }
+      )
+      .exec();
   }
 
-  // Increment branches
-  incrementTotalBranches(id: ID) {
-    return this.model.updateOne(
-      { _id: id },
-      { $inc: { 'stats.totalBranches': 1 }, $set: { lastActivityAt: new Date() } }
-    );
+  /** Increment branches counter */
+  incrementTotalBranches(
+    id: ID
+  ): Promise<{ acknowledged: boolean; modifiedCount: number; matchedCount: number }> {
+    return this.model
+      .updateOne(
+        { _id: id },
+        { $inc: { 'stats.totalBranches': 1 }, $set: { lastActivityAt: new Date() } }
+      )
+      .exec();
   }
 
   /**
-   * Generic aggregation executor (with session support)
+   * Generic aggregation executor
    */
   async aggregateStories<T = IStory>(
     pipeline: PipelineStage[],
@@ -57,9 +64,7 @@ export class StoryRepository extends BaseRepository<IStory, IStoryDoc> {
       .exec();
   }
 
-  /**
-   * Find all stories by creatorId
-   */
+  /** Find all stories created by a user */
   async findByCreatorId(creatorId: string, options: IOperationOptions = {}): Promise<IStory[]> {
     return this.model
       .find({ creatorId })
@@ -68,9 +73,7 @@ export class StoryRepository extends BaseRepository<IStory, IStoryDoc> {
       .exec();
   }
 
-  /**
-   * Find story by slug
-   */
+  /** Find a single story by slug */
   async findBySlug(slug: string, options: IOperationOptions = {}): Promise<IStory | null> {
     return this.model
       .findOne({ slug })
@@ -79,29 +82,7 @@ export class StoryRepository extends BaseRepository<IStory, IStoryDoc> {
       .exec();
   }
 
-  /**
-   * Paginated list (general feed/search)
-   */
-  // async findPaged(
-  //   filter: Record<string, any> = {},
-  //   options: {
-  //     limit?: number;
-  //     skip?: number;
-  //     session?: ClientSession;
-  //   } = {}
-  // ): Promise<IStory[]> {
-  //   return this.model
-  //     .find(filter)
-  //     .skip(options.skip ?? 0)
-  //     .limit(options.limit ?? 20)
-  //     .session(options.session ?? null)
-  //     .lean()
-  //     .exec();
-  // }
-
-  /**
-   * Generic findAll (paginated version recommended)
-   */
+  /** Generic findAll */
   async findAll(
     options: IOperationOptions & { limit?: number; skip?: number } = {}
   ): Promise<IStory[]> {
@@ -114,10 +95,25 @@ export class StoryRepository extends BaseRepository<IStory, IStoryDoc> {
       .exec();
   }
 
-  async changeStoryStatusToPublished(storyId: ID) {
-    return this.model.updateOne(
-      { _id: storyId },
-      { $set: { status: StoryStatus.PUBLISHED, publishedAt: new Date() } }
-    );
+  /** Change story status → Published */
+  async changeStoryStatusToPublished(
+    storyId: ID
+  ): Promise<{ acknowledged: boolean; modifiedCount: number; matchedCount: number }> {
+    return this.model
+      .updateOne(
+        { _id: storyId },
+        { $set: { status: StoryStatus.PUBLISHED, publishedAt: new Date() } }
+      )
+      .exec();
+  }
+
+  /** Update story settings */
+  async updateStorySetting(storyId: ID, update: Partial<IStory['settings']>): Promise<IStory> {
+    const updated = await this.model
+      .findByIdAndUpdate(storyId, { $set: update }, { new: true })
+      .lean()
+      .exec();
+
+    return updated as IStory;
   }
 }

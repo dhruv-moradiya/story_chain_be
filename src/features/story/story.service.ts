@@ -17,6 +17,7 @@ import {
   IPublishedStoryDTO,
   IStoryCollaboratorAcceptInvitationDTO,
   IStoryCreateDTO,
+  IStoryUpdateSettingDTO,
   TStoryAddChapterDTO,
   TStoryCreateInviteLinkDTO,
 } from '../../dto/story.dto';
@@ -333,6 +334,18 @@ export class StoryService extends BaseModule {
     const collaborators = this.storyCollaboratorService.getAllStoryMembers({ storyId });
 
     return collaborators;
+  }
+
+  async updateSetting(input: IStoryUpdateSettingDTO) {
+    const { storyId, ...update } = input;
+
+    const story = await this.storyRepo.updateStorySetting(storyId, update);
+
+    if (!story) {
+      this.throwNotFoundError('Unable to update settings: the story does not exist.');
+    }
+
+    return story;
   }
 }
 

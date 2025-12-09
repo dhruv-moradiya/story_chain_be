@@ -1,24 +1,36 @@
 import { Document, Types } from 'mongoose';
 import { ID } from '../../types';
 
+export enum StoryGenre {
+  FANTASY = 'FANTASY',
+  SCI_FI = 'SCI_FI',
+  MYSTERY = 'MYSTERY',
+  ROMANCE = 'ROMANCE',
+  HORROR = 'HORROR',
+  THRILLER = 'THRILLER',
+  ADVENTURE = 'ADVENTURE',
+  DRAMA = 'DRAMA',
+  COMEDY = 'COMEDY',
+  OTHER = 'OTHER',
+}
+
+export enum StoryContentRating {
+  GENERAL = 'GENERAL',
+  TEEN = 'TEEN',
+  MATURE = 'MATURE',
+}
+
+export type TStoryGenre = keyof typeof StoryGenre;
+export type TStoryContentRating = keyof typeof StoryContentRating;
+
 export interface IStorySettings {
   isPublic: boolean;
   allowBranching: boolean;
   requireApproval: boolean;
   allowComments: boolean;
   allowVoting: boolean;
-  genre:
-    | 'FANTASY'
-    | 'SCI_FI'
-    | 'MYSTERY'
-    | 'ROMANCE'
-    | 'HORROR'
-    | 'THRILLER'
-    | 'ADVENTURE'
-    | 'DRAMA'
-    | 'COMEDY'
-    | 'OTHER';
-  contentRating: 'GENERAL' | 'TEEN' | 'MATURE';
+  genre: TStoryGenre;
+  contentRating: TStoryContentRating;
 }
 
 export interface IStoryStats {

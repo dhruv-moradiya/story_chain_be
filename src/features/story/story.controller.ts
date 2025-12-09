@@ -1,11 +1,16 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
 
 import { HTTP_STATUS } from '../../constants/httpStatus';
-import { IStoryCreateDTO, TStoryCreateInviteLinkDTO } from '../../dto/story.dto';
+import {
+  IStoryCreateDTO,
+  IStoryUpdateSettingDTO,
+  TStoryCreateInviteLinkDTO,
+} from '../../dto/story.dto';
 import {
   TStoryAddChapterSchema,
   TStoryCreateInviteLinkSchema,
   TStoryIDSchema,
+  TStoryUpdateSettingSchema,
 } from '../../schema/story.schema';
 import { ApiResponse } from '../../utils/apiResponse';
 import { BaseModule } from '../../utils/baseClass';
@@ -217,6 +222,26 @@ export class StoryController extends BaseModule {
       return reply
         .code(HTTP_STATUS.CREATED.code)
         .send(new ApiResponse(true, 'Invitation created successfully', invitation));
+    }
+  );
+
+  updateStorySetting = catchAsync(
+    async (
+      request: FastifyRequest<{ Params: TStoryIDSchema; Body: TStoryUpdateSettingSchema }>,
+      reply: FastifyReply
+    ) => {
+      const { storyId } = request.params;
+
+      const input: IStoryUpdateSettingDTO = {
+        ...request.body,
+        storyId,
+      };
+
+      const story = await storyService.updateSetting(input);
+
+      return reply
+        .code(HTTP_STATUS.CREATED.code)
+        .send(new ApiResponse(true, 'Story setting updated successfully', story));
     }
   );
 }

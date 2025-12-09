@@ -171,6 +171,76 @@ const StoryCreateInviteLinkSchema = z.object({
   invitedUserId: z.string(),
 });
 
+const GenreEnum = z.enum(
+  [
+    'FANTASY',
+    'SCI_FI',
+    'MYSTERY',
+    'ROMANCE',
+    'HORROR',
+    'THRILLER',
+    'ADVENTURE',
+    'DRAMA',
+    'COMEDY',
+    'OTHER',
+  ],
+  {
+    errorMap: () => ({
+      message: 'Invalid genre selected. Please choose a valid genre option.',
+    }),
+  }
+);
+
+const ContentRatingEnum = z.enum(['GENERAL', 'TEEN', 'MATURE'], {
+  errorMap: () => ({
+    message: 'Invalid content rating. Allowed values are GENERAL, TEEN, or MATURE.',
+  }),
+});
+
+const StoryUpdateSettingSchema = z.object({
+  isPublic: z
+    .boolean({
+      required_error: 'isPublic is required.',
+      invalid_type_error: 'isPublic must be a boolean.',
+    })
+    .default(false),
+
+  allowBranching: z
+    .boolean({
+      required_error: 'allowBranching is required.',
+      invalid_type_error: 'allowBranching must be a boolean.',
+    })
+    .default(false),
+
+  requireApproval: z
+    .boolean({
+      required_error: 'requireApproval is required.',
+      invalid_type_error: 'requireApproval must be a boolean.',
+    })
+    .default(true),
+
+  allowComments: z
+    .boolean({
+      required_error: 'allowComments is required.',
+      invalid_type_error: 'allowComments must be a boolean.',
+    })
+    .default(false),
+
+  allowVoting: z
+    .boolean({
+      required_error: 'allowVoting is required.',
+      invalid_type_error: 'allowVoting must be a boolean.',
+    })
+    .default(false),
+
+  genre: GenreEnum.default('OTHER'),
+
+  contentRating: ContentRatingEnum.default('GENERAL'),
+});
+
+// Type export
+export type TStorySettings = z.infer<typeof StoryUpdateSettingSchema>;
+
 type TStoryIDSchema = z.infer<typeof StoryIdSchema>;
 type TStorySlugSchema = z.infer<typeof StorySlugSchema>;
 type TStoryCreateSchema = z.infer<typeof StoryCreateSchema>;
@@ -179,6 +249,7 @@ type TStoryAddChapterSchema = z.infer<typeof StoryAddChapterSchema>;
 type TStoryUpdateChapterTitleSchema = z.infer<typeof StoryUpdateChapterTitleSchema>;
 type TStoryUpdateChapterContentSchema = z.infer<typeof StoryUpdateChapterContentSchema>;
 type TStoryCreateInviteLinkSchema = z.infer<typeof StoryCreateInviteLinkSchema>;
+type TStoryUpdateSettingSchema = z.infer<typeof StoryUpdateSettingSchema>;
 
 export {
   StoryIdSchema,
@@ -189,6 +260,7 @@ export {
   StoryUpdateChapterTitleSchema,
   StoryUpdateChapterContentSchema,
   StoryCreateInviteLinkSchema,
+  StoryUpdateSettingSchema,
 };
 
 export type {
@@ -200,4 +272,5 @@ export type {
   TStoryUpdateChapterTitleSchema,
   TStoryUpdateChapterContentSchema,
   TStoryCreateInviteLinkSchema,
+  TStoryUpdateSettingSchema,
 };

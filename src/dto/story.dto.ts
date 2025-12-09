@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { ID } from '../types';
 import { TStoryAddChapterSchema } from '../schema/story.schema';
 import { TStoryCollaboratorRole } from '../features/storyCollaborator/storyCollaborator.types';
+import { TStoryContentRating, TStoryGenre } from '../features/story/story.types';
 
 // TODO: Remove zod schema in DTOs
 
@@ -143,6 +144,17 @@ interface IStoryCollaboratorAcceptInvitationDTO {
   userId: string;
 }
 
+interface IStoryUpdateSettingDTO {
+  storyId: ID;
+  isPublic: boolean;
+  allowBranching: boolean;
+  requireApproval: boolean;
+  allowComments: boolean;
+  allowVoting: boolean;
+  genre: TStoryGenre;
+  contentRating: TStoryContentRating;
+}
+
 export { StoryCreateDTO, StoryUpdateDTO };
 export type {
   IStoryCreateDTO,
@@ -152,4 +164,5 @@ export type {
   TStoryCreateInviteLinkDTO,
   IStoryCollaboratorAcceptInvitationDTO,
   IGetAllCollaboratorsDTO,
+  IStoryUpdateSettingDTO,
 };
