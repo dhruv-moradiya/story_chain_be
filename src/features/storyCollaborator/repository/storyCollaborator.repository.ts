@@ -30,8 +30,8 @@ export class StoryCollaboratorRepository extends BaseRepository<
   ): Promise<IStoryCollaborator> {
     const doc = new this.model({
       storyId: input.storyId,
-      userId: input.invitedUserId,
-      invitedBy: input.inviterUserId,
+      userId: input.invitedUser.id,
+      invitedBy: input.inviterUser.id,
       role: input.role,
     });
 

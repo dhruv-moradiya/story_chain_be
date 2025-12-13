@@ -28,6 +28,25 @@ export enum StoryCollaboratorStatus {
 
 export type TStoryCollaboratorStatus = keyof typeof StoryCollaboratorStatus;
 
+export type TStoryCollaboratorPermission =
+  | 'canEditStorySettings'
+  | 'canDeleteStory'
+  | 'canArchiveStory'
+  | 'canWriteChapters'
+  | 'canEditAnyChapter'
+  | 'canDeleteAnyChapter'
+  | 'canApprovePRs'
+  | 'canRejectPRs'
+  | 'canReviewPRs'
+  | 'canMergePRs'
+  | 'canInviteCollaborators'
+  | 'canRemoveCollaborators'
+  | 'canChangePermissions'
+  | 'canModerateComments'
+  | 'canDeleteComments'
+  | 'canBanFromStory'
+  | 'canViewStoryAnalytics';
+
 export interface IStoryCollaborator {
   _id: ID;
   storyId: ID;

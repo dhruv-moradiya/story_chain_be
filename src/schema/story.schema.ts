@@ -169,6 +169,7 @@ const StoryUpdateChapterContentSchema = z.object({
 const StoryCreateInviteLinkSchema = z.object({
   role: z.enum(['CO_AUTHOR', 'MODERATOR', 'REVIEWER', 'CONTRIBUTOR']),
   invitedUserId: z.string(),
+  invitedUserName: z.string(),
 });
 
 const GenreEnum = z.enum(

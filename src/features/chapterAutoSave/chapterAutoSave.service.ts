@@ -188,7 +188,7 @@ class ChapterAutoSaveService extends BaseModule {
       );
 
       if (!disableAutoSaveData) {
-        this.throwInternalError('');
+        this.throwInternalError('Failed to disable auto-save. Please try again.');
       }
 
       return disableAutoSaveData;

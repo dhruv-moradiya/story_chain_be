@@ -6,7 +6,7 @@ import { withTransaction } from '../../utils/withTransaction';
 import { ChapterService } from '../chapter/chapter.service';
 import { IChapter } from '../chapter/chapter.types';
 import { ChapterRepository } from '../chapter/repositories/chapter.repository';
-import { StoryCollaboratorSerice } from '../storyCollaborator/storyCollaborator.service';
+import { StoryCollaboratorService } from '../storyCollaborator/storyCollaborator.service';
 import {
   IStoryCollaborator,
   StoryCollaboratorRole,
@@ -30,7 +30,7 @@ export class StoryService extends BaseModule {
   private readonly storyRepo = new StoryRepository();
   private readonly chapterService = new ChapterService();
   private readonly chapterRepo = new ChapterRepository();
-  private readonly storyCollaboratorService = new StoryCollaboratorSerice();
+  private readonly storyCollaboratorService = new StoryCollaboratorService();
 
   /**
    * Create new story (with rate limiting)

@@ -127,11 +127,24 @@ type IPublishedStoryDTO = {
   userId: string;
 };
 
+// type TStoryCreateInviteLinkDTO = {
+//   storyId: ID;
+//   role: TStoryCollaboratorRole;
+//   invitedUserId: string;
+//   inviterUserId: string;
+// };
+
 type TStoryCreateInviteLinkDTO = {
   storyId: ID;
   role: TStoryCollaboratorRole;
-  invitedUserId: string;
-  inviterUserId: string;
+  invitedUser: {
+    id: string;
+    name: string;
+  };
+  inviterUser: {
+    id: string;
+    name: string;
+  };
 };
 
 interface IGetAllCollaboratorsDTO {

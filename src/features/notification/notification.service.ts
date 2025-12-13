@@ -1,49 +1,46 @@
-import { Notification } from '../../models/notification.model';
+import { INotificationForCollabInvitation } from '../../dto/notification.dto';
+import { NotificationFactory } from '../../services/notificationFactory.service';
 import { BaseModule } from '../../utils/baseClass';
+import { INotification, NotificationType } from './notification.types';
+import { NotificationRepository } from './repository/notification.repository';
 
 export class NotificationService extends BaseModule {
-  async notifyBranchCreation(chapter, story, treeData, userId, badges) {
-    const notifications = [];
+  private readonly notificationRepo = new NotificationRepository();
 
-    // Notify parent chapter author
-    if (treeData.parentChapter && treeData.parentChapter.authorId.toString() !== userId) {
-      notifications.push({
-        userId: treeData.parentChapter.authorId,
-        type: 'NEW_BRANCH',
-        relatedStoryId: story._id,
-        relatedChapterId: chapter._id,
-        relatedUserId: userId,
-        title: 'New Branch Created!',
-        message: `Someone continued your chapter in "${story.title}"`,
-      });
+  async createNotificationForCollabInvitation(
+    input: INotificationForCollabInvitation
+    // options: IOperationOptions = {}
+  ) {
+    const { invitedUser, inviterUser, role, story } = input;
+
+    const { title, message, type, actionUrl } = NotificationFactory.build(
+      NotificationType.COLLAB_INVITATION,
+      {
+        role,
+        storyId: story._id,
+        storyName: story.title,
+        actor: inviterUser.name,
+      }
+    );
+
+    const payload: Partial<INotification> = {
+      userId: invitedUser.id,
+      relatedStoryId: story._id,
+      type: type,
+      title,
+      message,
+      actionUrl: actionUrl ?? '',
+    };
+
+    const notification = await this.notificationRepo.createNotification({
+      ...payload,
+    });
+
+    if (!notification) {
+      this.throwInternalError('');
     }
 
-    // Notify story owner
-    if (story.creatorId.toString() !== userId && !treeData.isRootChapter) {
-      notifications.push({
-        userId: story.creatorId,
-        type: 'STORY_CONTINUED',
-        relatedStoryId: story._id,
-        relatedChapterId: chapter._id,
-        relatedUserId: userId,
-        title: 'Story Continued!',
-        message: `New chapter added to "${story.title}"`,
-      });
-    }
-
-    // Badge notifications
-    if (badges.length > 0) {
-      notifications.push({
-        userId,
-        type: 'BADGE_EARNED',
-        title: 'Achievement Unlocked!',
-        message: `You earned the ${badges.join(', ')} badge${badges.length > 1 ? 's' : ''}!`,
-      });
-    }
-
-    if (notifications.length > 0) {
-      await Notification.insertMany(notifications);
-    }
+    return notification;
   }
 }
 export const notificationService = new NotificationService();
