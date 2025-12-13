@@ -30,6 +30,10 @@ const notificationSchema = new Schema<INotificationDoc>({
       'MENTION',
       'NEW_FOLLOWER',
       'BADGE_EARNED',
+
+      'COLLAB_INVITATION',
+      'COLLAB_INVITATION_APPROVED',
+      'COLLAB_INVITATION_REJECTED',
     ],
     required: true,
     index: true,

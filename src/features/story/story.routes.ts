@@ -9,6 +9,7 @@ import {
 } from '../../schema/story.schema';
 import { storyController } from './story.controller';
 import zodToJsonSchema from 'zod-to-json-schema';
+import { loadStoryContext, StoryRoleGuards } from '../../middlewares/rbac/storyRole.middleware';
 
 export async function storyRoutes(fastify: FastifyInstance) {
   // ---------------
@@ -48,7 +49,7 @@ export async function storyRoutes(fastify: FastifyInstance) {
   fastify.post(
     '/:storyId/collaborators',
     {
-      preHandler: [validateAuth],
+      preHandler: [validateAuth, loadStoryContext, StoryRoleGuards.canInvite],
       schema: {
         body: zodToJsonSchema(StoryCreateInviteLinkSchema),
         params: zodToJsonSchema(StoryIdSchema),
@@ -67,7 +68,7 @@ export async function storyRoutes(fastify: FastifyInstance) {
   fastify.post(
     '/:storyId/chapters',
     {
-      preHandler: [validateAuth],
+      preHandler: [validateAuth, loadStoryContext, StoryRoleGuards.canWriteChapters],
       schema: {
         body: zodToJsonSchema(StoryAddChapterSchema),
         params: zodToJsonSchema(StoryIdSchema),

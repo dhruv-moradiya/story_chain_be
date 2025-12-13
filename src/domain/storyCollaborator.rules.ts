@@ -3,6 +3,7 @@ import { IStory } from '../features/story/story.types';
 import {
   IStoryCollaborator,
   ROLE_HIERARCHY,
+  TStoryCollaboratorPermission,
   TStoryCollaboratorRole,
 } from '../features/storyCollaborator/storyCollaborator.types';
 
@@ -31,6 +32,8 @@ export class StoryCollaboratorRules {
     invitorUserId: string,
     collaborators: IStoryCollaborator[]
   ): boolean {
+    console.log('collaborators :>> ', collaborators);
+    console.log('invitorUserId :>> ', invitorUserId);
     return collaborators.some((collaborator) => collaborator.userId === invitorUserId);
   }
 
@@ -58,5 +61,28 @@ export class StoryCollaboratorRules {
     invitedUserRole: TStoryCollaboratorRole
   ): boolean {
     return ROLE_HIERARCHY[invitorRole] >= ROLE_HIERARCHY[invitedUserRole];
+  }
+
+  static getCollaboratorLavel(role: TStoryCollaboratorRole): number {
+    return ROLE_HIERARCHY[role];
+  }
+
+  static hasMinimumStoryRole(
+    userRole: TStoryCollaboratorRole,
+    requiredRole: TStoryCollaboratorRole
+  ): boolean {
+    return (
+      StoryCollaboratorRules.getCollaboratorLavel(userRole) >=
+      StoryCollaboratorRules.getCollaboratorLavel(requiredRole)
+    );
+  }
+
+  static hasStoryPermission(
+    role: TStoryCollaboratorRole,
+    permission: TStoryCollaboratorPermission
+  ): boolean {
+    const roleConfig = STORY_ROLES[role];
+    if (!roleConfig) return false;
+    return roleConfig.permissions[permission] === true;
   }
 }

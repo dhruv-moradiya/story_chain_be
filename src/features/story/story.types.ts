@@ -1,5 +1,6 @@
 import { Document, Types } from 'mongoose';
 import { ID } from '../../types';
+import { TStoryCollaboratorRole } from '../storyCollaborator/storyCollaborator.types';
 
 export enum StoryGenre {
   FANTASY = 'FANTASY',
@@ -50,6 +51,16 @@ export enum StoryStatus {
 }
 
 export type TStoryStatus = keyof typeof StoryStatus;
+
+export interface IStoryContext {
+  storyId: string;
+  creatorId: string;
+  status: string;
+  collaborators?: Array<{
+    userId: string;
+    role: TStoryCollaboratorRole;
+  }>;
+}
 
 export interface IStory {
   _id: ID;

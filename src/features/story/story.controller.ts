@@ -206,15 +206,21 @@ export class StoryController extends BaseModule {
       request: FastifyRequest<{ Params: TStoryIDSchema; Body: TStoryCreateInviteLinkSchema }>,
       reply: FastifyReply
     ) => {
-      const { clerkId: userId } = request.user;
+      const { clerkId: userId, username } = request.user;
       const { storyId } = request.params;
-      const { role, invitedUserId } = request.body;
+      const { role, invitedUserId, invitedUserName } = request.body;
 
       const input: TStoryCreateInviteLinkDTO = {
         storyId: storyId,
         role: role,
-        invitedUserId,
-        inviterUserId: userId,
+        invitedUser: {
+          id: invitedUserId,
+          name: invitedUserName,
+        },
+        inviterUser: {
+          id: userId,
+          name: username,
+        },
       };
 
       const invitation = await storyService.createInvitation(input);

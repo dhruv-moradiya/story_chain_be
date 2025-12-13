@@ -1,8 +1,7 @@
 import { ClientSession } from 'mongoose';
-import { PlatformRole } from '../../types';
 import { PlatformRoleRepository } from './repository/platformRole.repository';
 import { PlatformRoleValidator } from './validators/platformRole.validator';
-import { IPlatformRole } from './platformRole.types';
+import { IPlatformRole, PlatformRole } from './platformRole.types';
 
 export class PlatformRoleService {
   private readonly repo = new PlatformRoleRepository();

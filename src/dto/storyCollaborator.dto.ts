@@ -14,8 +14,14 @@ interface IStoryCollaboratorCreateDTO {
 interface IStoryCollaboratorInvitationDTO {
   storyId: ID;
   role: TStoryCollaboratorRole;
-  invitedUserId: string;
-  inviterUserId: string;
+  invitedUser: {
+    id: string;
+    name: string;
+  };
+  inviterUser: {
+    id: string;
+    name: string;
+  };
 }
 
 interface IStoryCollaboratorUpdateStatusDTO {

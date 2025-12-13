@@ -8,16 +8,28 @@ import {
 } from '../../dto/storyCollaborator.dto';
 import { ID, IOperationOptions } from '../../types';
 import { BaseModule } from '../../utils/baseClass';
+import { NotificationService } from '../notification/notification.service';
 import { StoryRepository } from '../story/repository/story.repository';
+import { IStory } from '../story/story.types';
 import { StoryCollaboratorPipelineBuilder } from './pipelines/storyCollaborator.pipeline';
 import { StoryCollaboratorRepository } from './repository/storyCollaborator.repository';
-import { IStoryCollaborator, StoryCollaboratorStatus } from './storyCollaborator.types';
+import {
+  IStoryCollaborator,
+  StoryCollaboratorRole,
+  StoryCollaboratorStatus,
+  TStoryCollaboratorRole,
+} from './storyCollaborator.types';
 
-export class StoryCollaboratorSerice extends BaseModule {
+export class StoryCollaboratorService extends BaseModule {
   private readonly storyRepo = new StoryRepository();
   private readonly storyCollaboratorRepo = new StoryCollaboratorRepository();
+  private readonly notificationService = new NotificationService();
 
-  protected async ensureStoryExists(storyId: ID, repo: any, options = {}) {
+  protected async ensureStoryExists(
+    storyId: ID,
+    repo: StoryRepository,
+    options: IOperationOptions = {}
+  ): Promise<IStory> {
     const story = await repo.findById(storyId, {}, options);
 
     if (!story) {
@@ -25,6 +37,21 @@ export class StoryCollaboratorSerice extends BaseModule {
     }
 
     return story;
+  }
+
+  protected async getStoryCollaboratos(
+    input: IGetAllStoryMembers,
+    options: IOperationOptions = {}
+  ): Promise<IStoryCollaborator[]> {
+    await this.ensureStoryExists(input.storyId, this.storyRepo, options);
+
+    const members = await this.storyCollaboratorRepo.findStoryCollaborators(input.storyId);
+
+    if (!members) {
+      this.throwNotFoundError('No collaborators found for this story');
+    }
+
+    return members;
   }
 
   async createCollaborator(
@@ -53,12 +80,12 @@ export class StoryCollaboratorSerice extends BaseModule {
     input: IStoryCollaboratorInvitationDTO,
     options: IOperationOptions = {}
   ): Promise<IStoryCollaborator> {
-    await this.ensureStoryExists(input.storyId, this.storyRepo, options);
+    const story = await this.ensureStoryExists(input.storyId, this.storyRepo, options);
 
     const inviter = await this.storyCollaboratorRepo.findOne(
       {
         storyId: input.storyId,
-        userId: input.inviterUserId,
+        userId: input.inviterUser.id,
         status: StoryCollaboratorStatus.ACCEPTED,
       },
       {},
@@ -69,11 +96,11 @@ export class StoryCollaboratorSerice extends BaseModule {
       throw new Error('You do not have permission to send invitations for this story.');
     }
 
-    const storyCollaborators = await this.getAllStoryMembers({ storyId: input.storyId });
+    const storyCollaborators = await this.getStoryCollaboratos({ storyId: input.storyId });
 
     if (
       !StoryCollaboratorRules.isInvitorIsCollaboratorOfStory(
-        input.inviterUserId,
+        input.inviterUser.id,
         storyCollaborators
       )
     ) {
@@ -91,6 +118,14 @@ export class StoryCollaboratorSerice extends BaseModule {
     }
 
     const invitation = this.storyCollaboratorRepo.createInvitation(input, options);
+
+    // TODO: Add in queue
+    await this.notificationService.createNotificationForCollabInvitation({
+      invitedUser: input.invitedUser,
+      inviterUser: input.inviterUser,
+      role: input.role,
+      story,
+    });
 
     if (!invitation) {
       this.throwInternalError('Invitation could not be created due to an unexpected error.');
@@ -141,4 +176,30 @@ export class StoryCollaboratorSerice extends BaseModule {
 
     return members;
   }
+
+  async getCollaboratorRole(
+    userId: string,
+    storyId: ID,
+    options: IOperationOptions = {}
+  ): Promise<TStoryCollaboratorRole | null> {
+    const story = await this.ensureStoryExists(storyId, this.storyRepo, options);
+
+    if (story.creatorId === userId) {
+      return StoryCollaboratorRole.OWNER;
+    }
+
+    const collaborator = await this.storyCollaboratorRepo.findOne({
+      storyId,
+      userId,
+      status: StoryCollaboratorStatus.ACCEPTED,
+    });
+
+    if (collaborator) {
+      return collaborator.role;
+    }
+
+    return null;
+  }
 }
+
+export const storyCollaboratorService = new StoryCollaboratorService();

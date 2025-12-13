@@ -5,12 +5,16 @@ import { PlatformRole } from '../models/platformRole.model';
 import { IUser } from '../features/user/user.types';
 import { IPlatformRole } from '../features/platformRole/platformRole.types';
 import { HTTP_STATUS } from '../constants/httpStatus';
+import { TStoryCollaboratorRole } from '../features/storyCollaborator/storyCollaborator.types';
+import { IStoryContext } from '../features/story/story.types';
 
 type AuthUser = IUser & IPlatformRole;
 
 declare module 'fastify' {
   interface FastifyRequest {
     user: AuthUser;
+    storyContext?: IStoryContext;
+    userStoryRole?: TStoryCollaboratorRole | null;
   }
 }
 
