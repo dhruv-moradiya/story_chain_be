@@ -40,6 +40,8 @@ export async function storyRoutes(fastify: FastifyInstance) {
   // Fetch a single story by its ID for viewing and for public access.
   fastify.get('/:slug', { preHandler: [validateAuth] }, storyController.getStoryBySlug);
 
+  fastify.get('/:storyId/tree', { preHandler: [validateAuth] }, storyController.getStoryTree);
+
   fastify.get(
     '/:storyId/collaborators',
     { preHandler: [validateAuth] },

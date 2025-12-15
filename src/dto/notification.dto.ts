@@ -14,4 +14,8 @@ interface INotificationForCollabInvitation {
   role: TStoryCollaboratorRole;
 }
 
-export type { INotificationForCollabInvitation };
+interface IGetUserNotificationDTO {
+  userId: string;
+}
+
+export type { INotificationForCollabInvitation, IGetUserNotificationDTO };

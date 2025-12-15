@@ -25,11 +25,13 @@ import { StoryPipelineBuilder } from './pipelines/storyPipeline.builder';
 import { StoryRepository } from './repository/story.repository';
 import { IStory, TStoryStatus } from './story.types';
 import { StoryRules } from '../../domain/story.rules';
+import { ChapterPipelineBuilder } from '../chapter/pipelines/chapterPipeline.builder';
 
 export class StoryService extends BaseModule {
   private readonly storyRepo = new StoryRepository();
   private readonly chapterService = new ChapterService();
   private readonly chapterRepo = new ChapterRepository();
+  private readonly chapterPipelineBuilder = new ChapterPipelineBuilder();
   private readonly storyCollaboratorService = new StoryCollaboratorService();
 
   /**
@@ -176,7 +178,17 @@ export class StoryService extends BaseModule {
       this.throwNotFoundError('Story not found. Unable to generate chapter tree.');
     }
 
-    const chapters = await this.chapterRepo.findByStoryId(storyId);
+    const pipeline = new ChapterPipelineBuilder()
+      .loadChaptersForStory(storyId)
+      .getAuthorDetails()
+      .buildChapterGraphNode()
+      .build();
+
+    console.log('pipeline :>> ', pipeline);
+
+    const chapters = await this.chapterRepo.aggregateChapters(pipeline);
+
+    console.log('chapters :>> ', chapters);
 
     if (!chapters || chapters.length === 0) {
       return {

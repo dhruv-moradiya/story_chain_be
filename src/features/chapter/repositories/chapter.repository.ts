@@ -1,12 +1,23 @@
-import { ClientSession, QueryOptions, UpdateQuery } from 'mongoose';
+import { ClientSession, PipelineStage, QueryOptions, UpdateQuery } from 'mongoose';
 
 import { Chapter } from '../../../models/chapter.model';
 import { IChapter, IChapterDoc } from '../chapter.types';
 import { BaseRepository } from '../../../utils/baseClass';
+import { IOperationOptions } from '../../../types';
 
 export class ChapterRepository extends BaseRepository<IChapter, IChapterDoc> {
   constructor() {
     super(Chapter);
+  }
+
+  async aggregateChapters<T = IChapter>(
+    pipeline: PipelineStage[],
+    options: IOperationOptions = {}
+  ): Promise<T[]> {
+    return this.model
+      .aggregate<T>(pipeline)
+      .session(options.session ?? null)
+      .exec();
   }
 
   async findRoot(storyId: string): Promise<IChapter | null> {
