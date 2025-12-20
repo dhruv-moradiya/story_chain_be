@@ -49,7 +49,6 @@ export async function validateAuth(request: FastifyRequest, reply: FastifyReply)
     }
     request.user = { ...user, ...platformRole };
   } catch (error) {
-    console.error('validateAuth error:', error);
     return reply.code(500).send({
       error: 'Unexpected server error',
       message: 'Something went wrong while verifying your authentication. Please try again.',

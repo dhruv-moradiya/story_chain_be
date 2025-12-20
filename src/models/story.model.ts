@@ -28,6 +28,10 @@ const storySchema = new Schema<IStoryDoc>(
       url: String,
       publicId: String,
     },
+    cardImage: {
+      url: String,
+      publicId: String,
+    },
 
     // Creator
     creatorId: {

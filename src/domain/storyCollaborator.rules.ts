@@ -32,8 +32,6 @@ export class StoryCollaboratorRules {
     invitorUserId: string,
     collaborators: IStoryCollaborator[]
   ): boolean {
-    console.log('collaborators :>> ', collaborators);
-    console.log('invitorUserId :>> ', invitorUserId);
     return collaborators.some((collaborator) => collaborator.userId === invitorUserId);
   }
 

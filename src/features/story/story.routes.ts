@@ -6,6 +6,7 @@ import {
   StoryCreateInviteLinkSchema,
   StoryCreateSchema,
   StoryIdSchema,
+  StoryUpdateSettingSchema,
 } from '../../schema/story.schema';
 import { storyController } from './story.controller';
 import zodToJsonSchema from 'zod-to-json-schema';
@@ -41,6 +42,18 @@ export async function storyRoutes(fastify: FastifyInstance) {
   fastify.get('/:slug', { preHandler: [validateAuth] }, storyController.getStoryBySlug);
 
   fastify.get('/:storyId/tree', { preHandler: [validateAuth] }, storyController.getStoryTree);
+
+  fastify.post(
+    '/:storyId/settings',
+    {
+      preHandler: [validateAuth],
+      schema: {
+        body: zodToJsonSchema(StoryUpdateSettingSchema),
+        params: zodToJsonSchema(StoryIdSchema),
+      },
+    },
+    storyController.updateStorySetting
+  );
 
   fastify.get(
     '/:storyId/collaborators',

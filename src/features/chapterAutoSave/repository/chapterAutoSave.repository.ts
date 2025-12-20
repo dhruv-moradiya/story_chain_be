@@ -23,6 +23,10 @@ export class ChapterAutoSaveRepository extends BaseRepository<
     return this.model.findOne({ draftId, userId });
   }
 
+  findByUser(userId: string) {
+    return this.model.findOne({ userId });
+  }
+
   disableAutoSaveForExistingChapter(chapterId: ID) {
     return this.findOneAndUpdate({ chapterId: chapterId }, { isEnabled: false }, { new: true });
   }
@@ -39,7 +43,7 @@ export class ChapterAutoSaveRepository extends BaseRepository<
     userId: string;
     title: string;
     content: string;
-  }) {
+  }): Promise<IChapterAutoSave> {
     const { chapterId, userId, title, content } = chapter;
 
     return this.model.findOneAndUpdate(

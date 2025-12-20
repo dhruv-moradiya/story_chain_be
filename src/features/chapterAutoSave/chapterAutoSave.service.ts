@@ -17,6 +17,10 @@ class ChapterAutoSaveService extends BaseModule {
   private readonly chapterRepo = new ChapterRepository();
   private readonly chapterAutoSaveRepo = new ChapterAutoSaveRepository();
 
+  private generateDraftId(): string {
+    return crypto.randomUUID();
+  }
+
   private async ensureChapterIsExist(chapterId: ID): Promise<IChapter> {
     const chapter = await this.chapterRepo.findById(chapterId);
 
@@ -45,6 +49,38 @@ class ChapterAutoSaveService extends BaseModule {
     return updated;
   }
 
+  private async enableChapterAutoSave(chapterId: ID, userId: string): Promise<IChapterAutoSave> {
+    const chapter = await this.ensureChapterIsExist(chapterId);
+
+    ChapterRules.ensureCanEnableAutoSave(chapter, userId);
+
+    const autoSave = await this.chapterAutoSaveRepo.enableAutoSaveForChapter({
+      chapterId: chapter._id as Types.ObjectId,
+      userId,
+      title: chapter.title,
+      content: chapter.content,
+    });
+
+    if (!autoSave) {
+      this.throwInternalError('Failed to enable autosave for chapter');
+    }
+
+    return autoSave;
+  }
+
+  private async enableDraftAutoSave(draftId: string, userId: string): Promise<IChapterAutoSave> {
+    const autoSave = await this.chapterAutoSaveRepo.enableAutoSaveForDraft({
+      draftId,
+      userId,
+    });
+
+    if (!autoSave) {
+      this.throwInternalError('Failed to enable autosave for draft');
+    }
+
+    return autoSave;
+  }
+
   /**
    * ═══════════════════════════════════════════════════════════════════
    * STEP 1: ENABLE AUTO-SAVE
@@ -61,38 +97,22 @@ class ChapterAutoSaveService extends BaseModule {
   ): Promise<IChapterAutoSave> {
     const { chapterId, draftId, userId } = input;
 
-    let chapter: IChapter | null = null;
-    let finalDraftId = draftId;
-
     // ───────────────────────────────────────────────
-    // CASE 1: Existing chapter → Standard AutoSave
+    // CASE 1: Existing Chapter → Standard AutoSave
     // ───────────────────────────────────────────────
     if (chapterId) {
-      chapter = await this.ensureChapterIsExist(chapterId);
-      ChapterRules.ensureCanEnableAutoSave(chapter, userId);
-
-      return this.chapterAutoSaveRepo.enableAutoSaveForChapter({
-        chapterId: chapter._id as Types.ObjectId,
-        userId,
-        title: chapter.title,
-        content: chapter.content,
-      });
+      return this.enableChapterAutoSave(chapterId, userId);
     }
 
     // ───────────────────────────────────────────────
-    // CASE 2: New draft (no chapter yet)
+    // CASE 2: New or Existing Draft → Draft AutoSave
     // ───────────────────────────────────────────────
-    if (!finalDraftId) {
-      finalDraftId = crypto.randomUUID();
-    }
+    const finalDraftId = draftId ?? this.generateDraftId();
 
-    // Case 3: Resume draft → (optional) owner rule
+    // Optional rule
     // DraftRules.ensureValidDraftOwner(finalDraftId, userId);
 
-    return this.chapterAutoSaveRepo.enableAutoSaveForDraft({
-      draftId: finalDraftId,
-      userId,
-    });
+    return this.enableDraftAutoSave(finalDraftId, userId);
   }
 
   /**
@@ -233,29 +253,38 @@ class ChapterAutoSaveService extends BaseModule {
    * 3. Return draft content
    */
   async getAutoSaveDraft(input: IGetAutoSaveDraftDTO) {
-    const { userId, chapterId, draftId } = input;
+    const { userId } = input;
 
-    if (chapterId) {
-      const autoSave = await this.chapterAutoSaveRepo.findByChapterIdAndUser(chapterId, userId);
+    const autoSave = await this.chapterAutoSaveRepo.findByUser(userId);
 
-      if (!autoSave) {
-        this.throwNotFoundError('No active auto-save was found for this chapter.');
-      }
-
-      return autoSave;
+    if (!autoSave) {
+      this.throwNotFoundError('No active auto-save was found.');
     }
 
-    if (draftId) {
-      const autoSave = await this.chapterAutoSaveRepo.findByDraftIdAndUser(draftId, userId);
-      if (!autoSave) {
-        this.throwNotFoundError('No active auto-save was found for this draft.');
-      }
+    return autoSave;
 
-      return autoSave;
-    }
+    // if (chapterId) {
+    //   const autoSave = await this.chapterAutoSaveRepo.findByChapterIdAndUser(chapterId, userId);
 
-    this.throwBadRequest('Provide either chapterId or draftId to get auto-save.');
+    //   if (!autoSave) {
+    //     this.throwNotFoundError('No active auto-save was found for this chapter.');
+    //   }
+
+    //   return autoSave;
+    // }
+
+    // if (draftId) {
+    //   const autoSave = await this.chapterAutoSaveRepo.findByDraftIdAndUser(draftId, userId);
+    //   if (!autoSave) {
+    //     this.throwNotFoundError('No active auto-save was found for this draft.');
+    //   }
+
+    //   return autoSave;
+    // }
+
+    // this.throwBadRequest('Provide either chapterId or draftId to get auto-save.');
   }
 }
 
 export { ChapterAutoSaveService };
+export const chapterAutoSaveService = new ChapterAutoSaveService();

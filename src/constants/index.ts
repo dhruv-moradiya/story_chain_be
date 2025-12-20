@@ -3,6 +3,9 @@
 // All configuration values and limits
 // ========================================
 
+export const cloudinaryUrlRegex =
+  /^https:\/\/res\.cloudinary\.com\/[a-z0-9-_]+\/(image|video|raw)\/upload\/.+$/i;
+
 // ========================================
 // ROLE DEFINITIONS & PERMISSIONS
 // ========================================

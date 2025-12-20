@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { ObjectIdSchema } from '../utils';
-import { CHAPTER_LIMITS } from '../constants';
+import { CHAPTER_LIMITS, cloudinaryUrlRegex } from '../constants';
 
 const StoryIdSchema = z.object({
   storyId: ObjectIdSchema(),
@@ -237,6 +237,26 @@ const StoryUpdateSettingSchema = z.object({
   genre: GenreEnum.default('OTHER'),
 
   contentRating: ContentRatingEnum.default('GENERAL'),
+
+  converImage: z
+    .object({
+      url: z
+        .string()
+        .url('Invalid URL format')
+        .refine((url) => cloudinaryUrlRegex.test(url), 'URL must be a valid Cloudinary URL'),
+      publicId: z.string().min(1, 'publicId is required'),
+    })
+    .optional(),
+
+  cardImage: z
+    .object({
+      url: z
+        .string()
+        .url('Invalid URL format')
+        .refine((url) => cloudinaryUrlRegex.test(url), 'URL must be a valid Cloudinary URL'),
+      publicId: z.string().min(1, 'publicId is required'),
+    })
+    .optional(),
 });
 
 // Type export

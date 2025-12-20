@@ -72,6 +72,10 @@ export interface IStory {
     url?: string;
     publicId?: string;
   };
+  cardImage?: {
+    url?: string;
+    publicId?: string;
+  };
 
   creatorId: string;
 

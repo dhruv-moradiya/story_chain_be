@@ -184,11 +184,7 @@ export class StoryService extends BaseModule {
       .buildChapterGraphNode()
       .build();
 
-    console.log('pipeline :>> ', pipeline);
-
     const chapters = await this.chapterRepo.aggregateChapters(pipeline);
-
-    console.log('chapters :>> ', chapters);
 
     if (!chapters || chapters.length === 0) {
       return {
@@ -341,7 +337,6 @@ export class StoryService extends BaseModule {
 
   async getAllCollaborators(input: IGetAllCollaboratorsDTO): Promise<IStoryCollaborator[]> {
     const { storyId } = input;
-    console.log('storyId :>> ', storyId);
 
     const collaborators = this.storyCollaboratorService.getAllStoryMembers({ storyId });
 

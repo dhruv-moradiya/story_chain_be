@@ -21,8 +21,8 @@ interface IDisableAutoSaveDTO {
 }
 
 interface IGetAutoSaveDraftDTO {
-  chapterId?: ID;
-  draftId?: string;
+  // chapterId?: ID;
+  // draftId?: string;
   userId: string;
 }
 

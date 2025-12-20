@@ -3,7 +3,8 @@ import { ID } from '../../types';
 
 interface IChapterAutoSave {
   _id: ID;
-  chapterId: Types.ObjectId;
+  chapterId?: ID;
+  draftId?: string;
   userId: string;
   content: string;
   title: string;
@@ -14,7 +15,6 @@ interface IChapterAutoSave {
     additionsCount: number;
     deletionsCount: number;
   };
-  draftId: string;
 }
 
 interface IChapterAutoSaveDoc extends Document, IChapterAutoSave {
