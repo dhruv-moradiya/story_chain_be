@@ -28,6 +28,8 @@
     "@clerk/fastify": "^2.4.41",
     "@fastify/cors": "^11.1.0",
     "@fastify/helmet": "^13.0.2",
+    "@fastify/swagger": "^9.6.1",
+    "@fastify/swagger-ui": "^5.2.3",
     "@types/jsonwebtoken": "^9.0.10",
     "bullmq": "^5.61.0",
     "cross-env": "^10.1.0",

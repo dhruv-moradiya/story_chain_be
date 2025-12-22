@@ -19,8 +19,8 @@ const StoryCreateDTO = z.object({
 
   coverImage: z
     .object({
-      url: z.string().url().optional(),
-      publicId: z.string().optional(),
+      url: z.string().url(),
+      publicId: z.string(),
     })
     .optional(),
 

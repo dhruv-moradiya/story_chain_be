@@ -203,9 +203,8 @@ class ChapterAutoSaveService extends BaseModule {
         this.throwNotFoundError('Auto-save is not enabled for this chapter.');
       }
 
-      const disableAutoSaveData = await this.chapterAutoSaveRepo.disableAutoSaveForExistingChapter(
-        autoSave._id
-      );
+      const disableAutoSaveData =
+        await this.chapterAutoSaveRepo.disableAutoSaveForExistingChapter(chapterId);
 
       if (!disableAutoSaveData) {
         this.throwInternalError('Failed to disable auto-save. Please try again.');
@@ -252,14 +251,14 @@ class ChapterAutoSaveService extends BaseModule {
    * 2. Ask user: "Resume from auto-save?" or "Use published version?"
    * 3. Return draft content
    */
-  async getAutoSaveDraft(input: IGetAutoSaveDraftDTO) {
+  async getAutoSaveDraft(input: IGetAutoSaveDraftDTO): Promise<IChapterAutoSave[]> {
     const { userId } = input;
 
     const autoSave = await this.chapterAutoSaveRepo.findByUser(userId);
 
-    if (!autoSave) {
-      this.throwNotFoundError('No active auto-save was found.');
-    }
+    // if (!autoSave) {
+    //   this.throwNotFoundError('No active auto-save was found.');
+    // }
 
     return autoSave;
 

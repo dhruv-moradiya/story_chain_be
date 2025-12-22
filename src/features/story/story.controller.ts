@@ -10,6 +10,7 @@ import {
   TStoryAddChapterSchema,
   TStoryCreateInviteLinkSchema,
   TStoryIDSchema,
+  TStorySlugSchema,
   TStoryUpdateSettingSchema,
 } from '../../schema/story.schema';
 import { ApiResponse } from '../../utils/apiResponse';
@@ -137,7 +138,7 @@ export class StoryController extends BaseModule {
     }
   );
 
-  // TODO: Add story tree fetching logic
+  // Get story tree by ID
   getStoryTree = catchAsync(
     async (request: FastifyRequest<{ Params: { storyId: string } }>, reply: FastifyReply) => {
       const { storyId } = request.params;
@@ -150,14 +151,26 @@ export class StoryController extends BaseModule {
     }
   );
 
-  // Publish a story by the authenticated user (DRAFT -> PUBLISHED).
-  publishStory = catchAsync(
-    (request: FastifyRequest<{ Params: TStoryIDSchema }>, reply: FastifyReply) => {
-      const { storyId } = request.params;
+  // Get story tree by slug
+  getStoryTreeBySlug = catchAsync(
+    async (request: FastifyRequest<{ Params: TStorySlugSchema }>, reply: FastifyReply) => {
+      const { slug } = request.params;
+      const storyTree = await storyService.getStoryTreeBySlug(slug);
 
+      this.logInfo(`Fetched story tree for story ${slug}`);
+      return reply
+        .code(HTTP_STATUS.OK.code)
+        .send(new ApiResponse(true, 'Story tree loaded successfully', storyTree));
+    }
+  );
+
+  // Publish a story by ID
+  publishStory = catchAsync(
+    async (request: FastifyRequest<{ Params: TStoryIDSchema }>, reply: FastifyReply) => {
+      const { storyId } = request.params;
       const { clerkId: userId } = request.user;
 
-      const publishedStory = storyService.publishStory({ storyId, userId });
+      const publishedStory = await storyService.publishStory({ storyId, userId });
 
       this.logInfo(`Published story ${storyId} by user ${userId}`);
 
@@ -167,8 +180,123 @@ export class StoryController extends BaseModule {
     }
   );
 
+  // Publish a story by slug
+  publishStoryBySlug = catchAsync(
+    async (request: FastifyRequest<{ Params: TStorySlugSchema }>, reply: FastifyReply) => {
+      const { slug } = request.params;
+      const { clerkId: userId } = request.user;
+
+      const publishedStory = await storyService.publishStoryBySlug({ slug, userId });
+
+      this.logInfo(`Published story ${slug} by user ${userId}`);
+
+      return reply
+        .code(HTTP_STATUS.OK.code)
+        .send(new ApiResponse(true, 'Story published successfully', publishedStory));
+    }
+  );
+
+  // Get story collaborators by slug
+  getStoryCollaboratorsBySlug = catchAsync(
+    async (request: FastifyRequest<{ Params: TStorySlugSchema }>, reply: FastifyReply) => {
+      const { slug } = request.params;
+      const userId = request.user.clerkId;
+
+      const collaborators = await storyService.getAllCollaboratorsBySlug({ slug, userId });
+
+      return reply
+        .code(HTTP_STATUS.OK.code)
+        .send(
+          new ApiResponse(
+            true,
+            collaborators.length === 0
+              ? `No collaborators found for this story.`
+              : `${collaborators.length} user${collaborators.length > 1 ? 's' : ''} found.`,
+            collaborators
+          )
+        );
+    }
+  );
+
+  // Create invitation by slug
+  createInvitationBySlug = catchAsync(
+    async (
+      request: FastifyRequest<{ Params: TStorySlugSchema; Body: TStoryCreateInviteLinkSchema }>,
+      reply: FastifyReply
+    ) => {
+      const { clerkId: userId, username } = request.user;
+      const { slug } = request.params;
+      const { role, invitedUserId, invitedUserName } = request.body;
+
+      const invitation = await storyService.createInvitationBySlug({
+        slug,
+        role,
+        invitedUser: {
+          id: invitedUserId,
+          name: invitedUserName,
+        },
+        inviterUser: {
+          id: userId,
+          name: username,
+        },
+      });
+
+      return reply
+        .code(HTTP_STATUS.CREATED.code)
+        .send(new ApiResponse(true, 'Invitation created successfully', invitation));
+    }
+  );
+
+  // Update story settings by slug
+  updateStorySettingBySlug = catchAsync(
+    async (
+      request: FastifyRequest<{ Params: TStorySlugSchema; Body: TStoryUpdateSettingSchema }>,
+      reply: FastifyReply
+    ) => {
+      const { slug } = request.params;
+
+      const story = await storyService.updateSettingBySlug({
+        ...request.body,
+        slug,
+      });
+
+      return reply
+        .code(HTTP_STATUS.OK.code)
+        .send(new ApiResponse(true, 'Story setting updated successfully', story));
+    }
+  );
+
+  // Add chapter to story by slug
+  addChapterToStoryBySlug = catchAsync(
+    async (
+      request: FastifyRequest<{
+        Body: TStoryAddChapterSchema;
+        Params: TStorySlugSchema;
+      }>,
+      reply: FastifyReply
+    ) => {
+      const { clerkId: userId } = request.user;
+      const { slug } = request.params;
+      const { title, content, parentChapterId } = request.body;
+
+      const newChapter = await storyService.addChapterToStoryBySlug({
+        slug,
+        userId,
+        title,
+        content,
+        parentChapterId,
+      });
+
+      this.logInfo(`Added chapter to story ${slug} by user ${userId}`);
+
+      return reply
+        .code(HTTP_STATUS.CREATED.code)
+        .send(new ApiResponse(true, 'Chapter added successfully', newChapter));
+    }
+  );
+
   // --------------------
-  // CHAPTER RELATED METHODS
+  // CHAPTER RELATED METHODS (BY ID)
   // --------------------
 
   // Add a chapter to a story by the authenticated user.

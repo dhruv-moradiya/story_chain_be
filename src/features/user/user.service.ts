@@ -27,6 +27,14 @@ export class UserService {
     // this.logInfo('Session is created', { input });
   }
 
+  async getUserById(userId: string): Promise<IUser | null> {
+    return this.userRepo.findByClerkId(userId);
+  }
+
+  async getUserByUsername(username: string): Promise<IUser | null> {
+    return this.userRepo.findOneByUsername(username);
+  }
+
   async searchUserByUsername(input: ISearchUserByUsernameDTO): Promise<IUser[]> {
     const { username } = input;
 

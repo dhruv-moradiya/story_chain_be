@@ -69,12 +69,12 @@ export interface IStory {
   description: string;
 
   coverImage?: {
-    url?: string;
-    publicId?: string;
+    url: string;
+    publicId: string;
   };
   cardImage?: {
-    url?: string;
-    publicId?: string;
+    url: string;
+    publicId: string;
   };
 
   creatorId: string;

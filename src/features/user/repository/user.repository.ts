@@ -32,6 +32,10 @@ export class UserRepository extends BaseRepository<IUser, IUserDoc> {
     });
   }
 
+  async findOneByUsername(username: string): Promise<IUser | null> {
+    return this.findOne({ username });
+  }
+
   async updateByClerkId(id: string, update: UpdateQuery<IUser>): Promise<IUser | null> {
     return this.findOneAndUpdate({ clerkId: id }, { ...update }, { new: true });
   }

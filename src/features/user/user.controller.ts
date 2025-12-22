@@ -3,16 +3,60 @@ import { HTTP_STATUS } from '../../constants/httpStatus';
 import { ApiResponse } from '../../utils/apiResponse';
 import { BaseModule } from '../../utils/baseClass';
 import { catchAsync } from '../../utils/catchAsync';
-import { TSearchUserByUsernameSchema } from '../../schema/user.schema';
+import {
+  TSearchUserByUsernameSchema,
+  TGetUserByIdSchema,
+  TGetUserByUsernameSchema,
+} from '../../schema/user.schema';
 import { userService } from './user.service';
+import { UserTransformer } from '../../transformer/user.transformer';
 
 export class UserController extends BaseModule {
   getCurrentUserDetails = catchAsync(async (request: FastifyRequest, reply: FastifyReply) => {
     const user = request.user;
+
+    const responseData = UserTransformer.currentUserResponse(user);
+
     return reply
       .code(HTTP_STATUS.OK.code)
-      .send(new ApiResponse(true, 'Your draft stories fetched successfully', user));
+      .send(new ApiResponse(true, 'User details fetched successfully', responseData));
   });
+
+  getUserById = catchAsync(
+    async (request: FastifyRequest<{ Params: TGetUserByIdSchema }>, reply: FastifyReply) => {
+      const { userId } = request.params;
+
+      const user = await userService.getUserById(userId);
+
+      if (!user) {
+        this.throwNotFoundError('User not found.');
+      }
+
+      const responseData = UserTransformer.publicUserResponse(user);
+
+      return reply
+        .code(HTTP_STATUS.OK.code)
+        .send(new ApiResponse(true, 'User fetched successfully', responseData));
+    }
+  );
+
+  getUserByUsername = catchAsync(
+    async (request: FastifyRequest<{ Params: TGetUserByUsernameSchema }>, reply: FastifyReply) => {
+      const { username } = request.params;
+
+      const user = await userService.getUserByUsername(username);
+
+      if (!user) {
+        this.throwNotFoundError('User not found.');
+      }
+
+      const responseData = UserTransformer.publicUserResponse(user);
+
+      return reply
+        .code(HTTP_STATUS.OK.code)
+        .send(new ApiResponse(true, 'User fetched successfully', responseData));
+    }
+  );
 
   searchUserByUsername = catchAsync(
     async (request: FastifyRequest<{ Body: TSearchUserByUsernameSchema }>, reply: FastifyReply) => {
@@ -20,15 +64,17 @@ export class UserController extends BaseModule {
 
       const users = await userService.searchUserByUsername({ username });
 
+      const responseData = users.map((user) => UserTransformer.searchItemResponse(user));
+
       return reply
         .code(HTTP_STATUS.OK.code)
         .send(
           new ApiResponse(
             true,
             users.length === 0
-              ? `No users found matching “${username}”.`
+              ? `No users found matching "${username}".`
               : `${users.length} user${users.length > 1 ? 's' : ''} found.`,
-            users
+            responseData
           )
         );
     }

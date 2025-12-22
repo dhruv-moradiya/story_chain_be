@@ -23,8 +23,8 @@ export class ChapterAutoSaveRepository extends BaseRepository<
     return this.model.findOne({ draftId, userId });
   }
 
-  findByUser(userId: string) {
-    return this.model.findOne({ userId });
+  findByUser(userId: string): Promise<IChapterAutoSave[]> {
+    return this.model.find({ userId });
   }
 
   disableAutoSaveForExistingChapter(chapterId: ID) {

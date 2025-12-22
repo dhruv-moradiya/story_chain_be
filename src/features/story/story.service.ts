@@ -31,7 +31,6 @@ export class StoryService extends BaseModule {
   private readonly storyRepo = new StoryRepository();
   private readonly chapterService = new ChapterService();
   private readonly chapterRepo = new ChapterRepository();
-  private readonly chapterPipelineBuilder = new ChapterPipelineBuilder();
   private readonly storyCollaboratorService = new StoryCollaboratorService();
 
   /**
@@ -201,6 +200,11 @@ export class StoryService extends BaseModule {
     };
   }
 
+  async getStoryTreeBySlug(slug: string): Promise<{ storyId: string; chapters: IChapter[] }> {
+    const story = await this.getStoryBySlug(slug);
+    return this.getStoryTree(story._id.toString());
+  }
+
   async addChapterToStory(input: TStoryAddChapterDTO): Promise<IChapter> {
     return await withTransaction('Creating a new chapter', async (session) => {
       const { storyId, userId, ...chapterData } = input;
@@ -295,6 +299,41 @@ export class StoryService extends BaseModule {
     }
 
     return updatedStory;
+  }
+
+  async publishStoryBySlug(input: { slug: string; userId: string }) {
+    const story = await this.getStoryBySlug(input.slug);
+    return this.publishStory({ storyId: story._id.toString(), userId: input.userId });
+  }
+
+  async getAllCollaboratorsBySlug(input: {
+    slug: string;
+    userId: string;
+  }): Promise<IStoryCollaborator[]> {
+    const story = await this.getStoryBySlug(input.slug);
+    return this.getAllCollaborators({ storyId: story._id.toString(), userId: input.userId });
+  }
+
+  async createInvitationBySlug(
+    input: Omit<TStoryCreateInviteLinkDTO, 'storyId'> & { slug: string }
+  ): Promise<IStoryCollaborator> {
+    const { slug, ...rest } = input;
+    const story = await this.getStoryBySlug(slug);
+    return this.createInvitation({ ...rest, storyId: story._id.toString() });
+  }
+
+  async updateSettingBySlug(input: Omit<IStoryUpdateSettingDTO, 'storyId'> & { slug: string }) {
+    const { slug, ...update } = input;
+    const story = await this.getStoryBySlug(slug);
+    return this.updateSetting({ ...update, storyId: story._id.toString() });
+  }
+
+  async addChapterToStoryBySlug(
+    input: Omit<TStoryAddChapterDTO, 'storyId'> & { slug: string }
+  ): Promise<IChapter> {
+    const { slug, ...rest } = input;
+    const story = await this.getStoryBySlug(slug);
+    return this.addChapterToStory({ ...rest, storyId: story._id.toString() });
   }
 
   async createInvitation(input: TStoryCreateInviteLinkDTO): Promise<IStoryCollaborator> {
