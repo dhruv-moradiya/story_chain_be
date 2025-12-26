@@ -58,7 +58,6 @@ const chapterAutoSaveSchema = new Schema<IChapterAutoSaveDoc>(
     lastSavedAt: {
       type: Date,
       default: Date.now,
-      index: true, // Index for cleanup queries
     },
 
     /**

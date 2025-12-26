@@ -35,6 +35,9 @@ const StoryApiRoutes = {
   GetCollaboratorsBySlug: '/slug/:slug/collaborators',
   CreateInvitationBySlug: '/slug/:slug/collaborators',
   AddChapterBySlug: '/slug/:slug/chapters',
+  GetSignatureUrlBySlug: '/slug/:slug/signature-url',
+  GetStoryOverviewBySlug: '/slug/:slug/overview',
+  GetStorySettingsBySlug: '/slug/:slug/settings',
 
   // By ID
   GetById: '/id/:storyId',
@@ -359,5 +362,51 @@ export async function storyRoutes(fastify: FastifyInstance) {
       },
     },
     storyController.addChapterToStoryBySlug
+  );
+
+  // Get signature URL by slug
+  fastify.get(
+    StoryApiRoutes.GetSignatureUrlBySlug,
+    {
+      preHandler: [validateAuth],
+      schema: {
+        description: 'Get image upload signature URL by slug',
+        tags: ['Stories'],
+        security: [{ bearerAuth: [] }],
+        params: zodToJsonSchema(StorySlugSchema),
+        response: StoryResponses.signatureUrl,
+      },
+    },
+    storyController.getSignatureURLBySlug
+  );
+
+  fastify.get(
+    StoryApiRoutes.GetStoryOverviewBySlug,
+    {
+      preHandler: [validateAuth],
+      schema: {
+        description: 'Get story overview by slug',
+        tags: ['Stories'],
+        security: [{ bearerAuth: [] }],
+        params: zodToJsonSchema(StorySlugSchema),
+        response: StoryResponses.storyOverview,
+      },
+    },
+    storyController.getStoryOverviewBySlug
+  );
+
+  fastify.get(
+    StoryApiRoutes.GetStorySettingsBySlug,
+    {
+      preHandler: [validateAuth],
+      schema: {
+        description: 'Get story settings by slug',
+        tags: ['Stories'],
+        security: [{ bearerAuth: [] }],
+        params: zodToJsonSchema(StorySlugSchema),
+        response: StoryResponses.storySettings,
+      },
+    },
+    storyController.getStorySettingsBySlug
   );
 }

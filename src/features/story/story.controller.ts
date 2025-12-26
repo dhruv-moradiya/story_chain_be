@@ -254,6 +254,7 @@ export class StoryController extends BaseModule {
       reply: FastifyReply
     ) => {
       const { slug } = request.params;
+      console.log('request.body :>> ', request.body);
 
       const story = await storyService.updateSettingBySlug({
         ...request.body,
@@ -376,6 +377,43 @@ export class StoryController extends BaseModule {
       return reply
         .code(HTTP_STATUS.CREATED.code)
         .send(new ApiResponse(true, 'Story setting updated successfully', story));
+    }
+  );
+
+  getSignatureURLBySlug = catchAsync(
+    async (request: FastifyRequest<{ Params: TStorySlugSchema }>, reply: FastifyReply) => {
+      const userId = request.user.clerkId;
+      const { slug } = request.params;
+
+      const uploadParams = await storyService.getStoryImageUploadParams(slug, userId);
+
+      return reply
+        .code(HTTP_STATUS.OK.code)
+        .send(new ApiResponse(true, 'Upload parameters generated successfully', uploadParams));
+    }
+  );
+
+  getStoryOverviewBySlug = catchAsync(
+    async (request: FastifyRequest<{ Params: TStorySlugSchema }>, reply: FastifyReply) => {
+      const { slug } = request.params;
+
+      const overview = await storyService.getStoryOverviewBySlug(slug);
+      this.logInfo(`Fetched story overview for story ${slug}`);
+      return reply
+        .code(HTTP_STATUS.OK.code)
+        .send(new ApiResponse(true, 'Story overview fetched successfully', overview));
+    }
+  );
+
+  getStorySettingsBySlug = catchAsync(
+    async (request: FastifyRequest<{ Params: TStorySlugSchema }>, reply: FastifyReply) => {
+      const { slug } = request.params;
+
+      const settings = await storyService.getStorySettingsBySlug(slug);
+      this.logInfo(`Fetched story settings for story ${slug}`);
+      return reply
+        .code(HTTP_STATUS.OK.code)
+        .send(new ApiResponse(true, 'Story settings fetched successfully', settings));
     }
   );
 }

@@ -19,6 +19,7 @@ const start = async () => {
     await app.listen({ port: env.PORT });
 
     logger.info(`🚀 Server running on http://localhost:${env.PORT}`);
+    logger.info(`📚 API Documentation available at http://localhost:${env.PORT}/docs`);
   } catch (error) {
     logger.error('❌ Failed to start server:', error);
     process.exit(1);

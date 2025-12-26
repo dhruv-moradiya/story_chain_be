@@ -26,6 +26,8 @@ import { StoryRepository } from './repository/story.repository';
 import { IStory, TStoryStatus } from './story.types';
 import { StoryRules } from '../../domain/story.rules';
 import { ChapterPipelineBuilder } from '../chapter/pipelines/chapterPipeline.builder';
+import { env } from '../../config/env';
+import { IStoryWithCreator } from '../../types/response/story.response.types';
 
 export class StoryService extends BaseModule {
   private readonly storyRepo = new StoryRepository();
@@ -324,8 +326,13 @@ export class StoryService extends BaseModule {
 
   async updateSettingBySlug(input: Omit<IStoryUpdateSettingDTO, 'storyId'> & { slug: string }) {
     const { slug, ...update } = input;
-    const story = await this.getStoryBySlug(slug);
-    return this.updateSetting({ ...update, storyId: story._id.toString() });
+    const story = await this.storyRepo.updateStorySettingBySlug(slug, update);
+
+    if (!story) {
+      this.throwNotFoundError('Unable to update settings: the story does not exist.');
+    }
+
+    return story;
   }
 
   async addChapterToStoryBySlug(
@@ -392,6 +399,41 @@ export class StoryService extends BaseModule {
     }
 
     return story;
+  }
+
+  async getStoryImageUploadParams(slug: string, userId: string) {
+    const story = await this.getStoryBySlug(slug);
+
+    if (!StoryRules.canEditStory(story, userId)) {
+      this.throwForbiddenError('You do not have permission to update this story.');
+    }
+    const { getSignatureURL } = await import('../../utils/cloudinary.js');
+    const signatureURL = getSignatureURL(slug);
+    return {
+      uploadURL: `https://api.cloudinary.com/v1_1/${env.CLOUDINARY_CLOUD_NAME}/image/upload${signatureURL}`,
+    };
+  }
+
+  async getStoryOverviewBySlug(slug: string): Promise<IStoryWithCreator> {
+    const pipeline = new StoryPipelineBuilder().storyBySlug(slug).withStoryCreator().build();
+
+    const stories = await this.storyRepo.aggregateStories<IStoryWithCreator>(pipeline);
+
+    if (!stories.length) {
+      this.throwNotFoundError('Story not found');
+    }
+
+    return stories[0];
+  }
+
+  async getStorySettingsBySlug(slug: string): Promise<IStory['settings']> {
+    const story = await this.getStoryBySlug(slug);
+
+    if (!story) {
+      this.throwNotFoundError('Story not found');
+    }
+
+    return story.settings;
   }
 }
 

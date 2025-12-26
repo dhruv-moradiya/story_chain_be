@@ -25,6 +25,48 @@ class StoryPipelineBuilder {
     return this;
   }
 
+  storyBySlug(slug: string) {
+    this.pipeline.push({
+      $match: {
+        slug,
+      },
+    });
+    return this;
+  }
+
+  withStoryCreator() {
+    this.pipeline.push(
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'creatorId',
+          foreignField: 'clerkId',
+          as: 'creator',
+          pipeline: [
+            {
+              $project: {
+                clerkId: 1,
+                email: 1,
+                username: 1,
+                avatarUrl: 1,
+              },
+            },
+          ],
+        },
+      },
+      {
+        $set: {
+          creator: { $arrayElemAt: ['$creator', 0] },
+        },
+      },
+      {
+        $unset: 'creatorId',
+      }
+    );
+
+    return this;
+  }
+
   build() {
     return this.pipeline;
   }

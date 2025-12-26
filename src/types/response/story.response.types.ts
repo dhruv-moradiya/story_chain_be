@@ -1,5 +1,12 @@
 import { ID } from '..';
-import { IStoryStats } from '../../features/story/story.types';
+import { IStory, IStoryStats } from '../../features/story/story.types';
+
+interface IStoryCreator {
+  clerkId: string;
+  email: string;
+  username: string;
+  avatar: string;
+}
 
 interface IGetStoryOverviewBySlugResponse {
   _id: ID;
@@ -17,4 +24,8 @@ interface IGetStoryOverviewBySlugResponse {
   updatedAt: Date;
 }
 
-export type { IGetStoryOverviewBySlugResponse };
+interface IStoryWithCreator extends Omit<IStory, 'creatorId'> {
+  creator: IStoryCreator;
+}
+
+export type { IStoryCreator, IGetStoryOverviewBySlugResponse, IStoryWithCreator };
