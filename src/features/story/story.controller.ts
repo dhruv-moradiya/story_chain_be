@@ -3,6 +3,7 @@ import { FastifyReply, FastifyRequest } from 'fastify';
 import { HTTP_STATUS } from '../../constants/httpStatus';
 import {
   IStoryCreateDTO,
+  IStoryUpdateCardImageBySlugDTO,
   IStoryUpdateSettingDTO,
   TStoryCreateInviteLinkDTO,
 } from '../../dto/story.dto';
@@ -11,6 +12,7 @@ import {
   TStoryCreateInviteLinkSchema,
   TStoryIDSchema,
   TStorySlugSchema,
+  TStoryUpdateCoverImageSchema,
   TStoryUpdateSettingSchema,
 } from '../../schema/story.schema';
 import { ApiResponse } from '../../utils/apiResponse';
@@ -254,7 +256,6 @@ export class StoryController extends BaseModule {
       reply: FastifyReply
     ) => {
       const { slug } = request.params;
-      console.log('request.body :>> ', request.body);
 
       const story = await storyService.updateSettingBySlug({
         ...request.body,
@@ -398,7 +399,9 @@ export class StoryController extends BaseModule {
       const { slug } = request.params;
 
       const overview = await storyService.getStoryOverviewBySlug(slug);
+
       this.logInfo(`Fetched story overview for story ${slug}`);
+
       return reply
         .code(HTTP_STATUS.OK.code)
         .send(new ApiResponse(true, 'Story overview fetched successfully', overview));
@@ -414,6 +417,46 @@ export class StoryController extends BaseModule {
       return reply
         .code(HTTP_STATUS.OK.code)
         .send(new ApiResponse(true, 'Story settings fetched successfully', settings));
+    }
+  );
+
+  updateStoryCoverImageBySlug = catchAsync(
+    async (
+      request: FastifyRequest<{ Params: TStorySlugSchema; Body: TStoryUpdateCoverImageSchema }>,
+      reply: FastifyReply
+    ) => {
+      const { slug } = request.params;
+      const { coverImage: coverImageInfo } = request.body;
+
+      console.log('coverImage :>> ', coverImageInfo);
+
+      const coverImage = await storyService.updateStoryCoverImageBySlug({
+        slug,
+        coverImage: coverImageInfo,
+      });
+
+      return reply
+        .code(HTTP_STATUS.OK.code)
+        .send(new ApiResponse(true, 'Story cover image updated successfully', coverImage));
+    }
+  );
+
+  updateStoryCardImageBySlug = catchAsync(
+    async (
+      request: FastifyRequest<{ Params: TStorySlugSchema; Body: IStoryUpdateCardImageBySlugDTO }>,
+      reply: FastifyReply
+    ) => {
+      const { slug } = request.params;
+      const { cardImage: cardImageInfo } = request.body;
+
+      const cardImage = await storyService.updateStoryCardImageBySlug({
+        slug,
+        cardImage: cardImageInfo,
+      });
+
+      return reply
+        .code(HTTP_STATUS.OK.code)
+        .send(new ApiResponse(true, 'Story card image updated successfully', cardImage));
     }
   );
 }

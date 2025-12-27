@@ -15,6 +15,10 @@ const UsernameSchema = z
   .min(3, 'Username must be at least 3 characters.')
   .max(30, 'Username cannot exceed 30 characters.');
 
+const LoginUserSchema = z.object({
+  userId: UserIdSchema,
+});
+
 // Search User By Username Schema
 const SearchUserByUsernameSchema = z.object({
   username: z
@@ -49,6 +53,7 @@ const UpdateUserPreferencesSchema = z.object({
 });
 
 // Type exports
+type TLoginUserSchema = z.infer<typeof LoginUserSchema>;
 type TSearchUserByUsernameSchema = z.infer<typeof SearchUserByUsernameSchema>;
 type TGetUserByIdSchema = z.infer<typeof GetUserByIdSchema>;
 type TGetUserByUsernameSchema = z.infer<typeof GetUserByUsernameSchema>;
@@ -58,6 +63,7 @@ type TUpdateUserPreferencesSchema = z.infer<typeof UpdateUserPreferencesSchema>;
 export {
   UserIdSchema,
   UsernameSchema,
+  LoginUserSchema,
   SearchUserByUsernameSchema,
   GetUserByIdSchema,
   GetUserByUsernameSchema,
@@ -66,6 +72,7 @@ export {
 };
 
 export type {
+  TLoginUserSchema,
   TSearchUserByUsernameSchema,
   TGetUserByIdSchema,
   TGetUserByUsernameSchema,

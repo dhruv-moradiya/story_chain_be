@@ -7,6 +7,8 @@ import {
   StoryCreateSchema,
   StoryIdSchema,
   StorySlugSchema,
+  StoryUpdateCardImageSchema,
+  StoryUpdateCoverImageSchema,
   StoryUpdateSettingSchema,
 } from '../../schema/story.schema';
 import {
@@ -31,6 +33,8 @@ const StoryApiRoutes = {
   GetBySlug: '/slug/:slug',
   PublishBySlug: '/slug/:slug/publish',
   UpdateSettingsBySlug: '/slug/:slug/settings',
+  UpdateStoryCoverImageBySlug: '/slug/:slug/cover-image',
+  UpdateStoryCardImageBySlug: '/slug/:slug/card-image',
   GetTreeBySlug: '/slug/:slug/tree',
   GetCollaboratorsBySlug: '/slug/:slug/collaborators',
   CreateInvitationBySlug: '/slug/:slug/collaborators',
@@ -408,5 +412,37 @@ export async function storyRoutes(fastify: FastifyInstance) {
       },
     },
     storyController.getStorySettingsBySlug
+  );
+
+  fastify.patch(
+    StoryApiRoutes.UpdateStoryCoverImageBySlug,
+    {
+      // preHandler: [validateAuth],
+      schema: {
+        description: 'Update story cover image by slug',
+        tags: ['Stories'],
+        security: [{ bearerAuth: [] }],
+        params: zodToJsonSchema(StorySlugSchema),
+        body: zodToJsonSchema(StoryUpdateCoverImageSchema),
+        response: StoryResponses.storyCoverImageUpdated,
+      },
+    },
+    storyController.updateStoryCoverImageBySlug
+  );
+
+  fastify.patch(
+    StoryApiRoutes.UpdateStoryCardImageBySlug,
+    {
+      preHandler: [validateAuth],
+      schema: {
+        description: 'Update story card image by slug',
+        tags: ['Stories'],
+        security: [{ bearerAuth: [] }],
+        params: zodToJsonSchema(StorySlugSchema),
+        body: zodToJsonSchema(StoryUpdateCardImageSchema),
+        response: StoryResponses.storyCardImageUpdated,
+      },
+    },
+    storyController.updateStoryCardImageBySlug
   );
 }

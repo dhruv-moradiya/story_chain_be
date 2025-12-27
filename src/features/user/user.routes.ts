@@ -8,6 +8,7 @@ import {
   SearchUserByUsernameSchema,
   GetUserByIdSchema,
   GetUserByUsernameSchema,
+  LoginUserSchema,
 } from '../../schema/user.schema';
 import { UserResponses } from '../../schema/response.schema';
 
@@ -15,6 +16,8 @@ import { UserResponses } from '../../schema/response.schema';
 const UserApiRoutes = {
   // Webhook
   Webhook: '/webhook',
+
+  Login: '/login',
 
   // Current User
   GetMe: '/me',
@@ -32,6 +35,20 @@ const UserApiRoutes = {
 export { UserApiRoutes };
 
 export async function userRoutes(fastify: FastifyInstance) {
+  fastify.post(
+    UserApiRoutes.Login,
+    {
+      schema: {
+        description: 'User login (for testing purposes)',
+        tags: ['Users'],
+        hide: true, // Hide from Swagger - internal endpoint
+        body: zodToJsonSchema(LoginUserSchema),
+        response: UserResponses.login,
+      },
+    },
+    userController.login
+  );
+
   // Clerk Webhook
   fastify.post(
     UserApiRoutes.Webhook,

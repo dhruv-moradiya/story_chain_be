@@ -1,13 +1,34 @@
 import { withTransaction } from '../../utils/withTransaction';
 import { PlatformRoleService } from '../platformRole/platformRole.service';
-import { ISearchUserByUsernameDTO, ISessionCreateDTO, IUserCreateDTO } from '../../dto/user.dto';
+import {
+  ILoginUserDTO,
+  ISearchUserByUsernameDTO,
+  ISessionCreateDTO,
+  IUserCreateDTO,
+} from '../../dto/user.dto';
 import { UserRepository } from './repository/user.repository';
 import { UserRules } from '../../domain/user.rules';
 import { IUser } from './user.types';
+import { clerkClient, SignInToken } from '@clerk/fastify';
+import { BaseModule } from '../../utils/baseClass';
 
-export class UserService {
+export class UserService extends BaseModule {
   private readonly userRepo = new UserRepository();
   private readonly platformRoleService = new PlatformRoleService();
+
+  // For POSTMAN testing purposes
+  async loginUser(input: ILoginUserDTO): Promise<SignInToken> {
+    const signToken = await clerkClient.signInTokens.createSignInToken({
+      userId: input.userId,
+      expiresInSeconds: 2592000,
+    });
+
+    if (!signToken.token) {
+      this.throwUnauthorizedError('Failed to generate sign-in token.');
+    }
+
+    return signToken;
+  }
 
   async createUser(input: IUserCreateDTO) {
     return await withTransaction('Creating new user', async (session) => {

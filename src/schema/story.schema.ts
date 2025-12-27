@@ -238,15 +238,15 @@ const StoryUpdateSettingSchema = z.object({
 
   contentRating: ContentRatingEnum.default('GENERAL'),
 
-  converImage: z
-    .object({
-      url: z
-        .string()
-        .url('Invalid URL format')
-        .refine((url) => cloudinaryUrlRegex.test(url), 'URL must be a valid Cloudinary URL'),
-      publicId: z.string().min(1, 'publicId is required'),
-    })
-    .optional(),
+  // converImage: z
+  //   .object({
+  //     url: z
+  //       .string()
+  //       .url('Invalid URL format')
+  //       .refine((url) => cloudinaryUrlRegex.test(url), 'URL must be a valid Cloudinary URL'),
+  //     publicId: z.string().min(1, 'publicId is required'),
+  //   })
+  //   .optional(),
 
   cardImage: z
     .object({
@@ -257,6 +257,26 @@ const StoryUpdateSettingSchema = z.object({
       publicId: z.string().min(1, 'publicId is required'),
     })
     .optional(),
+});
+
+const StoryUpdateCoverImageSchema = z.object({
+  coverImage: z.object({
+    url: z
+      .string()
+      .url('Invalid URL format')
+      .refine((url) => cloudinaryUrlRegex.test(url), 'URL must be a valid Cloudinary URL'),
+    publicId: z.string().min(1, 'publicId is required'),
+  }),
+});
+
+const StoryUpdateCardImageSchema = z.object({
+  cardImage: z.object({
+    url: z
+      .string()
+      .url('Invalid URL format')
+      .refine((url) => cloudinaryUrlRegex.test(url), 'URL must be a valid Cloudinary URL'),
+    publicId: z.string().min(1, 'publicId is required'),
+  }),
 });
 
 // Type export
@@ -271,6 +291,8 @@ type TStoryUpdateChapterTitleSchema = z.infer<typeof StoryUpdateChapterTitleSche
 type TStoryUpdateChapterContentSchema = z.infer<typeof StoryUpdateChapterContentSchema>;
 type TStoryCreateInviteLinkSchema = z.infer<typeof StoryCreateInviteLinkSchema>;
 type TStoryUpdateSettingSchema = z.infer<typeof StoryUpdateSettingSchema>;
+type TStoryUpdateCoverImageSchema = z.infer<typeof StoryUpdateCoverImageSchema>;
+type TStoryUpdateCardImageSchema = z.infer<typeof StoryUpdateCardImageSchema>;
 
 export {
   StoryIdSchema,
@@ -282,6 +304,8 @@ export {
   StoryUpdateChapterContentSchema,
   StoryCreateInviteLinkSchema,
   StoryUpdateSettingSchema,
+  StoryUpdateCoverImageSchema,
+  StoryUpdateCardImageSchema,
 };
 
 export type {
@@ -294,4 +318,6 @@ export type {
   TStoryUpdateChapterContentSchema,
   TStoryCreateInviteLinkSchema,
   TStoryUpdateSettingSchema,
+  TStoryUpdateCoverImageSchema,
+  TStoryUpdateCardImageSchema,
 };

@@ -1,5 +1,6 @@
 import { PipelineStage } from 'mongoose';
 import { ID } from '../../../types';
+import { IStorySettings } from '../story.types';
 
 class StoryPipelineBuilder {
   private pipeline: PipelineStage[] = [];
@@ -31,6 +32,20 @@ class StoryPipelineBuilder {
         slug,
       },
     });
+    return this;
+  }
+
+  storySettings(keys: (keyof IStorySettings)[]) {
+    const fields: Partial<Record<keyof IStorySettings, string>> = {};
+
+    keys.forEach((element) => {
+      fields[element] = `$settings.${element}`;
+    });
+
+    this.pipeline.push({
+      $set: fields,
+    });
+
     return this;
   }
 

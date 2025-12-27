@@ -1,5 +1,5 @@
-import { StoryContentRating, StoryGenre } from '../../features/story/story.types';
-import { apiResponse, apiArrayResponse, errorResponse } from './helpers';
+import { StoryContentRating, StoryGenre, StoryStatus } from '../../features/story/story.types';
+import { apiArrayResponse, apiResponse, errorResponse } from './helpers';
 
 // ===============================
 // STORY DATA SCHEMAS
@@ -80,8 +80,14 @@ export const StoryOverviewSchema = {
         avatarUrl: { type: 'string' },
       },
     },
+    genre: {
+      type: 'string',
+      enum: Object.values(StoryGenre),
+    },
+    contentRating: { type: 'string', enum: Object.values(StoryContentRating) },
     tags: { type: 'array', items: { type: 'string' } },
     stats: StoryStatsSchema,
+    status: { type: 'string', enum: Object.values(StoryStatus) },
     publishedAt: { type: 'string', format: 'date-time' },
     lastActivityAt: { type: 'string', format: 'date-time' },
   },
@@ -122,6 +128,24 @@ export const StoryTreeResponseSchema = {
   },
 };
 
+export const StoryUpdateCoverImageSchema = {
+  type: 'object',
+  properties: {
+    url: { type: 'string' },
+    publicId: { type: 'string' },
+  },
+  required: ['url', 'publicId'],
+};
+
+export const StoryUpdateCardImageSchema = {
+  type: 'object',
+  properties: {
+    url: { type: 'string' },
+    publicId: { type: 'string' },
+  },
+  required: ['url', 'publicId'],
+};
+
 // ===============================
 // STORY RESPONSE OBJECTS
 // ===============================
@@ -144,4 +168,10 @@ export const StoryResponses = {
   storyPublished: { 200: apiResponse(StoryPublishResponseSchema, 'Story published successfully') },
   storyTree: { 200: apiResponse(StoryTreeResponseSchema, 'Story chapter tree') },
   signatureUrl: { 200: apiResponse(StorySignatureSchema, 'Signature URL generated successfully') },
+  storyCoverImageUpdated: {
+    200: apiResponse(StoryUpdateCoverImageSchema, 'Story cover image updated successfully'),
+  },
+  storyCardImageUpdated: {
+    200: apiResponse(StoryUpdateCardImageSchema, 'Story card image updated successfully'),
+  },
 };

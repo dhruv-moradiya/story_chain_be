@@ -1,5 +1,10 @@
 import { ID } from '..';
-import { IStory, IStoryStats } from '../../features/story/story.types';
+import {
+  IStory,
+  IStoryStats,
+  TStoryContentRating,
+  TStoryGenre,
+} from '../../features/story/story.types';
 
 interface IStoryCreator {
   clerkId: string;
@@ -24,8 +29,20 @@ interface IGetStoryOverviewBySlugResponse {
   updatedAt: Date;
 }
 
-interface IStoryWithCreator extends Omit<IStory, 'creatorId'> {
+interface IStoryWithCreator
+  extends Omit<
+    IStory,
+    | 'creatorId'
+    | 'collaboratorIds'
+    | 'settings'
+    | 'cardImage'
+    | 'trendingScore'
+    | 'createdAt'
+    | 'updatedAt'
+  > {
   creator: IStoryCreator;
+  generes: TStoryGenre;
+  contentRating: TStoryContentRating;
 }
 
-export type { IStoryCreator, IGetStoryOverviewBySlugResponse, IStoryWithCreator };
+export type { IGetStoryOverviewBySlugResponse, IStoryCreator, IStoryWithCreator };

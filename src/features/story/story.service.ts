@@ -17,6 +17,8 @@ import {
   IPublishedStoryDTO,
   IStoryCollaboratorAcceptInvitationDTO,
   IStoryCreateDTO,
+  IStoryUpdateCardImageBySlugDTO,
+  IStoryUpdateCoverImageBySlugDTO,
   IStoryUpdateSettingDTO,
   TStoryAddChapterDTO,
   TStoryCreateInviteLinkDTO,
@@ -415,7 +417,11 @@ export class StoryService extends BaseModule {
   }
 
   async getStoryOverviewBySlug(slug: string): Promise<IStoryWithCreator> {
-    const pipeline = new StoryPipelineBuilder().storyBySlug(slug).withStoryCreator().build();
+    const pipeline = new StoryPipelineBuilder()
+      .storyBySlug(slug)
+      .storySettings(['genre', 'contentRating'])
+      .withStoryCreator()
+      .build();
 
     const stories = await this.storyRepo.aggregateStories<IStoryWithCreator>(pipeline);
 
@@ -434,6 +440,34 @@ export class StoryService extends BaseModule {
     }
 
     return story.settings;
+  }
+
+  async updateStoryCoverImageBySlug(
+    input: IStoryUpdateCoverImageBySlugDTO
+  ): Promise<IStory['coverImage']> {
+    const { slug, coverImage } = input;
+
+    const story = await this.storyRepo.findOneAndUpdate({ slug }, { coverImage }, { new: true });
+
+    if (!story) {
+      this.throwNotFoundError('Story not found. Unable to update cover image.');
+    }
+
+    return story.coverImage;
+  }
+
+  async updateStoryCardImageBySlug(
+    input: IStoryUpdateCardImageBySlugDTO
+  ): Promise<IStory['cardImage']> {
+    const { slug, cardImage } = input;
+
+    const story = await this.storyRepo.findOneAndUpdate({ slug }, { cardImage }, { new: true });
+
+    if (!story) {
+      this.throwNotFoundError('Story not found. Unable to update card image.');
+    }
+
+    return story.cardImage;
   }
 }
 

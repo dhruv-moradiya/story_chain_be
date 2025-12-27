@@ -15,7 +15,11 @@ export const createApp = async () => {
   });
 
   // Register plugins
-  await app.register(cors, { origin: true });
+  await app.register(cors, {
+    origin: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    credentials: true,
+  });
   await app.register(helmet);
   await app.register(clerkPlugin);
 

@@ -168,6 +168,22 @@ interface IStoryUpdateSettingDTO {
   contentRating: TStoryContentRating;
 }
 
+interface IStoryUpdateCoverImageBySlugDTO {
+  slug: ID;
+  coverImage: {
+    url: string;
+    publicId: string;
+  };
+}
+
+interface IStoryUpdateCardImageBySlugDTO {
+  slug: ID;
+  cardImage: {
+    url: string;
+    publicId: string;
+  };
+}
+
 export { StoryCreateDTO, StoryUpdateDTO };
 export type {
   IStoryCreateDTO,
@@ -178,4 +194,6 @@ export type {
   IStoryCollaboratorAcceptInvitationDTO,
   IGetAllCollaboratorsDTO,
   IStoryUpdateSettingDTO,
+  IStoryUpdateCoverImageBySlugDTO,
+  IStoryUpdateCardImageBySlugDTO,
 };

@@ -7,11 +7,25 @@ import {
   TSearchUserByUsernameSchema,
   TGetUserByIdSchema,
   TGetUserByUsernameSchema,
+  TLoginUserSchema,
 } from '../../schema/user.schema';
 import { userService } from './user.service';
 import { UserTransformer } from '../../transformer/user.transformer';
 
 export class UserController extends BaseModule {
+  // POSTMAN: Only for testing purposes to generate JWT token
+  login = catchAsync(
+    async (request: FastifyRequest<{ Body: TLoginUserSchema }>, reply: FastifyReply) => {
+      const { userId } = request.body;
+
+      const token = await userService.loginUser({ userId });
+
+      return reply
+        .code(HTTP_STATUS.OK.code)
+        .send(new ApiResponse(true, 'Login successful', { ...token }));
+    }
+  );
+
   getCurrentUserDetails = catchAsync(async (request: FastifyRequest, reply: FastifyReply) => {
     const user = request.user;
 

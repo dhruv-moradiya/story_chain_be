@@ -4,6 +4,19 @@ import { apiResponse, apiArrayResponse, errorResponse } from './helpers';
 // USER DATA SCHEMAS
 // ===============================
 
+export const UserLoginSchema = {
+  type: 'object',
+  properties: {
+    id: { type: 'string' },
+    userId: { type: 'string' },
+    token: { type: 'string' },
+    status: { type: 'string' },
+    url: { type: 'string' },
+    createdAt: { type: 'number' },
+    updatedAt: { type: 'number' },
+  },
+};
+
 export const UserSchema = {
   type: 'object',
   properties: {
@@ -31,6 +44,10 @@ export const UserPublicSchema = {
 // ===============================
 
 export const UserResponses = {
+  login: {
+    200: apiResponse(UserLoginSchema, 'Sign-in token for user login'),
+    422: errorResponse('Invalid request parameters'),
+  },
   currentUser: { 200: apiResponse(UserSchema, 'Current user details') },
   userProfile: {
     200: apiResponse(UserPublicSchema, 'Public user profile'),
