@@ -1,4 +1,3 @@
-import { STORY_ROLES } from '../../constants';
 import { StoryCollaboratorRules } from '../../domain/storyCollaborator.rules';
 import {
   IGetAllStoryMembers,

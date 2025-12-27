@@ -1,6 +1,4 @@
-import { STORY_ROLES } from '../constants';
 import { IStory, StoryStatus, TStoryStatus } from '../features/story/story.types';
-import { TStoryCollaboratorRole } from '../features/storyCollaborator/storyCollaborator.types';
 
 export class StoryRules {
   static readonly NEW_STORY_COOLDOWN_IN_DAYS = 7;

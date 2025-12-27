@@ -2,15 +2,14 @@ import {
   ClientSession,
   Document,
   FilterQuery,
+  Model,
   ProjectionType,
   QueryOptions,
-  Types,
   UpdateQuery,
 } from 'mongoose';
+import { ID } from '../types';
 import { ApiError } from './apiResponse';
 import { logger } from './logger';
-import { Model } from 'mongoose';
-import { ID } from '../types';
 
 export class BaseModule {
   protected logger = logger;

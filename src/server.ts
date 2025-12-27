@@ -1,7 +1,6 @@
 import { createApp } from './app';
 import { connectDB } from './config/db';
 import { env } from './config/env';
-import { connectRedis } from './config/redis';
 import { logger } from './utils/logger';
 
 const start = async () => {

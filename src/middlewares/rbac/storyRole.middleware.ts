@@ -13,10 +13,10 @@ import { STORY_ROLES } from '../../constants';
 import { StoryCollaboratorRules } from '../../domain/storyCollaborator.rules';
 
 async function loadStoryContext(
-  request: FastifyRequest<{ Params: { storyId: string } }>,
+  request: FastifyRequest,
   reply: FastifyReply
 ): Promise<void> {
-  const { storyId } = request.params;
+  const { storyId } = request.params as { storyId: string };
 
   if (!storyId) {
     return reply.code(HTTP_STATUS.BAD_REQUEST.code).send({

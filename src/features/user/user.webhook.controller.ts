@@ -1,14 +1,12 @@
+import { WebhookEvent } from '@clerk/fastify';
 import { FastifyReply, FastifyRequest } from 'fastify';
-import { WebhookTransformer } from './builders/webhook.transformer';
-import { catchAsync } from '../../utils/catchAsync';
 import { HTTP_STATUS } from '../../constants/httpStatus';
 import { ApiResponse } from '../../utils/apiResponse';
+import { catchAsync } from '../../utils/catchAsync';
+import { WebhookTransformer } from './builders/webhook.transformer';
 import { userService } from './user.service';
-import { logger } from '../../utils/logger';
-import { WebhookEvent } from '@clerk/fastify';
 
 export class UserWebhookController {
-  private logger = logger;
   private transformer = new WebhookTransformer();
 
   handle = catchAsync(async (req: FastifyRequest, reply: FastifyReply) => {

@@ -1,17 +1,17 @@
 import { Types } from 'mongoose';
+import { ChapterRules } from '../../domain/chapter.roles';
 import {
   IAutoSaveContentDTO,
   IDisableAutoSaveDTO,
   IEnableChapterAutoSaveDTO,
   IGetAutoSaveDraftDTO,
 } from '../../dto/chapterAutoSave.dto';
-import { ID, IOperationOptions } from '../../types';
+import { ID } from '../../types';
 import { BaseModule } from '../../utils/baseClass';
 import { IChapter } from '../chapter/chapter.types';
 import { ChapterRepository } from '../chapter/repositories/chapter.repository';
 import { IChapterAutoSave } from './chapterAutoSave.types';
 import { ChapterAutoSaveRepository } from './repository/chapterAutoSave.repository';
-import { ChapterRules } from '../../domain/chapter.roles';
 
 class ChapterAutoSaveService extends BaseModule {
   private readonly chapterRepo = new ChapterRepository();
@@ -91,10 +91,7 @@ class ChapterAutoSaveService extends BaseModule {
    * 2. Set isEnabled = true
    * 3. Frontend starts 1-minute interval
    */
-  async enableAutoSave(
-    input: IEnableChapterAutoSaveDTO,
-    options: IOperationOptions = {}
-  ): Promise<IChapterAutoSave> {
+  async enableAutoSave(input: IEnableChapterAutoSaveDTO): Promise<IChapterAutoSave> {
     const { chapterId, draftId, userId } = input;
 
     // ───────────────────────────────────────────────

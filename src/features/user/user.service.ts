@@ -45,7 +45,7 @@ export class UserService extends BaseModule {
   }
 
   async createSession(input: ISessionCreateDTO) {
-    // this.logInfo('Session is created', { input });
+    this.logInfo('Session is created', { input });
   }
 
   async getUserById(userId: string): Promise<IUser | null> {
