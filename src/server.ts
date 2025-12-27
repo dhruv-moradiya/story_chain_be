@@ -15,7 +15,10 @@ const start = async () => {
 
     // Create and start app
     const app = await createApp();
-    await app.listen({ port: env.PORT });
+    await app.listen({
+      port: process.env.NODE_ENV === 'production' ? Number(process.env.PORT) : env.PORT,
+      host: env.HOST,
+    });
 
     logger.info(`🚀 Server running on http://localhost:${env.PORT}`);
     logger.info(`📚 API Documentation available at http://localhost:${env.PORT}/docs`);
