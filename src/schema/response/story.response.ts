@@ -84,6 +84,18 @@ export const StoryOverviewSchema = {
       type: 'string',
       enum: Object.values(StoryGenre),
     },
+    collaborators: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          clerkId: { type: 'string' },
+          role: { type: 'string' },
+          username: { type: 'string' },
+          avatarUrl: { type: 'string' },
+        },
+      },
+    },
     contentRating: { type: 'string', enum: Object.values(StoryContentRating) },
     tags: { type: 'array', items: { type: 'string' } },
     stats: StoryStatsSchema,
@@ -173,5 +185,13 @@ export const StoryResponses = {
   },
   storyCardImageUpdated: {
     200: apiResponse(StoryUpdateCardImageSchema, 'Story card image updated successfully'),
+  },
+  acceptInvitation: {
+    200: apiResponse({}, 'Invitation accepted successfully'),
+    404: errorResponse('Invitation not found'),
+  },
+  declineInvitation: {
+    200: apiResponse({}, 'Invitation declined successfully'),
+    404: errorResponse('Invitation not found'),
   },
 };

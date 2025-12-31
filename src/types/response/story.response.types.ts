@@ -5,6 +5,11 @@ import {
   TStoryContentRating,
   TStoryGenre,
 } from '../../features/story/story.types';
+import {
+  StoryCollaboratorRole,
+  TStoryCollaboratorRole,
+  TStoryCollaboratorStatus,
+} from '../../features/storyCollaborator/storyCollaborator.types';
 
 interface IStoryCreator {
   clerkId: string;
@@ -45,4 +50,25 @@ interface IStoryWithCreator
   contentRating: TStoryContentRating;
 }
 
-export type { IGetStoryOverviewBySlugResponse, IStoryCreator, IStoryWithCreator };
+interface IStoryCollaboratorUser {
+  clerkId: string;
+  email: string;
+  username: string;
+  avatar: string;
+}
+
+interface IStoryCollaboratorDetailsResponse {
+  role: TStoryCollaboratorRole;
+  status: TStoryCollaboratorStatus;
+  user: IStoryCollaboratorUser;
+  invitedBy: IStoryCollaboratorUser | null;
+  invitedAt: Date;
+  updatedAt: Date;
+}
+
+export type {
+  IGetStoryOverviewBySlugResponse,
+  IStoryCreator,
+  IStoryWithCreator,
+  IStoryCollaboratorDetailsResponse,
+};

@@ -8,7 +8,7 @@ export interface IReport {
   relatedChapterId?: ID;
   relatedCommentId?: ID;
   relatedUserId?: string;
-  relatedStoryId?: ID;
+  relatedStorySlug?: string;
   reason: 'SPAM' | 'HARASSMENT' | 'INAPPROPRIATE_CONTENT' | 'COPYRIGHT' | 'OFF_TOPIC' | 'OTHER';
   description: string;
   status: 'PENDING' | 'REVIEWED' | 'RESOLVED' | 'DISMISSED';

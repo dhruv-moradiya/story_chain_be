@@ -1,7 +1,19 @@
 import { FastifyInstance } from 'fastify';
+import zodToJsonSchema from 'zod-to-json-schema';
 import { validateAuth } from '../../middlewares/authHandler';
+import {
+  loadStoryContext,
+  loadStoryContextBySlug,
+  StoryRoleGuards,
+} from '../../middlewares/rbac/storyRole.middleware';
 import { validateSuperAdmin } from '../../middlewares/story/story.middleware';
 import {
+  ChapterResponses,
+  CollaboratorResponses,
+  StoryResponses,
+} from '../../schema/response.schema';
+import {
+  StoryAddChapterBySlugSchema,
   StoryAddChapterSchema,
   StoryCreateInviteLinkSchema,
   StoryCreateSchema,
@@ -11,14 +23,7 @@ import {
   StoryUpdateCoverImageSchema,
   StoryUpdateSettingSchema,
 } from '../../schema/story.schema';
-import {
-  StoryResponses,
-  CollaboratorResponses,
-  ChapterResponses,
-} from '../../schema/response.schema';
 import { storyController } from './story.controller';
-import zodToJsonSchema from 'zod-to-json-schema';
-import { loadStoryContext, StoryRoleGuards } from '../../middlewares/rbac/storyRole.middleware';
 
 // Story API Routes - following chapterAutoSave pattern
 const StoryApiRoutes = {
@@ -38,6 +43,8 @@ const StoryApiRoutes = {
   GetTreeBySlug: '/slug/:slug/tree',
   GetCollaboratorsBySlug: '/slug/:slug/collaborators',
   CreateInvitationBySlug: '/slug/:slug/collaborators',
+  AcceptInvitationById: '/slug/:slug/collaborators/accept-invitation',
+  DeclineInvitationById: '/slug/:slug/collaborators/decline-invitation',
   AddChapterBySlug: '/slug/:slug/chapters',
   GetSignatureUrlBySlug: '/slug/:slug/signature-url',
   GetStoryOverviewBySlug: '/slug/:slug/overview',
@@ -48,8 +55,6 @@ const StoryApiRoutes = {
   Publish: '/id/:storyId/publish',
   UpdateSettings: '/id/:storyId/settings',
   GetTree: '/id/:storyId/tree',
-  GetCollaborators: '/id/:storyId/collaborators',
-  CreateInvitation: '/id/:storyId/collaborators',
   AddChapter: '/id/:storyId/chapters',
 } as const;
 
@@ -215,39 +220,6 @@ export async function storyRoutes(fastify: FastifyInstance) {
     storyController.updateStorySetting
   );
 
-  // Get story collaborators by ID
-  fastify.get(
-    StoryApiRoutes.GetCollaborators,
-    {
-      preHandler: [validateAuth],
-      schema: {
-        description: 'Get story collaborators by ID',
-        tags: ['Story Collaborators'],
-        security: [{ bearerAuth: [] }],
-        params: zodToJsonSchema(StoryIdSchema),
-        response: CollaboratorResponses.collaboratorList,
-      },
-    },
-    storyController.getStoryCollaborators
-  );
-
-  // Create invitation for collaborator by ID
-  fastify.post(
-    StoryApiRoutes.CreateInvitation,
-    {
-      preHandler: [validateAuth, loadStoryContext, StoryRoleGuards.canInvite],
-      schema: {
-        description: 'Create collaborator invitation by ID',
-        tags: ['Story Collaborators'],
-        security: [{ bearerAuth: [] }],
-        body: zodToJsonSchema(StoryCreateInviteLinkSchema),
-        params: zodToJsonSchema(StoryIdSchema),
-        response: CollaboratorResponses.collaboratorCreated,
-      },
-    },
-    storyController.createInvitation
-  );
-
   // Add a chapter to a story by ID
   fastify.post(
     StoryApiRoutes.AddChapter,
@@ -351,16 +323,47 @@ export async function storyRoutes(fastify: FastifyInstance) {
     storyController.createInvitationBySlug
   );
 
+  fastify.post(
+    StoryApiRoutes.AcceptInvitationById,
+    {
+      preHandler: [validateAuth],
+      schema: {
+        description: 'Accept collaborator invitation by slug',
+        tags: ['Story Collaborators'],
+        security: [{ bearerAuth: [] }],
+        params: zodToJsonSchema(StorySlugSchema),
+        response: StoryResponses.acceptInvitation,
+      },
+    },
+    storyController.acceptInvitation
+  );
+
+  fastify.post(
+    StoryApiRoutes.DeclineInvitationById,
+    {
+      preHandler: [validateAuth],
+      schema: {
+        description: 'Decline collaborator invitation by slug',
+        tags: ['Story Collaborators'],
+        security: [{ bearerAuth: [] }],
+        params: zodToJsonSchema(StorySlugSchema),
+        response: StoryResponses.declineInvitation,
+      },
+    },
+    storyController.declineInvitation
+  );
+
   // Add a chapter to a story by slug
   fastify.post(
     StoryApiRoutes.AddChapterBySlug,
     {
-      preHandler: [validateAuth],
+      preHandler: [validateAuth, loadStoryContextBySlug, StoryRoleGuards.canWriteChapters],
       schema: {
-        description: 'Add a chapter to a story by slug',
+        description:
+          'Add a chapter to a story by slug. Use "root" as parentChapterId for root chapters.',
         tags: ['Chapters'],
         security: [{ bearerAuth: [] }],
-        body: zodToJsonSchema(StoryAddChapterSchema),
+        body: zodToJsonSchema(StoryAddChapterBySlugSchema),
         params: zodToJsonSchema(StorySlugSchema),
         response: ChapterResponses.chapterCreated,
       },

@@ -1,11 +1,12 @@
 import { StoryCollaboratorRules } from '../../domain/storyCollaborator.rules';
 import {
-  IGetAllStoryMembers,
+  IGetAllStoryMembersBySlugDTO,
   IStoryCollaboratorCreateDTO,
   IStoryCollaboratorInvitationDTO,
   IStoryCollaboratorUpdateStatusDTO,
 } from '../../dto/storyCollaborator.dto';
 import { ID, IOperationOptions } from '../../types';
+import { IStoryCollaboratorDetailsResponse } from '../../types/response/story.response.types';
 import { BaseModule } from '../../utils/baseClass';
 import { NotificationService } from '../notification/notification.service';
 import { StoryRepository } from '../story/repository/story.repository';
@@ -24,7 +25,11 @@ export class StoryCollaboratorService extends BaseModule {
   private readonly storyCollaboratorRepo = new StoryCollaboratorRepository();
   private readonly notificationService = new NotificationService();
 
-  protected async ensureStoryExists(
+  private getStoryMembersIds(collaborators: IStoryCollaboratorDetailsResponse[]): string[] {
+    return collaborators.map((collaborator) => collaborator.user.clerkId);
+  }
+
+  protected async ensureStoryExistsById(
     storyId: ID,
     repo: StoryRepository,
     options: IOperationOptions = {}
@@ -32,37 +37,36 @@ export class StoryCollaboratorService extends BaseModule {
     const story = await repo.findById(storyId, {}, options);
 
     if (!story) {
-      this.throwNotFoundError('Story not found');
+      this.throwNotFoundError(`Story not found for ID: ${storyId}`);
     }
 
     return story;
   }
 
-  protected async getStoryCollaboratos(
-    input: IGetAllStoryMembers,
+  protected async ensureStoryExistsBySlug(
+    slug: string,
+    repo: StoryRepository,
     options: IOperationOptions = {}
-  ): Promise<IStoryCollaborator[]> {
-    await this.ensureStoryExists(input.storyId, this.storyRepo, options);
+  ): Promise<IStory> {
+    const story = await repo.findOne({ slug }, {}, options);
 
-    const members = await this.storyCollaboratorRepo.findStoryCollaborators(input.storyId);
-
-    if (!members) {
-      this.throwNotFoundError('No collaborators found for this story');
+    if (!story) {
+      this.throwNotFoundError(`Story not found for slug: ${slug}`);
     }
 
-    return members;
+    return story;
   }
 
   async createCollaborator(
     input: IStoryCollaboratorCreateDTO,
     options: IOperationOptions = {}
   ): Promise<IStoryCollaborator> {
-    const { userId, role, storyId, status } = input;
+    const { userId, role, slug, status } = input;
 
-    await this.ensureStoryExists(storyId, this.storyRepo, options);
+    await this.ensureStoryExistsBySlug(slug, this.storyRepo, options);
 
     const collaborator = await this.storyCollaboratorRepo.create({
-      storyId,
+      slug,
       role,
       userId,
       ...(status ? { status } : {}),
@@ -79,11 +83,11 @@ export class StoryCollaboratorService extends BaseModule {
     input: IStoryCollaboratorInvitationDTO,
     options: IOperationOptions = {}
   ): Promise<IStoryCollaborator> {
-    const story = await this.ensureStoryExists(input.storyId, this.storyRepo, options);
+    const story = await this.ensureStoryExistsBySlug(input.slug, this.storyRepo, options);
 
     const inviter = await this.storyCollaboratorRepo.findOne(
       {
-        storyId: input.storyId,
+        slug: input.slug,
         userId: input.inviterUser.id,
         status: StoryCollaboratorStatus.ACCEPTED,
       },
@@ -92,16 +96,27 @@ export class StoryCollaboratorService extends BaseModule {
     );
 
     if (!inviter) {
-      throw new Error('You do not have permission to send invitations for this story.');
+      this.throwForbiddenError('You do not have permission to send invitations for this story.');
     }
 
-    const storyCollaborators = await this.getStoryCollaboratos({ storyId: input.storyId });
+    const storyCollaborators = await this.getAllStoryMemberDetailsBySlug({ slug: input.slug });
 
     if (
-      !StoryCollaboratorRules.isInvitorIsCollaboratorOfStory(
-        input.inviterUser.id,
-        storyCollaborators
-      )
+      storyCollaborators
+        .filter((c) => c.role === StoryCollaboratorRole.OWNER)
+        .some((owner) => owner.user.clerkId === input.invitedUser.id)
+    ) {
+      this.throwConflictError('The user is already the owner of this story.');
+    }
+
+    if (storyCollaborators.filter((c) => c.user.clerkId === input.invitedUser.id).length > 0) {
+      this.throwConflictError('The user is already a collaborator of this story.');
+    }
+
+    const storyMemberIds = this.getStoryMembersIds(storyCollaborators);
+
+    if (
+      !StoryCollaboratorRules.isInvitorIsCollaboratorOfStory(input.inviterUser.id, storyMemberIds)
     ) {
       this.throwForbiddenError('You must be a collaborator of this story to send invitations.');
     }
@@ -137,7 +152,7 @@ export class StoryCollaboratorService extends BaseModule {
     input: IStoryCollaboratorUpdateStatusDTO,
     options: IOperationOptions = {}
   ): Promise<IStoryCollaborator> {
-    const { status, userId, stotyId } = input;
+    const { status, userId, slug } = input;
 
     const updatePayload = {
       status,
@@ -145,7 +160,7 @@ export class StoryCollaboratorService extends BaseModule {
     };
 
     const collaborator = await this.storyCollaboratorRepo.findOneAndUpdate(
-      { userId, stotyId },
+      { userId, slug },
       updatePayload,
       options
     );
@@ -157,20 +172,26 @@ export class StoryCollaboratorService extends BaseModule {
     return collaborator;
   }
 
-  async getAllStoryMembers(
-    input: IGetAllStoryMembers,
+  async getAllStoryMemberDetailsBySlug(
+    input: IGetAllStoryMembersBySlugDTO,
     options: IOperationOptions = {}
-  ): Promise<IStoryCollaborator[]> {
-    await this.ensureStoryExists(input.storyId, this.storyRepo, options);
+  ): Promise<IStoryCollaboratorDetailsResponse[]> {
+    await this.ensureStoryExistsBySlug(input.slug, this.storyRepo, options);
 
     const pipeline = new StoryCollaboratorPipelineBuilder()
-      .allCollaboratorDetails(input.storyId)
+      .matchStoryBySlug(input.slug)
+      .populatedCollaboratorUser()
+      .populatedInvitedByUser()
       .build();
 
-    const members = await this.storyCollaboratorRepo.aggregateStories(pipeline);
+    const members =
+      await this.storyCollaboratorRepo.aggregateStories<IStoryCollaboratorDetailsResponse>(
+        pipeline,
+        options
+      );
 
     if (!members) {
-      this.throwNotFoundError('No collaborators found for this story');
+      this.throwNotFoundError(`No collaborators found for ${input.slug} story`);
     }
 
     return members;
@@ -178,17 +199,17 @@ export class StoryCollaboratorService extends BaseModule {
 
   async getCollaboratorRole(
     userId: string,
-    storyId: ID,
+    slug: string,
     options: IOperationOptions = {}
   ): Promise<TStoryCollaboratorRole | null> {
-    const story = await this.ensureStoryExists(storyId, this.storyRepo, options);
+    const story = await this.ensureStoryExistsBySlug(slug, this.storyRepo, options);
 
     if (story.creatorId === userId) {
       return StoryCollaboratorRole.OWNER;
     }
 
     const collaborator = await this.storyCollaboratorRepo.findOne({
-      storyId,
+      slug,
       userId,
       status: StoryCollaboratorStatus.ACCEPTED,
     });

@@ -5,13 +5,21 @@ import { apiResponse } from './helpers';
 // ===============================
 
 export const AutoSaveDraftSchema = {
-  type: 'object',
-  properties: {
-    _id: { type: 'string' },
-    chapterId: { type: 'string' },
-    userId: { type: 'string' },
-    content: { type: 'string' },
-    savedAt: { type: 'string', format: 'date-time' },
+  type: 'array',
+  items: {
+    type: 'object',
+    properties: {
+      _id: { type: 'string' },
+      chapterId: { type: 'string' },
+      draftId: { type: 'string' },
+      userId: { type: 'string' },
+      content: { type: 'string' },
+      isEnabled: { type: 'boolean' },
+      saveCount: { type: 'number' },
+      title: { type: 'string' },
+      lastSavedAt: { type: 'string', format: 'date-time' },
+      createdAt: { type: 'string', format: 'date-time' },
+    },
   },
 };
 

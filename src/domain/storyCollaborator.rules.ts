@@ -6,6 +6,7 @@ import {
   TStoryCollaboratorPermission,
   TStoryCollaboratorRole,
 } from '../features/storyCollaborator/storyCollaborator.types';
+import { ID } from '../types';
 
 export class StoryCollaboratorRules {
   /**
@@ -28,11 +29,8 @@ export class StoryCollaboratorRules {
    * @param collaborators - List of all collaborators of the story.
    * @returns True if the inviter exists in the collaborator list, otherwise false.
    */
-  static isInvitorIsCollaboratorOfStory(
-    invitorUserId: string,
-    collaborators: IStoryCollaborator[]
-  ): boolean {
-    return collaborators.some((collaborator) => collaborator.userId === invitorUserId);
+  static isInvitorIsCollaboratorOfStory(invitorUserId: string, collaboratorIds: string[]): boolean {
+    return collaboratorIds.some((collaboratorId) => collaboratorId === invitorUserId);
   }
 
   /**

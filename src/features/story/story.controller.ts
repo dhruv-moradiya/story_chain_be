@@ -116,29 +116,29 @@ export class StoryController extends BaseModule {
   });
 
   // TODO: Only valid user can do this
-  getStoryCollaborators = catchAsync(
-    async (request: FastifyRequest<{ Params: TStoryIDSchema }>, reply: FastifyReply) => {
-      const storyId = request.params.storyId;
-      const userId = request.user.clerkId;
+  // getStoryCollaborators = catchAsync(
+  //   async (request: FastifyRequest<{ Params: TStoryIDSchema }>, reply: FastifyReply) => {
+  //     const storyId = request.params.storyId;
+  //     const userId = request.user.clerkId;
 
-      const collaborators = await storyService.getAllCollaborators({
-        storyId,
-        userId,
-      });
+  //     const collaborators = await storyService.getAllCollaboratorsById({
+  //       storyId,
+  //       userId,
+  //     });
 
-      return reply
-        .code(HTTP_STATUS.OK.code)
-        .send(
-          new ApiResponse(
-            true,
-            collaborators.length === 0
-              ? `No collaborators found for this story.`
-              : `${collaborators.length} user${collaborators.length > 1 ? 's' : ''} found.`,
-            collaborators
-          )
-        );
-    }
-  );
+  //     return reply
+  //       .code(HTTP_STATUS.OK.code)
+  //       .send(
+  //         new ApiResponse(
+  //           true,
+  //           collaborators.length === 0
+  //             ? `No collaborators found for this story.`
+  //             : `${collaborators.length} user${collaborators.length > 1 ? 's' : ''} found.`,
+  //           collaborators
+  //         )
+  //       );
+  //   }
+  // );
 
   // Get story tree by ID
   getStoryTree = catchAsync(
@@ -249,6 +249,38 @@ export class StoryController extends BaseModule {
     }
   );
 
+  acceptInvitation = catchAsync(
+    async (request: FastifyRequest<{ Params: TStorySlugSchema }>, reply: FastifyReply) => {
+      const { slug } = request.params;
+      const { clerkId: userId } = request.user;
+
+      const result = await storyService.acceptInvitation({
+        slug,
+        userId,
+      });
+
+      return reply
+        .code(HTTP_STATUS.OK.code)
+        .send(new ApiResponse(true, 'Invitation accepted successfully', result));
+    }
+  );
+
+  declineInvitation = catchAsync(
+    async (request: FastifyRequest<{ Params: TStorySlugSchema }>, reply: FastifyReply) => {
+      const { slug } = request.params;
+      const { clerkId: userId } = request.user;
+
+      const result = await storyService.declineInvitation({
+        slug,
+        userId,
+      });
+
+      return reply
+        .code(HTTP_STATUS.OK.code)
+        .send(new ApiResponse(true, 'Invitation declined successfully', result));
+    }
+  );
+
   // Update story settings by slug
   updateStorySettingBySlug = catchAsync(
     async (
@@ -328,36 +360,6 @@ export class StoryController extends BaseModule {
       return reply
         .code(HTTP_STATUS.CREATED.code)
         .send(new ApiResponse(true, 'Chapter added successfully', newChapter));
-    }
-  );
-
-  createInvitation = catchAsync(
-    async (
-      request: FastifyRequest<{ Params: TStoryIDSchema; Body: TStoryCreateInviteLinkSchema }>,
-      reply: FastifyReply
-    ) => {
-      const { clerkId: userId, username } = request.user;
-      const { storyId } = request.params;
-      const { role, invitedUserId, invitedUserName } = request.body;
-
-      const input: TStoryCreateInviteLinkDTO = {
-        storyId: storyId,
-        role: role,
-        invitedUser: {
-          id: invitedUserId,
-          name: invitedUserName,
-        },
-        inviterUser: {
-          id: userId,
-          name: username,
-        },
-      };
-
-      const invitation = await storyService.createInvitation(input);
-
-      return reply
-        .code(HTTP_STATUS.CREATED.code)
-        .send(new ApiResponse(true, 'Invitation created successfully', invitation));
     }
   );
 

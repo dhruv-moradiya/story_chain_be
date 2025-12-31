@@ -12,6 +12,7 @@ import { IChapter } from '../chapter/chapter.types';
 import { ChapterRepository } from '../chapter/repositories/chapter.repository';
 import { IChapterAutoSave } from './chapterAutoSave.types';
 import { ChapterAutoSaveRepository } from './repository/chapterAutoSave.repository';
+import { storyService } from '../story/story.service';
 
 class ChapterAutoSaveService extends BaseModule {
   private readonly chapterRepo = new ChapterRepository();
@@ -49,7 +50,13 @@ class ChapterAutoSaveService extends BaseModule {
     return updated;
   }
 
-  private async enableChapterAutoSave(chapterId: ID, userId: string): Promise<IChapterAutoSave> {
+  private async enableChapterAutoSave(
+    chapterId: ID,
+    userId: string,
+    autoSaveType: string,
+    storyId: ID,
+    parentChapterId?: ID
+  ): Promise<IChapterAutoSave> {
     const chapter = await this.ensureChapterIsExist(chapterId);
 
     ChapterRules.ensureCanEnableAutoSave(chapter, userId);
@@ -59,6 +66,9 @@ class ChapterAutoSaveService extends BaseModule {
       userId,
       title: chapter.title,
       content: chapter.content,
+      autoSaveType,
+      storyId: storyId as Types.ObjectId,
+      parentChapterId: parentChapterId as Types.ObjectId | undefined,
     });
 
     if (!autoSave) {
@@ -68,10 +78,19 @@ class ChapterAutoSaveService extends BaseModule {
     return autoSave;
   }
 
-  private async enableDraftAutoSave(draftId: string, userId: string): Promise<IChapterAutoSave> {
+  private async enableDraftAutoSave(
+    draftId: string,
+    userId: string,
+    autoSaveType: string,
+    storyId: ID,
+    parentChapterId?: ID
+  ): Promise<IChapterAutoSave> {
     const autoSave = await this.chapterAutoSaveRepo.enableAutoSaveForDraft({
       draftId,
       userId,
+      autoSaveType,
+      storyId: storyId as Types.ObjectId,
+      parentChapterId: parentChapterId as Types.ObjectId | undefined,
     });
 
     if (!autoSave) {
@@ -79,6 +98,14 @@ class ChapterAutoSaveService extends BaseModule {
     }
 
     return autoSave;
+  }
+
+  /**
+   * Resolve storySlug to storyId
+   */
+  private async resolveStoryId(storySlug: string): Promise<Types.ObjectId> {
+    const story = await storyService.getStoryBySlug(storySlug);
+    return story._id as Types.ObjectId;
   }
 
   /**
@@ -92,13 +119,16 @@ class ChapterAutoSaveService extends BaseModule {
    * 3. Frontend starts 1-minute interval
    */
   async enableAutoSave(input: IEnableChapterAutoSaveDTO): Promise<IChapterAutoSave> {
-    const { chapterId, draftId, userId } = input;
+    const { chapterId, draftId, userId, autoSaveType, storySlug, parentChapterId } = input;
+
+    // Resolve storySlug to storyId
+    const storyId = await this.resolveStoryId(storySlug);
 
     // ───────────────────────────────────────────────
     // CASE 1: Existing Chapter → Standard AutoSave
     // ───────────────────────────────────────────────
-    if (chapterId) {
-      return this.enableChapterAutoSave(chapterId, userId);
+    if (chapterId && chapterId !== 'root') {
+      return this.enableChapterAutoSave(chapterId, userId, autoSaveType, storyId, parentChapterId);
     }
 
     // ───────────────────────────────────────────────
@@ -109,7 +139,7 @@ class ChapterAutoSaveService extends BaseModule {
     // Optional rule
     // DraftRules.ensureValidDraftOwner(finalDraftId, userId);
 
-    return this.enableDraftAutoSave(finalDraftId, userId);
+    return this.enableDraftAutoSave(finalDraftId, userId, autoSaveType, storyId, parentChapterId);
   }
 
   /**
@@ -124,7 +154,13 @@ class ChapterAutoSaveService extends BaseModule {
    * 4. Return success + metadata
    */
   async autoSaveContent(input: IAutoSaveContentDTO): Promise<IChapterAutoSave> {
-    const { chapterId, draftId, content, title, userId } = input;
+    const { chapterId, draftId, content, title, userId, autoSaveType, storySlug, parentChapterId } =
+      input;
+
+    console.log({ input });
+
+    // Resolve storySlug to storyId
+    const storyId = await this.resolveStoryId(storySlug);
 
     let chapter: IChapter | null = null;
     let autoSave: IChapterAutoSave | null = null;
@@ -133,7 +169,7 @@ class ChapterAutoSaveService extends BaseModule {
     // ───────────────────────────────────────────────
     // CASE 1: Auto-save for existing chapter
     // ───────────────────────────────────────────────
-    if (chapterId) {
+    if (chapterId && chapterId !== 'root') {
       chapter = await this.ensureChapterIsExist(chapterId);
       ChapterRules.ensureCanAutoSaveContent(chapter, userId);
 
@@ -149,6 +185,9 @@ class ChapterAutoSaveService extends BaseModule {
           userId,
           title: chapter.title,
           content: chapter.content,
+          autoSaveType,
+          storyId: storyId as Types.ObjectId,
+          parentChapterId: parentChapterId as Types.ObjectId | undefined,
         });
       }
 
@@ -166,12 +205,16 @@ class ChapterAutoSaveService extends BaseModule {
     // DraftRules.ensureValidDraftOwner(finalDraftId, userId);
 
     autoSave = await this.chapterAutoSaveRepo.findByDraftIdAndUser(finalDraftId, userId);
+    console.log('autoSave :>> ', autoSave);
 
     if (!autoSave) {
       // First time draft autosave
       autoSave = await this.chapterAutoSaveRepo.enableAutoSaveForDraft({
         draftId: finalDraftId,
         userId,
+        autoSaveType,
+        storyId: storyId as Types.ObjectId,
+        parentChapterId: parentChapterId as Types.ObjectId | undefined,
       });
     }
 
@@ -280,6 +323,50 @@ class ChapterAutoSaveService extends BaseModule {
 
     // this.throwBadRequest('Provide either chapterId or draftId to get auto-save.');
   }
+
+  /**
+   * ═══════════════════════════════════════════════════════════════════
+   * STEP 5: PUBLISH AUTO-SAVE DRAFT
+   * ═══════════════════════════════════════════════════════════════════
+   *
+   * When user clicks "Publish" on their auto-saved draft:
+   * 1. Find the auto-save record
+   * 2. Create a new chapter from the draft content
+   * 3. Return the published chapter
+   */
+  // async publishAutoSaveDraft(input: IPublishAutoSaveDraftDTO): Promise<IChapter> {
+  //   const { userId, chapterId, draftId } = input;
+
+  //   let autoSave: IChapterAutoSave | null = null;
+
+  //   // ───────────────────────────────────────────────
+  //   // CASE 1: Publish from existing chapter auto-save
+  //   // ───────────────────────────────────────────────
+  //   if (chapterId && chapterId !== 'root') {
+  //     autoSave = await this.chapterAutoSaveRepo.findByChapterIdAndUser(chapterId, userId);
+  //   }
+
+  //   // ───────────────────────────────────────────────
+  //   // CASE 2: Publish from draft auto-save
+  //   // ───────────────────────────────────────────────
+  //   if (!autoSave && draftId) {
+  //     autoSave = await this.chapterAutoSaveRepo.findByDraftIdAndUser(draftId, userId);
+  //   }
+
+  //   if (!autoSave) {
+  //     this.throwNotFoundError('No active auto-save was found to publish.');
+  //   }
+
+  //   const chapter = await storyService.addChapterToStoryBySlug({
+  //     slug: autoSave.storySlug as string,
+  //     title: autoSave.title,
+  //     content: autoSave.content,
+  //     parentChapterId: chapterId ?? null,
+  //     userId,
+  //   });
+
+  //   return chapter;
+  // }
 }
 
 export { ChapterAutoSaveService };

@@ -19,7 +19,7 @@ const reportSchema = new Schema<IReportDoc>(
     relatedChapterId: { type: Schema.Types.ObjectId, ref: 'Chapter' },
     relatedCommentId: { type: Schema.Types.ObjectId, ref: 'Comment' },
     relatedUserId: { type: String, ref: 'User' },
-    relatedStoryId: { type: Schema.Types.ObjectId, ref: 'Story' },
+    relatedStorySlug: { type: String, ref: 'Story' },
 
     // Report details
     reason: {

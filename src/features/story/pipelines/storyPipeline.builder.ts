@@ -82,6 +82,45 @@ class StoryPipelineBuilder {
     return this;
   }
 
+  withStoryCollaborators() {
+    this.pipeline.push({
+      $lookup: {
+        from: 'storycollaborators',
+        let: { storySlug: '$slug' },
+        pipeline: [
+          {
+            $match: {
+              $expr: { $eq: ['$slug', '$$storySlug'] },
+              status: 'ACCEPTED',
+            },
+          },
+          { $project: { userId: 1, role: 1 } },
+          {
+            $lookup: {
+              from: 'users',
+              localField: 'userId',
+              foreignField: 'clerkId',
+              pipeline: [{ $project: { username: 1, clerkId: 1, avatarUrl: 1 } }],
+              as: 'user',
+            },
+          },
+          { $unwind: '$user' },
+          {
+            $project: {
+              username: '$user.username',
+              clerkId: '$user.clerkId',
+              avatarUrl: '$user.avatarUrl',
+              role: '$role',
+            },
+          },
+        ],
+        as: 'collaborators',
+      },
+    });
+
+    return this;
+  }
+
   build() {
     return this.pipeline;
   }

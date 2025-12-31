@@ -92,6 +92,40 @@ const chapterAutoSaveSchema = new Schema<IChapterAutoSaveDoc>(
 
     // track new-chapter mode
     draftId: String,
+
+    /**
+     * AUTO_SAVE_TYPE: What type of save operation is this?
+     * USE: Track if this is an update, new chapter, or root chapter
+     * OPTIONS: 'update' | 'new_chapter' | 'root_chapter'
+     */
+    autoSaveType: {
+      type: String,
+      enum: ['update', 'new_chapter', 'root_chapter'],
+      required: true,
+    },
+
+    /**
+     * STORY_ID: Which story does this belong to?
+     * USE: Link autosave to story for all save types
+     * REFERENCE: Links to Story document
+     */
+    storyId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Story',
+      required: true,
+      index: true,
+    },
+
+    /**
+     * PARENT_CHAPTER_ID: Which is the parent chapter?
+     * USE: For new_chapter and update types - track parent relationship
+     * REFERENCE: Links to Chapter document
+     */
+    parentChapterId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Chapter',
+      index: true,
+    },
   },
   {
     timestamps: true,

@@ -30,11 +30,15 @@ export class ChapterAutoSaveController extends BaseModule {
     async (request: FastifyRequest<{ Body: TAutoSaveContentSchema }>, reply: FastifyReply) => {
       const input = request.body;
 
-      await chapterAutoSaveService.autoSaveContent(input);
+      const result = await chapterAutoSaveService.autoSaveContent(input);
 
       return reply
         .code(HTTP_STATUS.CREATED.code)
-        .send(new ApiResponse(true, 'Content auto-saved successfully.', {}));
+        .send(
+          new ApiResponse(true, 'Content auto-saved successfully.', {
+            saveCount: result.saveCount,
+          })
+        );
     }
   );
 

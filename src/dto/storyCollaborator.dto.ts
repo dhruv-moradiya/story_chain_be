@@ -5,14 +5,14 @@ import {
 } from '../features/storyCollaborator/storyCollaborator.types';
 
 interface IStoryCollaboratorCreateDTO {
-  storyId: ID;
+  slug: string;
   userId: string;
   role: TStoryCollaboratorRole;
   status?: TStoryCollaboratorStatus;
 }
 
 interface IStoryCollaboratorInvitationDTO {
-  storyId: ID;
+  slug: string;
   role: TStoryCollaboratorRole;
   invitedUser: {
     id: string;
@@ -27,16 +27,16 @@ interface IStoryCollaboratorInvitationDTO {
 interface IStoryCollaboratorUpdateStatusDTO {
   status: TStoryCollaboratorStatus;
   userId: string;
-  stotyId: ID;
+  slug: string;
 }
 
-interface IGetAllStoryMembers {
-  storyId: ID;
+interface IGetAllStoryMembersBySlugDTO {
+  slug: string;
 }
 
 export type {
   IStoryCollaboratorInvitationDTO,
-  IGetAllStoryMembers,
+  IGetAllStoryMembersBySlugDTO,
   IStoryCollaboratorCreateDTO,
   IStoryCollaboratorUpdateStatusDTO,
 };

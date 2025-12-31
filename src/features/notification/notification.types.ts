@@ -49,7 +49,7 @@ export interface INotification {
   userId: string; // Receiver of the notification
   type: TNotificationType;
 
-  relatedStoryId?: ID;
+  relatedStorySlug?: string;
   relatedChapterId?: ID;
   relatedPullRequestId?: ID;
   relatedCommentId?: ID;

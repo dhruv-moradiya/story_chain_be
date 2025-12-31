@@ -49,7 +49,7 @@ export type TStoryCollaboratorPermission =
 
 export interface IStoryCollaborator {
   _id: ID;
-  storyId: ID;
+  slug: string;
   userId: string;
   role: TStoryCollaboratorRole;
   invitedBy?: string;

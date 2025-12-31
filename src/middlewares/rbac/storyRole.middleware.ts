@@ -52,6 +52,49 @@ async function loadStoryContext(
   }
 }
 
+async function loadStoryContextBySlug(
+  request: FastifyRequest,
+  reply: FastifyReply
+): Promise<void> {
+  const { slug } = request.params as { slug: string };
+
+  if (!slug) {
+    return reply.code(HTTP_STATUS.BAD_REQUEST.code).send({
+      success: false,
+      error: 'Bad Request',
+      message: 'Story slug is required.',
+    });
+  }
+
+  const story = await storyService.getStoryBySlug(slug);
+
+  if (!story) {
+    return reply.code(HTTP_STATUS.NOT_FOUND.code).send({
+      success: false,
+      error: 'Not Found',
+      message: 'Story not found.',
+    });
+  }
+
+  // Build story context
+  request.storyContext = {
+    storyId: story._id.toString(),
+    creatorId: story.creatorId,
+    status: story.status,
+  };
+
+  // Get user's role in this story
+  if (request.user) {
+    const userId = request.user.clerkId;
+    request.userStoryRole = await storyCollaboratorService.getCollaboratorRole(
+      userId,
+      story._id.toString()
+    );
+  } else {
+    request.userStoryRole = null;
+  }
+}
+
 function requireStoryRole(
   minimumRole: TStoryCollaboratorRole,
   options: { allowPlatformOverride?: boolean } = {}
@@ -250,4 +293,10 @@ const StoryRoleGuards = {
   canBanFromStory: requireStoryPermission('canBanFromStory'),
 };
 
-export { loadStoryContext, requireStoryRole, requireStoryPermission, StoryRoleGuards };
+export {
+  loadStoryContext,
+  loadStoryContextBySlug,
+  requireStoryRole,
+  requireStoryPermission,
+  StoryRoleGuards,
+};

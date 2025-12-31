@@ -25,7 +25,7 @@ export class NotificationService extends BaseModule {
 
     const payload: Partial<INotification> = {
       userId: invitedUser.id,
-      relatedStoryId: story._id,
+      relatedStorySlug: story.slug,
       type,
       title,
       message,

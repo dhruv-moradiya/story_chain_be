@@ -7,7 +7,6 @@ import { apiResponse, apiArrayResponse } from './helpers';
 export const CollaboratorSchema = {
   type: 'object',
   properties: {
-    _id: { type: 'string' },
     storyId: { type: 'string' },
     userId: { type: 'string' },
     role: { type: 'string', enum: ['OWNER', 'CO_AUTHOR', 'MODERATOR', 'REVIEWER', 'CONTRIBUTOR'] },
@@ -16,10 +15,22 @@ export const CollaboratorSchema = {
       type: 'object',
       properties: {
         clerkId: { type: 'string' },
+        email: { type: 'string' },
         username: { type: 'string' },
         avatarUrl: { type: 'string' },
       },
     },
+    invitedBy: {
+      type: ['object', 'null'],
+      properties: {
+        clerkId: { type: 'string' },
+        email: { type: 'string' },
+        username: { type: 'string' },
+        avatarUrl: { type: 'string' },
+      },
+    },
+    invitedAt: { type: 'string', format: 'date-time' },
+    updatedAt: { type: 'string', format: 'date-time' },
   },
 };
 

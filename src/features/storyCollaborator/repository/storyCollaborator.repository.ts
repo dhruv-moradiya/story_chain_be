@@ -29,7 +29,7 @@ export class StoryCollaboratorRepository extends BaseRepository<
     options: IOperationOptions = {}
   ): Promise<IStoryCollaborator> {
     const doc = new this.model({
-      storyId: input.storyId,
+      slug: input.slug,
       userId: input.invitedUser.id,
       invitedBy: input.inviterUser.id,
       role: input.role,

@@ -142,6 +142,35 @@ const StoryAddChapterSchema = z.object({
     .transform((s) => s.trim()),
 });
 
+const StoryAddChapterBySlugSchema = z.object({
+  parentChapterId: z
+    .string()
+    .transform((s) => s.trim().toLowerCase())
+    .refine(
+      (val) => val === 'root' || /^[a-f\d]{24}$/i.test(val),
+      { message: 'parentChapterId must be "root" or a valid ObjectId' }
+    )
+    .transform((val) => (val === 'root' ? null : val)),
+  title: z
+    .string()
+    .min(CHAPTER_LIMITS.TITLE.MIN_LENGTH, {
+      message: `Title must be at least ${CHAPTER_LIMITS.TITLE.MIN_LENGTH} characters`,
+    })
+    .max(CHAPTER_LIMITS.TITLE.MAX_LENGTH, {
+      message: `Title must be at most ${CHAPTER_LIMITS.TITLE.MAX_LENGTH} characters`,
+    })
+    .transform((s) => s.trim()),
+  content: z
+    .string()
+    .min(CHAPTER_LIMITS.CONTENT.MIN_LENGTH, {
+      message: `Content must be at least ${CHAPTER_LIMITS.CONTENT.MIN_LENGTH} characters`,
+    })
+    .max(CHAPTER_LIMITS.CONTENT.MAX_LENGTH, {
+      message: `Content must be at most ${CHAPTER_LIMITS.CONTENT.MAX_LENGTH} characters`,
+    })
+    .transform((s) => s.trim()),
+});
+
 const StoryUpdateChapterTitleSchema = z.object({
   title: z
     .string()
@@ -287,6 +316,7 @@ type TStorySlugSchema = z.infer<typeof StorySlugSchema>;
 type TStoryCreateSchema = z.infer<typeof StoryCreateSchema>;
 type TStoryUpdateSchema = z.infer<typeof StoryUpdateSchema>;
 type TStoryAddChapterSchema = z.infer<typeof StoryAddChapterSchema>;
+type TStoryAddChapterBySlugSchema = z.infer<typeof StoryAddChapterBySlugSchema>;
 type TStoryUpdateChapterTitleSchema = z.infer<typeof StoryUpdateChapterTitleSchema>;
 type TStoryUpdateChapterContentSchema = z.infer<typeof StoryUpdateChapterContentSchema>;
 type TStoryCreateInviteLinkSchema = z.infer<typeof StoryCreateInviteLinkSchema>;
@@ -300,6 +330,7 @@ export {
   StoryCreateSchema,
   StoryUpdateSchema,
   StoryAddChapterSchema,
+  StoryAddChapterBySlugSchema,
   StoryUpdateChapterTitleSchema,
   StoryUpdateChapterContentSchema,
   StoryCreateInviteLinkSchema,
@@ -314,6 +345,7 @@ export type {
   TStoryCreateSchema,
   TStoryUpdateSchema,
   TStoryAddChapterSchema,
+  TStoryAddChapterBySlugSchema,
   TStoryUpdateChapterTitleSchema,
   TStoryUpdateChapterContentSchema,
   TStoryCreateInviteLinkSchema,

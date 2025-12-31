@@ -3,8 +3,8 @@ import { IStoryCollaboratorDoc } from '../features/storyCollaborator/storyCollab
 
 const storyCollaboratorSchema = new Schema<IStoryCollaboratorDoc>(
   {
-    storyId: {
-      type: Schema.Types.ObjectId,
+    slug: {
+      type: String,
       ref: 'Story',
       required: true,
       index: true,
@@ -41,7 +41,7 @@ const storyCollaboratorSchema = new Schema<IStoryCollaboratorDoc>(
 );
 
 // Unique: one role per user per story
-storyCollaboratorSchema.index({ storyId: 1, userId: 1 }, { unique: true });
+storyCollaboratorSchema.index({ slug: 1, userId: 1 }, { unique: true });
 
 const StoryCollaborator = mongoose.model('StoryCollaborator', storyCollaboratorSchema);
 

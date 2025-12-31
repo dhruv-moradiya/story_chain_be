@@ -40,7 +40,7 @@ const notificationSchema = new Schema<INotificationDoc>({
   },
 
   // Generic references (only use what's relevant for each type)
-  relatedStoryId: { type: Schema.Types.ObjectId, ref: 'Story' },
+  relatedStorySlug: { type: String, ref: 'Story' },
   relatedChapterId: { type: Schema.Types.ObjectId, ref: 'Chapter' },
   relatedPullRequestId: { type: Schema.Types.ObjectId, ref: 'PullRequest' },
   relatedCommentId: { type: Schema.Types.ObjectId, ref: 'Comment' },

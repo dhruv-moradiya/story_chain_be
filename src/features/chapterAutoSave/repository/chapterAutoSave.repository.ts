@@ -43,8 +43,11 @@ export class ChapterAutoSaveRepository extends BaseRepository<
     userId: string;
     title: string;
     content: string;
+    autoSaveType: string;
+    storyId: Types.ObjectId;
+    parentChapterId?: Types.ObjectId;
   }): Promise<IChapterAutoSave> {
-    const { chapterId, userId, title, content } = chapter;
+    const { chapterId, userId, title, content, autoSaveType, storyId, parentChapterId } = chapter;
 
     return this.model.findOneAndUpdate(
       { chapterId, userId },
@@ -59,6 +62,9 @@ export class ChapterAutoSaveRepository extends BaseRepository<
           title,
           content,
           saveCount: 0,
+          autoSaveType,
+          storyId,
+          parentChapterId,
         },
       },
       { new: true, upsert: true }
@@ -68,8 +74,14 @@ export class ChapterAutoSaveRepository extends BaseRepository<
   // ───────────────────────────────────────────────
   // Create autosave for NEW draft (no chapter yet)
   // ───────────────────────────────────────────────
-  enableAutoSaveForDraft(draft: { draftId: string; userId: string }) {
-    const { draftId, userId } = draft;
+  enableAutoSaveForDraft(draft: {
+    draftId: string;
+    userId: string;
+    autoSaveType: string;
+    storyId: Types.ObjectId;
+    parentChapterId?: Types.ObjectId;
+  }) {
+    const { draftId, userId, autoSaveType, storyId, parentChapterId } = draft;
 
     return this.model.findOneAndUpdate(
       { draftId, userId },
@@ -84,6 +96,9 @@ export class ChapterAutoSaveRepository extends BaseRepository<
           title: '',
           content: '',
           saveCount: 0,
+          autoSaveType,
+          storyId,
+          parentChapterId,
         },
       },
       { new: true, upsert: true }

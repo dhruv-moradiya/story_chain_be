@@ -1,19 +1,7 @@
+import { env } from '../../config/env';
 import { StoryStatus } from '../../constants';
-import { ID, IOperationOptions } from '../../types';
-import { buildChapterTree, toId } from '../../utils';
-import { BaseModule } from '../../utils/baseClass';
-import { withTransaction } from '../../utils/withTransaction';
-import { ChapterService } from '../chapter/chapter.service';
-import { IChapter } from '../chapter/chapter.types';
-import { ChapterRepository } from '../chapter/repositories/chapter.repository';
-import { StoryCollaboratorService } from '../storyCollaborator/storyCollaborator.service';
+import { StoryRules } from '../../domain/story.rules';
 import {
-  IStoryCollaborator,
-  StoryCollaboratorRole,
-  StoryCollaboratorStatus,
-} from '../storyCollaborator/storyCollaborator.types';
-import {
-  IGetAllCollaboratorsDTO,
   IPublishedStoryDTO,
   IStoryCollaboratorAcceptInvitationDTO,
   IStoryCreateDTO,
@@ -23,13 +11,27 @@ import {
   TStoryAddChapterDTO,
   TStoryCreateInviteLinkDTO,
 } from '../../dto/story.dto';
+import { ID, IOperationOptions } from '../../types';
+import {
+  IStoryCollaboratorDetailsResponse,
+  IStoryWithCreator,
+} from '../../types/response/story.response.types';
+import { buildChapterTree, toId } from '../../utils';
+import { BaseModule } from '../../utils/baseClass';
+import { withTransaction } from '../../utils/withTransaction';
+import { ChapterService } from '../chapter/chapter.service';
+import { IChapter } from '../chapter/chapter.types';
+import { ChapterPipelineBuilder } from '../chapter/pipelines/chapterPipeline.builder';
+import { ChapterRepository } from '../chapter/repositories/chapter.repository';
+import { StoryCollaboratorService } from '../storyCollaborator/storyCollaborator.service';
+import {
+  IStoryCollaborator,
+  StoryCollaboratorRole,
+  StoryCollaboratorStatus,
+} from '../storyCollaborator/storyCollaborator.types';
 import { StoryPipelineBuilder } from './pipelines/storyPipeline.builder';
 import { StoryRepository } from './repository/story.repository';
 import { IStory, TStoryStatus } from './story.types';
-import { StoryRules } from '../../domain/story.rules';
-import { ChapterPipelineBuilder } from '../chapter/pipelines/chapterPipeline.builder';
-import { env } from '../../config/env';
-import { IStoryWithCreator } from '../../types/response/story.response.types';
 
 export class StoryService extends BaseModule {
   private readonly storyRepo = new StoryRepository();
@@ -67,7 +69,7 @@ export class StoryService extends BaseModule {
       await this.storyCollaboratorService.createCollaborator(
         {
           userId: creatorId,
-          storyId: story._id,
+          slug: story.slug,
           role: StoryCollaboratorRole.OWNER,
           status: StoryCollaboratorStatus.ACCEPTED,
         },
@@ -313,17 +315,25 @@ export class StoryService extends BaseModule {
   async getAllCollaboratorsBySlug(input: {
     slug: string;
     userId: string;
-  }): Promise<IStoryCollaborator[]> {
-    const story = await this.getStoryBySlug(input.slug);
-    return this.getAllCollaborators({ storyId: story._id.toString(), userId: input.userId });
+  }): Promise<IStoryCollaboratorDetailsResponse[]> {
+    const { slug } = input;
+
+    const collaborator = await this.storyCollaboratorService.getAllStoryMemberDetailsBySlug({
+      slug,
+    });
+
+    if (!collaborator || collaborator.length === 0) {
+      this.throwNotFoundError(`No collaborators found for /${slug}/ story.`);
+    }
+
+    return collaborator;
   }
 
   async createInvitationBySlug(
     input: Omit<TStoryCreateInviteLinkDTO, 'storyId'> & { slug: string }
   ): Promise<IStoryCollaborator> {
     const { slug, ...rest } = input;
-    const story = await this.getStoryBySlug(slug);
-    return this.createInvitation({ ...rest, storyId: story._id.toString() });
+    return this.createInvitation({ ...rest, slug });
   }
 
   async updateSettingBySlug(input: Omit<IStoryUpdateSettingDTO, 'storyId'> & { slug: string }) {
@@ -363,14 +373,14 @@ export class StoryService extends BaseModule {
     input: IStoryCollaboratorAcceptInvitationDTO
   ): Promise<IStoryCollaborator> {
     return withTransaction('Accepting collaborator invitation', async (session) => {
-      const { userId, stotyId } = input;
+      const { userId, slug } = input;
       const options = { session };
 
       const collaborator = await this.storyCollaboratorService.updateCollaboratorStatus(
         {
           status: StoryCollaboratorStatus.ACCEPTED,
           userId,
-          stotyId,
+          slug,
         },
         options
       );
@@ -383,12 +393,25 @@ export class StoryService extends BaseModule {
     });
   }
 
-  async getAllCollaborators(input: IGetAllCollaboratorsDTO): Promise<IStoryCollaborator[]> {
-    const { storyId } = input;
+  async declineInvitation(input: { slug: string; userId: string }) {
+    return withTransaction('Rejecting collaborator invitation', async (session) => {
+      const options = { session };
 
-    const collaborators = this.storyCollaboratorService.getAllStoryMembers({ storyId });
+      const collaborator = await this.storyCollaboratorService.updateCollaboratorStatus(
+        {
+          status: StoryCollaboratorStatus.DECLINED,
+          userId: input.userId,
+          slug: input.slug,
+        },
+        options
+      );
 
-    return collaborators;
+      if (!collaborator) {
+        this.throwInternalError('Unable to reject the invitation. Please try again.');
+      }
+
+      return collaborator;
+    });
   }
 
   async updateSetting(input: IStoryUpdateSettingDTO) {
@@ -420,7 +443,7 @@ export class StoryService extends BaseModule {
     const pipeline = new StoryPipelineBuilder()
       .storyBySlug(slug)
       .storySettings(['genre', 'contentRating'])
-      .withStoryCreator()
+      .withStoryCollaborators()
       .build();
 
     const stories = await this.storyRepo.aggregateStories<IStoryWithCreator>(pipeline);
