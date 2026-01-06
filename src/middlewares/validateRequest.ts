@@ -62,6 +62,7 @@ export async function validateWebhook(request: FastifyRequest, reply: FastifyRep
       'svix-signature': svixSignature as string,
     });
 
+    // eslint-disable-next-line
     (request as any).clerkEvent = event;
     return;
   } catch (error) {

@@ -1,12 +1,10 @@
 import { STORY_ROLES } from '../constants';
 import { IStory } from '../features/story/story.types';
 import {
-  IStoryCollaborator,
   ROLE_HIERARCHY,
   TStoryCollaboratorPermission,
   TStoryCollaboratorRole,
 } from '../features/storyCollaborator/storyCollaborator.types';
-import { ID } from '../types';
 
 export class StoryCollaboratorRules {
   /**

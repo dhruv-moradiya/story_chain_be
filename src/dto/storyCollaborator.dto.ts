@@ -1,4 +1,3 @@
-import { ID } from '../types';
 import {
   TStoryCollaboratorRole,
   TStoryCollaboratorStatus,
@@ -35,8 +34,8 @@ interface IGetAllStoryMembersBySlugDTO {
 }
 
 export type {
-  IStoryCollaboratorInvitationDTO,
   IGetAllStoryMembersBySlugDTO,
   IStoryCollaboratorCreateDTO,
+  IStoryCollaboratorInvitationDTO,
   IStoryCollaboratorUpdateStatusDTO,
 };

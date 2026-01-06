@@ -15,13 +15,13 @@ const ParentChapterIdSchema = ObjectIdSchema().optional();
 const ChapterIdSchema = ObjectIdSchema().optional();
 const AutoSaveIdSchema = ObjectIdSchema().optional();
 
-const SaveTypeSchema = z.enum(['update', 'new_chapter', 'root_chapter'], {
+const SaveTypeSchema = z.enum(['update_chapter', 'new_chapter', 'root_chapter'], {
   required_error: 'autoSaveType is required.',
   invalid_type_error: 'autoSaveType must be: update | new_chapter | root_chapter.',
 });
 
 const BaseAutoSaveContentSchema = z.object({
-  userId: UserIdSchema,
+  // userId: UserIdSchema,
   title: z
     .string({
       required_error: 'title is required.',
@@ -54,7 +54,7 @@ const NewChapterAutoSaveSchema = BaseAutoSaveContentSchema.extend({
 });
 
 const UpdateAutoSaveSchema = BaseAutoSaveContentSchema.extend({
-  autoSaveType: z.literal('update'),
+  autoSaveType: z.literal('update_chapter'),
   storySlug: StorySlugSchema,
   chapterId: z.string({
     required_error: 'chapterId is required for update.',
@@ -85,7 +85,7 @@ const EnableAutoSaveSchema = z
   })
   .refine(
     (data) => {
-      if (data.autoSaveType === 'update') {
+      if (data.autoSaveType === 'update_chapter') {
         return data.chapterId && data.storySlug;
       }
       if (data.autoSaveType === 'root_chapter') {
@@ -118,10 +118,32 @@ const DisableAutoSaveSchema = z
     path: ['chapterId'],
   });
 
+const PublishAutoSaveDraftSchema = z
+  .object({
+    // userId: UserIdSchema,
+    chapterId: ChapterIdSchema,
+    draftId: z.string().optional(),
+  })
+  .refine((data) => data.chapterId || data.draftId, {
+    message: 'Either chapterId or draftId must be provided.',
+    path: ['chapterId'],
+  });
+
 type TEnableAutoSaveSchema = z.infer<typeof EnableAutoSaveSchema>;
 type TAutoSaveContentSchema = z.infer<typeof AutoSaveContentSchema>;
 type TDisableAutoSaveSchema = z.infer<typeof DisableAutoSaveSchema>;
+type TPublishAutoSaveDraftSchema = z.infer<typeof PublishAutoSaveDraftSchema>;
 
-export { EnableAutoSaveSchema, AutoSaveContentSchema, DisableAutoSaveSchema };
+export {
+  EnableAutoSaveSchema,
+  AutoSaveContentSchema,
+  DisableAutoSaveSchema,
+  PublishAutoSaveDraftSchema,
+};
 
-export type { TEnableAutoSaveSchema, TAutoSaveContentSchema, TDisableAutoSaveSchema };
+export type {
+  TEnableAutoSaveSchema,
+  TAutoSaveContentSchema,
+  TDisableAutoSaveSchema,
+  TPublishAutoSaveDraftSchema,
+};

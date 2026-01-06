@@ -8,9 +8,12 @@
     "class": "tsx watch src/class.ts",
     "build": "tsc",
     "start": "cross-env NODE_ENV=production node dist/server.js",
-    "lint": "eslint . --ext .ts",
+    "lint": "eslint \"src/**/*.ts\"",
     "format": "prettier --write \"src/**/*.ts\"",
-    "type-check": "tsc --noEmit"
+    "format:check": "prettier --check \"src/**/*.ts\"",
+    "check-all": "npm run type-check && npm run lint && npm run format:check",
+    "type-check": "tsc --noEmit",
+    "prepare": "husky"
   },
   "keywords": [
     "fastify",
@@ -22,6 +25,12 @@
   "author": "",
   "license": "ISC",
   "type": "commonjs",
+  "lint-staged": {
+    "src/**/*.ts": [
+      "eslint --fix",
+      "prettier --write"
+    ]
+  },
   "dependencies": {
     "@clerk/backend": "^2.18.3",
     "@clerk/clerk-sdk-node": "^4.13.23",
@@ -47,11 +56,17 @@
     "zod-to-json-schema": "^3.25.0"
   },
   "devDependencies": {
+    "@commitlint/cli": "^20.3.0",
+    "@commitlint/config-conventional": "^20.3.0",
+    "@eslint/js": "^9.39.2",
     "@types/node": "^24.8.1",
     "@types/nodemailer": "^7.0.2",
     "@typescript-eslint/eslint-plugin": "^8.46.1",
     "@typescript-eslint/parser": "^8.46.1",
     "eslint": "^9.38.0",
+    "globals": "^17.0.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
     "prettier": "^3.6.2",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3"

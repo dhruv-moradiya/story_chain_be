@@ -1,9 +1,11 @@
+import { PipelineStage } from 'mongoose';
+
 function escapeRegex(str: string): string {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 export class UserPipelineBuilder {
-  private pipeline: any[] = [];
+  private pipeline: PipelineStage[] = [];
 
   matchById(userId: string) {
     this.pipeline.push({ $match: { _id: userId } });

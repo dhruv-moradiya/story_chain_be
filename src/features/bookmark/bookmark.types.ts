@@ -3,7 +3,7 @@ import { ID } from '../../types';
 
 export interface IBookmark {
   _id: ID;
-  userId: String;
+  userId: string;
   storyId: ID;
   chapterId?: ID;
   note?: string;

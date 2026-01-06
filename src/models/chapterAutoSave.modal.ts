@@ -11,8 +11,6 @@ const chapterAutoSaveSchema = new Schema<IChapterAutoSaveDoc>(
     chapterId: {
       type: Schema.Types.ObjectId,
       ref: 'Chapter',
-      required: true,
-      index: true,
     },
 
     /**
@@ -91,16 +89,16 @@ const chapterAutoSaveSchema = new Schema<IChapterAutoSaveDoc>(
     },
 
     // track new-chapter mode
-    draftId: String,
+    // draftId: String,
 
     /**
      * AUTO_SAVE_TYPE: What type of save operation is this?
      * USE: Track if this is an update, new chapter, or root chapter
-     * OPTIONS: 'update' | 'new_chapter' | 'root_chapter'
+     * OPTIONS: 'update_chapter' | 'new_chapter' | 'root_chapter'
      */
     autoSaveType: {
       type: String,
-      enum: ['update', 'new_chapter', 'root_chapter'],
+      enum: ['update_chapter', 'new_chapter', 'root_chapter'],
       required: true,
     },
 

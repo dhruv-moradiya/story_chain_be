@@ -1,8 +1,13 @@
 import { Types } from 'mongoose';
-import { IChapterAutoSave, IChapterAutoSaveDoc } from '../chapterAutoSave.types';
-import { BaseRepository } from '../../../utils/baseClass';
 import { ChapterAutoSave } from '../../../models/chapterAutoSave.modal';
 import { ID } from '../../../types';
+import {
+  IEnableAutoSaveNewChapter,
+  IEnableAutoSaveUpdateChapter,
+  TEnableAutoSaveInput,
+} from '../../../types/response/chapterAutoSave.response.types';
+import { BaseRepository } from '../../../utils/baseClass';
+import { IChapterAutoSave, IChapterAutoSaveDoc } from '../chapterAutoSave.types';
 
 export class ChapterAutoSaveRepository extends BaseRepository<
   IChapterAutoSave,
@@ -126,5 +131,45 @@ export class ChapterAutoSaveRepository extends BaseRepository<
       },
       { new: true }
     );
+  }
+
+  // ───────────────────────────────────────────────
+  // Enable auto-save (handles all auto-save types)
+  // ───────────────────────────────────────────────
+  enableAutoSave(input: TEnableAutoSaveInput): Promise<IChapterAutoSave> {
+    const { autoSaveType, userId, storyId, title, content } = input;
+    console.log('ENABLE AUTO SAVE');
+    const baseFields = {
+      userId,
+      storyId,
+      title,
+      content,
+      autoSaveType,
+      isEnabled: true,
+      lastSavedAt: new Date(),
+      saveCount: 0,
+    };
+
+    switch (autoSaveType) {
+      case 'root_chapter':
+        return this.model.create(baseFields);
+
+      case 'new_chapter': {
+        const newChapterInput = input as IEnableAutoSaveNewChapter;
+        return this.model.create({
+          ...baseFields,
+          parentChapterId: newChapterInput.parentChapterId,
+        });
+      }
+
+      case 'update_chapter': {
+        const updateInput = input as IEnableAutoSaveUpdateChapter;
+        return this.model.create({
+          ...baseFields,
+          chapterId: updateInput.chapterId,
+          parentChapterId: updateInput.parentChapterId,
+        });
+      }
+    }
   }
 }

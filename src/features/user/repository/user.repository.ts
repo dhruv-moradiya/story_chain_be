@@ -48,6 +48,7 @@ export class UserRepository extends BaseRepository<IUser, IUserDoc> {
     return this.findOneAndUpdate({ clerkId }, { $push: { badges: badge } });
   }
 
+  // eslint-disable-next-line
   async countAllUsers(options?: { session?: any }) {
     return this.count({}, options);
   }

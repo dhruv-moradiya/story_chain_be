@@ -1,44 +1,45 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
+import { HTTP_STATUS } from '../../constants/httpStatus';
+import { TDisableAutoSaveSchema } from '../../schema/chapterAutoSave.schema';
+import {
+  TAutoSaveContentSchemaVer2,
+  TEnableAutoSaveSchemaVer2Type,
+} from '../../schema/chapterAutoSaveVer2.Schema';
+import { ApiResponse } from '../../utils/apiResponse';
 import { BaseModule } from '../../utils/baseClass';
 import { catchAsync } from '../../utils/catchAsync';
-import {
-  TAutoSaveContentSchema,
-  TDisableAutoSaveSchema,
-  TEnableAutoSaveSchema,
-} from '../../schema/chapterAutoSave.schema';
 import { chapterAutoSaveService } from './chapterAutoSave.service';
-import { HTTP_STATUS } from '../../constants/httpStatus';
-import { ApiResponse } from '../../utils/apiResponse';
-import { ChapterAutoSaveTransformer } from '../../transformer/chapterAutoSave.transformer';
 
 export class ChapterAutoSaveController extends BaseModule {
   enableAutoSave = catchAsync(
-    async (request: FastifyRequest<{ Body: TEnableAutoSaveSchema }>, reply: FastifyReply) => {
+    async (
+      request: FastifyRequest<{ Body: TEnableAutoSaveSchemaVer2Type }>,
+      reply: FastifyReply
+    ) => {
+      const userId = request.user.clerkId;
       const input = request.body;
 
-      const result = await chapterAutoSaveService.enableAutoSave(input);
-
-      const replyData = ChapterAutoSaveTransformer.enableAutoSaveRespose(result);
+      const result = await chapterAutoSaveService.enableAutoSave({ ...input, userId });
 
       return reply
         .code(HTTP_STATUS.CREATED.code)
-        .send(new ApiResponse(true, 'Auto-save enabled successfully.', replyData));
+        .send(new ApiResponse(true, 'Auto-save enabled successfully.', result));
     }
   );
 
   autoSaveContent = catchAsync(
-    async (request: FastifyRequest<{ Body: TAutoSaveContentSchema }>, reply: FastifyReply) => {
+    async (request: FastifyRequest<{ Body: TAutoSaveContentSchemaVer2 }>, reply: FastifyReply) => {
+      const userId = request.user.clerkId;
       const input = request.body;
 
-      const result = await chapterAutoSaveService.autoSaveContent(input);
+      const result = await chapterAutoSaveService.autoSaveContent({ ...input, userId });
 
-      return reply
-        .code(HTTP_STATUS.CREATED.code)
-        .send(
-          new ApiResponse(true, 'Content auto-saved successfully.', {
-            saveCount: result.saveCount,
-          })
-        );
+      return reply.code(HTTP_STATUS.CREATED.code).send(
+        new ApiResponse(true, 'Content auto-saved successfully.', {
+          _id: result._id,
+          saveCount: result.saveCount,
+        })
+      );
     }
   );
 
@@ -58,6 +59,7 @@ export class ChapterAutoSaveController extends BaseModule {
     const userId = request.user.clerkId;
 
     const result = await chapterAutoSaveService.getAutoSaveDraft({ userId });
+    console.log('result :>> ', result);
 
     return reply
       .code(HTTP_STATUS.OK.code)

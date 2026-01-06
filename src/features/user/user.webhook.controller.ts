@@ -10,6 +10,7 @@ export class UserWebhookController {
   private transformer = new WebhookTransformer();
 
   handle = catchAsync(async (req: FastifyRequest, reply: FastifyReply) => {
+    // eslint-disable-next-line
     const event = (req as any).clerkEvent as WebhookEvent;
 
     if (!event?.type) {

@@ -7,6 +7,7 @@ import { IPlatformRole } from '../features/platformRole/platformRole.types';
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { TStoryCollaboratorRole } from '../features/storyCollaborator/storyCollaborator.types';
 import { IStoryContext } from '../features/story/story.types';
+import { logger } from '../utils/logger';
 
 type AuthUser = IUser & IPlatformRole;
 
@@ -48,7 +49,8 @@ export async function validateAuth(request: FastifyRequest, reply: FastifyReply)
       });
     }
     request.user = { ...user, ...platformRole };
-  } catch (error) {
+  } catch (error: unknown) {
+    logger.error('Received error which checking auth: ', { error });
     return reply.code(500).send({
       error: 'Unexpected server error',
       message: 'Something went wrong while verifying your authentication. Please try again.',

@@ -1,7 +1,7 @@
 import { Document, Types } from 'mongoose';
 import { ID } from '../../types';
 
-enum ChapterVersionEditType {
+export enum ChapterVersionEditType {
   MANUAL_EDIT = 'MANUAL_EDIT',
   PR_MERGE = 'PR_MERGE',
   ADMIN_ROLLBACK = 'ADMIN_ROLLBACK',

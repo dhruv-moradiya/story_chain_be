@@ -5,7 +5,6 @@ import {
   IStoryCreateDTO,
   IStoryUpdateCardImageBySlugDTO,
   IStoryUpdateSettingDTO,
-  TStoryCreateInviteLinkDTO,
 } from '../../dto/story.dto';
 import {
   TStoryAddChapterSchema,

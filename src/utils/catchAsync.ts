@@ -1,9 +1,16 @@
-import { FastifyReply, FastifyRequest } from 'fastify';
+import { FastifyReply, FastifyRequest, RouteGenericInterface, RouteHandlerMethod } from 'fastify';
 
-export const catchAsync = (fn: Function) => {
-  return async (req: FastifyRequest, reply: FastifyReply) => {
+type AsyncHandler<T extends RouteGenericInterface = RouteGenericInterface> = (
+  req: FastifyRequest<T>,
+  reply: FastifyReply
+) => Promise<unknown>;
+
+export const catchAsync = <T extends RouteGenericInterface = RouteGenericInterface>(
+  fn: AsyncHandler<T>
+): RouteHandlerMethod => {
+  return async (req, reply) => {
     try {
-      await fn(req, reply);
+      await fn(req as FastifyRequest<T>, reply);
     } catch (error) {
       reply.send(error);
     }

@@ -1,19 +1,20 @@
 import { FastifyInstance } from 'fastify';
-import { ChapterAutoSaveController } from './chapterAutoSave.controller';
-import {
-  EnableAutoSaveSchema,
-  AutoSaveContentSchema,
-  DisableAutoSaveSchema,
-} from '../../schema/chapterAutoSave.schema';
 import zodToJsonSchema from 'zod-to-json-schema';
-import { AutoSaveResponses } from '../../schema/response.schema';
 import { validateAuth } from '../../middlewares/authHandler';
+import { DisableAutoSaveSchema } from '../../schema/chapterAutoSave.schema';
+import {
+  AutoSaveContentSchemaVer2,
+  EnableAutoSaveSchemaVer2,
+} from '../../schema/chapterAutoSaveVer2.Schema';
+import { AutoSaveResponses } from '../../schema/response.schema';
+import { ChapterAutoSaveController } from './chapterAutoSave.controller';
 
 enum ChapterAutoSaveApiRoutes {
   EnableAutoSave = '/enable',
   AutoSaveContent = '/save',
   DisableAutoSave = '/disable',
   GetAutoSaveDraft = '/draft',
+  PublishAutoSaveDraft = '/publish',
 }
 
 export async function chapterAutoSaveRoutes(fastify: FastifyInstance) {
@@ -26,7 +27,7 @@ export async function chapterAutoSaveRoutes(fastify: FastifyInstance) {
       schema: {
         description: 'Enable auto-save for a chapter',
         tags: ['Chapter Auto-Save'],
-        body: zodToJsonSchema(EnableAutoSaveSchema),
+        body: zodToJsonSchema(EnableAutoSaveSchemaVer2),
         response: AutoSaveResponses.enabled,
       },
     },
@@ -40,7 +41,7 @@ export async function chapterAutoSaveRoutes(fastify: FastifyInstance) {
       schema: {
         description: 'Auto-save chapter content',
         tags: ['Chapter Auto-Save'],
-        body: zodToJsonSchema(AutoSaveContentSchema),
+        body: zodToJsonSchema(AutoSaveContentSchemaVer2),
         response: AutoSaveResponses.saved,
       },
     },

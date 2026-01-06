@@ -146,10 +146,9 @@ const StoryAddChapterBySlugSchema = z.object({
   parentChapterId: z
     .string()
     .transform((s) => s.trim().toLowerCase())
-    .refine(
-      (val) => val === 'root' || /^[a-f\d]{24}$/i.test(val),
-      { message: 'parentChapterId must be "root" or a valid ObjectId' }
-    )
+    .refine((val) => val === 'root' || /^[a-f\d]{24}$/i.test(val), {
+      message: 'parentChapterId must be "root" or a valid ObjectId',
+    })
     .transform((val) => (val === 'root' ? null : val)),
   title: z
     .string()

@@ -6,7 +6,6 @@ import {
   TStoryGenre,
 } from '../../features/story/story.types';
 import {
-  StoryCollaboratorRole,
   TStoryCollaboratorRole,
   TStoryCollaboratorStatus,
 } from '../../features/storyCollaborator/storyCollaborator.types';
@@ -68,7 +67,7 @@ interface IStoryCollaboratorDetailsResponse {
 
 export type {
   IGetStoryOverviewBySlugResponse,
+  IStoryCollaboratorDetailsResponse,
   IStoryCreator,
   IStoryWithCreator,
-  IStoryCollaboratorDetailsResponse,
 };

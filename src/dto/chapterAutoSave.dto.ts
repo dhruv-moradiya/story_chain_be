@@ -1,18 +1,20 @@
 import { ID } from '../types';
 import { TSaveType } from '../features/chapterAutoSave/chapterAutoSave.types';
+import {
+  TAutoSaveContentSchemaVer2,
+  TEnableAutoSaveSchemaVer2Type,
+} from '../schema/chapterAutoSaveVer2.Schema';
 
-interface IEnableChapterAutoSaveDTO {
+type TEnableChapterAutoSaveDTO = TEnableAutoSaveSchemaVer2Type & {
   userId: string;
-  chapterId?: ID;
-  draftId?: string;
-  autoSaveType: TSaveType;
-  storySlug: string;
-  parentChapterId?: ID;
-}
+};
+
+type TAutoSaveContentDTO = TAutoSaveContentSchemaVer2 & {
+  userId: string;
+};
 
 interface IAutoSaveContentDTO {
   chapterId?: ID;
-  draftId?: string;
   userId: string;
   content: string;
   title: string;
@@ -23,7 +25,6 @@ interface IAutoSaveContentDTO {
 
 interface IDisableAutoSaveDTO {
   chapterId?: ID;
-  draftId?: string;
   userId: string;
   autoSaveType: TSaveType;
   storySlug: string;
@@ -31,19 +32,17 @@ interface IDisableAutoSaveDTO {
 }
 
 interface IGetAutoSaveDraftDTO {
-  // chapterId?: ID;
-  // draftId?: string;
   userId: string;
 }
 
 interface IPublishAutoSaveDraftDTO {
   userId: string;
   chapterId?: string;
-  draftId?: string;
 }
 
 export type {
-  IEnableChapterAutoSaveDTO,
+  TEnableChapterAutoSaveDTO,
+  TAutoSaveContentDTO,
   IAutoSaveContentDTO,
   IDisableAutoSaveDTO,
   IGetAutoSaveDraftDTO,

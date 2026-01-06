@@ -12,10 +12,7 @@ import { PlatformRole } from '../../features/platformRole/platformRole.types';
 import { STORY_ROLES } from '../../constants';
 import { StoryCollaboratorRules } from '../../domain/storyCollaborator.rules';
 
-async function loadStoryContext(
-  request: FastifyRequest,
-  reply: FastifyReply
-): Promise<void> {
+async function loadStoryContext(request: FastifyRequest, reply: FastifyReply): Promise<void> {
   const { storyId } = request.params as { storyId: string };
 
   if (!storyId) {
@@ -52,10 +49,7 @@ async function loadStoryContext(
   }
 }
 
-async function loadStoryContextBySlug(
-  request: FastifyRequest,
-  reply: FastifyReply
-): Promise<void> {
+async function loadStoryContextBySlug(request: FastifyRequest, reply: FastifyReply): Promise<void> {
   const { slug } = request.params as { slug: string };
 
   if (!slug) {

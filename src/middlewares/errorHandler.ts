@@ -43,8 +43,10 @@ export function globalErrorHandler(isDevelopment: boolean = false) {
       typeof error === 'object' &&
       error !== null &&
       'validation' in error &&
+      // eslint-disable-next-line
       Array.isArray((error as any).validation)
     ) {
+      // eslint-disable-next-line
       const message = (error as any).message || HTTP_STATUS.UNPROCESSABLE_ENTITY.message;
 
       const validationError = new ApiError(
@@ -63,6 +65,7 @@ export function globalErrorHandler(isDevelopment: boolean = false) {
       typeof error === 'object' &&
       error !== null &&
       'statusCode' in error &&
+      // eslint-disable-next-line
       typeof (error as any).statusCode === 'number'
     ) {
       const err = error as FastifyError;

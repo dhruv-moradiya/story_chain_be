@@ -5,7 +5,7 @@ export class ChapterRepositoryRule {
     return !!record?.isEnabled;
   }
 
-  static ensureBelongsToUser(record: IChapterAutoSave, userId: string): Boolean {
+  static ensureBelongsToUser(record: IChapterAutoSave, userId: string): boolean {
     const isBelongToUser = record.userId !== userId;
     return isBelongToUser;
   }

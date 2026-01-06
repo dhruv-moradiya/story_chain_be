@@ -107,7 +107,14 @@ export interface IPullRequest {
   draftReason: string;
   draftedAt: Date;
 
-  approvalsStatus: {};
+  approvalsStatus: {
+    required: number;
+    received: number;
+    pending: number;
+    approvers: string[];
+    blockers: string[];
+    canMerge: boolean;
+  };
 
   requiresModeration: boolean;
   flaggedForReview: boolean;
@@ -124,6 +131,7 @@ export interface IPullRequest {
     action: string;
     performedBy?: string;
     performedAt: Date;
+    // eslint-disable-next-line
     metadata?: any;
   }>;
 
