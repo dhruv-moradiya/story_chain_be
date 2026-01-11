@@ -1,6 +1,6 @@
 import { PipelineStage } from 'mongoose';
-import { ID } from '../../../types';
-import { toId } from '../../../utils';
+import { ID } from '@/types';
+import { toId } from '@utils/index';
 
 class ChapterPipelineBuilder {
   private pipeline: PipelineStage[] = [];

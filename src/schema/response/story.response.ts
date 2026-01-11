@@ -1,4 +1,4 @@
-import { StoryContentRating, StoryGenre, StoryStatus } from '../../features/story/story.types';
+import { StoryContentRating, StoryGenre, StoryStatus } from '@features/story/types/story.types';
 import { apiArrayResponse, apiResponse, errorResponse } from './helpers';
 
 // ===============================

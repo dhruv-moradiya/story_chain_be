@@ -1,0 +1,77 @@
+import { FastifyInstance } from 'fastify';
+import zodToJsonSchema from 'zod-to-json-schema';
+import { validateAuth } from '@middleware/authHandler';
+import { DisableAutoSaveSchema } from '@schema/chapterAutoSave.schema';
+import {
+  AutoSaveContentSchemaVer2,
+  EnableAutoSaveSchemaVer2,
+} from '@schema/chapterAutoSaveVer2.Schema';
+import { AutoSaveResponses } from '@schema/response.schema';
+import { ChapterAutoSaveController } from '../controllers/chapterAutoSave.controller';
+
+enum ChapterAutoSaveApiRoutes {
+  EnableAutoSave = '/enable',
+  AutoSaveContent = '/save',
+  DisableAutoSave = '/disable',
+  GetAutoSaveDraft = '/draft',
+  PublishAutoSaveDraft = '/publish',
+}
+
+export async function chapterAutoSaveRoutes(fastify: FastifyInstance) {
+  const controller = new ChapterAutoSaveController();
+
+  fastify.post(
+    ChapterAutoSaveApiRoutes.EnableAutoSave,
+    {
+      preHandler: [validateAuth],
+      schema: {
+        description: 'Enable auto-save for a chapter',
+        tags: ['Chapter Auto-Save'],
+        body: zodToJsonSchema(EnableAutoSaveSchemaVer2),
+        response: AutoSaveResponses.enabled,
+      },
+    },
+    controller.enableAutoSave
+  );
+
+  fastify.post(
+    ChapterAutoSaveApiRoutes.AutoSaveContent,
+    {
+      preHandler: [validateAuth],
+      schema: {
+        description: 'Auto-save chapter content',
+        tags: ['Chapter Auto-Save'],
+        body: zodToJsonSchema(AutoSaveContentSchemaVer2),
+        response: AutoSaveResponses.saved,
+      },
+    },
+    controller.autoSaveContent
+  );
+
+  fastify.post(
+    ChapterAutoSaveApiRoutes.DisableAutoSave,
+    {
+      preHandler: [validateAuth],
+      schema: {
+        description: 'Disable auto-save for a chapter',
+        tags: ['Chapter Auto-Save'],
+        body: zodToJsonSchema(DisableAutoSaveSchema),
+        response: AutoSaveResponses.disabled,
+      },
+    },
+    controller.disableAutoSave
+  );
+
+  fastify.get(
+    ChapterAutoSaveApiRoutes.GetAutoSaveDraft,
+    {
+      preHandler: [validateAuth],
+      schema: {
+        description: 'Get auto-save draft for a chapter',
+        tags: ['Chapter Auto-Save'],
+        response: AutoSaveResponses.draft,
+      },
+    },
+    controller.getAutoSaveDraft
+  );
+}

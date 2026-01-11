@@ -1,4 +1,4 @@
-import { IChapter } from '../features/chapter/chapter.types';
+import { IChapter } from '@features/chapter/types/chapter.types';
 
 export class ChapterRules {
   static ensureCreator(chapter: IChapter, userId: string): boolean {

@@ -1,4 +1,4 @@
-import { PlatformRole } from '../features/platformRole/platformRole.types';
+import { PlatformRole } from '@features/platformRole/types/platformRole.types';
 
 export class UserRules {
   static determineInitialRole(totalUsers: number) {

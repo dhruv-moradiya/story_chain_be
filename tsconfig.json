@@ -17,7 +17,27 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["./*"],
+      "@config/*": ["config/*"],
+      "@container/*": ["container/*"],
+      "@shared/*": ["shared/*"],
+      "@features/*": ["features/*"],
+      "@models/*": ["models/*"],
+      "@utils/*": ["utils/*"],
+      "@constants/*": ["constants/*"],
+      "@routes/*": ["routes/*"],
+      "@middleware/*": ["middlewares/*"],
+      "@dto/*": ["dto/*"],
+      "@schema/*": ["schema/*"],
+      "@domain/*": ["domain/*"],
+      "@transformer/*": ["transformer/*"],
+      "@services/*": ["services/*"]
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

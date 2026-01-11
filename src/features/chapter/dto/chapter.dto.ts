@@ -1,5 +1,5 @@
-import { ID } from '../../../types';
-import { TStoryStatus } from '../../story/story.types';
+import { ID } from '@/types';
+import { TStoryStatus } from '@features/story/types/story.types';
 
 type TChapterAddRootDTO = {
   storyId: ID;

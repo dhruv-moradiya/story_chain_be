@@ -1,5 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
-import { IStoryCollaboratorDoc } from '../features/storyCollaborator/storyCollaborator.types';
+import { IStoryCollaboratorDoc } from '@features/storyCollaborator/types/storyCollaborator.types';
 
 const storyCollaboratorSchema = new Schema<IStoryCollaboratorDoc>(
   {

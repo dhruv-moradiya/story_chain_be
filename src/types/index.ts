@@ -1,5 +1,5 @@
 import { ClientSession, Types } from 'mongoose';
-import { TStoryCollaboratorRole } from '../features/storyCollaborator/storyCollaborator.types';
+import { TStoryCollaboratorRole } from '@features/storyCollaborator/types/storyCollaborator.types';
 
 type ID = string | Types.ObjectId;
 

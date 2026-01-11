@@ -1,16 +1,16 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
-import { HTTP_STATUS } from '../../constants/httpStatus';
-import { storyCollaboratorService } from '../../features/storyCollaborator/storyCollaborator.service';
-import { storyService } from '../../features/story/story.service';
+import { HTTP_STATUS } from '@constants/httpStatus';
+import { storyCollaboratorService } from '@features/storyCollaborator/services/storyCollaborator.service';
+import { storyService } from '@features/story/services/story.service';
 import {
   StoryCollaboratorRole,
   TStoryCollaboratorPermission,
   TStoryCollaboratorRole,
-} from '../../features/storyCollaborator/storyCollaborator.types';
-import { PlatformRoleRules } from '../../domain/platformRole.rules';
-import { PlatformRole } from '../../features/platformRole/platformRole.types';
-import { STORY_ROLES } from '../../constants';
-import { StoryCollaboratorRules } from '../../domain/storyCollaborator.rules';
+} from '@features/storyCollaborator/types/storyCollaborator.types';
+import { PlatformRoleRules } from '@domain/platformRole.rules';
+import { PlatformRole } from '@features/platformRole/types/platformRole.types';
+import { STORY_ROLES } from '@constants/index';
+import { StoryCollaboratorRules } from '@domain/storyCollaborator.rules';
 
 async function loadStoryContext(request: FastifyRequest, reply: FastifyReply): Promise<void> {
   const { storyId } = request.params as { storyId: string };

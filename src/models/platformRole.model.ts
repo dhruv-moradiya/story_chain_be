@@ -1,5 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
-import { IPlatformRoleDoc } from '../features/platformRole/platformRole.types';
+import { IPlatformRoleDoc } from '@features/platformRole/types/platformRole.types';
 
 const platformRoleSchema = new Schema<IPlatformRoleDoc>(
   {

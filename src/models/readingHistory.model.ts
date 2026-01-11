@@ -1,5 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
-import { IReadingHistoryDoc } from '../features/readingHistory/readingHistory.types';
+import { IReadingHistoryDoc } from '@features/readingHistory/types/readingHistory.types';
 
 const readingHistorySchema = new Schema<IReadingHistoryDoc>(
   {

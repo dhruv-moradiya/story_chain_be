@@ -1,4 +1,4 @@
-import { IStory, StoryStatus, TStoryStatus } from '../features/story/story.types';
+import { IStory, StoryStatus, TStoryStatus } from '@features/story/types/story.types';
 
 export class StoryRules {
   static readonly NEW_STORY_COOLDOWN_IN_DAYS = 7;

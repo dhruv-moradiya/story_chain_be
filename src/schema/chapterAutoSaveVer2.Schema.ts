@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ObjectIdSchema } from '../utils';
+import { ObjectIdSchema } from '@utils/index';
 
 const BaseAutoSaveContentSchema = z.object({
   // userId: UserIdSchema,

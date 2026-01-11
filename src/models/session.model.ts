@@ -1,5 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
-import { ISessionDoc } from '../features/sesstion/sesstion.types';
+import { ISessionDoc } from '@features/sesstion/types/sesstion.types';
 
 const sessionSchema = new Schema<ISessionDoc>({
   sessionId: {

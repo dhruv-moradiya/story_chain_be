@@ -1,5 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
-import { IPRVoteDoc } from '../features/prVote/prVote.types';
+import { IPRVoteDoc } from '@features/prVote/types/prVote.types';
 
 const prVoteSchema = new Schema<IPRVoteDoc>({
   pullRequestId: {

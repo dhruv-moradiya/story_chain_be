@@ -1,13 +1,13 @@
 import { getAuth } from '@clerk/fastify';
 import { FastifyReply, FastifyRequest } from 'fastify';
-import { User } from '../models/user.model';
-import { PlatformRole } from '../models/platformRole.model';
-import { IUser } from '../features/user/user.types';
-import { IPlatformRole } from '../features/platformRole/platformRole.types';
-import { HTTP_STATUS } from '../constants/httpStatus';
-import { TStoryCollaboratorRole } from '../features/storyCollaborator/storyCollaborator.types';
-import { IStoryContext } from '../features/story/story.types';
-import { logger } from '../utils/logger';
+import { User } from '@models/user.model';
+import { PlatformRole } from '@models/platformRole.model';
+import { IUser } from '@features/user/types/user.types';
+import { IPlatformRole } from '@features/platformRole/types/platformRole.types';
+import { HTTP_STATUS } from '@constants/httpStatus';
+import { TStoryCollaboratorRole } from '@features/storyCollaborator/types/storyCollaborator.types';
+import { IStoryContext } from '@features/story/types/story.types';
+import { logger } from '@utils/logger';
 
 type AuthUser = IUser & IPlatformRole;
 

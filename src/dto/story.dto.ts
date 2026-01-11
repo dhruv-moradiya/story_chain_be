@@ -1,8 +1,8 @@
 import { z } from 'zod';
-import { ID } from '../types';
-import { TStoryAddChapterSchema } from '../schema/story.schema';
-import { TStoryCollaboratorRole } from '../features/storyCollaborator/storyCollaborator.types';
-import { TStoryContentRating, TStoryGenre } from '../features/story/story.types';
+import { ID } from '@/types';
+import { TStoryAddChapterSchema } from '@schema/story.schema';
+import { TStoryCollaboratorRole } from '@features/storyCollaborator/types/storyCollaborator.types';
+import { TStoryContentRating, TStoryGenre } from '@features/story/types/story.types';
 
 // TODO: Remove zod schema in DTOs
 

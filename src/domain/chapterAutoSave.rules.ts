@@ -1,4 +1,4 @@
-import { IChapterAutoSave } from '../features/chapterAutoSave/chapterAutoSave.types';
+import { IChapterAutoSave } from '@features/chapterAutoSave/types/chapterAutoSave.types';
 
 export class ChapterRepositoryRule {
   static alreadyEnabled(record: IChapterAutoSave | null): boolean {

@@ -12,7 +12,7 @@ const envSchema = z.object({
   MONGODB_URI: z.string(),
 
   // Redis
-  REDIS_URL: z.string(),
+  // REDIS_URL: z.string(),
 
   // CORS
   CORS_ORIGIN: z.string().default('*'),

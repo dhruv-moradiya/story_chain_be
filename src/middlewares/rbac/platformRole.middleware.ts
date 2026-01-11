@@ -1,9 +1,9 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
-import { PlatformRole, TPlatformPermission } from '../../features/platformRole/platformRole.types';
-import { HTTP_STATUS } from '../../constants/httpStatus';
-import { PlatformRoleRules } from '../../domain/platformRole.rules';
-import { logger } from '../../utils/logger';
-import { PLATFORM_ROLES } from '../../constants';
+import { PlatformRole, TPlatformPermission } from '@features/platformRole/types/platformRole.types';
+import { HTTP_STATUS } from '@constants/httpStatus';
+import { PlatformRoleRules } from '@domain/platformRole.rules';
+import { logger } from '@utils/logger';
+import { PLATFORM_ROLES } from '@constants/index';
 
 function requirePlatformRole(minimumRole: PlatformRole) {
   return async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {

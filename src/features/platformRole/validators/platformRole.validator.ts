@@ -1,6 +1,6 @@
-import { ApiError } from '../../../utils/apiResponse';
-import { BaseModule } from '../../../utils/baseClass';
-import { PlatformRoleRepository } from '../repository/platformRole.repository';
+import { ApiError } from '@utils/apiResponse';
+import { BaseModule } from '@utils/baseClass';
+import { PlatformRoleRepository } from '../repositories/platformRole.repository';
 
 export class PlatformRoleValidator extends BaseModule {
   private readonly repo = new PlatformRoleRepository();

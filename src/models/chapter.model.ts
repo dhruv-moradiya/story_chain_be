@@ -1,5 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
-import { IChapterDoc } from '../features/chapter/chapter.types';
+import { IChapterDoc } from '@features/chapter/types/chapter.types';
 
 const chapterSchema = new Schema<IChapterDoc>(
   {

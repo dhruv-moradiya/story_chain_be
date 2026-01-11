@@ -1,6 +1,6 @@
 import { Types } from 'mongoose';
-import { ID } from '../types';
-import { IChapter, TChapterMap, TChapterNode } from '../features/chapter/chapter.types';
+import { ID } from '@/types';
+import { IChapter, TChapterMap, TChapterNode } from '@features/chapter/types/chapter.types';
 import { z } from 'zod';
 import mongoose from 'mongoose';
 

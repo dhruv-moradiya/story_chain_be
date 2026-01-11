@@ -1,5 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
-import { IBookmarkDoc } from '../features/bookmark/bookmark.types';
+import { IBookmarkDoc } from '@features/bookmark/types/bookmark.types';
 
 const bookmarkSchema = new Schema<IBookmarkDoc>(
   {

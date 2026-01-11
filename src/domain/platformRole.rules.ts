@@ -1,9 +1,9 @@
-import { PLATFORM_ROLES } from '../constants';
+import { PLATFORM_ROLES } from '@constants/index';
 import {
   PLATFORM_ROLE_HIERARCHY,
   PlatformRole,
   TPlatformPermission,
-} from '../features/platformRole/platformRole.types';
+} from '@features/platformRole/types/platformRole.types';
 
 export class PlatformRoleRules {
   /**

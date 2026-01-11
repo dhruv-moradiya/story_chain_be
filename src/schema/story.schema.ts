@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { ObjectIdSchema } from '../utils';
-import { CHAPTER_LIMITS, cloudinaryUrlRegex } from '../constants';
+import { ObjectIdSchema } from '@utils/index';
+import { CHAPTER_LIMITS, cloudinaryUrlRegex } from '@constants/index';
 
 const StoryIdSchema = z.object({
   storyId: ObjectIdSchema(),

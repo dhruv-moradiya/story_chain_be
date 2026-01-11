@@ -1,7 +1,7 @@
 import {
   TStoryCollaboratorRole,
   TStoryCollaboratorStatus,
-} from '../features/storyCollaborator/storyCollaborator.types';
+} from '@features/storyCollaborator/types/storyCollaborator.types';
 
 interface IStoryCollaboratorCreateDTO {
   slug: string;

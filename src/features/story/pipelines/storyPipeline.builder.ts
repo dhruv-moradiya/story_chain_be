@@ -1,6 +1,6 @@
 import { PipelineStage } from 'mongoose';
-import { ID } from '../../../types';
-import { IStorySettings } from '../story.types';
+import { ID } from '@/types';
+import { IStorySettings } from '../types/story.types';
 
 class StoryPipelineBuilder {
   private pipeline: PipelineStage[] = [];

@@ -4,11 +4,11 @@ import {
   IStoryStats,
   TStoryContentRating,
   TStoryGenre,
-} from '../../features/story/story.types';
+} from '@features/story/types/story.types';
 import {
   TStoryCollaboratorRole,
   TStoryCollaboratorStatus,
-} from '../../features/storyCollaborator/storyCollaborator.types';
+} from '@features/storyCollaborator/types/storyCollaborator.types';
 
 interface IStoryCreator {
   clerkId: string;

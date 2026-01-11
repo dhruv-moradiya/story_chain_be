@@ -1,5 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
-import { IPRReviewDoc } from '../features/prReview/prReview.types';
+import { IPRReviewDoc } from '@features/prReview/types/prReview.types';
 
 const prReviewSchema = new Schema<IPRReviewDoc>(
   {

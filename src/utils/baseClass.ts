@@ -7,7 +7,7 @@ import {
   QueryOptions,
   UpdateQuery,
 } from 'mongoose';
-import { ID } from '../types';
+import { ID } from '@/types';
 import { ApiError } from './apiResponse';
 import { logger } from './logger';
 

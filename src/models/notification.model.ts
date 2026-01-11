@@ -1,5 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
-import { INotificationDoc } from '../features/notification/notification.types';
+import { INotificationDoc } from '@features/notification/types/notification.types';
 
 // One notification collection handles EVERYTHING
 const notificationSchema = new Schema<INotificationDoc>({
