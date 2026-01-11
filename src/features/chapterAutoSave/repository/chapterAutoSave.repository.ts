@@ -138,7 +138,6 @@ export class ChapterAutoSaveRepository extends BaseRepository<
   // ───────────────────────────────────────────────
   enableAutoSave(input: TEnableAutoSaveInput): Promise<IChapterAutoSave> {
     const { autoSaveType, userId, storyId, title, content } = input;
-    console.log('ENABLE AUTO SAVE');
     const baseFields = {
       userId,
       storyId,

@@ -429,8 +429,6 @@ export class StoryController extends BaseModule {
       const { slug } = request.params;
       const { coverImage: coverImageInfo } = request.body;
 
-      console.log('coverImage :>> ', coverImageInfo);
-
       const coverImage = await storyService.updateStoryCoverImageBySlug({
         slug,
         coverImage: coverImageInfo,

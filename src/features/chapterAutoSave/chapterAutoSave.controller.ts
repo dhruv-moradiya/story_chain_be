@@ -59,7 +59,6 @@ export class ChapterAutoSaveController extends BaseModule {
     const userId = request.user.clerkId;
 
     const result = await chapterAutoSaveService.getAutoSaveDraft({ userId });
-    console.log('result :>> ', result);
 
     return reply
       .code(HTTP_STATUS.OK.code)
