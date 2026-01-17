@@ -1,9 +1,12 @@
 import { PipelineStage } from 'mongoose';
+import { singleton } from 'tsyringe';
 import { Story } from '@models/story.model';
 import { ID, IOperationOptions } from '@/types';
 import { BaseRepository } from '@utils/baseClass';
-import { IStory, IStoryDoc, StoryStatus } from '../types/story.types';
+import { IStory, IStoryDoc } from '../types/story.types';
+import { StoryStatus } from '../types/story-enum';
 
+@singleton()
 export class StoryRepository extends BaseRepository<IStory, IStoryDoc> {
   constructor() {
     super(Story);

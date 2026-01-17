@@ -1,4 +1,8 @@
-import { StoryContentRating, StoryGenre, StoryStatus } from '@features/story/types/story.types';
+import {
+  STORY_CONTENT_RATINGS,
+  STORY_GENRES,
+  STORY_STATUSES,
+} from '@/features/story/types/story-enum';
 import { apiArrayResponse, apiResponse, errorResponse } from './helpers';
 
 // ===============================
@@ -13,11 +17,14 @@ export const StorySettingsSchema = {
     requireApproval: { type: 'boolean' },
     allowComments: { type: 'boolean' },
     allowVoting: { type: 'boolean' },
-    genre: {
-      type: 'string',
-      enum: Object.values(StoryGenre),
+    genres: {
+      type: 'array',
+      items: {
+        type: 'string',
+        enum: STORY_GENRES,
+      },
     },
-    contentRating: { type: 'string', enum: Object.values(StoryContentRating) },
+    contentRating: { type: 'string', enum: STORY_CONTENT_RATINGS },
   },
 };
 
@@ -80,9 +87,12 @@ export const StoryOverviewSchema = {
         avatarUrl: { type: 'string' },
       },
     },
-    genre: {
-      type: 'string',
-      enum: Object.values(StoryGenre),
+    genres: {
+      type: 'array',
+      items: {
+        type: 'string',
+        enum: Object.values(STORY_GENRES),
+      },
     },
     collaborators: {
       type: 'array',
@@ -96,10 +106,10 @@ export const StoryOverviewSchema = {
         },
       },
     },
-    contentRating: { type: 'string', enum: Object.values(StoryContentRating) },
+    contentRating: { type: 'string', enum: Object.values(STORY_CONTENT_RATINGS) },
     tags: { type: 'array', items: { type: 'string' } },
     stats: StoryStatsSchema,
-    status: { type: 'string', enum: Object.values(StoryStatus) },
+    status: { type: 'string', enum: STORY_STATUSES },
     publishedAt: { type: 'string', format: 'date-time' },
     lastActivityAt: { type: 'string', format: 'date-time' },
   },
@@ -158,6 +168,23 @@ export const StoryUpdateCardImageSchema = {
   required: ['url', 'publicId'],
 };
 
+export const StorySettingsWithImagesSchema = {
+  type: 'object',
+  properties: {
+    settings: StorySettingsSchema,
+    coverImage: {
+      type: 'object',
+      properties: { url: { type: 'string' }, publicId: { type: 'string' } },
+      nullable: true,
+    },
+    cardImage: {
+      type: 'object',
+      properties: { url: { type: 'string' }, publicId: { type: 'string' } },
+      nullable: true,
+    },
+  },
+};
+
 // ===============================
 // STORY RESPONSE OBJECTS
 // ===============================
@@ -173,7 +200,7 @@ export const StoryResponses = {
     404: errorResponse('Story not found'),
   },
   storySettings: {
-    200: apiResponse(StorySettingsSchema, 'Story settings'),
+    200: apiResponse(StorySettingsWithImagesSchema, 'Story settings with images'),
     404: errorResponse('Story not found'),
   },
   storyList: { 200: apiArrayResponse(StorySchema, 'List of stories') },

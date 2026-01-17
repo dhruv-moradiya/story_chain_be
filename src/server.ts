@@ -8,14 +8,11 @@ import type { RedisService } from '@config/services/redis.service';
 const start = async () => {
   try {
     // Connect to databases
-    // await connectDB();le
-
-    // const databaseService = container.resolve(DatabaseService);
     const databaseService = container.resolve<DatabaseService>(TOKENS.DatabaseService);
     await databaseService.connect();
 
-    // await connectRedis();
     const redisService = container.resolve<RedisService>(TOKENS.RedisService);
+
     await redisService.connect();
 
     // Initialize services

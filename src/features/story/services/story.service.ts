@@ -1,5 +1,6 @@
+import { inject, singleton } from 'tsyringe';
+import { TOKENS } from '@container/tokens';
 import { env } from '@config/env';
-import { StoryStatus } from '@constants/index';
 import { StoryRules } from '@domain/story.rules';
 import {
   IPublishedStoryDTO,
@@ -24,25 +25,35 @@ import { IChapter } from '@features/chapter/types/chapter.types';
 import { ChapterPipelineBuilder } from '@features/chapter/pipelines/chapterPipeline.builder';
 import { ChapterRepository } from '@features/chapter/repositories/chapter.repository';
 import { StoryCollaboratorService } from '@features/storyCollaborator/services/storyCollaborator.service';
-import {
-  IStoryCollaborator,
-  StoryCollaboratorRole,
-  StoryCollaboratorStatus,
-} from '@features/storyCollaborator/types/storyCollaborator.types';
+import { IStoryCollaborator } from '@features/storyCollaborator/types/storyCollaborator.types';
 import { StoryPipelineBuilder } from '../pipelines/storyPipeline.builder';
 import { StoryRepository } from '../repositories/story.repository';
-import { IStory, TStoryStatus } from '../types/story.types';
+import { IStory, IStorySettingsWithImages, TStoryStatus } from '../types/story.types';
+import {
+  StoryCollaboratorRole,
+  StoryCollaboratorStatus,
+} from '@/features/storyCollaborator/types/storyCollaborator-enum';
+import { StoryStatus } from '../types/story-enum';
 
-export class StoryService extends BaseModule {
-  private readonly storyRepo = new StoryRepository();
-  private readonly chapterService = new ChapterService();
-  private readonly chapterRepo = new ChapterRepository();
-  private readonly storyCollaboratorService = new StoryCollaboratorService();
+@singleton()
+class StoryService extends BaseModule {
+  constructor(
+    @inject(TOKENS.StoryRepository)
+    private readonly storyRepo: StoryRepository,
+    @inject(TOKENS.ChapterService)
+    private readonly chapterService: ChapterService,
+    @inject(TOKENS.ChapterRepository)
+    private readonly chapterRepo: ChapterRepository,
+    @inject(TOKENS.StoryCollaboratorService)
+    private readonly storyCollaboratorService: StoryCollaboratorService
+  ) {
+    super();
+  }
 
   /**
    * Create new story (with rate limiting)
    */
-  async createStory(input: IStoryCreateDTO & { creatorId: string }): Promise<IStory> {
+  async createStory(input: IStoryCreateDTO): Promise<IStory> {
     return await withTransaction('Creating new story', async (session) => {
       const { creatorId } = input;
       const options = { session };
@@ -64,9 +75,9 @@ export class StoryService extends BaseModule {
         this.throwTooManyRequestsError('Daily story creation limit reached. Try again tomorrow.');
       }
 
-      const story = await this.storyRepo.create({ ...input, status: StoryStatus.DRAFT }, options);
+      const story = await this.storyRepo.create({ ...input }, options);
 
-      await this.storyCollaboratorService.createCollaborator(
+      const collab = await this.storyCollaboratorService.createCollaborator(
         {
           userId: creatorId,
           slug: story.slug,
@@ -75,6 +86,8 @@ export class StoryService extends BaseModule {
         },
         options
       );
+
+      console.log('collab :>> ', collab);
 
       return story;
     });
@@ -442,7 +455,7 @@ export class StoryService extends BaseModule {
   async getStoryOverviewBySlug(slug: string): Promise<IStoryWithCreator> {
     const pipeline = new StoryPipelineBuilder()
       .storyBySlug(slug)
-      .storySettings(['genre', 'contentRating'])
+      .storySettings(['genres', 'contentRating'])
       .withStoryCollaborators()
       .build();
 
@@ -455,14 +468,18 @@ export class StoryService extends BaseModule {
     return stories[0];
   }
 
-  async getStorySettingsBySlug(slug: string): Promise<IStory['settings']> {
+  async getStorySettingsBySlug(slug: string): Promise<IStorySettingsWithImages> {
     const story = await this.getStoryBySlug(slug);
 
     if (!story) {
       this.throwNotFoundError('Story not found');
     }
 
-    return story.settings;
+    return {
+      settings: story.settings,
+      coverImage: story.coverImage,
+      cardImage: story.cardImage,
+    };
   }
 
   async updateStoryCoverImageBySlug(
@@ -494,4 +511,4 @@ export class StoryService extends BaseModule {
   }
 }
 
-export const storyService = new StoryService();
+export { StoryService };

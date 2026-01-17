@@ -1,14 +1,14 @@
 import { ID } from '..';
 import {
+  TStoryCollaboratorRole,
+  TStoryCollaboratorStatus,
+} from '@/features/storyCollaborator/types/storyCollaborator.types';
+import {
   IStory,
   IStoryStats,
   TStoryContentRating,
   TStoryGenre,
 } from '@features/story/types/story.types';
-import {
-  TStoryCollaboratorRole,
-  TStoryCollaboratorStatus,
-} from '@features/storyCollaborator/types/storyCollaborator.types';
 
 interface IStoryCreator {
   clerkId: string;
@@ -45,7 +45,7 @@ interface IStoryWithCreator
     | 'updatedAt'
   > {
   creator: IStoryCreator;
-  generes: TStoryGenre;
+  genres: TStoryGenre[];
   contentRating: TStoryContentRating;
 }
 

@@ -1,5 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import zodToJsonSchema from 'zod-to-json-schema';
+import { container } from 'tsyringe';
+import { TOKENS } from '@/container';
 import { validateAuth } from '@middleware/authHandler';
 import {
   loadStoryContext,
@@ -19,7 +21,7 @@ import {
   StoryUpdateCoverImageSchema,
   StoryUpdateSettingSchema,
 } from '@schema/story.schema';
-import { storyController } from '../controllers/story.controller';
+import { type StoryController } from '../controllers/story.controller';
 
 // Story API Routes - following chapterAutoSave pattern
 const StoryApiRoutes = {
@@ -57,6 +59,8 @@ const StoryApiRoutes = {
 export { StoryApiRoutes };
 
 export async function storyRoutes(fastify: FastifyInstance) {
+  const storyController = container.resolve<StoryController>(TOKENS.StoryController);
+
   // ===============================
   // STORY ROUTES (BY ID)
   // ===============================

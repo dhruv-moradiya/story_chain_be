@@ -1,3 +1,4 @@
-export class ChapterController {}
+import { singleton } from 'tsyringe';
 
-export const chapterController = new ChapterController();
+@singleton()
+export class ChapterController {}

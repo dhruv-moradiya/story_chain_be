@@ -1,40 +1,23 @@
-import { Document, Types } from 'mongoose';
 import { ID } from '@/types';
 import { TStoryCollaboratorRole } from '@features/storyCollaborator/types/storyCollaborator.types';
+import { Document, Types } from 'mongoose';
+import { STORY_CONTENT_RATINGS, STORY_GENRES, STORY_STATUSES } from './story-enum';
 
-export enum StoryGenre {
-  FANTASY = 'FANTASY',
-  SCI_FI = 'SCI_FI',
-  MYSTERY = 'MYSTERY',
-  ROMANCE = 'ROMANCE',
-  HORROR = 'HORROR',
-  THRILLER = 'THRILLER',
-  ADVENTURE = 'ADVENTURE',
-  DRAMA = 'DRAMA',
-  COMEDY = 'COMEDY',
-  OTHER = 'OTHER',
-}
+type TStoryGenre = (typeof STORY_GENRES)[number];
+type TStoryContentRating = (typeof STORY_CONTENT_RATINGS)[number];
+type TStoryStatus = (typeof STORY_STATUSES)[number];
 
-export enum StoryContentRating {
-  GENERAL = 'GENERAL',
-  TEEN = 'TEEN',
-  MATURE = 'MATURE',
-}
-
-export type TStoryGenre = keyof typeof StoryGenre;
-export type TStoryContentRating = keyof typeof StoryContentRating;
-
-export interface IStorySettings {
+interface IStorySettings {
   isPublic: boolean;
   allowBranching: boolean;
   requireApproval: boolean;
   allowComments: boolean;
   allowVoting: boolean;
-  genre: TStoryGenre;
+  genres: TStoryGenre[];
   contentRating: TStoryContentRating;
 }
 
-export interface IStoryStats {
+interface IStoryStats {
   totalChapters: number;
   totalBranches: number;
   totalReads: number;
@@ -43,16 +26,7 @@ export interface IStoryStats {
   averageRating: number;
 }
 
-export enum StoryStatus {
-  DRAFT = 'DRAFT',
-  PUBLISHED = 'PUBLISHED',
-  ARCHIVED = 'ARCHIVED',
-  DELETED = 'DELETED',
-}
-
-export type TStoryStatus = keyof typeof StoryStatus;
-
-export interface IStoryContext {
+interface IStoryContext {
   storyId: string;
   creatorId: string;
   status: string;
@@ -62,7 +36,7 @@ export interface IStoryContext {
   }>;
 }
 
-export interface IStory {
+interface IStory {
   _id: ID;
   title: string;
   slug: string;
@@ -94,6 +68,24 @@ export interface IStory {
   updatedAt: Date;
 }
 
-export interface IStoryDoc extends Document, IStory {
+interface IStoryDoc extends Document, IStory {
   _id: Types.ObjectId;
 }
+
+interface IStorySettingsWithImages {
+  settings: IStorySettings;
+  coverImage?: IStory['coverImage'];
+  cardImage?: IStory['cardImage'];
+}
+
+export type {
+  IStory,
+  IStoryContext,
+  IStoryDoc,
+  IStorySettings,
+  IStorySettingsWithImages,
+  IStoryStats,
+  TStoryContentRating,
+  TStoryGenre,
+  TStoryStatus,
+};

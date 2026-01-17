@@ -1,6 +1,26 @@
 import { z } from 'zod';
 import { ObjectIdSchema } from '@utils/index';
 import { CHAPTER_LIMITS, cloudinaryUrlRegex } from '@constants/index';
+import {
+  STORY_CONTENT_RATINGS,
+  STORY_GENRES,
+  STORY_STATUSES,
+} from '@/features/story/types/story-enum';
+import { STORY_COLLABORATOR_ROLES } from '@/features/storyCollaborator/types/storyCollaborator-enum';
+
+// Define enums first so they can be used in schemas below
+const GenreEnum = z.enum(STORY_GENRES, {
+  errorMap: () => ({
+    message: 'Invalid genre selected. Please choose a valid genre option.',
+  }),
+});
+
+const ContentRatingEnum = z.enum(STORY_CONTENT_RATINGS, {
+  errorMap: () => ({
+    message:
+      'Invalid content rating. Allowed values are all_ages, general, teen, young_adult, mature, r18, or r18g.',
+  }),
+});
 
 const StoryIdSchema = z.object({
   storyId: ObjectIdSchema(),
@@ -35,27 +55,14 @@ const StoryCreateSchema = z.object({
       requireApproval: z.boolean().default(false),
       allowComments: z.boolean().default(true),
       allowVoting: z.boolean().default(true),
-      genre: z
-        .enum([
-          'FANTASY',
-          'SCI_FI',
-          'MYSTERY',
-          'ROMANCE',
-          'HORROR',
-          'THRILLER',
-          'ADVENTURE',
-          'DRAMA',
-          'COMEDY',
-          'OTHER',
-        ])
-        .default('OTHER'),
-      contentRating: z.enum(['GENERAL', 'TEEN', 'MATURE']).default('GENERAL'),
+      genres: z.array(GenreEnum).default([]),
+      contentRating: ContentRatingEnum.default('general'),
     })
     .default({}),
 
   tags: z.array(z.string().trim().toLowerCase()).default([]),
 
-  status: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED', 'DELETED']).default('PUBLISHED'),
+  status: z.enum(STORY_STATUSES).default('draft'),
 });
 
 const StoryUpdateSchema = z.object({
@@ -89,28 +96,15 @@ const StoryUpdateSchema = z.object({
       requireApproval: z.boolean().optional(),
       allowComments: z.boolean().optional(),
       allowVoting: z.boolean().optional(),
-      genre: z
-        .enum([
-          'FANTASY',
-          'SCI_FI',
-          'MYSTERY',
-          'ROMANCE',
-          'HORROR',
-          'THRILLER',
-          'ADVENTURE',
-          'DRAMA',
-          'COMEDY',
-          'OTHER',
-        ])
-        .optional(),
-      contentRating: z.enum(['GENERAL', 'TEEN', 'MATURE']).optional(),
+      genres: z.array(GenreEnum).optional(),
+      contentRating: ContentRatingEnum.optional(),
     })
     .partial()
     .optional(),
 
   tags: z.array(z.string().trim().toLowerCase()).optional(),
 
-  status: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED', 'DELETED']).optional(),
+  status: z.enum(STORY_STATUSES).optional(),
 
   trendingScore: z.number().optional(),
   lastActivityAt: z.date().optional(),
@@ -118,7 +112,6 @@ const StoryUpdateSchema = z.object({
 });
 
 const StoryAddChapterSchema = z.object({
-  // storyId: ObjectIdSchema().transform((s) => s.trim()),
   parentChapterId: ObjectIdSchema()
     .transform((s) => s.trim())
     .nullable(),
@@ -195,35 +188,9 @@ const StoryUpdateChapterContentSchema = z.object({
 });
 
 const StoryCreateInviteLinkSchema = z.object({
-  role: z.enum(['CO_AUTHOR', 'MODERATOR', 'REVIEWER', 'CONTRIBUTOR']),
+  role: z.enum(STORY_COLLABORATOR_ROLES),
   invitedUserId: z.string(),
   invitedUserName: z.string(),
-});
-
-const GenreEnum = z.enum(
-  [
-    'FANTASY',
-    'SCI_FI',
-    'MYSTERY',
-    'ROMANCE',
-    'HORROR',
-    'THRILLER',
-    'ADVENTURE',
-    'DRAMA',
-    'COMEDY',
-    'OTHER',
-  ],
-  {
-    errorMap: () => ({
-      message: 'Invalid genre selected. Please choose a valid genre option.',
-    }),
-  }
-);
-
-const ContentRatingEnum = z.enum(['GENERAL', 'TEEN', 'MATURE'], {
-  errorMap: () => ({
-    message: 'Invalid content rating. Allowed values are GENERAL, TEEN, or MATURE.',
-  }),
 });
 
 const StoryUpdateSettingSchema = z.object({
@@ -262,9 +229,9 @@ const StoryUpdateSettingSchema = z.object({
     })
     .default(false),
 
-  genre: GenreEnum.default('OTHER'),
+  genres: z.array(GenreEnum).default([]),
 
-  contentRating: ContentRatingEnum.default('GENERAL'),
+  contentRating: ContentRatingEnum.default('general'),
 
   // converImage: z
   //   .object({

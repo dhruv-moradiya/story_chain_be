@@ -1,4 +1,6 @@
+import { inject, singleton } from 'tsyringe';
 import { Types } from 'mongoose';
+import { TOKENS } from '@container/tokens';
 import {
   IDisableAutoSaveDTO,
   IGetAutoSaveDraftDTO,
@@ -8,20 +10,28 @@ import {
 import { ID } from '@/types';
 import { TEnableAutoSaveInput } from '@/types/response/chapterAutoSave.response.types';
 import { BaseModule } from '@utils/baseClass';
-import { storyService } from '@features/story/services/story.service';
+import { StoryService } from '@features/story/services/story.service';
 import { IChapterAutoSave } from '../types/chapterAutoSave.types';
 import { ChapterAutoSaveRepository } from '../repositories/chapterAutoSave.repository';
 
 export type { TEnableChapterAutoSaveDTO };
 
+@singleton()
 class ChapterAutoSaveService extends BaseModule {
-  private readonly chapterAutoSaveRepo = new ChapterAutoSaveRepository();
+  constructor(
+    @inject(TOKENS.ChapterAutoSaveRepository)
+    private readonly chapterAutoSaveRepo: ChapterAutoSaveRepository,
+    @inject(TOKENS.StoryService)
+    private readonly storyService: StoryService
+  ) {
+    super();
+  }
 
   /**
    * Resolve storySlug to storyId
    */
   private async resolveStoryId(storySlug: string): Promise<ID> {
-    const story = await storyService.getStoryBySlug(storySlug);
+    const story = await this.storyService.getStoryBySlug(storySlug);
     return story._id as ID;
   }
 
@@ -293,4 +303,3 @@ class ChapterAutoSaveService extends BaseModule {
 }
 
 export { ChapterAutoSaveService };
-export const chapterAutoSaveService = new ChapterAutoSaveService();

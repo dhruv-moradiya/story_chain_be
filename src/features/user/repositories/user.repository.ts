@@ -1,9 +1,12 @@
 import { ProjectionType, UpdateQuery } from 'mongoose';
+import { singleton } from 'tsyringe';
 import { User } from '@models/user.model';
 import { ICreateNewUser, IUser, IUserDoc } from '../types/user.types';
 import { BaseRepository } from '@utils/baseClass';
+import { IUserRepository } from '../interfaces';
 
-export class UserRepository extends BaseRepository<IUser, IUserDoc> {
+@singleton()
+export class UserRepository extends BaseRepository<IUser, IUserDoc> implements IUserRepository {
   constructor() {
     super(User);
   }

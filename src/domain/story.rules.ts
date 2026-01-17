@@ -1,4 +1,5 @@
-import { IStory, StoryStatus, TStoryStatus } from '@features/story/types/story.types';
+import { StoryStatus } from '@/features/story/types/story-enum';
+import { IStory, TStoryStatus } from '@features/story/types/story.types';
 
 export class StoryRules {
   static readonly NEW_STORY_COOLDOWN_IN_DAYS = 7;

@@ -1,7 +1,9 @@
-import { STORY_ROLES } from '@constants/index';
-import { IStory } from '@features/story/types/story.types';
 import {
   ROLE_HIERARCHY,
+  STORY_COLLABORATOR_ROLE_CONFIG,
+} from '@/features/storyCollaborator/types/storyCollaborator-enum';
+import { IStory } from '@features/story/types/story.types';
+import {
   TStoryCollaboratorPermission,
   TStoryCollaboratorRole,
 } from '@features/storyCollaborator/types/storyCollaborator.types';
@@ -39,7 +41,7 @@ export class StoryCollaboratorRules {
    * @returns True if the role allows sending invitations, otherwise false.
    */
   static ensureInviterHasSufficientRole(role: TStoryCollaboratorRole): boolean {
-    return STORY_ROLES[role].permissions.canInviteCollaborators;
+    return STORY_COLLABORATOR_ROLE_CONFIG[role].permissions.canInviteCollaborators;
   }
 
   /**
@@ -75,7 +77,7 @@ export class StoryCollaboratorRules {
     role: TStoryCollaboratorRole,
     permission: TStoryCollaboratorPermission
   ): boolean {
-    const roleConfig = STORY_ROLES[role];
+    const roleConfig = STORY_COLLABORATOR_ROLE_CONFIG[role];
     if (!roleConfig) return false;
     return roleConfig.permissions[permission] === true;
   }

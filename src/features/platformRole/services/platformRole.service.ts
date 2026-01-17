@@ -1,11 +1,17 @@
 import { ClientSession } from 'mongoose';
+import { inject, singleton } from 'tsyringe';
+import { TOKENS } from '@container/tokens';
 import { PlatformRoleRepository } from '../repositories/platformRole.repository';
 import { PlatformRoleValidator } from '../validators/platformRole.validator';
 import { IPlatformRole, PlatformRole } from '../types/platformRole.types';
 
+@singleton()
 export class PlatformRoleService {
-  private readonly repo = new PlatformRoleRepository();
-  private readonly validator = new PlatformRoleValidator();
+  constructor(
+    @inject(TOKENS.PlatformRoleRepository)
+    private readonly repo: PlatformRoleRepository,
+    private readonly validator: PlatformRoleValidator = new PlatformRoleValidator()
+  ) {}
 
   async assignRole(
     input: { userId: string; role: PlatformRole },
@@ -31,5 +37,3 @@ export class PlatformRoleService {
     });
   }
 }
-
-export const platformRoleService = new PlatformRoleService();

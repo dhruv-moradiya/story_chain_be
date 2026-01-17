@@ -1,13 +1,15 @@
 import { getAuth } from '@clerk/fastify';
 import { FastifyReply, FastifyRequest } from 'fastify';
-import { User } from '@models/user.model';
-import { PlatformRole } from '@models/platformRole.model';
+import { container } from 'tsyringe';
+import { TOKENS } from '@container/tokens';
+import { HTTP_STATUS } from '@constants/httpStatus';
 import { IUser } from '@features/user/types/user.types';
 import { IPlatformRole } from '@features/platformRole/types/platformRole.types';
-import { HTTP_STATUS } from '@constants/httpStatus';
 import { TStoryCollaboratorRole } from '@features/storyCollaborator/types/storyCollaborator.types';
 import { IStoryContext } from '@features/story/types/story.types';
 import { logger } from '@utils/logger';
+import { UserRepository } from '@features/user/repositories/user.repository';
+import { PlatformRoleRepository } from '@features/platformRole/repositories/platformRole.repository';
 
 type AuthUser = IUser & IPlatformRole;
 
@@ -19,6 +21,10 @@ declare module 'fastify' {
   }
 }
 
+/**
+ * Authentication middleware that validates user and attaches to request
+ * Uses DI to resolve repositories
+ */
 export async function validateAuth(request: FastifyRequest, reply: FastifyReply) {
   try {
     const auth = getAuth(request);
@@ -30,9 +36,14 @@ export async function validateAuth(request: FastifyRequest, reply: FastifyReply)
       });
     }
 
+    const userRepo = container.resolve<UserRepository>(TOKENS.UserRepository);
+    const platformRoleRepo = container.resolve<PlatformRoleRepository>(
+      TOKENS.PlatformRoleRepository
+    );
+
     const [user, platformRole] = await Promise.all([
-      User.findOne({ clerkId: auth.userId }).lean(),
-      PlatformRole.findOne({ userId: auth.userId }).lean(),
+      userRepo.findByClerkId(auth.userId),
+      platformRoleRepo.findByUserId(auth.userId),
     ]);
 
     if (!user) {
@@ -50,7 +61,7 @@ export async function validateAuth(request: FastifyRequest, reply: FastifyReply)
     }
     request.user = { ...user, ...platformRole };
   } catch (error: unknown) {
-    logger.error('Received error which checking auth: ', { error });
+    logger.error('Received error while checking auth: ', { error });
     return reply.code(500).send({
       error: 'Unexpected server error',
       message: 'Something went wrong while verifying your authentication. Please try again.',

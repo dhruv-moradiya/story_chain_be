@@ -1,14 +1,10 @@
-import { FastifyReply, FastifyRequest } from 'fastify';
-
 import { HTTP_STATUS } from '@constants/httpStatus';
-import {
-  IStoryCreateDTO,
-  IStoryUpdateCardImageBySlugDTO,
-  IStoryUpdateSettingDTO,
-} from '@dto/story.dto';
+import { TOKENS } from '@container/tokens';
+import { IStoryUpdateCardImageBySlugDTO, IStoryUpdateSettingDTO } from '@dto/story.dto';
 import {
   TStoryAddChapterSchema,
   TStoryCreateInviteLinkSchema,
+  TStoryCreateSchema,
   TStoryIDSchema,
   TStorySlugSchema,
   TStoryUpdateCoverImageSchema,
@@ -17,17 +13,26 @@ import {
 import { ApiResponse } from '@utils/apiResponse';
 import { BaseModule } from '@utils/baseClass';
 import { catchAsync } from '@utils/catchAsync';
-import { storyService } from '../services/story.service';
+import { FastifyReply, FastifyRequest } from 'fastify';
+import { inject, singleton } from 'tsyringe';
+import { StoryService } from '../services/story.service';
 
+@singleton()
 export class StoryController extends BaseModule {
+  constructor(
+    @inject(TOKENS.StoryService)
+    private readonly storyService: StoryService
+  ) {
+    super();
+  }
   // Handles creation of a new story for the authenticated user.
   createStory = catchAsync(
-    async (request: FastifyRequest<{ Body: IStoryCreateDTO }>, reply: FastifyReply) => {
+    async (request: FastifyRequest<{ Body: TStoryCreateSchema }>, reply: FastifyReply) => {
       const { body, user } = request;
 
       const userId = user.clerkId;
 
-      const newStory = await storyService.createStory({
+      const newStory = await this.storyService.createStory({
         ...body,
         creatorId: userId,
       });
@@ -45,7 +50,7 @@ export class StoryController extends BaseModule {
     async (request: FastifyRequest<{ Params: { storyId: string } }>, reply: FastifyReply) => {
       const { storyId } = request.params;
 
-      const story = await storyService.getStoryById(storyId);
+      const story = await this.storyService.getStoryById(storyId);
 
       this.logInfo(`Fetched story ${storyId}`);
 
@@ -59,7 +64,7 @@ export class StoryController extends BaseModule {
     async (request: FastifyRequest<{ Params: { slug: string } }>, reply: FastifyReply) => {
       const { slug } = request.params;
 
-      const story = await storyService.getStoryBySlug(slug);
+      const story = await this.storyService.getStoryBySlug(slug);
 
       this.logInfo(`Fetched story ${slug}`);
 
@@ -71,7 +76,7 @@ export class StoryController extends BaseModule {
 
   // List all stories with pagination support only for SUPER_ADMIN.
   getStories = catchAsync(async (_request: FastifyRequest, reply: FastifyReply) => {
-    const stories = await storyService.listStories();
+    const stories = await this.storyService.listStories();
 
     this.logInfo(`Fetched stories`);
     return reply
@@ -81,7 +86,7 @@ export class StoryController extends BaseModule {
 
   // For public feed - only stories created in last 7 days
   getNewStories = catchAsync(async (_request: FastifyRequest, reply: FastifyReply) => {
-    const stories = await storyService.getNewStories();
+    const stories = await this.storyService.getNewStories();
     this.logInfo(`Fetched new stories`);
     return reply
       .code(HTTP_STATUS.OK.code)
@@ -93,7 +98,7 @@ export class StoryController extends BaseModule {
     const { user } = request;
     const userId = user.clerkId;
 
-    const stories = await storyService.getStoriesByCreatorId(userId);
+    const stories = await this.storyService.getStoriesByCreatorId(userId);
 
     this.logInfo(`Fetched stories for user ${userId}`);
     return reply
@@ -106,7 +111,7 @@ export class StoryController extends BaseModule {
     const { user } = request;
     const userId = user.clerkId;
 
-    const stories = await storyService.getDraftStoriesByCreatorId(userId);
+    const stories = await this.storyService.getDraftStoriesByCreatorId(userId);
 
     this.logInfo(`Fetched draft stories for user ${userId}`);
     return reply
@@ -120,7 +125,7 @@ export class StoryController extends BaseModule {
   //     const storyId = request.params.storyId;
   //     const userId = request.user.clerkId;
 
-  //     const collaborators = await storyService.getAllCollaboratorsById({
+  //     const collaborators = await this.storyService.getAllCollaboratorsById({
   //       storyId,
   //       userId,
   //     });
@@ -143,7 +148,7 @@ export class StoryController extends BaseModule {
   getStoryTree = catchAsync(
     async (request: FastifyRequest<{ Params: { storyId: string } }>, reply: FastifyReply) => {
       const { storyId } = request.params;
-      const storyTree = await storyService.getStoryTree(storyId);
+      const storyTree = await this.storyService.getStoryTree(storyId);
 
       this.logInfo(`Fetched story tree for story ${storyId}`);
       return reply
@@ -156,7 +161,7 @@ export class StoryController extends BaseModule {
   getStoryTreeBySlug = catchAsync(
     async (request: FastifyRequest<{ Params: TStorySlugSchema }>, reply: FastifyReply) => {
       const { slug } = request.params;
-      const storyTree = await storyService.getStoryTreeBySlug(slug);
+      const storyTree = await this.storyService.getStoryTreeBySlug(slug);
 
       this.logInfo(`Fetched story tree for story ${slug}`);
       return reply
@@ -171,7 +176,7 @@ export class StoryController extends BaseModule {
       const { storyId } = request.params;
       const { clerkId: userId } = request.user;
 
-      const publishedStory = await storyService.publishStory({ storyId, userId });
+      const publishedStory = await this.storyService.publishStory({ storyId, userId });
 
       this.logInfo(`Published story ${storyId} by user ${userId}`);
 
@@ -187,7 +192,7 @@ export class StoryController extends BaseModule {
       const { slug } = request.params;
       const { clerkId: userId } = request.user;
 
-      const publishedStory = await storyService.publishStoryBySlug({ slug, userId });
+      const publishedStory = await this.storyService.publishStoryBySlug({ slug, userId });
 
       this.logInfo(`Published story ${slug} by user ${userId}`);
 
@@ -203,7 +208,7 @@ export class StoryController extends BaseModule {
       const { slug } = request.params;
       const userId = request.user.clerkId;
 
-      const collaborators = await storyService.getAllCollaboratorsBySlug({ slug, userId });
+      const collaborators = await this.storyService.getAllCollaboratorsBySlug({ slug, userId });
 
       return reply
         .code(HTTP_STATUS.OK.code)
@@ -229,7 +234,7 @@ export class StoryController extends BaseModule {
       const { slug } = request.params;
       const { role, invitedUserId, invitedUserName } = request.body;
 
-      const invitation = await storyService.createInvitationBySlug({
+      const invitation = await this.storyService.createInvitationBySlug({
         slug,
         role,
         invitedUser: {
@@ -253,7 +258,7 @@ export class StoryController extends BaseModule {
       const { slug } = request.params;
       const { clerkId: userId } = request.user;
 
-      const result = await storyService.acceptInvitation({
+      const result = await this.storyService.acceptInvitation({
         slug,
         userId,
       });
@@ -269,7 +274,7 @@ export class StoryController extends BaseModule {
       const { slug } = request.params;
       const { clerkId: userId } = request.user;
 
-      const result = await storyService.declineInvitation({
+      const result = await this.storyService.declineInvitation({
         slug,
         userId,
       });
@@ -288,7 +293,7 @@ export class StoryController extends BaseModule {
     ) => {
       const { slug } = request.params;
 
-      const story = await storyService.updateSettingBySlug({
+      const story = await this.storyService.updateSettingBySlug({
         ...request.body,
         slug,
       });
@@ -312,7 +317,7 @@ export class StoryController extends BaseModule {
       const { slug } = request.params;
       const { title, content, parentChapterId } = request.body;
 
-      const newChapter = await storyService.addChapterToStoryBySlug({
+      const newChapter = await this.storyService.addChapterToStoryBySlug({
         slug,
         userId,
         title,
@@ -346,7 +351,7 @@ export class StoryController extends BaseModule {
 
       const { title, content, parentChapterId } = request.body;
 
-      const newChapter = await storyService.addChapterToStory({
+      const newChapter = await this.storyService.addChapterToStory({
         storyId,
         userId,
         title,
@@ -374,7 +379,7 @@ export class StoryController extends BaseModule {
         storyId,
       };
 
-      const story = await storyService.updateSetting(input);
+      const story = await this.storyService.updateSetting(input);
 
       return reply
         .code(HTTP_STATUS.CREATED.code)
@@ -387,7 +392,7 @@ export class StoryController extends BaseModule {
       const userId = request.user.clerkId;
       const { slug } = request.params;
 
-      const uploadParams = await storyService.getStoryImageUploadParams(slug, userId);
+      const uploadParams = await this.storyService.getStoryImageUploadParams(slug, userId);
 
       return reply
         .code(HTTP_STATUS.OK.code)
@@ -399,7 +404,7 @@ export class StoryController extends BaseModule {
     async (request: FastifyRequest<{ Params: TStorySlugSchema }>, reply: FastifyReply) => {
       const { slug } = request.params;
 
-      const overview = await storyService.getStoryOverviewBySlug(slug);
+      const overview = await this.storyService.getStoryOverviewBySlug(slug);
 
       this.logInfo(`Fetched story overview for story ${slug}`);
 
@@ -413,7 +418,7 @@ export class StoryController extends BaseModule {
     async (request: FastifyRequest<{ Params: TStorySlugSchema }>, reply: FastifyReply) => {
       const { slug } = request.params;
 
-      const settings = await storyService.getStorySettingsBySlug(slug);
+      const settings = await this.storyService.getStorySettingsBySlug(slug);
       this.logInfo(`Fetched story settings for story ${slug}`);
       return reply
         .code(HTTP_STATUS.OK.code)
@@ -429,7 +434,7 @@ export class StoryController extends BaseModule {
       const { slug } = request.params;
       const { coverImage: coverImageInfo } = request.body;
 
-      const coverImage = await storyService.updateStoryCoverImageBySlug({
+      const coverImage = await this.storyService.updateStoryCoverImageBySlug({
         slug,
         coverImage: coverImageInfo,
       });
@@ -448,7 +453,7 @@ export class StoryController extends BaseModule {
       const { slug } = request.params;
       const { cardImage: cardImageInfo } = request.body;
 
-      const cardImage = await storyService.updateStoryCardImageBySlug({
+      const cardImage = await this.storyService.updateStoryCardImageBySlug({
         slug,
         cardImage: cardImageInfo,
       });
@@ -459,5 +464,3 @@ export class StoryController extends BaseModule {
     }
   );
 }
-
-export const storyController = new StoryController();

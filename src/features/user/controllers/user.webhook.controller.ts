@@ -1,13 +1,21 @@
 import { WebhookEvent } from '@clerk/fastify';
 import { FastifyReply, FastifyRequest } from 'fastify';
+import { inject, singleton } from 'tsyringe';
+import { TOKENS } from '@container/tokens';
 import { HTTP_STATUS } from '@constants/httpStatus';
 import { ApiResponse } from '@utils/apiResponse';
 import { catchAsync } from '@utils/catchAsync';
 import { WebhookTransformer } from '../builders/webhook.transformer';
-import { userService } from '../services/user.service';
+import { UserService } from '../services/user.service';
 
-export class UserWebhookController {
-  private transformer = new WebhookTransformer();
+@singleton()
+class UserWebhookController {
+  constructor(
+    @inject(TOKENS.UserService)
+    private readonly userService: UserService,
+    @inject(TOKENS.WebhookTransformer)
+    private readonly transformer: WebhookTransformer
+  ) {}
 
   handle = catchAsync(async (req: FastifyRequest, reply: FastifyReply) => {
     // eslint-disable-next-line
@@ -26,7 +34,7 @@ export class UserWebhookController {
       case 'user.created': {
         const parsed = this.transformer.transformUserCreated(event.data);
 
-        await userService.createUser(parsed);
+        await this.userService.createUser(parsed);
 
         return reply.code(HTTP_STATUS.CREATED.code).send(new ApiResponse(true, 'User created'));
       }
@@ -37,7 +45,7 @@ export class UserWebhookController {
       case 'session.created': {
         const parsed = this.transformer.transformSessionCreated(event.data);
 
-        await userService.createSession(parsed);
+        await this.userService.createSession(parsed);
 
         return reply.code(HTTP_STATUS.CREATED.code).send(new ApiResponse(true, 'Session created'));
       }
@@ -50,4 +58,4 @@ export class UserWebhookController {
   });
 }
 
-export const userWebhookController = new UserWebhookController();
+export { UserWebhookController };

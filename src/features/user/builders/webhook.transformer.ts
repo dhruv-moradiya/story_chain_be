@@ -1,6 +1,8 @@
 import { SessionJSON, UserJSON } from '@clerk/fastify';
 import { ISessionCreateDTO, IUserCreateDTO, SessionCreateDTO, UserCreateDTO } from '@dto/user.dto';
+import { singleton } from 'tsyringe';
 
+@singleton()
 export class WebhookTransformer {
   transformUserCreated(raw: UserJSON): IUserCreateDTO {
     return UserCreateDTO.parse({

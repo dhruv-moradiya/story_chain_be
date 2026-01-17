@@ -1,5 +1,10 @@
-import mongoose, { Schema } from 'mongoose';
+import {
+  CHAPTER_PR_STATUSES,
+  CHAPTER_STATUSES,
+  ChapterStatus,
+} from '@features/chapter/types/chapter-enum';
 import { IChapterDoc } from '@features/chapter/types/chapter.types';
+import mongoose, { Schema } from 'mongoose';
 
 const chapterSchema = new Schema<IChapterDoc>(
   {
@@ -64,8 +69,8 @@ const chapterSchema = new Schema<IChapterDoc>(
     // Status
     status: {
       type: String,
-      enum: ['PUBLISHED', 'PENDING_APPROVAL', 'REJECTED', 'DELETED'],
-      default: 'PUBLISHED',
+      enum: CHAPTER_STATUSES,
+      default: ChapterStatus.PUBLISHED,
     },
     isEnding: {
       type: Boolean,
@@ -78,7 +83,7 @@ const chapterSchema = new Schema<IChapterDoc>(
       prId: { type: Schema.Types.ObjectId, ref: 'PullRequest' },
       status: {
         type: String,
-        enum: ['PENDING', 'APPROVED', 'REJECTED', 'MERGED'],
+        enum: CHAPTER_PR_STATUSES,
       },
       submittedAt: Date,
       reviewedBy: { type: String, ref: 'User' },

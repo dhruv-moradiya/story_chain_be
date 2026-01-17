@@ -1,18 +1,14 @@
-import { inject, registry, singleton } from 'tsyringe';
+import { inject, singleton } from 'tsyringe';
 import Redis from 'ioredis';
+import { TOKENS } from '@container/tokens';
 import { ConfigService } from './config.service';
 import { logger } from '@utils/logger';
-import { TOKENS } from '@container/tokens';
 
 @singleton()
-@registry([{ token: TOKENS.RedisService, useClass: RedisService }])
 class RedisService {
   private client: Redis | null = null;
 
-  constructor(
-    @inject(TOKENS.ConfigService)
-    private readonly config: ConfigService
-  ) {}
+  constructor(@inject(TOKENS.ConfigService) private readonly config: ConfigService) {}
 
   async connect(): Promise<void> {
     if (this.client) {

@@ -1,9 +1,13 @@
 import { Document, Types } from 'mongoose';
 import { ID } from '@/types';
+import { CHAPTER_PR_STATUSES, CHAPTER_STATUSES } from './chapter-enum';
 
 // ========================================
 // MODEL TYPES
 // ========================================
+
+export type TChapterStatus = (typeof CHAPTER_STATUSES)[number];
+export type TChapterPRStatus = (typeof CHAPTER_PR_STATUSES)[number];
 
 /**
  * Represents a single chapter within a story.
@@ -26,13 +30,13 @@ export interface IChapter {
     score: number; // Derived metric for ranking
   };
 
-  status: 'PUBLISHED' | 'PENDING_APPROVAL' | 'REJECTED' | 'DELETED';
+  status: TChapterStatus;
   isEnding: boolean;
 
   pullRequest: {
     isPR: boolean;
     prId?: ID;
-    status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'MERGED';
+    status: TChapterPRStatus;
     submittedAt?: Date;
     reviewedBy?: ID;
     reviewedAt?: Date;

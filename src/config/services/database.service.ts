@@ -1,20 +1,16 @@
 import 'reflect-metadata';
 
-import mongoose, { Connection } from 'mongoose';
-import { logger } from '@utils/logger';
-import { inject, registry, singleton } from 'tsyringe';
-import { ConfigService } from './config.service';
 import { TOKENS } from '@container/tokens';
+import { logger } from '@utils/logger';
+import mongoose, { Connection } from 'mongoose';
+import { inject, singleton } from 'tsyringe';
+import { ConfigService } from './config.service';
 
 @singleton()
-@registry([{ token: TOKENS.DatabaseService, useClass: DatabaseService }])
 class DatabaseService {
   private connection: Connection | null = null;
 
-  constructor(
-    @inject(TOKENS.ConfigService)
-    private readonly config: ConfigService
-  ) {}
+  constructor(@inject(TOKENS.ConfigService) private readonly config: ConfigService) {}
 
   async connect(): Promise<void> {
     if (this.connection) {

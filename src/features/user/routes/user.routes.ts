@@ -1,8 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { validateWebhook } from '@middleware/validateRequest';
-import { userWebhookController } from '../controllers/user.webhook.controller';
 import { validateAuth } from '@middleware/authHandler';
-import { userController } from '../controllers/user.controller';
 import zodToJsonSchema from 'zod-to-json-schema';
 import {
   SearchUserByUsernameSchema,
@@ -11,6 +9,10 @@ import {
   LoginUserSchema,
 } from '@schema/user.schema';
 import { UserResponses } from '@schema/response.schema';
+import { container } from 'tsyringe';
+import { TOKENS } from '@/container';
+import { type UserController } from '../controllers/user.controller';
+import { type UserWebhookController } from '../controllers/user.webhook.controller';
 
 // User API Routes - following chapterAutoSave pattern
 const UserApiRoutes = {
@@ -35,6 +37,11 @@ const UserApiRoutes = {
 export { UserApiRoutes };
 
 export async function userRoutes(fastify: FastifyInstance) {
+  const userController = container.resolve<UserController>(TOKENS.UserController);
+  const userWebhookController = container.resolve<UserWebhookController>(
+    TOKENS.UserWebhookController
+  );
+
   fastify.post(
     UserApiRoutes.Login,
     {

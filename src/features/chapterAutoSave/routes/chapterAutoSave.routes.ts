@@ -1,5 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import zodToJsonSchema from 'zod-to-json-schema';
+import { container } from 'tsyringe';
+import { TOKENS } from '@/container';
 import { validateAuth } from '@middleware/authHandler';
 import { DisableAutoSaveSchema } from '@schema/chapterAutoSave.schema';
 import {
@@ -7,7 +9,7 @@ import {
   EnableAutoSaveSchemaVer2,
 } from '@schema/chapterAutoSaveVer2.Schema';
 import { AutoSaveResponses } from '@schema/response.schema';
-import { ChapterAutoSaveController } from '../controllers/chapterAutoSave.controller';
+import { type ChapterAutoSaveController } from '../controllers/chapterAutoSave.controller';
 
 enum ChapterAutoSaveApiRoutes {
   EnableAutoSave = '/enable',
@@ -18,7 +20,7 @@ enum ChapterAutoSaveApiRoutes {
 }
 
 export async function chapterAutoSaveRoutes(fastify: FastifyInstance) {
-  const controller = new ChapterAutoSaveController();
+  const controller = container.resolve<ChapterAutoSaveController>(TOKENS.ChapterAutoSaveController);
 
   fastify.post(
     ChapterAutoSaveApiRoutes.EnableAutoSave,

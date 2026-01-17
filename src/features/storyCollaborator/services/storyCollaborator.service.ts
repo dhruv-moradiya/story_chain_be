@@ -1,3 +1,5 @@
+import { inject, singleton } from 'tsyringe';
+import { TOKENS } from '@container/tokens';
 import { StoryCollaboratorRules } from '@domain/storyCollaborator.rules';
 import {
   IGetAllStoryMembersBySlugDTO,
@@ -13,17 +15,21 @@ import { StoryRepository } from '@features/story/repositories/story.repository';
 import { IStory } from '@features/story/types/story.types';
 import { StoryCollaboratorPipelineBuilder } from '../pipelines/storyCollaborator.pipeline';
 import { StoryCollaboratorRepository } from '../repositories/storyCollaborator.repository';
-import {
-  IStoryCollaborator,
-  StoryCollaboratorRole,
-  StoryCollaboratorStatus,
-  TStoryCollaboratorRole,
-} from '../types/storyCollaborator.types';
+import { IStoryCollaborator, TStoryCollaboratorRole } from '../types/storyCollaborator.types';
+import { StoryCollaboratorRole, StoryCollaboratorStatus } from '../types/storyCollaborator-enum';
 
+@singleton()
 export class StoryCollaboratorService extends BaseModule {
-  private readonly storyRepo = new StoryRepository();
-  private readonly storyCollaboratorRepo = new StoryCollaboratorRepository();
-  private readonly notificationService = new NotificationService();
+  constructor(
+    @inject(TOKENS.StoryRepository)
+    private readonly storyRepo: StoryRepository,
+    @inject(TOKENS.StoryCollaboratorRepository)
+    private readonly storyCollaboratorRepo: StoryCollaboratorRepository,
+    @inject(TOKENS.NotificationService)
+    private readonly notificationService: NotificationService
+  ) {
+    super();
+  }
 
   private getStoryMembersIds(collaborators: IStoryCollaboratorDetailsResponse[]): string[] {
     return collaborators.map((collaborator) => collaborator.user.clerkId);
@@ -221,5 +227,3 @@ export class StoryCollaboratorService extends BaseModule {
     return null;
   }
 }
-
-export const storyCollaboratorService = new StoryCollaboratorService();

@@ -1,34 +1,12 @@
-import { Document, Types } from 'mongoose';
 import { ID } from '@/types';
+import { Document, Types } from 'mongoose';
+import { STORY_COLLABORATOR_ROLES, STORY_COLLABORATOR_STATUSES } from './storyCollaborator-enum';
 
-export enum StoryCollaboratorRole {
-  OWNER = 'OWNER',
-  CO_AUTHOR = 'CO_AUTHOR',
-  MODERATOR = 'MODERATOR',
-  REVIEWER = 'REVIEWER',
-  CONTRIBUTOR = 'CONTRIBUTOR',
-}
+type TStoryCollaboratorRole = (typeof STORY_COLLABORATOR_ROLES)[number];
 
-export type TStoryCollaboratorRole = keyof typeof StoryCollaboratorRole;
+type TStoryCollaboratorStatus = (typeof STORY_COLLABORATOR_STATUSES)[number];
 
-export const ROLE_HIERARCHY = {
-  CONTRIBUTOR: 0,
-  REVIEWER: 1,
-  MODERATOR: 2,
-  CO_AUTHOR: 3,
-  OWNER: 4,
-};
-
-export enum StoryCollaboratorStatus {
-  PENDING = 'PENDING',
-  ACCEPTED = 'ACCEPTED',
-  DECLINED = 'DECLINED',
-  REMOVED = 'REMOVED',
-}
-
-export type TStoryCollaboratorStatus = keyof typeof StoryCollaboratorStatus;
-
-export type TStoryCollaboratorPermission =
+type TStoryCollaboratorPermission =
   | 'canEditStorySettings'
   | 'canDeleteStory'
   | 'canArchiveStory'
@@ -47,7 +25,7 @@ export type TStoryCollaboratorPermission =
   | 'canBanFromStory'
   | 'canViewStoryAnalytics';
 
-export interface IStoryCollaborator {
+interface IStoryCollaborator {
   _id: ID;
   slug: string;
   userId: string;
@@ -60,6 +38,14 @@ export interface IStoryCollaborator {
   updatedAt?: Date;
 }
 
-export interface IStoryCollaboratorDoc extends IStoryCollaborator, Document {
+interface IStoryCollaboratorDoc extends IStoryCollaborator, Document {
   _id: Types.ObjectId;
 }
+
+export type {
+  IStoryCollaborator,
+  IStoryCollaboratorDoc,
+  TStoryCollaboratorPermission,
+  TStoryCollaboratorRole,
+  TStoryCollaboratorStatus,
+};

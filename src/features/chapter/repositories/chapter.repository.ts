@@ -1,3 +1,4 @@
+import { singleton } from 'tsyringe';
 import { ClientSession, PipelineStage, QueryOptions, UpdateQuery } from 'mongoose';
 
 import { Chapter } from '@models/chapter.model';
@@ -5,6 +6,7 @@ import { IChapter, IChapterDoc } from '../types/chapter.types';
 import { BaseRepository } from '@utils/baseClass';
 import { IOperationOptions } from '@/types';
 
+@singleton()
 export class ChapterRepository extends BaseRepository<IChapter, IChapterDoc> {
   constructor() {
     super(Chapter);
@@ -57,5 +59,3 @@ export class ChapterRepository extends BaseRepository<IChapter, IChapterDoc> {
 
   // }
 }
-
-export const chapterRepository = new ChapterRepository();

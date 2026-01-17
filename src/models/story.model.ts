@@ -1,5 +1,11 @@
 import mongoose, { Schema } from 'mongoose';
 import { IStoryDoc } from '@features/story/types/story.types';
+import {
+  STORY_CONTENT_RATINGS,
+  STORY_GENRES,
+  STORY_STATUSES,
+  StoryStatus,
+} from '@/features/story/types/story-enum';
 
 const storySchema = new Schema<IStoryDoc>(
   {
@@ -50,26 +56,15 @@ const storySchema = new Schema<IStoryDoc>(
       allowVoting: { type: Boolean, default: false }, // If true, readers can vote on the story
 
       // Metadata
-      genre: {
-        type: String,
-        enum: [
-          'FANTASY',
-          'SCI_FI',
-          'MYSTERY',
-          'ROMANCE',
-          'HORROR',
-          'THRILLER',
-          'ADVENTURE',
-          'DRAMA',
-          'COMEDY',
-          'OTHER',
-        ],
-        default: 'OTHER',
+      genres: {
+        type: [String],
+        enum: STORY_GENRES,
+        default: [],
       },
       contentRating: {
         type: String,
-        enum: ['GENERAL', 'TEEN', 'MATURE'],
-        default: 'GENERAL',
+        enum: STORY_CONTENT_RATINGS,
+        default: 'general',
       },
     },
 
@@ -95,8 +90,8 @@ const storySchema = new Schema<IStoryDoc>(
     // Status
     status: {
       type: String,
-      enum: ['DRAFT', 'PUBLISHED', 'ARCHIVED', 'DELETED'],
-      default: 'DRAFT',
+      enum: STORY_STATUSES,
+      default: StoryStatus.DRAFT,
     },
 
     // Trending

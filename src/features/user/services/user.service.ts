@@ -1,20 +1,30 @@
-import { withTransaction } from '@utils/withTransaction';
-import { PlatformRoleService } from '@features/platformRole/services/platformRole.service';
+import { clerkClient, SignInToken } from '@clerk/fastify';
+import { TOKENS } from '@container/tokens';
+import { UserRules } from '@domain/user.rules';
 import {
   ILoginUserDTO,
   ISearchUserByUsernameDTO,
   ISessionCreateDTO,
   IUserCreateDTO,
 } from '@dto/user.dto';
-import { UserRepository } from '../repositories/user.repository';
-import { UserRules } from '@domain/user.rules';
-import { IUser } from '../types/user.types';
-import { clerkClient, SignInToken } from '@clerk/fastify';
+import { PlatformRoleService } from '@features/platformRole/services/platformRole.service';
 import { BaseModule } from '@utils/baseClass';
+import { withTransaction } from '@utils/withTransaction';
+import { inject, singleton } from 'tsyringe';
+import { IUserService } from '../interfaces';
+import { UserRepository } from '../repositories/user.repository';
+import { IUser } from '../types/user.types';
 
-export class UserService extends BaseModule {
-  private readonly userRepo = new UserRepository();
-  private readonly platformRoleService = new PlatformRoleService();
+@singleton()
+class UserService extends BaseModule implements IUserService {
+  constructor(
+    @inject(TOKENS.UserRepository)
+    private readonly userRepo: UserRepository,
+    @inject(TOKENS.PlatformRoleService)
+    private readonly platformRoleService: PlatformRoleService
+  ) {
+    super();
+  }
 
   // For POSTMAN testing purposes
   async loginUser(input: ILoginUserDTO): Promise<SignInToken> {
@@ -63,4 +73,4 @@ export class UserService extends BaseModule {
   }
 }
 
-export const userService = new UserService();
+export { UserService };

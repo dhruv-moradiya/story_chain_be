@@ -1,9 +1,11 @@
+import { singleton } from 'tsyringe';
 import { PlatformRole } from '@models/platformRole.model';
 import { IPlatformRole, IPlatformRoleDoc } from '../types/platformRole.types';
 import { ApiError } from '@utils/apiResponse';
 import { ClientSession } from 'mongoose';
 import { BaseRepository } from '@utils/baseClass';
 
+@singleton()
 export class PlatformRoleRepository extends BaseRepository<IPlatformRole, IPlatformRoleDoc> {
   constructor() {
     super(PlatformRole);

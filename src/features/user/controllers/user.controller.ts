@@ -9,16 +9,25 @@ import {
   TGetUserByUsernameSchema,
   TLoginUserSchema,
 } from '@schema/user.schema';
-import { userService } from '../services/user.service';
+import { UserService } from '../services/user.service';
 import { UserTransformer } from '@transformer/user.transformer';
+import { inject, singleton } from 'tsyringe';
+import { TOKENS } from '@container/tokens';
 
-export class UserController extends BaseModule {
-  // POSTMAN: Only for testing purposes to generate JWT token
+@singleton()
+class UserController extends BaseModule {
+  constructor(
+    @inject(TOKENS.UserService)
+    private userService: UserService
+  ) {
+    super();
+  }
+
   login = catchAsync(
     async (request: FastifyRequest<{ Body: TLoginUserSchema }>, reply: FastifyReply) => {
       const { userId } = request.body;
 
-      const token = await userService.loginUser({ userId });
+      const token = await this.userService.loginUser({ userId });
 
       return reply
         .code(HTTP_STATUS.OK.code)
@@ -40,7 +49,7 @@ export class UserController extends BaseModule {
     async (request: FastifyRequest<{ Params: TGetUserByIdSchema }>, reply: FastifyReply) => {
       const { userId } = request.params;
 
-      const user = await userService.getUserById(userId);
+      const user = await this.userService.getUserById(userId);
 
       if (!user) {
         this.throwNotFoundError('User not found.');
@@ -58,7 +67,7 @@ export class UserController extends BaseModule {
     async (request: FastifyRequest<{ Params: TGetUserByUsernameSchema }>, reply: FastifyReply) => {
       const { username } = request.params;
 
-      const user = await userService.getUserByUsername(username);
+      const user = await this.userService.getUserByUsername(username);
 
       if (!user) {
         this.throwNotFoundError('User not found.');
@@ -76,7 +85,7 @@ export class UserController extends BaseModule {
     async (request: FastifyRequest<{ Body: TSearchUserByUsernameSchema }>, reply: FastifyReply) => {
       const username = request.body.username;
 
-      const users = await userService.searchUserByUsername({ username });
+      const users = await this.userService.searchUserByUsername({ username });
 
       const responseData = users.map((user) => UserTransformer.searchItemResponse(user));
 
@@ -95,4 +104,6 @@ export class UserController extends BaseModule {
   );
 }
 
-export const userController = new UserController();
+export { UserController };
+
+// export const userController = new UserController();

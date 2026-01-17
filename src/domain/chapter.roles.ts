@@ -1,3 +1,4 @@
+import { ChapterStatus } from '@/features/chapter/types/chapter-enum';
 import { IChapter } from '@features/chapter/types/chapter.types';
 
 export class ChapterRules {
@@ -11,7 +12,7 @@ export class ChapterRules {
     this.ensureCreator(chapter, userId);
 
     // rule 3: chapter must not be archived or deleted
-    const isDeleted = chapter.status === 'DELETED';
+    const isDeleted = chapter.status === ChapterStatus.DELETED;
 
     return isDeleted;
   }
@@ -21,7 +22,7 @@ export class ChapterRules {
     this.ensureCreator(chapter, userId);
 
     // rule 3: chapter must not be archived or deleted
-    const isDeleted = chapter.status === 'DELETED';
+    const isDeleted = chapter.status === ChapterStatus.DELETED;
 
     return isDeleted;
   }

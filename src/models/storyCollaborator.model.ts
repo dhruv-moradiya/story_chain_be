@@ -1,5 +1,11 @@
 import mongoose, { Schema } from 'mongoose';
 import { IStoryCollaboratorDoc } from '@features/storyCollaborator/types/storyCollaborator.types';
+import {
+  STORY_COLLABORATOR_ROLES,
+  STORY_COLLABORATOR_STATUSES,
+  StoryCollaboratorRole,
+  StoryCollaboratorStatus,
+} from '@/features/storyCollaborator/types/storyCollaborator-enum';
 
 const storyCollaboratorSchema = new Schema<IStoryCollaboratorDoc>(
   {
@@ -17,8 +23,8 @@ const storyCollaboratorSchema = new Schema<IStoryCollaboratorDoc>(
     },
     role: {
       type: String,
-      enum: ['OWNER', 'CO_AUTHOR', 'MODERATOR', 'REVIEWER', 'CONTRIBUTOR'],
-      default: 'CONTRIBUTOR',
+      enum: STORY_COLLABORATOR_ROLES,
+      default: StoryCollaboratorRole.CONTRIBUTOR,
     },
     invitedBy: {
       type: String,
@@ -31,8 +37,8 @@ const storyCollaboratorSchema = new Schema<IStoryCollaboratorDoc>(
     acceptedAt: Date,
     status: {
       type: String,
-      enum: ['PENDING', 'ACCEPTED', 'DECLINED', 'REMOVED'],
-      default: 'PENDING',
+      enum: STORY_COLLABORATOR_STATUSES,
+      default: StoryCollaboratorStatus.PENDING,
     },
   },
   {

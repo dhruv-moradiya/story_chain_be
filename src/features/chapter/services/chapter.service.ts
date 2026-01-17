@@ -1,8 +1,11 @@
+import { inject, singleton } from 'tsyringe';
+import { TOKENS } from '@container/tokens';
 import { ID, IOperationOptions } from '@/types';
 import { BaseModule } from '@utils/baseClass';
 import { IChapter } from '../types/chapter.types';
 import { IChapterAddChildDTO, TChapterAddRootDTO } from '../dto/chapter.dto';
 import { ChapterRepository } from '../repositories/chapter.repository';
+import { ChapterStatus } from '../types/chapter-enum';
 
 // Input type for createChapter
 export interface IChapterCreateInput {
@@ -13,14 +16,13 @@ export interface IChapterCreateInput {
   userId: string;
 }
 
+@singleton()
 export class ChapterService extends BaseModule {
-  private readonly chapterRepo: ChapterRepository;
-
-  constructor() {
+  constructor(
+    @inject(TOKENS.ChapterRepository)
+    private readonly chapterRepo: ChapterRepository
+  ) {
     super();
-
-    // Repositories
-    this.chapterRepo = new ChapterRepository();
   }
 
   async getChapterById(chapterId: ID, options: IOperationOptions = {}): Promise<IChapter | null> {
@@ -43,7 +45,7 @@ export class ChapterService extends BaseModule {
         authorId: userId,
         title: title.trim(),
         content: content.trim(),
-        status: 'PUBLISHED',
+        status: ChapterStatus.PUBLISHED,
       },
       { session: options.session }
     );
@@ -63,7 +65,7 @@ export class ChapterService extends BaseModule {
         authorId: userId,
         title: title.trim(),
         content: content.trim(),
-        status: 'PUBLISHED',
+        status: ChapterStatus.PUBLISHED,
       },
       { session: options.session }
     );
@@ -71,5 +73,3 @@ export class ChapterService extends BaseModule {
     return chapter;
   }
 }
-
-export const chapterService = new ChapterService();

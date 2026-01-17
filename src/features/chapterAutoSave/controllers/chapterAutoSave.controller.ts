@@ -1,4 +1,6 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
+import { inject, singleton } from 'tsyringe';
+import { TOKENS } from '@container/tokens';
 import { HTTP_STATUS } from '@constants/httpStatus';
 import { TDisableAutoSaveSchema } from '@schema/chapterAutoSave.schema';
 import {
@@ -8,9 +10,17 @@ import {
 import { ApiResponse } from '@utils/apiResponse';
 import { BaseModule } from '@utils/baseClass';
 import { catchAsync } from '@utils/catchAsync';
-import { chapterAutoSaveService } from '../services/chapterAutoSave.service';
+import { ChapterAutoSaveService } from '../services/chapterAutoSave.service';
 
+@singleton()
 export class ChapterAutoSaveController extends BaseModule {
+  constructor(
+    @inject(TOKENS.ChapterAutoSaveService)
+    private readonly chapterAutoSaveService: ChapterAutoSaveService
+  ) {
+    super();
+  }
+
   enableAutoSave = catchAsync(
     async (
       request: FastifyRequest<{ Body: TEnableAutoSaveSchemaVer2Type }>,
@@ -19,7 +29,7 @@ export class ChapterAutoSaveController extends BaseModule {
       const userId = request.user.clerkId;
       const input = request.body;
 
-      const result = await chapterAutoSaveService.enableAutoSave({ ...input, userId });
+      const result = await this.chapterAutoSaveService.enableAutoSave({ ...input, userId });
 
       return reply
         .code(HTTP_STATUS.CREATED.code)
@@ -32,7 +42,7 @@ export class ChapterAutoSaveController extends BaseModule {
       const userId = request.user.clerkId;
       const input = request.body;
 
-      const result = await chapterAutoSaveService.autoSaveContent({ ...input, userId });
+      const result = await this.chapterAutoSaveService.autoSaveContent({ ...input, userId });
 
       return reply.code(HTTP_STATUS.CREATED.code).send(
         new ApiResponse(true, 'Content auto-saved successfully.', {
@@ -47,7 +57,7 @@ export class ChapterAutoSaveController extends BaseModule {
     async (request: FastifyRequest<{ Body: TDisableAutoSaveSchema }>, reply: FastifyReply) => {
       const input = request.body;
 
-      await chapterAutoSaveService.disableAutoSave(input);
+      await this.chapterAutoSaveService.disableAutoSave(input);
 
       return reply
         .code(HTTP_STATUS.CREATED.code)
@@ -58,7 +68,7 @@ export class ChapterAutoSaveController extends BaseModule {
   getAutoSaveDraft = catchAsync(async (request: FastifyRequest, reply: FastifyReply) => {
     const userId = request.user.clerkId;
 
-    const result = await chapterAutoSaveService.getAutoSaveDraft({ userId });
+    const result = await this.chapterAutoSaveService.getAutoSaveDraft({ userId });
 
     return reply
       .code(HTTP_STATUS.OK.code)

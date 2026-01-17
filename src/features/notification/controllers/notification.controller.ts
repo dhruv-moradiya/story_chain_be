@@ -1,12 +1,20 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
+import { inject, singleton } from 'tsyringe';
+import { TOKENS } from '@container/tokens';
 import { BaseModule } from '@utils/baseClass';
 import { catchAsync } from '@utils/catchAsync';
 import { NotificationService } from '../services/notification.service';
 import { HTTP_STATUS } from '@constants/httpStatus';
 import { ApiResponse } from '@utils/apiResponse';
 
+@singleton()
 export class NotificationController extends BaseModule {
-  private readonly notificationService = new NotificationService();
+  constructor(
+    @inject(TOKENS.NotificationService)
+    private readonly notificationService: NotificationService
+  ) {
+    super();
+  }
 
   getUserNotifications = catchAsync(async (request: FastifyRequest, reply: FastifyReply) => {
     const { user } = request;
@@ -20,5 +28,3 @@ export class NotificationController extends BaseModule {
       .send(new ApiResponse(true, 'Notifications fetched successfully.', notifications));
   });
 }
-
-export const notificationController = new NotificationController();
