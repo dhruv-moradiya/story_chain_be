@@ -1,5 +1,5 @@
-import { BaseModule } from '../../../utils/baseClass';
-import { StoryCollaboratorRepository } from '../repository/storyCollaborator.repository';
+import { BaseModule } from '@utils/baseClass';
+import { StoryCollaboratorRepository } from '../repositories/storyCollaborator.repository';
 
 export class StoryCollaboratorValidator extends BaseModule {
   private readonly repo: StoryCollaboratorRepository;

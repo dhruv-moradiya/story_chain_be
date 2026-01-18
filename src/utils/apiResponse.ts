@@ -1,4 +1,4 @@
-import { HTTP_STATUS, HttpStatusKey } from '../constants/httpStatus';
+import { HTTP_STATUS, HttpStatusKey } from '@constants/httpStatus';
 
 export class ApiResponse<T = unknown> {
   public readonly success: boolean;

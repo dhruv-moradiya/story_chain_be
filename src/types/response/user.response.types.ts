@@ -1,4 +1,4 @@
-import { Badge, UserPreferences, UserStats } from '../../features/user/user.types';
+import { Badge, UserPreferences, UserStats } from '@features/user/types/user.types';
 
 // Current User Response
 interface ICurrentUserResponse {

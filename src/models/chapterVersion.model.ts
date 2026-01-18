@@ -1,5 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
-import { IChapterVersionDoc } from '../features/chapterVersion/chapterVersion.types';
+import { IChapterVersionDoc } from '@features/chapterVersion/types/chapterVersion.types';
 
 const chapterVersionSchema = new Schema<IChapterVersionDoc>(
   {

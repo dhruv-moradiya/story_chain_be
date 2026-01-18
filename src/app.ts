@@ -1,9 +1,9 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
-import { env } from './config/env';
-import { registerRoutes } from './routes';
-import { globalErrorHandler } from './middlewares/errorHandler';
+import { env } from '@config/env';
+import { registerRoutes } from '@routes/index';
+import { globalErrorHandler } from '@middleware/errorHandler';
 import { clerkPlugin } from '@clerk/fastify';
 import 'dotenv/config';
 import fastifySwagger from '@fastify/swagger';

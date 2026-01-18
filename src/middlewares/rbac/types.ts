@@ -1,9 +1,7 @@
-import { PlatformRole, TPlatformPermission } from '../../features/platformRole/platformRole.types';
-import {
-  StoryCollaboratorRole,
-  TStoryCollaboratorPermission,
-} from '../../features/storyCollaborator/storyCollaborator.types';
-import { ID } from '../../types';
+import { PlatformRole, TPlatformPermission } from '@features/platformRole/types/platformRole.types';
+import { TStoryCollaboratorPermission } from '@features/storyCollaborator/types/storyCollaborator.types';
+import { ID } from '@/types';
+import { StoryCollaboratorRole } from '@/features/storyCollaborator/types/storyCollaborator-enum';
 
 export interface IPermissionCheckResult {
   allowed: boolean;

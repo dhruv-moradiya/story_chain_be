@@ -1,5 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
-import { IPRCommentDoc } from '../features/prComment/prComment.types';
+import { IPRCommentDoc } from '@features/prComment/types/prComment.types';
 
 const prCommentSchema = new Schema<IPRCommentDoc>(
   {

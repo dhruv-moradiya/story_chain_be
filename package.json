@@ -4,9 +4,9 @@
   "description": "",
   "main": "dist/server.js",
   "scripts": {
-    "dev": "cross-env NODE_ENV=development tsx watch src/server.ts",
+    "dev": "cross-env NODE_ENV=development tsx watch --tsconfig tsconfig.json src/server.ts",
     "class": "tsx watch src/class.ts",
-    "build": "tsc",
+    "build": "tsc && tsc-alias",
     "start": "cross-env NODE_ENV=production node dist/server.js",
     "lint": "eslint \"src/**/*.ts\"",
     "format": "prettier --write \"src/**/*.ts\"",
@@ -50,7 +50,9 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.19.1",
     "nodemailer": "^7.0.9",
+    "reflect-metadata": "^0.2.2",
     "svix": "^1.77.0",
+    "tsyringe": "^4.10.0",
     "winston": "^3.18.3",
     "zod": "^3.25.67",
     "zod-to-json-schema": "^3.25.0"
@@ -68,6 +70,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
     "prettier": "^3.6.2",
+    "tsc-alias": "^1.8.10",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3"
   }

@@ -1,5 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
-import { IPullRequestDoc } from '../features/pullRequest/pullRequest.types';
+import { IPullRequestDoc } from '@features/pullRequest/types/pullRequest.types';
 
 const pullRequestSchema = new Schema<IPullRequestDoc>(
   {

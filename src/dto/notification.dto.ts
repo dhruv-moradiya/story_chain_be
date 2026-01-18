@@ -1,5 +1,5 @@
-import { IStory } from '../features/story/story.types';
-import { TStoryCollaboratorRole } from '../features/storyCollaborator/storyCollaborator.types';
+import { IStory } from '@features/story/types/story.types';
+import { TStoryCollaboratorRole } from '@features/storyCollaborator/types/storyCollaborator.types';
 
 interface INotificationForCollabInvitation {
   invitedUser: {

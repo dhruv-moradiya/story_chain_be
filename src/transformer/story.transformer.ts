@@ -1,5 +1,5 @@
-import { IStory } from '../features/story/story.types';
-import { IGetStoryOverviewBySlugResponse } from '../types/response/story.response.types';
+import { IStory } from '@features/story/types/story.types';
+import { IGetStoryOverviewBySlugResponse } from '@/types/response/story.response.types';
 
 export class StoryTransformer {
   static storyOverviewBySlug(input: IStory): IGetStoryOverviewBySlugResponse {

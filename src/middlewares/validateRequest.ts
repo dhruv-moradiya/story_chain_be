@@ -1,7 +1,7 @@
 import { ZodSchema } from 'zod';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { Webhook } from 'svix';
-import { logger } from '../utils/logger';
+import { logger } from '@utils/logger';
 
 type ValidationResult<T> =
   | { success: true; data: T }

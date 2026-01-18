@@ -1,9 +1,9 @@
-import { ID } from '../types';
-import { TSaveType } from '../features/chapterAutoSave/chapterAutoSave.types';
+import { ID } from '@/types';
+import { TSaveType } from '@features/chapterAutoSave/types/chapterAutoSave.types';
 import {
   TAutoSaveContentSchemaVer2,
   TEnableAutoSaveSchemaVer2Type,
-} from '../schema/chapterAutoSaveVer2.Schema';
+} from '@schema/chapterAutoSaveVer2.Schema';
 
 type TEnableChapterAutoSaveDTO = TEnableAutoSaveSchemaVer2Type & {
   userId: string;

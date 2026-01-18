@@ -1,5 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
-import { IVoteDoc } from '../features/vote/vote.types';
+import { IVoteDoc } from '@features/vote/types/vote.types';
 
 const voteSchema = new Schema<IVoteDoc>(
   {

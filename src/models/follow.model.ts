@@ -1,5 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
-import { IFollowDoc } from '../features/follow/follow.types';
+import { IFollowDoc } from '@features/follow/types/follow.types';
 
 const followSchema = new Schema<IFollowDoc>({
   followerId: {

@@ -1,7 +1,7 @@
 import { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
-import { ApiError } from '../utils/apiResponse';
+import { ApiError } from '@utils/apiResponse';
 import { ZodError } from 'zod';
-import { HTTP_STATUS } from '../constants/httpStatus';
+import { HTTP_STATUS } from '@constants/httpStatus';
 
 // Zod Error Handler
 export function handleZodError(error: ZodError): ApiError {

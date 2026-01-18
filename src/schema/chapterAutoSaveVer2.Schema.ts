@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ObjectIdSchema } from '../utils';
+import { ObjectIdSchema } from '@utils/index';
 
 const BaseAutoSaveContentSchema = z.object({
   // userId: UserIdSchema,
@@ -38,11 +38,24 @@ const EnableAutoSaveSchemaVer2UpdateChapter = BaseAutoSaveContentSchema.extend({
   parentChapterId: z.string(),
 }).passthrough();
 
-const AutoSaveContentSchemaVer2RootChapter = BaseAutoSaveContentSchema.extend({
+// When autoSaveId is provided, storySlug is optional
+const AutoSaveContentSchemaVer2RootChapterWithId = BaseAutoSaveContentSchema.extend({
   autoSaveType: z.literal('root_chapter'),
-  autoSaveId: ObjectIdSchema().optional(),
+  autoSaveId: ObjectIdSchema(),
+  storySlug: z.string().optional(),
+}).passthrough();
+
+// When autoSaveId is not provided, storySlug is required
+const AutoSaveContentSchemaVer2RootChapterWithSlug = BaseAutoSaveContentSchema.extend({
+  autoSaveType: z.literal('root_chapter'),
+  autoSaveId: z.undefined().optional(),
   storySlug: z.string(),
 }).passthrough();
+
+const AutoSaveContentSchemaVer2RootChapter = z.union([
+  AutoSaveContentSchemaVer2RootChapterWithId,
+  AutoSaveContentSchemaVer2RootChapterWithSlug,
+]);
 
 const AutoSaveContentSchemaVer2NewChapter = BaseAutoSaveContentSchema.extend({
   autoSaveId: ObjectIdSchema().optional(),
@@ -73,7 +86,7 @@ const EnableAutoSaveSchemaVer2 = z.discriminatedUnion('autoSaveType', [
   EnableAutoSaveSchemaVer2UpdateChapter,
 ]);
 
-const AutoSaveContentSchemaVer2 = z.discriminatedUnion('autoSaveType', [
+const AutoSaveContentSchemaVer2 = z.union([
   AutoSaveContentSchemaVer2RootChapter,
   AutoSaveContentSchemaVer2NewChapter,
   AutoSaveContentSchemaVer2UpdateChapter,

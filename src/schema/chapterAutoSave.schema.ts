@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ObjectIdSchema } from '../utils';
+import { ObjectIdSchema } from '@utils/index';
 
 const UserIdSchema = z.string({
   required_error: 'userId is required.',

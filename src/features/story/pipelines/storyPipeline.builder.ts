@@ -1,6 +1,7 @@
 import { PipelineStage } from 'mongoose';
-import { ID } from '../../../types';
-import { IStorySettings } from '../story.types';
+import { ID } from '@/types';
+import { IStorySettings } from '../types/story.types';
+import { StoryCollaboratorStatus } from '@/features/storyCollaborator/types/storyCollaborator-enum';
 
 class StoryPipelineBuilder {
   private pipeline: PipelineStage[] = [];
@@ -91,7 +92,7 @@ class StoryPipelineBuilder {
           {
             $match: {
               $expr: { $eq: ['$slug', '$$storySlug'] },
-              status: 'ACCEPTED',
+              status: StoryCollaboratorStatus.ACCEPTED,
             },
           },
           { $project: { userId: 1, role: 1 } },

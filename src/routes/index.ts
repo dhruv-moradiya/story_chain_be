@@ -1,8 +1,8 @@
 import { FastifyInstance } from 'fastify';
-import { userRoutes } from '../features/user/user.routes';
-import { storyRoutes } from '../features/story/story.routes';
-import { notificationRoutes } from '../features/notification/notification.router';
-import { chapterAutoSaveRoutes } from '../features/chapterAutoSave/chapterAutoSave.routes';
+import { userRoutes } from '@features/user/routes/user.routes';
+import { storyRoutes } from '@features/story/routes/story.routes';
+import { notificationRoutes } from '@features/notification/routes/notification.router';
+import { chapterAutoSaveRoutes } from '@features/chapterAutoSave/routes/chapterAutoSave.routes';
 
 enum ApiRoute {
   USERS = '/api/users',

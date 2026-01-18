@@ -1,5 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
-import { IChapterAutoSaveDoc } from '../features/chapterAutoSave/chapterAutoSave.types';
+import { IChapterAutoSaveDoc } from '@features/chapterAutoSave/types/chapterAutoSave.types';
 
 const chapterAutoSaveSchema = new Schema<IChapterAutoSaveDoc>(
   {

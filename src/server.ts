@@ -1,13 +1,19 @@
+import { container, TOKENS } from '@container/index';
 import { createApp } from './app';
-import { connectDB } from './config/db';
-import { env } from './config/env';
-import { logger } from './utils/logger';
+import { env } from '@config/env';
+import { logger } from '@utils/logger';
+import type { DatabaseService } from '@config/services/database.service';
+import type { RedisService } from '@config/services/redis.service';
 
 const start = async () => {
   try {
     // Connect to databases
-    await connectDB();
-    // await connectRedis();
+    const databaseService = container.resolve<DatabaseService>(TOKENS.DatabaseService);
+    await databaseService.connect();
+
+    const redisService = container.resolve<RedisService>(TOKENS.RedisService);
+
+    await redisService.connect();
 
     // Initialize services
     // initializeQueues();
@@ -16,7 +22,7 @@ const start = async () => {
     // Create and start app
     const app = await createApp();
     await app.listen({
-      port: process.env.NODE_ENV === 'production' ? Number(process.env.PORT) : env.PORT,
+      port: env.PORT,
       host: env.HOST,
     });
 

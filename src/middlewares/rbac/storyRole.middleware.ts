@@ -1,17 +1,24 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
-import { HTTP_STATUS } from '../../constants/httpStatus';
-import { storyCollaboratorService } from '../../features/storyCollaborator/storyCollaborator.service';
-import { storyService } from '../../features/story/story.service';
+import { container } from 'tsyringe';
+import { TOKENS } from '@container/tokens';
+import { HTTP_STATUS } from '@constants/httpStatus';
+import { PlatformRoleRules } from '@domain/platformRole.rules';
+import { StoryCollaboratorRules } from '@domain/storyCollaborator.rules';
+import { PlatformRole } from '@features/platformRole/types/platformRole.types';
+import { StoryService } from '@features/story/services/story.service';
+import { StoryCollaboratorService } from '@features/storyCollaborator/services/storyCollaborator.service';
 import {
+  STORY_COLLABORATOR_ROLE_CONFIG,
   StoryCollaboratorRole,
+} from '@/features/storyCollaborator/types/storyCollaborator-enum';
+import {
   TStoryCollaboratorPermission,
   TStoryCollaboratorRole,
-} from '../../features/storyCollaborator/storyCollaborator.types';
-import { PlatformRoleRules } from '../../domain/platformRole.rules';
-import { PlatformRole } from '../../features/platformRole/platformRole.types';
-import { STORY_ROLES } from '../../constants';
-import { StoryCollaboratorRules } from '../../domain/storyCollaborator.rules';
+} from '@features/storyCollaborator/types/storyCollaborator.types';
 
+/**
+ * Load story context by ID - uses DI to resolve services
+ */
 async function loadStoryContext(request: FastifyRequest, reply: FastifyReply): Promise<void> {
   const { storyId } = request.params as { storyId: string };
 
@@ -23,6 +30,11 @@ async function loadStoryContext(request: FastifyRequest, reply: FastifyReply): P
     });
   }
 
+  const storyService = container.resolve<StoryService>(TOKENS.StoryService);
+  const storyCollaboratorService = container.resolve<StoryCollaboratorService>(
+    TOKENS.StoryCollaboratorService
+  );
+
   const story = await storyService.getStoryById(storyId);
 
   if (!story) {
@@ -33,14 +45,12 @@ async function loadStoryContext(request: FastifyRequest, reply: FastifyReply): P
     });
   }
 
-  // Build story context
   request.storyContext = {
     storyId: story._id.toString(),
     creatorId: story.creatorId,
     status: story.status,
   };
 
-  // Get user's role in this story
   if (request.user) {
     const userId = request.user.clerkId;
     request.userStoryRole = await storyCollaboratorService.getCollaboratorRole(userId, storyId);
@@ -49,6 +59,9 @@ async function loadStoryContext(request: FastifyRequest, reply: FastifyReply): P
   }
 }
 
+/**
+ * Load story context by slug - uses DI to resolve services
+ */
 async function loadStoryContextBySlug(request: FastifyRequest, reply: FastifyReply): Promise<void> {
   const { slug } = request.params as { slug: string };
 
@@ -60,6 +73,11 @@ async function loadStoryContextBySlug(request: FastifyRequest, reply: FastifyRep
     });
   }
 
+  const storyService = container.resolve<StoryService>(TOKENS.StoryService);
+  const storyCollaboratorService = container.resolve<StoryCollaboratorService>(
+    TOKENS.StoryCollaboratorService
+  );
+
   const story = await storyService.getStoryBySlug(slug);
 
   if (!story) {
@@ -70,14 +88,12 @@ async function loadStoryContextBySlug(request: FastifyRequest, reply: FastifyRep
     });
   }
 
-  // Build story context
   request.storyContext = {
     storyId: story._id.toString(),
     creatorId: story.creatorId,
     status: story.status,
   };
 
-  // Get user's role in this story
   if (request.user) {
     const userId = request.user.clerkId;
     request.userStoryRole = await storyCollaboratorService.getCollaboratorRole(
@@ -117,7 +133,6 @@ function requireStoryRole(
       }
     }
 
-    // Check story role
     if (!userStoryRole) {
       return reply.code(HTTP_STATUS.FORBIDDEN.code).send({
         success: false,
@@ -130,7 +145,7 @@ function requireStoryRole(
       return reply.code(HTTP_STATUS.FORBIDDEN.code).send({
         success: false,
         error: 'Access denied',
-        message: `This action requires ${STORY_ROLES[minimumRole]?.name || minimumRole} role or higher.`,
+        message: `This action requires ${STORY_COLLABORATOR_ROLE_CONFIG[minimumRole]?.name || minimumRole} role or higher.`,
         requiredRole: minimumRole,
         yourRole: userStoryRole,
       });
@@ -156,18 +171,16 @@ function requireStoryPermission(
       });
     }
 
-    // Check platform override
     if (allowPlatformOverride) {
       const platformRole = user.role as PlatformRole;
       if (
         PlatformRoleRules.hasPermission(platformRole, 'canDeleteAnyContent') ||
         platformRole === PlatformRole.SUPER_ADMIN
       ) {
-        return; // Allow access
+        return;
       }
     }
 
-    // No role in story
     if (!userStoryRole) {
       return reply.code(HTTP_STATUS.FORBIDDEN.code).send({
         success: false,
@@ -177,12 +190,11 @@ function requireStoryPermission(
       });
     }
 
-    // Check permission
     if (!StoryCollaboratorRules.hasStoryPermission(userStoryRole, permission)) {
       return reply.code(HTTP_STATUS.FORBIDDEN.code).send({
         success: false,
         error: 'Access denied',
-        message: `Your role (${STORY_ROLES[userStoryRole]?.name || userStoryRole}) does not have permission to perform this action.`,
+        message: `Your role (${STORY_COLLABORATOR_ROLE_CONFIG[userStoryRole]?.name || userStoryRole}) does not have permission to perform this action.`,
         requiredPermission: permission,
         yourRole: userStoryRole,
       });
@@ -191,99 +203,27 @@ function requireStoryPermission(
 }
 
 const StoryRoleGuards = {
-  /**
-   * Load story context (required before other guards)
-   */
   loadContext: loadStoryContext,
 
-  /**
-   * Load optional story context
-   */
-  // loadOptionalContext: loadOptionalStoryContext,
-
-  /**
-   * Require OWNER role
-   */
+  // Role guards
   owner: requireStoryRole(StoryCollaboratorRole.OWNER),
-
-  /**
-   * Require CO_AUTHOR or higher
-   */
   coAuthor: requireStoryRole(StoryCollaboratorRole.CO_AUTHOR),
-
-  /**
-   * Require MODERATOR or higher
-   */
   moderator: requireStoryRole(StoryCollaboratorRole.MODERATOR),
-
-  /**
-   * Require REVIEWER or higher
-   */
   reviewer: requireStoryRole(StoryCollaboratorRole.REVIEWER),
-
-  /**
-   * Require CONTRIBUTOR or higher (any collaborator)
-   */
   contributor: requireStoryRole(StoryCollaboratorRole.CONTRIBUTOR),
 
-  /**
-   * Can write chapters
-   */
+  // Permission guards
   canWriteChapters: requireStoryPermission('canWriteChapters'),
-
-  /**
-   * Can approve PRs
-   */
   canApprovePRs: requireStoryPermission('canApprovePRs'),
-
-  /**
-   * Can reject PRs
-   */
   canRejectPRs: requireStoryPermission('canRejectPRs'),
-
-  /**
-   * Can merge PRs
-   */
   canMergePRs: requireStoryPermission('canMergePRs'),
-
-  /**
-   * Can review PRs (comment)
-   */
   canReviewPRs: requireStoryPermission('canReviewPRs'),
-
-  /**
-   * Can moderate comments
-   */
   canModerateComments: requireStoryPermission('canModerateComments'),
-
-  /**
-   * Can delete comments
-   */
   canDeleteComments: requireStoryPermission('canDeleteComments'),
-
-  /**
-   * Can edit story settings
-   */
   canEditSettings: requireStoryPermission('canEditStorySettings'),
-
-  /**
-   * Can delete story
-   */
   canDeleteStory: requireStoryPermission('canDeleteStory'),
-
-  /**
-   * Can invite collaborators
-   */
   canInvite: requireStoryPermission('canInviteCollaborators'),
-
-  /**
-   * Can remove collaborators
-   */
   canRemoveCollaborators: requireStoryPermission('canRemoveCollaborators'),
-
-  /**
-   * Can ban users from story
-   */
   canBanFromStory: requireStoryPermission('canBanFromStory'),
 };
 

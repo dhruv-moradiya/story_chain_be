@@ -1,1 +1,0 @@
-// storyCollaborator controller file

@@ -1,10 +1,10 @@
-import { IUser } from '../features/user/user.types';
+import { IUser } from '@features/user/types/user.types';
 import {
   ICurrentUserResponse,
   IPublicUserResponse,
   IUserSearchItemResponse,
   IUserProfileResponse,
-} from '../types/response/user.response.types';
+} from '@/types/response/user.response.types';
 
 export class UserTransformer {
   static currentUserResponse(input: IUser): ICurrentUserResponse {
