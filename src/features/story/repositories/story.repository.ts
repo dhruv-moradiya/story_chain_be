@@ -133,4 +133,21 @@ export class StoryRepository extends BaseRepository<IStory, IStoryDoc> {
       .lean()
       .exec();
   }
+
+  /** Search stories by title */
+  async searchByTitle(
+    query: string,
+    limit: number = 10,
+    options: IOperationOptions = {}
+  ): Promise<Pick<IStory, '_id' | 'title'>[]> {
+    return this.model
+      .find(
+        { title: { $regex: query, $options: 'i' }, status: StoryStatus.PUBLISHED },
+        { _id: 1, title: 1 },
+        { session: options.session }
+      )
+      .limit(limit)
+      .lean()
+      .exec();
+  }
 }

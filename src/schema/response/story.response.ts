@@ -168,6 +168,14 @@ export const StoryUpdateCardImageSchema = {
   required: ['url', 'publicId'],
 };
 
+export const StorySearchResultSchema = {
+  type: 'object',
+  properties: {
+    _id: { type: 'string' },
+    title: { type: 'string' },
+  },
+};
+
 export const StorySettingsWithImagesSchema = {
   type: 'object',
   properties: {
@@ -204,6 +212,7 @@ export const StoryResponses = {
     404: errorResponse('Story not found'),
   },
   storyList: { 200: apiArrayResponse(StorySchema, 'List of stories') },
+  storySearch: { 200: apiArrayResponse(StorySearchResultSchema, 'Search results') },
   storyPublished: { 200: apiResponse(StoryPublishResponseSchema, 'Story published successfully') },
   storyTree: { 200: apiResponse(StoryTreeResponseSchema, 'Story chapter tree') },
   signatureUrl: { 200: apiResponse(StorySignatureSchema, 'Signature URL generated successfully') },

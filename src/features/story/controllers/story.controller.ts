@@ -6,6 +6,7 @@ import {
   TStoryCreateInviteLinkSchema,
   TStoryCreateSchema,
   TStoryIDSchema,
+  TStorySearchSchema,
   TStorySlugSchema,
   TStoryUpdateCoverImageSchema,
   TStoryUpdateSettingSchema,
@@ -461,6 +462,20 @@ export class StoryController extends BaseModule {
       return reply
         .code(HTTP_STATUS.OK.code)
         .send(new ApiResponse(true, 'Story card image updated successfully', cardImage));
+    }
+  );
+
+  searchStories = catchAsync(
+    async (request: FastifyRequest<{ Querystring: TStorySearchSchema }>, reply: FastifyReply) => {
+      const { q, limit } = request.query;
+
+      const stories = await this.storyService.searchStoriesByTitle(q, limit);
+
+      this.logInfo(`Searched stories with query: ${q}`);
+
+      return reply
+        .code(HTTP_STATUS.OK.code)
+        .send(new ApiResponse(true, `Found ${stories.length} stories`, stories));
     }
   );
 }

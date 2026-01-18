@@ -64,7 +64,7 @@ export async function userRoutes(fastify: FastifyInstance) {
       schema: {
         description: 'Clerk webhook handler for user events',
         tags: ['Users'],
-        hide: true, // Hide from Swagger - internal endpoint
+        hide: true,
       },
     },
     userWebhookController.handle

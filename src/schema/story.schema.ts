@@ -30,6 +30,11 @@ const StorySlugSchema = z.object({
   slug: z.string(),
 });
 
+const StorySearchSchema = z.object({
+  q: z.string().min(1, 'Search query is required').max(100, 'Search query too long'),
+  limit: z.coerce.number().min(1).max(50).default(10).optional(),
+});
+
 const StoryCreateSchema = z.object({
   title: z
     .string()
@@ -279,6 +284,7 @@ export type TStorySettings = z.infer<typeof StoryUpdateSettingSchema>;
 
 type TStoryIDSchema = z.infer<typeof StoryIdSchema>;
 type TStorySlugSchema = z.infer<typeof StorySlugSchema>;
+type TStorySearchSchema = z.infer<typeof StorySearchSchema>;
 type TStoryCreateSchema = z.infer<typeof StoryCreateSchema>;
 type TStoryUpdateSchema = z.infer<typeof StoryUpdateSchema>;
 type TStoryAddChapterSchema = z.infer<typeof StoryAddChapterSchema>;
@@ -293,6 +299,7 @@ type TStoryUpdateCardImageSchema = z.infer<typeof StoryUpdateCardImageSchema>;
 export {
   StoryIdSchema,
   StorySlugSchema,
+  StorySearchSchema,
   StoryCreateSchema,
   StoryUpdateSchema,
   StoryAddChapterSchema,
@@ -308,6 +315,7 @@ export {
 export type {
   TStoryIDSchema,
   TStorySlugSchema,
+  TStorySearchSchema,
   TStoryCreateSchema,
   TStoryUpdateSchema,
   TStoryAddChapterSchema,

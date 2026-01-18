@@ -123,10 +123,7 @@ class ChapterAutoSaveService extends BaseModule {
    * - If autoSaveId is not provided → create new auto-save
    */
   async autoSaveContent(input: TAutoSaveContentDTO): Promise<IChapterAutoSave> {
-    const { content, title, userId, autoSaveType, storySlug } = input;
-
-    // Resolve storySlug to storyId
-    const storyId = await this.resolveStoryId(storySlug);
+    const { content, title, userId, autoSaveType } = input;
 
     // ───────────────────────────────────────────────
     // CASE 1: Update existing auto-save (autoSaveId provided)
@@ -146,8 +143,16 @@ class ChapterAutoSaveService extends BaseModule {
     }
 
     // ───────────────────────────────────────────────
-    // CASE 2: Create new auto-save (no autoSaveId)
+    // CASE 2: Create new auto-save (storySlug provided, no autoSaveId)
     // ───────────────────────────────────────────────
+    const { storySlug } = input;
+
+    if (!storySlug) {
+      this.throwBadRequest('storySlug is required when autoSaveId is not provided');
+    }
+
+    const storyId = await this.resolveStoryId(storySlug);
+
     let repoInput: TEnableAutoSaveInput;
 
     switch (autoSaveType) {

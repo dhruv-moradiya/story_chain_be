@@ -18,7 +18,7 @@ class UserWebhookController {
   ) {}
 
   handle = catchAsync(async (req: FastifyRequest, reply: FastifyReply) => {
-    // eslint-disable-next-line
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const event = (req as any).clerkEvent as WebhookEvent;
 
     if (!event?.type) {

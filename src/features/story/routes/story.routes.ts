@@ -16,6 +16,7 @@ import {
   StoryCreateInviteLinkSchema,
   StoryCreateSchema,
   StoryIdSchema,
+  StorySearchSchema,
   StorySlugSchema,
   StoryUpdateCardImageSchema,
   StoryUpdateCoverImageSchema,
@@ -31,6 +32,7 @@ const StoryApiRoutes = {
   GetNew: '/new',
   GetMy: '/my',
   GetDraft: '/draft',
+  Search: '/search',
 
   // By Slug
   GetBySlug: '/slug/:slug',
@@ -137,6 +139,20 @@ export async function storyRoutes(fastify: FastifyInstance) {
       },
     },
     storyController.getDraftStories
+  );
+
+  // Search stories by title
+  fastify.get(
+    StoryApiRoutes.Search,
+    {
+      schema: {
+        description: 'Search stories by title',
+        tags: ['Stories'],
+        querystring: zodToJsonSchema(StorySearchSchema),
+        response: StoryResponses.storySearch,
+      },
+    },
+    storyController.searchStories
   );
 
   // Fetch a single story by its slug

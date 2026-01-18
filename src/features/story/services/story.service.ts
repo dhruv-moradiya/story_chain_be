@@ -509,6 +509,16 @@ class StoryService extends BaseModule {
 
     return story.cardImage;
   }
+
+  /**
+   * Search stories by title
+   */
+  async searchStoriesByTitle(
+    query: string,
+    limit: number = 10
+  ): Promise<Pick<IStory, '_id' | 'title'>[]> {
+    return this.storyRepo.searchByTitle(query, limit);
+  }
 }
 
 export { StoryService };
