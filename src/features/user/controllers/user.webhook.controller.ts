@@ -5,6 +5,7 @@ import { TOKENS } from '@container/tokens';
 import { HTTP_STATUS } from '@constants/httpStatus';
 import { ApiResponse } from '@utils/apiResponse';
 import { catchAsync } from '@utils/catchAsync';
+import { logger } from '@utils/logger';
 import { WebhookTransformer } from '../builders/webhook.transformer';
 import { UserService } from '../services/user.service';
 
@@ -34,9 +35,15 @@ class UserWebhookController {
       case 'user.created': {
         const parsed = this.transformer.transformUserCreated(event.data);
 
-        await this.userService.createUser(parsed);
+        // createUser now handles duplicates gracefully (idempotent)
+        // If user already exists (created via JIT), it returns the existing user
+        const user = await this.userService.createUser(parsed);
 
-        return reply.code(HTTP_STATUS.CREATED.code).send(new ApiResponse(true, 'User created'));
+        logger.info(`[Webhook] User created/found: ${user.clerkId}`);
+
+        return reply
+          .code(HTTP_STATUS.CREATED.code)
+          .send(new ApiResponse(true, 'User created', { userId: user.clerkId }));
       }
 
       // ----------------------------
