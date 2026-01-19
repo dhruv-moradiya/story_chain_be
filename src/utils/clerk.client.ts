@@ -16,9 +16,14 @@ export async function fetchClerkUser(clerkId: string): Promise<ClerkUserData | n
   try {
     const user = await clerkClient.users.getUser(clerkId);
 
+    const email = user.emailAddresses[0]?.emailAddress;
+    if (!email) {
+      throw new Error(`Clerk user ${user.id} has no email address`);
+    }
+
     return {
       clerkId: user.id,
-      email: user.emailAddresses[0]?.emailAddress || '',
+      email,
       username: user.username || user.firstName || `user_${user.id.slice(-8)}`,
       avatarUrl: user.imageUrl,
     };
