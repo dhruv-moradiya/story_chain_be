@@ -4,6 +4,7 @@ const UserCreateDTO = z.object({
   clerkId: z.string(),
   email: z.string().email(),
   username: z.string(),
+  avatarUrl: z.string().optional(),
 });
 
 const SessionCreateDTO = z.object({

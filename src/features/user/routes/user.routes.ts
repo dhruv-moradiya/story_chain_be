@@ -48,7 +48,7 @@ export async function userRoutes(fastify: FastifyInstance) {
       schema: {
         description: 'User login (for testing purposes)',
         tags: ['Users'],
-        hide: true, // Hide from Swagger - internal endpoint
+        hide: true,
         body: zodToJsonSchema(LoginUserSchema),
         response: UserResponses.login,
       },

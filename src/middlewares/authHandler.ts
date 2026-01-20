@@ -8,7 +8,7 @@ import { IPlatformRole } from '@features/platformRole/types/platformRole.types';
 import { TStoryCollaboratorRole } from '@features/storyCollaborator/types/storyCollaborator.types';
 import { IStoryContext } from '@features/story/types/story.types';
 import { logger } from '@utils/logger';
-import { UserRepository } from '@features/user/repositories/user.repository';
+import { UserService } from '@features/user/services/user.service';
 import { PlatformRoleRepository } from '@features/platformRole/repositories/platformRole.repository';
 
 type AuthUser = IUser & IPlatformRole;
@@ -36,16 +36,15 @@ export async function validateAuth(request: FastifyRequest, reply: FastifyReply)
       });
     }
 
-    const userRepo = container.resolve<UserRepository>(TOKENS.UserRepository);
+    const userService = container.resolve<UserService>(TOKENS.UserService);
     const platformRoleRepo = container.resolve<PlatformRoleRepository>(
       TOKENS.PlatformRoleRepository
     );
 
-    const [user, platformRole] = await Promise.all([
-      userRepo.findByClerkId(auth.userId),
-      platformRoleRepo.findByUserId(auth.userId),
-    ]);
+    // Use getOrCreateUser for JIT user creation - handles webhook race condition
+    const user = await userService.getOrCreateUser(auth.userId);
 
+    const platformRole = await platformRoleRepo.findByUserId(auth.userId);
     if (!user) {
       return reply.code(HTTP_STATUS.UNAUTHORIZED.code).send({
         error: 'User not found',
