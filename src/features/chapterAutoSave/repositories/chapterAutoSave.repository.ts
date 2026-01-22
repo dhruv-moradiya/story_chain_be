@@ -134,6 +134,13 @@ export class ChapterAutoSaveRepository extends BaseRepository<
   }
 
   // ───────────────────────────────────────────────
+  // Delete autosave by ID
+  // ───────────────────────────────────────────────
+  deleteById(id: ID): Promise<IChapterAutoSave | null> {
+    return this.model.findByIdAndDelete(id).lean<IChapterAutoSave>().exec();
+  }
+
+  // ───────────────────────────────────────────────
   // Enable auto-save (handles all auto-save types)
   // ───────────────────────────────────────────────
   enableAutoSave(input: TEnableAutoSaveInput): Promise<IChapterAutoSave> {

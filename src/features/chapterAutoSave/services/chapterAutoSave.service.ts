@@ -5,12 +5,16 @@ import {
   IDisableAutoSaveDTO,
   IGetAutoSaveDraftDTO,
   TAutoSaveContentDTO,
+  TConvertToDraftDTO,
+  TConvertToPublishedDTO,
   TEnableChapterAutoSaveDTO,
 } from '@dto/chapterAutoSave.dto';
 import { ID } from '@/types';
 import { TEnableAutoSaveInput } from '@/types/response/chapterAutoSave.response.types';
 import { BaseModule } from '@utils/baseClass';
 import { StoryService } from '@features/story/services/story.service';
+import { ChapterService } from '@features/chapter/services/chapter.service';
+import { IChapter } from '@features/chapter/types/chapter.types';
 import { IChapterAutoSave } from '../types/chapterAutoSave.types';
 import { ChapterAutoSaveRepository } from '../repositories/chapterAutoSave.repository';
 
@@ -22,7 +26,9 @@ class ChapterAutoSaveService extends BaseModule {
     @inject(TOKENS.ChapterAutoSaveRepository)
     private readonly chapterAutoSaveRepo: ChapterAutoSaveRepository,
     @inject(TOKENS.StoryService)
-    private readonly storyService: StoryService
+    private readonly storyService: StoryService,
+    @inject(TOKENS.ChapterService)
+    private readonly chapterService: ChapterService
   ) {
     super();
   }
@@ -304,6 +310,164 @@ class ChapterAutoSaveService extends BaseModule {
     // }
 
     // this.throwBadRequest('Provide either chapterId or draftId to get auto-save.');
+  }
+
+  /**
+   * ═══════════════════════════════════════════════════════════════════
+   * STEP 5: CONVERT AUTO-SAVE TO DRAFT (Chapter owned by user)
+   * ═══════════════════════════════════════════════════════════════════
+   *
+   * Convert an autosave to a chapter that only the user can see/edit.
+   * - Only the owner of the autosave can convert it
+   * - No story role permission required (user owns their draft)
+   * - Chapter is created with PENDING_APPROVAL status (not visible to others)
+   * - AutoSave is deleted after successful conversion
+   */
+  async convertToDraft(input: TConvertToDraftDTO): Promise<IChapter> {
+    const { autoSaveId, userId } = input;
+
+    // 1. Find the autosave record
+    const autoSave = await this.chapterAutoSaveRepo.findById(autoSaveId);
+
+    if (!autoSave) {
+      this.throwNotFoundError('Auto-save record not found.');
+    }
+
+    // 2. Verify ownership - only the autosave owner can convert
+    if (autoSave.userId !== userId) {
+      this.throwForbiddenError('You do not have permission to convert this auto-save.');
+    }
+
+    // 3. Validate content
+    if (!autoSave.content || autoSave.content.trim().length < 50) {
+      this.throwBadRequest('Chapter content must be at least 50 characters.');
+    }
+
+    // 4. Create chapter based on autoSaveType
+    let chapter: IChapter;
+
+    switch (autoSave.autoSaveType) {
+      case 'root_chapter':
+        chapter = await this.chapterService.createRootChapter({
+          storyId: autoSave.storyId.toString(),
+          userId,
+          title: autoSave.title || 'Untitled Chapter',
+          content: autoSave.content,
+        });
+        break;
+
+      case 'new_chapter':
+        if (!autoSave.parentChapterId) {
+          this.throwBadRequest('Parent chapter ID is required for new chapter.');
+        }
+        chapter = await this.chapterService.createChildChapterSimple({
+          storyId: autoSave.storyId.toString(),
+          userId,
+          title: autoSave.title || 'Untitled Chapter',
+          content: autoSave.content,
+          parentChapterId: autoSave.parentChapterId.toString(),
+        });
+        break;
+
+      case 'update_chapter':
+        // For update_chapter, we don't create a new chapter
+        // This case should use a different flow (update existing chapter)
+        throw this.throwBadRequest(
+          'Cannot convert update_chapter autosave to draft. Use the chapter update API instead.'
+        );
+
+      default:
+        throw this.throwBadRequest('Invalid auto-save type.');
+    }
+
+    // 5. Delete the autosave record after successful conversion
+    await this.chapterAutoSaveRepo.deleteById(autoSaveId);
+
+    return chapter;
+  }
+
+  /**
+   * ═══════════════════════════════════════════════════════════════════
+   * STEP 6: CONVERT AUTO-SAVE TO PUBLISHED CHAPTER
+   * ═══════════════════════════════════════════════════════════════════
+   *
+   * Convert an autosave to a published chapter visible to all readers.
+   * - Requires `canWriteChapters` permission in the story
+   * - Permission check is done in the route middleware (RBAC)
+   * - Chapter is created with PUBLISHED status
+   * - AutoSave is deleted after successful conversion
+   *
+   * NOTE: The route must use StoryRoleGuards.canWriteChapters middleware
+   */
+  async convertToPublished(input: TConvertToPublishedDTO): Promise<IChapter> {
+    const { autoSaveId, userId } = input;
+
+    // 1. Find the autosave record
+    const autoSave = await this.chapterAutoSaveRepo.findById(autoSaveId);
+
+    if (!autoSave) {
+      this.throwNotFoundError('Auto-save record not found.');
+    }
+
+    // 2. Verify ownership - only the autosave owner can convert
+    if (autoSave.userId !== userId) {
+      this.throwForbiddenError('You do not have permission to convert this auto-save.');
+    }
+
+    // 3. Validate content
+    if (!autoSave.content || autoSave.content.trim().length < 50) {
+      this.throwBadRequest('Chapter content must be at least 50 characters.');
+    }
+
+    // 4. Create chapter based on autoSaveType
+    // Note: Permission to publish is already verified by route middleware
+    let chapter: IChapter;
+
+    switch (autoSave.autoSaveType) {
+      case 'root_chapter':
+        chapter = await this.chapterService.createRootChapter({
+          storyId: autoSave.storyId.toString(),
+          userId,
+          title: autoSave.title || 'Untitled Chapter',
+          content: autoSave.content,
+        });
+        break;
+
+      case 'new_chapter':
+        if (!autoSave.parentChapterId) {
+          this.throwBadRequest('Parent chapter ID is required for new chapter.');
+        }
+        chapter = await this.chapterService.createChildChapterSimple({
+          storyId: autoSave.storyId.toString(),
+          userId,
+          title: autoSave.title || 'Untitled Chapter',
+          content: autoSave.content,
+          parentChapterId: autoSave.parentChapterId.toString(),
+        });
+        break;
+
+      case 'update_chapter':
+        // For update_chapter, we don't create a new chapter
+        // This case should use a different flow (update existing chapter)
+        throw this.throwBadRequest(
+          'Cannot convert update_chapter autosave to published chapter. Use the chapter update API instead.'
+        );
+
+      default:
+        throw this.throwBadRequest('Invalid auto-save type.');
+    }
+
+    // 5. Delete the autosave record after successful conversion
+    await this.chapterAutoSaveRepo.deleteById(autoSaveId);
+
+    return chapter;
+  }
+
+  /**
+   * Get autosave by ID (used by controller to load story context)
+   */
+  async getAutoSaveById(autoSaveId: string): Promise<IChapterAutoSave | null> {
+    return this.chapterAutoSaveRepo.findById(autoSaveId);
   }
 }
 

@@ -76,7 +76,21 @@ const AutoSaveContentSchemaVer2DisableAutoSave = z.object({
   autoSaveId: ObjectIdSchema(),
 });
 
-const AutoSaveContentSchemaVer2PublishChapter = z.object({
+/**
+ * Convert AutoSave to Draft Chapter
+ * - Only the owner of the autosave can convert it to draft
+ * - No role permission required (user owns their own drafts)
+ */
+const ConvertAutoSaveToDraftSchema = z.object({
+  autoSaveId: ObjectIdSchema(),
+});
+
+/**
+ * Convert AutoSave to Published Chapter
+ * - Requires `canWriteChapters` permission in the story
+ * - OWNER, CO_AUTHOR, MODERATOR, REVIEWER, CONTRIBUTOR can publish
+ */
+const ConvertAutoSaveToPublishedSchema = z.object({
   autoSaveId: ObjectIdSchema(),
 });
 
@@ -111,10 +125,11 @@ type TAutoSaveContentSchemaVer2DisableAutoSave = z.infer<
   typeof AutoSaveContentSchemaVer2DisableAutoSave
 >;
 
-// PUBLISH AUTO SAVE
-type TAutoSaveContentSchemaVer2PublishChapter = z.infer<
-  typeof AutoSaveContentSchemaVer2PublishChapter
->;
+// CONVERT TO DRAFT
+type TConvertAutoSaveToDraftSchema = z.infer<typeof ConvertAutoSaveToDraftSchema>;
+
+// CONVERT TO PUBLISHED
+type TConvertAutoSaveToPublishedSchema = z.infer<typeof ConvertAutoSaveToPublishedSchema>;
 
 export {
   BaseAutoSaveContentSchema,
@@ -127,7 +142,8 @@ export {
   AutoSaveContentSchemaVer2NewChapter,
   AutoSaveContentSchemaVer2UpdateChapter,
   AutoSaveContentSchemaVer2DisableAutoSave,
-  AutoSaveContentSchemaVer2PublishChapter,
+  ConvertAutoSaveToDraftSchema,
+  ConvertAutoSaveToPublishedSchema,
 };
 
 export type {
@@ -140,5 +156,6 @@ export type {
   TAutoSaveContentSchemaVer2NewChapter,
   TAutoSaveContentSchemaVer2UpdateChapter,
   TAutoSaveContentSchemaVer2DisableAutoSave,
-  TAutoSaveContentSchemaVer2PublishChapter,
+  TConvertAutoSaveToDraftSchema,
+  TConvertAutoSaveToPublishedSchema,
 };

@@ -5,6 +5,8 @@ import { HTTP_STATUS } from '@constants/httpStatus';
 import { TDisableAutoSaveSchema } from '@schema/chapterAutoSave.schema';
 import {
   TAutoSaveContentSchemaVer2,
+  TConvertAutoSaveToDraftSchema,
+  TConvertAutoSaveToPublishedSchema,
   TEnableAutoSaveSchemaVer2Type,
 } from '@schema/chapterAutoSaveVer2.Schema';
 import { ApiResponse } from '@utils/apiResponse';
@@ -74,4 +76,75 @@ export class ChapterAutoSaveController extends BaseModule {
       .code(HTTP_STATUS.OK.code)
       .send(new ApiResponse(true, 'Auto-save draft retrieved successfully.', result));
   });
+
+  /**
+   * Convert AutoSave to Draft Chapter
+   * - Only the owner of the autosave can convert it
+   * - No story role permission required
+   */
+  convertToDraft = catchAsync(
+    async (
+      request: FastifyRequest<{ Body: TConvertAutoSaveToDraftSchema }>,
+      reply: FastifyReply
+    ) => {
+      const userId = request.user.clerkId;
+      const { autoSaveId } = request.body;
+
+      const chapter = await this.chapterAutoSaveService.convertToDraft({
+        autoSaveId,
+        userId,
+      });
+
+      return reply
+        .code(HTTP_STATUS.CREATED.code)
+        .send(new ApiResponse(true, 'Auto-save converted to draft chapter successfully.', chapter));
+    }
+  );
+
+  /**
+   * Convert AutoSave to Published Chapter
+   * - Requires `canWriteChapters` permission in the story
+   * - Permission is verified by route middleware (RBAC)
+   */
+  convertToPublished = catchAsync(
+    async (
+      request: FastifyRequest<{ Body: TConvertAutoSaveToPublishedSchema }>,
+      reply: FastifyReply
+    ) => {
+      const userId = request.user.clerkId;
+      const { autoSaveId } = request.body;
+
+      const chapter = await this.chapterAutoSaveService.convertToPublished({
+        autoSaveId,
+        userId,
+      });
+
+      return reply
+        .code(HTTP_STATUS.CREATED.code)
+        .send(
+          new ApiResponse(true, 'Auto-save converted to published chapter successfully.', chapter)
+        );
+    }
+  );
+
+  /**
+   * Get AutoSave by ID (helper for loading story context in middleware)
+   */
+  getAutoSaveById = catchAsync(
+    async (request: FastifyRequest<{ Params: { autoSaveId: string } }>, reply: FastifyReply) => {
+      const { autoSaveId } = request.params;
+
+      const autoSave = await this.chapterAutoSaveService.getAutoSaveById(autoSaveId);
+
+      if (!autoSave) {
+        return reply
+          .code(HTTP_STATUS.NOT_FOUND.code)
+          .send(new ApiResponse(false, 'Auto-save not found.', null));
+      }
+
+      return reply
+        .code(HTTP_STATUS.OK.code)
+        .send(new ApiResponse(true, 'Auto-save retrieved successfully.', autoSave));
+    }
+  );
 }

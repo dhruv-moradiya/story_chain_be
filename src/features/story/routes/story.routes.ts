@@ -8,7 +8,7 @@ import {
   loadStoryContextBySlug,
   StoryRoleGuards,
 } from '@middleware/rbac/storyRole.middleware';
-import { validateSuperAdmin } from '@middleware/story/story.middleware';
+import { PlatformRoleGuards } from '@middleware/rbac/platformRole.middleware';
 import { ChapterResponses, CollaboratorResponses, StoryResponses } from '@schema/response.schema';
 import {
   StoryAddChapterBySlugSchema,
@@ -87,7 +87,7 @@ export async function storyRoutes(fastify: FastifyInstance) {
   fastify.get(
     StoryApiRoutes.GetAll,
     {
-      preHandler: [validateAuth, validateSuperAdmin],
+      preHandler: [validateAuth, PlatformRoleGuards.superAdmin],
       schema: {
         description: 'List all stories (SUPER_ADMIN only)',
         tags: ['Stories'],

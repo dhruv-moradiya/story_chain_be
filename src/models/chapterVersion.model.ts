@@ -1,5 +1,6 @@
 import mongoose, { Schema } from 'mongoose';
 import { IChapterVersionDoc } from '@features/chapterVersion/types/chapterVersion.types';
+import { CHAPTER_VERSION_EDIT_TYPES } from '@features/chapterVersion/types/chapterVersion-enum';
 
 const chapterVersionSchema = new Schema<IChapterVersionDoc>(
   {
@@ -29,12 +30,12 @@ const chapterVersionSchema = new Schema<IChapterVersionDoc>(
     },
     changesSummary: {
       type: String,
-      maxLength: 1000,
+      maxlength: 1000,
     },
     editType: {
       type: String,
-      enum: ['MANUAL_EDIT', 'PR_MERGE', 'ADMIN_ROLLBACK', 'MODERATION_REMOVAL', 'IMPORT'],
-      default: 'MANUAL_EDIT',
+      enum: CHAPTER_VERSION_EDIT_TYPES,
+      default: 'manual_edit',
       index: true,
     },
     prId: {
@@ -45,6 +46,25 @@ const chapterVersionSchema = new Schema<IChapterVersionDoc>(
       type: Schema.Types.ObjectId,
       ref: 'ChapterVersion',
     },
+    changeMetadata: {
+      characterCountDelta: Number,
+      wordCountDelta: Number,
+    },
+    isVisible: {
+      type: Boolean,
+      default: true,
+    },
+    moderationInfo: {
+      hiddenBy: {
+        type: String,
+        ref: 'User',
+      },
+      hiddenAt: Date,
+      reasonHidden: {
+        type: String,
+        maxlength: 500,
+      },
+    },
   },
   {
     timestamps: true,
@@ -53,6 +73,7 @@ const chapterVersionSchema = new Schema<IChapterVersionDoc>(
 
 // Indexes
 chapterVersionSchema.index({ chapterId: 1, version: -1 });
+chapterVersionSchema.index({ isVisible: 1 });
 
 const ChapterVersion = mongoose.model('ChapterVersion', chapterVersionSchema);
 

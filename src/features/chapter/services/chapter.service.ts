@@ -4,7 +4,11 @@ import { ID, IOperationOptions } from '@/types';
 import { BaseModule } from '@utils/baseClass';
 import { IChapter } from '../types/chapter.types';
 import { IChapterAddChildDTO, TChapterAddRootDTO } from '../dto/chapter.dto';
-import { ChapterRepository } from '../repositories/chapter.repository';
+import {
+  ChapterRepository,
+  IChapterDetails,
+  IChapterWithStory,
+} from '../repositories/chapter.repository';
 import { ChapterStatus } from '../types/chapter-enum';
 
 // Input type for createChapter
@@ -14,6 +18,15 @@ export interface IChapterCreateInput {
   content: string;
   title: string;
   userId: string;
+}
+
+// Simplified input for creating child chapter (without requiring ancestorIds, depth, status)
+export interface ICreateChildChapterInput {
+  storyId: string;
+  userId: string;
+  parentChapterId: string;
+  title: string;
+  content: string;
 }
 
 @singleton()
@@ -71,5 +84,48 @@ export class ChapterService extends BaseModule {
     );
 
     return chapter;
+  }
+
+  /**
+   * Create a child chapter with simplified input
+   * Automatically sets ancestorIds, depth, and status
+   */
+  async createChildChapterSimple(
+    input: ICreateChildChapterInput,
+    options: IOperationOptions = {}
+  ): Promise<IChapter> {
+    const { storyId, userId, title, content, parentChapterId } = input;
+
+    // TODO: In future, calculate ancestorIds and depth from parent chapter
+    // For now, set to defaults (similar to existing createChildChapter)
+    const chapter = await this.chapterRepo.create(
+      {
+        storyId,
+        parentChapterId,
+        ancestorIds: [],
+        depth: 0,
+        authorId: userId,
+        title: title.trim(),
+        content: content.trim(),
+        status: ChapterStatus.PUBLISHED,
+      },
+      { session: options.session }
+    );
+
+    return chapter;
+  }
+
+  /**
+   * Get all chapters created by a user with story info
+   */
+  async getChaptersByUser(userId: string): Promise<IChapterWithStory[]> {
+    return this.chapterRepo.findByAuthorWithStory(userId);
+  }
+
+  /**
+   * Get chapter details by ID with story and author info
+   */
+  async getChapterDetails(chapterId: string): Promise<IChapterDetails | null> {
+    return this.chapterRepo.findByIdWithDetails(chapterId);
   }
 }

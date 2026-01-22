@@ -2,6 +2,8 @@ import { ID } from '@/types';
 import { TSaveType } from '@features/chapterAutoSave/types/chapterAutoSave.types';
 import {
   TAutoSaveContentSchemaVer2,
+  TConvertAutoSaveToDraftSchema,
+  TConvertAutoSaveToPublishedSchema,
   TEnableAutoSaveSchemaVer2Type,
 } from '@schema/chapterAutoSaveVer2.Schema';
 
@@ -35,10 +37,23 @@ interface IGetAutoSaveDraftDTO {
   userId: string;
 }
 
-interface IPublishAutoSaveDraftDTO {
+/**
+ * Convert AutoSave to Draft Chapter
+ * - Only requires ownership of the autosave (no story role required)
+ * - Creates a chapter with status = DRAFT (not visible to others)
+ */
+type TConvertToDraftDTO = TConvertAutoSaveToDraftSchema & {
   userId: string;
-  chapterId?: string;
-}
+};
+
+/**
+ * Convert AutoSave to Published Chapter
+ * - Requires `canWriteChapters` permission in the story
+ * - Creates a chapter with status = PUBLISHED
+ */
+type TConvertToPublishedDTO = TConvertAutoSaveToPublishedSchema & {
+  userId: string;
+};
 
 export type {
   TEnableChapterAutoSaveDTO,
@@ -46,5 +61,6 @@ export type {
   IAutoSaveContentDTO,
   IDisableAutoSaveDTO,
   IGetAutoSaveDraftDTO,
-  IPublishAutoSaveDraftDTO,
+  TConvertToDraftDTO,
+  TConvertToPublishedDTO,
 };
