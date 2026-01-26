@@ -53,7 +53,7 @@ async function loadStoryContext(request: FastifyRequest, reply: FastifyReply): P
 
   if (request.user) {
     const userId = request.user.clerkId;
-    request.userStoryRole = await storyCollaboratorService.getCollaboratorRole(userId, storyId);
+    request.userStoryRole = await storyCollaboratorService.getCollaboratorRole(userId, story.slug);
   } else {
     request.userStoryRole = null;
   }
