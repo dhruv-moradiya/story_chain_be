@@ -52,6 +52,25 @@ const UpdateUserPreferencesSchema = z.object({
   theme: z.enum(['light', 'dark', 'auto']).optional(),
 });
 
+// User Create DTO Schema
+const UserCreateDTO = z.object({
+  clerkId: z.string(),
+  email: z.string().email(),
+  username: z.string(),
+  avatarUrl: z.string().optional(),
+});
+
+// Session Create DTO Schema
+const SessionCreateDTO = z.object({
+  sessionId: z.string(),
+  userId: z.string(),
+  clientId: z.string(),
+  ip: z.string().nullable(),
+  userAgent: z.string().nullable(),
+  createdAt: z.date(),
+  lastActiveAt: z.date(),
+});
+
 // Type exports
 type TLoginUserSchema = z.infer<typeof LoginUserSchema>;
 type TSearchUserByUsernameSchema = z.infer<typeof SearchUserByUsernameSchema>;
@@ -69,6 +88,8 @@ export {
   GetUserByUsernameSchema,
   UpdateUserProfileSchema,
   UpdateUserPreferencesSchema,
+  UserCreateDTO,
+  SessionCreateDTO,
 };
 
 export type {

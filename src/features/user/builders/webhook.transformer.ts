@@ -1,5 +1,6 @@
 import { SessionJSON, UserJSON } from '@clerk/fastify';
-import { ISessionCreateDTO, IUserCreateDTO, SessionCreateDTO, UserCreateDTO } from '@dto/user.dto';
+import { ISessionCreateDTO, IUserCreateDTO } from '@dto/user.dto';
+import { SessionCreateDTO, UserCreateDTO } from '@schema/user.schema';
 import { singleton } from 'tsyringe';
 
 @singleton()

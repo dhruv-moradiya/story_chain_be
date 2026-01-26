@@ -1,24 +1,17 @@
 import { Document } from 'mongoose';
+import { ALL_BADGES, AUTH_PROVIDER, AuthProvider } from './user-enum';
 
-export enum Badge {
-  STORY_STARTER = 'STORY_STARTER',
-  BRANCH_CREATOR = 'BRANCH_CREATOR',
-  TOP_CONTRIBUTOR = 'TOP_CONTRIBUTOR',
-  MOST_UPVOTED = 'MOST_UPVOTED',
-  TRENDING_AUTHOR = 'TRENDING_AUTHOR',
-  VETERAN_WRITER = 'VETERAN_WRITER',
-  COMMUNITY_FAVORITE = 'COMMUNITY_FAVORITE',
-  COLLABORATIVE = 'COLLABORATIVE',
-  QUALITY_CURATOR = 'QUALITY_CURATOR',
-}
+type TOAuthProvider = Exclude<AuthProvider, AuthProvider.EMAIL>;
+type TAuthProvider = (typeof AUTH_PROVIDER)[number];
+type TBadge = (typeof ALL_BADGES)[number];
 
-export interface UserPreferences {
+interface IUserPreferences {
   emailNotifications: boolean;
   pushNotifications: boolean;
   theme: 'light' | 'dark' | 'auto';
 }
 
-export interface UserStats {
+interface IUserStats {
   storiesCreated: number;
   chaptersWritten: number;
   totalUpvotes: number;
@@ -26,7 +19,16 @@ export interface UserStats {
   branchesCreated: number;
 }
 
-export interface IUser {
+interface IConnectedAccount {
+  provider: TAuthProvider;
+  providerAccountId: string;
+  email: string;
+  username: string;
+  avatarUrl?: string;
+  connectedAt: Date;
+}
+
+interface IUser {
   clerkId: string;
   username: string;
   email: string;
@@ -36,10 +38,10 @@ export interface IUser {
 
   xp: number;
   level: number;
-  badges: Badge[];
+  badges: TBadge[];
 
-  stats: UserStats;
-  preferences: UserPreferences;
+  stats: IUserStats;
+  preferences: IUserPreferences;
 
   isActive: boolean;
   isBanned: boolean;
@@ -49,9 +51,14 @@ export interface IUser {
   lastActive: Date;
   createdAt: Date;
   updatedAt: Date;
+
+  authProvider: TAuthProvider;
+  connectedAccounts: IConnectedAccount[];
+  primaryAuthMethod: TAuthProvider;
+  emailVerified: boolean;
 }
 
-export interface ISession {
+interface ISession {
   sessionId: string;
   userId: string;
   clientId?: string;
@@ -64,23 +71,23 @@ export interface ISession {
   abandonAt?: Date;
 }
 
-export interface IUserDoc extends Document, IUser {}
-export interface ISessionDoc extends Document, ISession {}
+interface IUserDoc extends Document, IUser {}
+interface ISessionDoc extends Document, ISession {}
 
-export interface ICreateNewUser {
+interface ICreateNewUser {
   clerkId: string;
   username: string;
   email: string;
 }
 
-export interface IUserUpdateInput {
+interface IUserUpdateInput {
   clerkId: string;
   username: string;
   email: string;
 }
 
 // DTOs
-export interface ClerkUserCreatedEventDTO {
+interface IClerkUserCreatedEventDTO {
   clerkId: string;
   email: string;
   firstName?: string;
@@ -89,7 +96,7 @@ export interface ClerkUserCreatedEventDTO {
   profileImage?: string;
 }
 
-export interface ClerkSessionCreatedEventDTO {
+interface IClerkSessionCreatedEventDTO {
   sessionId: string;
   userId: string;
   clientId: string;
@@ -99,26 +106,38 @@ export interface ClerkSessionCreatedEventDTO {
   lastActiveAt: Date;
 }
 
-// With validation
-import { z } from 'zod';
+// const clerkUserCreatedSchema = z.object({
+//   clerkId: z.string(),
+//   email: z.string().email(),
+//   firstName: z.string().optional(),
+//   lastName: z.string().optional(),
+//   username: z.string().optional(),
+//   profileImage: z.string().url().optional(),
+// });
 
-export const clerkUserCreatedSchema = z.object({
-  clerkId: z.string(),
-  email: z.string().email(),
-  firstName: z.string().optional(),
-  lastName: z.string().optional(),
-  username: z.string().optional(),
-  profileImage: z.string().url().optional(),
-});
+// const clerkSessionCreatedSchema = z.object({
+//   sessionId: z.string(),
+//   userId: z.string(),
+//   clientId: z.string(),
+//   ip: z.string().nullable(),
+//   userAgent: z.string().nullable(),
+//   createdAt: z.date(),
+//   lastActiveAt: z.date(),
+// });
 
-export const clerkSessionCreatedSchema = z.object({
-  sessionId: z.string(),
-  userId: z.string(),
-  clientId: z.string(),
-  ip: z.string().nullable(),
-  userAgent: z.string().nullable(),
-  createdAt: z.date(),
-  lastActiveAt: z.date(),
-});
-
-//
+export type {
+  TOAuthProvider,
+  TAuthProvider,
+  TBadge,
+  IUserPreferences,
+  IUserStats,
+  IConnectedAccount,
+  IUser,
+  ISession,
+  IUserDoc,
+  ISessionDoc,
+  ICreateNewUser,
+  IUserUpdateInput,
+  IClerkUserCreatedEventDTO,
+  IClerkSessionCreatedEventDTO,
+};

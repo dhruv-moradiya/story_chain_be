@@ -1,4 +1,5 @@
-import { Badge, UserPreferences, UserStats } from '@features/user/types/user.types';
+import { Badge } from '@/features/user/types/user-enum';
+import { IUserPreferences, IUserStats } from '@/features/user/types/user.types';
 
 // Current User Response
 interface ICurrentUserResponse {
@@ -10,8 +11,8 @@ interface ICurrentUserResponse {
   xp: number;
   level: number;
   badges: Badge[];
-  stats: UserStats;
-  preferences: UserPreferences;
+  stats: IUserStats;
+  preferences: IUserPreferences;
   isActive: boolean;
   isBanned: boolean;
   banReason?: string;
@@ -46,7 +47,7 @@ interface IUserProfileResponse {
   xp: number;
   level: number;
   badges: Badge[];
-  stats: UserStats;
+  stats: IUserStats;
   createdAt: Date;
 }
 
@@ -57,7 +58,7 @@ interface IUserUpdateResponse {
   email: string;
   bio?: string;
   avatarUrl?: string;
-  preferences: UserPreferences;
+  preferences: IUserPreferences;
   updatedAt: Date;
 }
 

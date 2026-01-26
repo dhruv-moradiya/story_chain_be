@@ -1,5 +1,6 @@
-import mongoose, { Schema } from 'mongoose';
+import { AUTH_PROVIDER } from '@/features/user/types/user-enum';
 import { IUserDoc } from '@features/user/types/user.types';
+import mongoose, { Schema } from 'mongoose';
 
 const userSchema = new Schema<IUserDoc>(
   {
@@ -101,6 +102,45 @@ const userSchema = new Schema<IUserDoc>(
     lastActive: {
       type: Date,
       default: Date.now,
+    },
+
+    authProvider: {
+      type: String,
+      enum: AUTH_PROVIDER,
+      default: 'email',
+      index: true,
+    },
+    connectedAccounts: [
+      {
+        provider: {
+          type: String,
+          enum: [...AUTH_PROVIDER.filter((p) => p !== 'email')],
+          required: true,
+        },
+        providerAccountId: {
+          type: String,
+          required: true,
+        },
+        email: {
+          type: String,
+          lowercase: true,
+        },
+        username: String, // GitHub username, etc.
+        avatarUrl: String, // Provider-specific avatar
+        connectedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
+    primaryAuthMethod: {
+      type: String,
+      enum: AUTH_PROVIDER,
+      default: 'email',
+    },
+    emailVerified: {
+      type: Boolean,
+      default: false,
     },
   },
   {
