@@ -12,13 +12,22 @@ import {
 import { ApiResponse } from '@utils/apiResponse';
 import { BaseModule } from '@utils/baseClass';
 import { catchAsync } from '@utils/catchAsync';
-import { ChapterAutoSaveService } from '../services/chapterAutoSave.service';
+import { AutoSaveLifecycleService } from '../services/autosave-lifecycle.service';
+import { AutoSaveContentService } from '../services/autosave-content.service';
+import { AutoSaveQueryService } from '../services/autosave-query.service';
+import { AutoSaveConversionService } from '../services/autosave-conversion.service';
 
 @singleton()
 export class ChapterAutoSaveController extends BaseModule {
   constructor(
-    @inject(TOKENS.ChapterAutoSaveService)
-    private readonly chapterAutoSaveService: ChapterAutoSaveService
+    @inject(TOKENS.AutoSaveLifecycleService)
+    private readonly lifecycleService: AutoSaveLifecycleService,
+    @inject(TOKENS.AutoSaveContentService)
+    private readonly contentService: AutoSaveContentService,
+    @inject(TOKENS.AutoSaveQueryService)
+    private readonly queryService: AutoSaveQueryService,
+    @inject(TOKENS.AutoSaveConversionService)
+    private readonly conversionService: AutoSaveConversionService
   ) {
     super();
   }
@@ -31,7 +40,7 @@ export class ChapterAutoSaveController extends BaseModule {
       const userId = request.user.clerkId;
       const input = request.body;
 
-      const result = await this.chapterAutoSaveService.enableAutoSave({ ...input, userId });
+      const result = await this.lifecycleService.enableAutoSave({ ...input, userId });
 
       return reply
         .code(HTTP_STATUS.CREATED.code)
@@ -44,7 +53,7 @@ export class ChapterAutoSaveController extends BaseModule {
       const userId = request.user.clerkId;
       const input = request.body;
 
-      const result = await this.chapterAutoSaveService.autoSaveContent({ ...input, userId });
+      const result = await this.contentService.autoSaveContent({ ...input, userId });
 
       return reply.code(HTTP_STATUS.CREATED.code).send(
         new ApiResponse(true, 'Content auto-saved successfully.', {
@@ -57,9 +66,14 @@ export class ChapterAutoSaveController extends BaseModule {
 
   disableAutoSave = catchAsync(
     async (request: FastifyRequest<{ Body: TDisableAutoSaveSchema }>, reply: FastifyReply) => {
-      const input = request.body;
+      const userId = request.user.clerkId;
+      const { chapterId } = request.body;
 
-      await this.chapterAutoSaveService.disableAutoSave(input);
+      if (!chapterId) {
+        this.throwBadRequest('chapterId is required');
+      }
+
+      await this.lifecycleService.disableAutoSave(chapterId, userId);
 
       return reply
         .code(HTTP_STATUS.CREATED.code)
@@ -70,7 +84,7 @@ export class ChapterAutoSaveController extends BaseModule {
   getAutoSaveDraft = catchAsync(async (request: FastifyRequest, reply: FastifyReply) => {
     const userId = request.user.clerkId;
 
-    const result = await this.chapterAutoSaveService.getAutoSaveDraft({ userId });
+    const result = await this.queryService.getByUser(userId);
 
     return reply
       .code(HTTP_STATUS.OK.code)
@@ -90,7 +104,7 @@ export class ChapterAutoSaveController extends BaseModule {
       const userId = request.user.clerkId;
       const { autoSaveId } = request.body;
 
-      const chapter = await this.chapterAutoSaveService.convertToDraft({
+      const chapter = await this.conversionService.convertToDraft({
         autoSaveId,
         userId,
       });
@@ -114,7 +128,7 @@ export class ChapterAutoSaveController extends BaseModule {
       const userId = request.user.clerkId;
       const { autoSaveId } = request.body;
 
-      const chapter = await this.chapterAutoSaveService.convertToPublished({
+      const chapter = await this.conversionService.convertToPublished({
         autoSaveId,
         userId,
       });
@@ -134,7 +148,7 @@ export class ChapterAutoSaveController extends BaseModule {
     async (request: FastifyRequest<{ Params: { autoSaveId: string } }>, reply: FastifyReply) => {
       const { autoSaveId } = request.params;
 
-      const autoSave = await this.chapterAutoSaveService.getAutoSaveById(autoSaveId);
+      const autoSave = await this.queryService.getById(autoSaveId);
 
       if (!autoSave) {
         return reply

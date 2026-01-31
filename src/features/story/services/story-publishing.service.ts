@@ -27,8 +27,11 @@ class StoryPublishingService extends BaseModule implements IStoryPublishingServi
       this.throwNotFoundError('Story not found');
     }
 
-    if (!StoryRules.canPublishStory(story, userId)) {
-      this.throwForbiddenError('You do not have permission to publish this story.');
+    // Use enhanced domain validation
+    const validation = StoryRules.validatePublishing(story, userId);
+
+    if (!validation.canPublish) {
+      this.throwBadRequest(`Cannot publish story: ${validation.errors.join(', ')}`);
     }
 
     const result = await this.storyRepo.changeStoryStatusToPublished(story._id);

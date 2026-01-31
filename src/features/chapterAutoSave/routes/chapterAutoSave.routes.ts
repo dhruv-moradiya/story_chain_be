@@ -14,7 +14,7 @@ import {
 import { AutoSaveResponses } from '@schema/response.schema';
 import { HTTP_STATUS } from '@constants/httpStatus';
 import { type ChapterAutoSaveController } from '../controllers/chapterAutoSave.controller';
-import { ChapterAutoSaveService } from '../services/chapterAutoSave.service';
+import { AutoSaveQueryService } from '../services/autosave-query.service';
 
 enum ChapterAutoSaveApiRoutes {
   EnableAutoSave = '/enable',
@@ -43,11 +43,9 @@ async function loadStoryContextFromAutoSave(
     });
   }
 
-  const chapterAutoSaveService = container.resolve<ChapterAutoSaveService>(
-    TOKENS.ChapterAutoSaveService
-  );
+  const autoSaveQueryService = container.resolve<AutoSaveQueryService>(TOKENS.AutoSaveQueryService);
 
-  const autoSave = await chapterAutoSaveService.getAutoSaveById(autoSaveId);
+  const autoSave = await autoSaveQueryService.getById(autoSaveId);
 
   if (!autoSave) {
     return reply.code(HTTP_STATUS.NOT_FOUND.code).send({

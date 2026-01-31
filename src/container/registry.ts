@@ -39,7 +39,10 @@ import { CollaboratorQueryService } from '@features/storyCollaborator/services/c
 import { CollaboratorInvitationService } from '@features/storyCollaborator/services/collaborator-invitation.service';
 import { CollaboratorLifecycleService } from '@features/storyCollaborator/services/collaborator-lifecycle.service';
 import { NotificationService } from '@features/notification/services/notification.service';
-import { ChapterAutoSaveService } from '@features/chapterAutoSave/services/chapterAutoSave.service';
+import { AutoSaveQueryService } from '@features/chapterAutoSave/services/autosave-query.service';
+import { AutoSaveLifecycleService } from '@features/chapterAutoSave/services/autosave-lifecycle.service';
+import { AutoSaveContentService } from '@features/chapterAutoSave/services/autosave-content.service';
+import { AutoSaveConversionService } from '@features/chapterAutoSave/services/autosave-conversion.service';
 import { ChapterService } from '@features/chapter/services/chapter.service';
 
 // ═══════════════════════════════════════════
@@ -106,7 +109,10 @@ export function registerServices(): void {
   container.register(TOKENS.StoryQueryService, { useClass: StoryQueryService });
   container.register(TOKENS.StoryMediaService, { useClass: StoryMediaService });
   container.register(TOKENS.StoryPublishingService, { useClass: StoryPublishingService });
-  container.register(TOKENS.ChapterAutoSaveService, { useClass: ChapterAutoSaveService });
+  container.register(TOKENS.AutoSaveQueryService, { useClass: AutoSaveQueryService });
+  container.register(TOKENS.AutoSaveLifecycleService, { useClass: AutoSaveLifecycleService });
+  container.register(TOKENS.AutoSaveContentService, { useClass: AutoSaveContentService });
+  container.register(TOKENS.AutoSaveConversionService, { useClass: AutoSaveConversionService });
 
   // ═══════════════════════════════════════════
   // CONTROLLERS
