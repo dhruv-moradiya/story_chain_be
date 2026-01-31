@@ -4,13 +4,13 @@ import { container } from 'tsyringe';
 import { TOKENS } from '@/container';
 import { validateAuth } from '@middleware/authHandler';
 import { loadStoryContext, StoryRoleGuards } from '@middleware/rbac/storyRole.middleware';
-import { DisableAutoSaveSchema } from '@schema/chapterAutoSave.schema';
+import { DisableAutoSaveSchema } from '@schema/request/chapterAutoSave.schema';
 import {
   AutoSaveContentSchemaVer2,
   ConvertAutoSaveToDraftSchema,
   ConvertAutoSaveToPublishedSchema,
   EnableAutoSaveSchemaVer2,
-} from '@schema/chapterAutoSaveVer2.Schema';
+} from '@schema/request/chapterAutoSaveVer2.Schema';
 import { AutoSaveResponses } from '@schema/response.schema';
 import { HTTP_STATUS } from '@constants/httpStatus';
 import { type ChapterAutoSaveController } from '../controllers/chapterAutoSave.controller';

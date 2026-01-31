@@ -21,7 +21,7 @@ import {
   StoryUpdateCardImageSchema,
   StoryUpdateCoverImageSchema,
   StoryUpdateSettingSchema,
-} from '@schema/story.schema';
+} from '@schema/request/story.schema';
 import { type StoryController } from '../controllers/story.controller';
 import { type StoryCollaboratorController } from '@features/storyCollaborator/controllers/storyCollaborator.controller';
 

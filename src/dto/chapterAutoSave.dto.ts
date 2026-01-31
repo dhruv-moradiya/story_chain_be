@@ -5,7 +5,7 @@ import {
   TConvertAutoSaveToDraftSchema,
   TConvertAutoSaveToPublishedSchema,
   TEnableAutoSaveSchemaVer2Type,
-} from '@schema/chapterAutoSaveVer2.Schema';
+} from '@schema/request/chapterAutoSaveVer2.Schema';
 
 type TEnableChapterAutoSaveDTO = TEnableAutoSaveSchemaVer2Type & {
   userId: string;

@@ -1,6 +1,6 @@
 import { HTTP_STATUS } from '@constants/httpStatus';
 import { TOKENS } from '@container/tokens';
-import { TStoryCreateInviteLinkSchema, TStorySlugSchema } from '@schema/story.schema';
+import { TStoryCreateInviteLinkSchema, TStorySlugSchema } from '@schema/request/story.schema';
 import { ApiResponse } from '@utils/apiResponse';
 import { BaseModule } from '@utils/baseClass';
 import { catchAsync } from '@utils/catchAsync';

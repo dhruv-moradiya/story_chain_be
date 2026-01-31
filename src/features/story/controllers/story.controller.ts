@@ -9,7 +9,7 @@ import {
   TStorySlugSchema,
   TStoryUpdateCoverImageSchema,
   TStoryUpdateSettingSchema,
-} from '@schema/story.schema';
+} from '@schema/request/story.schema';
 import { ApiResponse } from '@utils/apiResponse';
 import { BaseModule } from '@utils/baseClass';
 import { catchAsync } from '@utils/catchAsync';

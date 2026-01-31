@@ -2,13 +2,13 @@ import { FastifyReply, FastifyRequest } from 'fastify';
 import { inject, singleton } from 'tsyringe';
 import { TOKENS } from '@container/tokens';
 import { HTTP_STATUS } from '@constants/httpStatus';
-import { TDisableAutoSaveSchema } from '@schema/chapterAutoSave.schema';
+import { TDisableAutoSaveSchema } from '@schema/request/chapterAutoSave.schema';
 import {
   TAutoSaveContentSchemaVer2,
   TConvertAutoSaveToDraftSchema,
   TConvertAutoSaveToPublishedSchema,
   TEnableAutoSaveSchemaVer2Type,
-} from '@schema/chapterAutoSaveVer2.Schema';
+} from '@schema/request/chapterAutoSaveVer2.Schema';
 import { ApiResponse } from '@utils/apiResponse';
 import { BaseModule } from '@utils/baseClass';
 import { catchAsync } from '@utils/catchAsync';

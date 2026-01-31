@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { ID } from '@/types';
-import { TStoryAddChapterSchema } from '@schema/story.schema';
+import { TStoryAddChapterSchema } from '@schema/request/story.schema';
 import { TStoryCollaboratorRole } from '@features/storyCollaborator/types/storyCollaborator.types';
 import {
   IStorySettings,
