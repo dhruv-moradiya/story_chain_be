@@ -12,7 +12,7 @@ import {
 import { ID } from '@/types';
 import { TEnableAutoSaveInput } from '@/types/response/chapterAutoSave.response.types';
 import { BaseModule } from '@utils/baseClass';
-import { StoryService } from '@features/story/services/story.service';
+import { StoryQueryService } from '@/features/story/services/story-query.service';
 import { ChapterService } from '@features/chapter/services/chapter.service';
 import { IChapter } from '@features/chapter/types/chapter.types';
 import { IChapterAutoSave } from '../types/chapterAutoSave.types';
@@ -25,8 +25,8 @@ class ChapterAutoSaveService extends BaseModule {
   constructor(
     @inject(TOKENS.ChapterAutoSaveRepository)
     private readonly chapterAutoSaveRepo: ChapterAutoSaveRepository,
-    @inject(TOKENS.StoryService)
-    private readonly storyService: StoryService,
+    @inject(TOKENS.StoryQueryService)
+    private readonly storyQueryService: StoryQueryService,
     @inject(TOKENS.ChapterService)
     private readonly chapterService: ChapterService
   ) {
@@ -37,7 +37,7 @@ class ChapterAutoSaveService extends BaseModule {
    * Resolve storySlug to storyId
    */
   private async resolveStoryId(storySlug: string): Promise<ID> {
-    const story = await this.storyService.getStoryBySlug(storySlug);
+    const story = await this.storyQueryService.getBySlug(storySlug);
     return story._id as ID;
   }
 

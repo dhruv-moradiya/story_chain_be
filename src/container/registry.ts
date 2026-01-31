@@ -31,8 +31,13 @@ import { ChapterRepository } from '@features/chapter/repositories/chapter.reposi
 // ═══════════════════════════════════════════
 import { PlatformRoleService } from '@features/platformRole/services/platformRole.service';
 import { UserService } from '@features/user/services/user.service';
-import { StoryService } from '@features/story/services/story.service';
-import { StoryCollaboratorService } from '@features/storyCollaborator/services/storyCollaborator.service';
+import { StoryCrudService } from '@/features/story/services/story-crud.service';
+import { StoryQueryService } from '@/features/story/services/story-query.service';
+import { StoryMediaService } from '@/features/story/services/story-media.service';
+import { StoryPublishingService } from '@/features/story/services/story-publishing.service';
+import { CollaboratorQueryService } from '@features/storyCollaborator/services/collaborator-query.service';
+import { CollaboratorInvitationService } from '@features/storyCollaborator/services/collaborator-invitation.service';
+import { CollaboratorLifecycleService } from '@features/storyCollaborator/services/collaborator-lifecycle.service';
 import { NotificationService } from '@features/notification/services/notification.service';
 import { ChapterAutoSaveService } from '@features/chapterAutoSave/services/chapterAutoSave.service';
 import { ChapterService } from '@features/chapter/services/chapter.service';
@@ -89,9 +94,18 @@ export function registerServices(): void {
   container.register(TOKENS.PlatformRoleService, { useClass: PlatformRoleService });
   container.register(TOKENS.UserService, { useClass: UserService });
   container.register(TOKENS.NotificationService, { useClass: NotificationService });
-  container.register(TOKENS.StoryCollaboratorService, { useClass: StoryCollaboratorService });
+  container.register(TOKENS.CollaboratorQueryService, { useClass: CollaboratorQueryService });
+  container.register(TOKENS.CollaboratorInvitationService, {
+    useClass: CollaboratorInvitationService,
+  });
+  container.register(TOKENS.CollaboratorLifecycleService, {
+    useClass: CollaboratorLifecycleService,
+  });
   container.register(TOKENS.ChapterService, { useClass: ChapterService });
-  container.register(TOKENS.StoryService, { useClass: StoryService });
+  container.register(TOKENS.StoryCrudService, { useClass: StoryCrudService });
+  container.register(TOKENS.StoryQueryService, { useClass: StoryQueryService });
+  container.register(TOKENS.StoryMediaService, { useClass: StoryMediaService });
+  container.register(TOKENS.StoryPublishingService, { useClass: StoryPublishingService });
   container.register(TOKENS.ChapterAutoSaveService, { useClass: ChapterAutoSaveService });
 
   // ═══════════════════════════════════════════

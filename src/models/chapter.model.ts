@@ -15,6 +15,13 @@ const chapterSchema = new Schema<IChapterDoc>(
       index: true,
     },
 
+    slug: {
+      type: String,
+      required: true,
+      unique: true,
+      index: true,
+    },
+
     // Tree structure
     parentChapterId: {
       type: Schema.Types.ObjectId,

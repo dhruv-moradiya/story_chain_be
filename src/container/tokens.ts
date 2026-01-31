@@ -19,6 +19,7 @@ export const TOKENS = {
   QueueService: Symbol.for('QueueService'),
   InviteTokenService: Symbol.for('InviteTokenService'),
   NotificationFactoryService: Symbol.for('NotificationFactoryService'),
+  StoryGuardService: Symbol.for('StoryGuardService'),
 
   // ═══════════════════════════════════════════
   // REPOSITORIES
@@ -37,10 +38,16 @@ export const TOKENS = {
   // FEATURE SERVICES
   // ═══════════════════════════════════════════
   UserService: Symbol.for('UserService'),
-  StoryService: Symbol.for('StoryService'),
+  StoryCrudService: Symbol.for('StoryCrudService'),
+  StoryQueryService: Symbol.for('StoryQueryService'),
+  StoryMediaService: Symbol.for('StoryMediaService'),
+  StoryPublishingService: Symbol.for('StoryPublishingService'),
   ChapterService: Symbol.for('ChapterService'),
   ChapterVersionService: Symbol.for('ChapterVersionService'),
   ChapterAutoSaveService: Symbol.for('ChapterAutoSaveService'),
+  CollaboratorQueryService: Symbol.for('CollaboratorQueryService'),
+  CollaboratorInvitationService: Symbol.for('CollaboratorInvitationService'),
+  CollaboratorLifecycleService: Symbol.for('CollaboratorLifecycleService'),
   CommentService: Symbol.for('CommentService'),
   VoteService: Symbol.for('VoteService'),
   BookmarkService: Symbol.for('BookmarkService'),
@@ -53,7 +60,6 @@ export const TOKENS = {
   ReportService: Symbol.for('ReportService'),
   ReadingHistoryService: Symbol.for('ReadingHistoryService'),
   SessionService: Symbol.for('SessionService'),
-  StoryCollaboratorService: Symbol.for('StoryCollaboratorService'),
   PlatformRoleService: Symbol.for('PlatformRoleService'),
 
   // ═══════════════════════════════════════════

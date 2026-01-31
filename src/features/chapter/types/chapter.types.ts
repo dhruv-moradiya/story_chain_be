@@ -14,6 +14,7 @@ export type TChapterPRStatus = (typeof CHAPTER_PR_STATUSES)[number];
  */
 export interface IChapter {
   _id: ID;
+  slug: string;
   storyId: ID;
 
   parentChapterId?: ID | null;

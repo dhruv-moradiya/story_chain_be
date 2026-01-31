@@ -219,13 +219,6 @@ type IPublishedStoryDTO = {
   userId: string;
 };
 
-// type TStoryCreateInviteLinkDTO = {
-//   storyId: ID;
-//   role: TStoryCollaboratorRole;
-//   invitedUserId: string;
-//   inviterUserId: string;
-// };
-
 type TStoryCreateInviteLinkDTO = {
   slug: string;
   role: TStoryCollaboratorRole;
@@ -281,6 +274,12 @@ interface IStoryUpdateCardImageBySlugDTO {
   };
 }
 
+interface IUpdateStoryStatusDTO {
+  slug: string;
+  userId: string;
+  status: TStoryStatus;
+}
+
 export { StoryUpdateDTO };
 export type {
   IStoryCreateDTO,
@@ -293,5 +292,6 @@ export type {
   IGetAllCollaboratorsBySlugDTO,
   IStoryUpdateSettingDTO,
   IStoryUpdateCoverImageBySlugDTO,
+  IUpdateStoryStatusDTO,
   IStoryUpdateCardImageBySlugDTO,
 };

@@ -248,15 +248,15 @@ const StoryUpdateSettingSchema = z.object({
   //   })
   //   .optional(),
 
-  cardImage: z
-    .object({
-      url: z
-        .string()
-        .url('Invalid URL format')
-        .refine((url) => cloudinaryUrlRegex.test(url), 'URL must be a valid Cloudinary URL'),
-      publicId: z.string().min(1, 'publicId is required'),
-    })
-    .optional(),
+  // cardImage: z
+  //   .object({
+  //     url: z
+  //       .string()
+  //       .url('Invalid URL format')
+  //       .refine((url) => cloudinaryUrlRegex.test(url), 'URL must be a valid Cloudinary URL'),
+  //     publicId: z.string().min(1, 'publicId is required'),
+  //   })
+  //   .optional(),
 });
 
 const StoryUpdateCoverImageSchema = z.object({
