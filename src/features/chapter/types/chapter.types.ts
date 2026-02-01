@@ -28,7 +28,7 @@ export interface IChapter {
   votes: {
     upvotes: number;
     downvotes: number;
-    score: number; // Derived metric for ranking
+    score: number;
   };
 
   status: TChapterStatus;

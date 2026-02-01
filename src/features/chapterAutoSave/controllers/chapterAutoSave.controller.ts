@@ -104,14 +104,14 @@ export class ChapterAutoSaveController extends BaseModule {
       const userId = request.user.clerkId;
       const { autoSaveId } = request.body;
 
-      const chapter = await this.conversionService.convertToDraft({
+      await this.conversionService.convertToDraft({
         autoSaveId,
         userId,
       });
 
       return reply
         .code(HTTP_STATUS.CREATED.code)
-        .send(new ApiResponse(true, 'Auto-save converted to draft chapter successfully.', chapter));
+        .send(new ApiResponse(true, 'Auto-save converted to draft chapter successfully.', {}));
     }
   );
 

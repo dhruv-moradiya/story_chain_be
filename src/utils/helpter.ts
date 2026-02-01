@@ -4,7 +4,13 @@ export const validateObjectId = (id: string): boolean => {
   return mongoose.Types.ObjectId.isValid(id);
 };
 
-export function createSlug(input: string): string {
+export interface CreateSlugOptions {
+  addSuffix?: boolean;
+}
+
+export function createSlug(input: string, options: CreateSlugOptions = {}): string {
+  const { addSuffix = true } = options;
+
   const base = input
     .toLowerCase()
     .trim()
@@ -12,6 +18,10 @@ export function createSlug(input: string): string {
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-');
 
-  const suffix = crypto.randomUUID().slice(0, 6);
-  return `${base}-${suffix}`;
+  if (addSuffix) {
+    const suffix = crypto.randomUUID().slice(0, 6);
+    return `${base}-${suffix}`;
+  }
+
+  return base;
 }
