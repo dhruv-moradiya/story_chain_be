@@ -1,236 +1,194 @@
-import { FastifyReply, FastifyRequest } from 'fastify';
+import { FastifyRequest, FastifyReply } from 'fastify';
 import { container } from 'tsyringe';
 import { TOKENS } from '@container/tokens';
 import { HTTP_STATUS } from '@constants/httpStatus';
-import { PlatformRoleRules } from '@domain/platformRole.rules';
-import { StoryCollaboratorRules } from '@domain/storyCollaborator.rules';
-import { PlatformRole } from '@features/platformRole/types/platformRole.types';
-import { StoryService } from '@features/story/services/story.service';
-import { StoryCollaboratorService } from '@features/storyCollaborator/services/storyCollaborator.service';
-import {
-  STORY_COLLABORATOR_ROLE_CONFIG,
-  StoryCollaboratorRole,
-} from '@/features/storyCollaborator/types/storyCollaborator-enum';
-import {
-  TStoryCollaboratorPermission,
-  TStoryCollaboratorRole,
-} from '@features/storyCollaborator/types/storyCollaborator.types';
+import { extractStoryIdFromRequest, extractSlugFromRequest } from '@utils/extractors';
+import { StoryQueryService } from '@features/story/services/story-query.service';
+import { CollaboratorQueryService } from '@features/storyCollaborator/services/collaborator-query.service';
+import { StoryCollaboratorRole } from '@features/storyCollaborator/types/storyCollaborator-enum';
+
+// Roles that can write chapters
+const WRITE_CHAPTER_ROLES: string[] = [
+  StoryCollaboratorRole.OWNER,
+  StoryCollaboratorRole.CO_AUTHOR,
+  StoryCollaboratorRole.CONTRIBUTOR,
+];
+
+// Roles that can edit story settings (including images)
+const EDIT_SETTINGS_ROLES: string[] = [
+  StoryCollaboratorRole.OWNER,
+  StoryCollaboratorRole.CO_AUTHOR,
+];
+
+// Roles that can publish stories
+const PUBLISH_STORY_ROLES: string[] = [
+  StoryCollaboratorRole.OWNER,
+  StoryCollaboratorRole.CO_AUTHOR,
+];
 
 /**
- * Load story context by ID - uses DI to resolve services
+ * Loads the story context by storyId and attaches story role info to the request.
+ * This middleware assumes that the user is already authenticated and user info is attached to request.user.
+ *
+ * @responsibility
+ * - Resolves the story from the database using storyId in request params
+ * - Attaches the story context to request.storyContext
+ * - Attaches the user's story role to request.userStoryRole
+ * - If story not found, responds with 404 and stops request processing.
  */
-async function loadStoryContext(request: FastifyRequest, reply: FastifyReply): Promise<void> {
-  const { storyId } = request.params as { storyId: string };
+export async function loadStoryContext(request: FastifyRequest, reply: FastifyReply) {
+  const storyId = extractStoryIdFromRequest(request);
 
   if (!storyId) {
     return reply.code(HTTP_STATUS.BAD_REQUEST.code).send({
       success: false,
       error: 'Bad Request',
-      message: 'Story ID is required.',
+      message: 'Story ID is required in the request.',
     });
   }
 
-  const storyService = container.resolve<StoryService>(TOKENS.StoryService);
-  const storyCollaboratorService = container.resolve<StoryCollaboratorService>(
-    TOKENS.StoryCollaboratorService
+  const storyQueryService = container.resolve<StoryQueryService>(TOKENS.StoryQueryService);
+  const collaboratorQueryService = container.resolve<CollaboratorQueryService>(
+    TOKENS.CollaboratorQueryService
   );
 
-  const story = await storyService.getStoryById(storyId);
+  try {
+    const story = await storyQueryService.getById(storyId);
 
-  if (!story) {
-    return reply.code(HTTP_STATUS.NOT_FOUND.code).send({
-      success: false,
-      error: 'Not Found',
-      message: 'Story not found.',
-    });
-  }
+    request.storyContext = {
+      storyId: story._id.toString(),
+      creatorId: story.creatorId,
+      status: story.status,
+    };
 
-  request.storyContext = {
-    storyId: story._id.toString(),
-    creatorId: story.creatorId,
-    status: story.status,
-  };
-
-  if (request.user) {
-    const userId = request.user.clerkId;
-    request.userStoryRole = await storyCollaboratorService.getCollaboratorRole(userId, story.slug);
-  } else {
-    request.userStoryRole = null;
+    if (request.user) {
+      const userId = request.user.clerkId;
+      request.userStoryRole = await collaboratorQueryService.getCollaboratorRole(
+        userId,
+        story.slug
+      );
+    } else {
+      request.userStoryRole = null;
+    }
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'statusCode' in error && error.statusCode === 404) {
+      return reply.code(HTTP_STATUS.NOT_FOUND.code).send({
+        success: false,
+        error: 'Not Found',
+        message: 'Story not found.',
+      });
+    }
+    throw error;
   }
 }
 
 /**
- * Load story context by slug - uses DI to resolve services
+ * Loads the story context by slug and attaches story role info to the request.
+ * This middleware assumes that the user is already authenticated and user info is attached to request.user.
+ *
+ * @responsibility
+ * - Resolves the story from the database using slug in request params
+ * - Attaches the story context to request.storyContext
+ * - Attaches the user's story role to request.userStoryRole
+ * - If story not found, responds with 404 and stops request processing.
  */
-async function loadStoryContextBySlug(request: FastifyRequest, reply: FastifyReply): Promise<void> {
-  const { slug } = request.params as { slug: string };
+export async function loadStoryContextBySlug(request: FastifyRequest, reply: FastifyReply) {
+  const slug = extractSlugFromRequest(request);
 
   if (!slug) {
     return reply.code(HTTP_STATUS.BAD_REQUEST.code).send({
       success: false,
       error: 'Bad Request',
-      message: 'Story slug is required.',
+      message: 'Story slug is required in the request.',
     });
   }
 
-  const storyService = container.resolve<StoryService>(TOKENS.StoryService);
-  const storyCollaboratorService = container.resolve<StoryCollaboratorService>(
-    TOKENS.StoryCollaboratorService
+  const storyQueryService = container.resolve<StoryQueryService>(TOKENS.StoryQueryService);
+  const collaboratorQueryService = container.resolve<CollaboratorQueryService>(
+    TOKENS.CollaboratorQueryService
   );
 
-  const story = await storyService.getStoryBySlug(slug);
+  try {
+    const story = await storyQueryService.getBySlug(slug);
 
-  if (!story) {
-    return reply.code(HTTP_STATUS.NOT_FOUND.code).send({
-      success: false,
-      error: 'Not Found',
-      message: 'Story not found.',
-    });
+    request.storyContext = {
+      storyId: story._id.toString(),
+      creatorId: story.creatorId,
+      status: story.status,
+    };
+
+    if (request.user) {
+      const userId = request.user.clerkId;
+      request.userStoryRole = await collaboratorQueryService.getCollaboratorRole(
+        userId,
+        story._id.toString()
+      );
+    } else {
+      request.userStoryRole = null;
+    }
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'statusCode' in error && error.statusCode === 404) {
+      return reply.code(HTTP_STATUS.NOT_FOUND.code).send({
+        success: false,
+        error: 'Not Found',
+        message: 'Story not found.',
+      });
+    }
+    throw error;
   }
-
-  request.storyContext = {
-    storyId: story._id.toString(),
-    creatorId: story.creatorId,
-    status: story.status,
-  };
-
-  if (request.user) {
-    const userId = request.user.clerkId;
-    request.userStoryRole = await storyCollaboratorService.getCollaboratorRole(
-      userId,
-      story._id.toString()
-    );
-  } else {
-    request.userStoryRole = null;
-  }
 }
 
-function requireStoryRole(
-  minimumRole: TStoryCollaboratorRole,
-  options: { allowPlatformOverride?: boolean } = {}
-) {
-  const { allowPlatformOverride = true } = options;
+/**
+ * Story role guard functions for RBAC.
+ * These middlewares check if the user has the required role to perform an action.
+ * They must be used AFTER loadStoryContext or loadStoryContextBySlug middleware.
+ */
+export const StoryRoleGuards = {
+  /**
+   * Checks if the user can write chapters.
+   * Allowed roles: OWNER, CO_OWNER, CONTRIBUTOR
+   */
+  canWriteChapters: async (request: FastifyRequest, reply: FastifyReply) => {
+    const userRole = request.userStoryRole;
 
-  return async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
-    const user = request.user;
-    const userStoryRole = request.userStoryRole;
-
-    if (!user) {
-      return reply.code(HTTP_STATUS.UNAUTHORIZED.code).send({
-        success: false,
-        error: 'Authentication required',
-        message: 'You must be logged in to access this resource.',
-      });
-    }
-
-    if (allowPlatformOverride) {
-      const platformRole = user.role as PlatformRole;
-      if (
-        PlatformRoleRules.hasPermission(platformRole, 'canDeleteAnyContent') ||
-        platformRole === PlatformRole.SUPER_ADMIN
-      ) {
-        return;
-      }
-    }
-
-    if (!userStoryRole) {
+    if (!userRole || !WRITE_CHAPTER_ROLES.includes(userRole)) {
       return reply.code(HTTP_STATUS.FORBIDDEN.code).send({
         success: false,
-        error: 'Access denied',
-        message: 'You are not a collaborator on this story.',
+        error: 'Forbidden',
+        message: 'You do not have permission to write chapters for this story.',
       });
     }
+  },
 
-    if (!StoryCollaboratorRules.hasMinimumStoryRole(userStoryRole, minimumRole)) {
+  /**
+   * Checks if the user can edit story settings (including cover/card images).
+   * Allowed roles: OWNER, CO_AUTHOR
+   */
+  canEditStorySettings: async (request: FastifyRequest, reply: FastifyReply) => {
+    const userRole = request.userStoryRole;
+
+    if (!userRole || !EDIT_SETTINGS_ROLES.includes(userRole)) {
       return reply.code(HTTP_STATUS.FORBIDDEN.code).send({
         success: false,
-        error: 'Access denied',
-        message: `This action requires ${STORY_COLLABORATOR_ROLE_CONFIG[minimumRole]?.name || minimumRole} role or higher.`,
-        requiredRole: minimumRole,
-        yourRole: userStoryRole,
+        error: 'Forbidden',
+        message: 'You do not have permission to edit settings for this story.',
       });
     }
-  };
-}
+  },
 
-function requireStoryPermission(
-  permission: TStoryCollaboratorPermission,
-  options: { allowPlatformOverride?: boolean } = {}
-) {
-  const { allowPlatformOverride = true } = options;
+  /**
+   * Checks if the user can publish the story.
+   * Allowed roles: OWNER, CO_AUTHOR
+   */
+  canPublishStory: async (request: FastifyRequest, reply: FastifyReply) => {
+    const userRole = request.userStoryRole;
 
-  return async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
-    const user = request.user;
-    const userStoryRole = request.userStoryRole;
-
-    if (!user) {
-      return reply.code(HTTP_STATUS.UNAUTHORIZED.code).send({
-        success: false,
-        error: 'Authentication required',
-        message: 'You must be logged in to access this resource.',
-      });
-    }
-
-    if (allowPlatformOverride) {
-      const platformRole = user.role as PlatformRole;
-      if (
-        PlatformRoleRules.hasPermission(platformRole, 'canDeleteAnyContent') ||
-        platformRole === PlatformRole.SUPER_ADMIN
-      ) {
-        return;
-      }
-    }
-
-    if (!userStoryRole) {
+    if (!userRole || !PUBLISH_STORY_ROLES.includes(userRole)) {
       return reply.code(HTTP_STATUS.FORBIDDEN.code).send({
         success: false,
-        error: 'Access denied',
-        message: 'You are not a collaborator on this story.',
-        requiredPermission: permission,
+        error: 'Forbidden',
+        message: 'You do not have permission to publish this story.',
       });
     }
-
-    if (!StoryCollaboratorRules.hasStoryPermission(userStoryRole, permission)) {
-      return reply.code(HTTP_STATUS.FORBIDDEN.code).send({
-        success: false,
-        error: 'Access denied',
-        message: `Your role (${STORY_COLLABORATOR_ROLE_CONFIG[userStoryRole]?.name || userStoryRole}) does not have permission to perform this action.`,
-        requiredPermission: permission,
-        yourRole: userStoryRole,
-      });
-    }
-  };
-}
-
-const StoryRoleGuards = {
-  loadContext: loadStoryContext,
-
-  // Role guards
-  owner: requireStoryRole(StoryCollaboratorRole.OWNER),
-  coAuthor: requireStoryRole(StoryCollaboratorRole.CO_AUTHOR),
-  moderator: requireStoryRole(StoryCollaboratorRole.MODERATOR),
-  reviewer: requireStoryRole(StoryCollaboratorRole.REVIEWER),
-  contributor: requireStoryRole(StoryCollaboratorRole.CONTRIBUTOR),
-
-  // Permission guards
-  canWriteChapters: requireStoryPermission('canWriteChapters'),
-  canApprovePRs: requireStoryPermission('canApprovePRs'),
-  canRejectPRs: requireStoryPermission('canRejectPRs'),
-  canMergePRs: requireStoryPermission('canMergePRs'),
-  canReviewPRs: requireStoryPermission('canReviewPRs'),
-  canModerateComments: requireStoryPermission('canModerateComments'),
-  canDeleteComments: requireStoryPermission('canDeleteComments'),
-  canEditSettings: requireStoryPermission('canEditStorySettings'),
-  canDeleteStory: requireStoryPermission('canDeleteStory'),
-  canInvite: requireStoryPermission('canInviteCollaborators'),
-  canRemoveCollaborators: requireStoryPermission('canRemoveCollaborators'),
-  canBanFromStory: requireStoryPermission('canBanFromStory'),
-};
-
-export {
-  loadStoryContext,
-  loadStoryContextBySlug,
-  requireStoryRole,
-  requireStoryPermission,
-  StoryRoleGuards,
+  },
 };

@@ -7,7 +7,7 @@ import {
   GetUserByIdSchema,
   GetUserByUsernameSchema,
   LoginUserSchema,
-} from '@schema/user.schema';
+} from '@schema/request/user.schema';
 import { UserResponses } from '@schema/response.schema';
 import { container } from 'tsyringe';
 import { TOKENS } from '@/container';

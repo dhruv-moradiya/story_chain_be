@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { UserCreateDTO, SessionCreateDTO } from '@schema/user.schema';
+import { UserCreateDTO, SessionCreateDTO } from '@schema/request/user.schema';
 
 interface ILoginUserDTO {
   userId: string;

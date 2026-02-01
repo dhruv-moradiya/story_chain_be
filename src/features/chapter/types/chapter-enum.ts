@@ -1,11 +1,12 @@
 enum ChapterStatus {
+  DRAFT = 'draft',
   PUBLISHED = 'published',
   PENDING_APPROVAL = 'pending_approval',
   REJECTED = 'rejected',
   DELETED = 'deleted',
 }
 
-const CHAPTER_STATUSES = ['published', 'pending_approval', 'rejected', 'deleted'] as const;
+const CHAPTER_STATUSES = ['draft', 'published', 'pending_approval', 'rejected', 'deleted'] as const;
 
 enum ChapterPRStatus {
   PENDING = 'pending',

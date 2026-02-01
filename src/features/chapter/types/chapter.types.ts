@@ -14,6 +14,7 @@ export type TChapterPRStatus = (typeof CHAPTER_PR_STATUSES)[number];
  */
 export interface IChapter {
   _id: ID;
+  slug: string;
   storyId: ID;
 
   parentChapterId?: ID | null;
@@ -27,7 +28,7 @@ export interface IChapter {
   votes: {
     upvotes: number;
     downvotes: number;
-    score: number; // Derived metric for ranking
+    score: number;
   };
 
   status: TChapterStatus;

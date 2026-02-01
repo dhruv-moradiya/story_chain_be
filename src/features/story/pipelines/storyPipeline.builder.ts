@@ -2,6 +2,7 @@ import { PipelineStage } from 'mongoose';
 import { ID } from '@/types';
 import { IStorySettings } from '../types/story.types';
 import { StoryCollaboratorStatus } from '@/features/storyCollaborator/types/storyCollaborator-enum';
+import { StoryStatus } from '../types/story-enum';
 
 class StoryPipelineBuilder {
   private pipeline: PipelineStage[] = [];
@@ -13,6 +14,15 @@ class StoryPipelineBuilder {
     this.pipeline.push({
       $match: {
         createdAt: { $gte: sevenDaysAgo, $lt: new Date() },
+      },
+    });
+    return this;
+  }
+
+  isPublished() {
+    this.pipeline.push({
+      $match: {
+        status: StoryStatus.PUBLISHED,
       },
     });
     return this;

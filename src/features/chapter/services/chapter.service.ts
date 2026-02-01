@@ -3,7 +3,8 @@ import { TOKENS } from '@container/tokens';
 import { ID, IOperationOptions } from '@/types';
 import { BaseModule } from '@utils/baseClass';
 import { IChapter } from '../types/chapter.types';
-import { IChapterAddChildDTO, TChapterAddRootDTO } from '../dto/chapter.dto';
+import { TChapterAddRootDTO, ICreateChildChapterSimpleDTO } from '../dto/chapter.dto';
+import { createSlug } from '@utils/helpter';
 import {
   ChapterRepository,
   IChapterDetails,
@@ -18,15 +19,6 @@ export interface IChapterCreateInput {
   content: string;
   title: string;
   userId: string;
-}
-
-// Simplified input for creating child chapter (without requiring ancestorIds, depth, status)
-export interface ICreateChildChapterInput {
-  storyId: string;
-  userId: string;
-  parentChapterId: string;
-  title: string;
-  content: string;
 }
 
 @singleton()
@@ -66,35 +58,25 @@ export class ChapterService extends BaseModule {
     return chapter;
   }
 
-  async createChildChapter(input: IChapterAddChildDTO, options: IOperationOptions = {}) {
-    const { storyId, userId, title, content, parentChapterId } = input;
-
-    const chapter = this.chapterRepo.create(
-      {
-        storyId,
-        parentChapterId,
-        ancestorIds: [],
-        depth: 0,
-        authorId: userId,
-        title: title.trim(),
-        content: content.trim(),
-        status: ChapterStatus.PUBLISHED,
-      },
-      { session: options.session }
-    );
-
-    return chapter;
-  }
-
   /**
-   * Create a child chapter with simplified input
-   * Automatically sets ancestorIds, depth, and status
+   * Create a child chapter
+   * Automatically sets ancestorIds, depth, status defaults to PUBLISHED, and generates slug
    */
   async createChildChapterSimple(
-    input: ICreateChildChapterInput,
+    input: ICreateChildChapterSimpleDTO,
     options: IOperationOptions = {}
   ): Promise<IChapter> {
-    const { storyId, userId, title, content, parentChapterId } = input;
+    const {
+      storyId,
+      userId,
+      title,
+      content,
+      parentChapterId,
+      status = ChapterStatus.PUBLISHED,
+    } = input;
+
+    // Generate slug with suffix for uniqueness
+    const slug = createSlug(title, { addSuffix: true });
 
     // TODO: In future, calculate ancestorIds and depth from parent chapter
     // For now, set to defaults (similar to existing createChildChapter)
@@ -107,7 +89,8 @@ export class ChapterService extends BaseModule {
         authorId: userId,
         title: title.trim(),
         content: content.trim(),
-        status: ChapterStatus.PUBLISHED,
+        status,
+        slug,
       },
       { session: options.session }
     );

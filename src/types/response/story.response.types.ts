@@ -71,3 +71,18 @@ export type {
   IStoryCreator,
   IStoryWithCreator,
 };
+
+// Domain validation types
+export interface PublishValidationResult {
+  canPublish: boolean;
+  errors: string[];
+}
+
+export interface StatsUpdate {
+  totalChapters?: number;
+  totalBranches?: number;
+  totalReads?: number;
+  totalVotes?: number;
+  uniqueContributors?: number;
+  averageRating?: number;
+}

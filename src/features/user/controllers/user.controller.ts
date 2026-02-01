@@ -8,7 +8,7 @@ import {
   TGetUserByIdSchema,
   TGetUserByUsernameSchema,
   TLoginUserSchema,
-} from '@schema/user.schema';
+} from '@schema/request/user.schema';
 import { UserService } from '../services/user.service';
 import { UserTransformer } from '@transformer/user.transformer';
 import { inject, singleton } from 'tsyringe';

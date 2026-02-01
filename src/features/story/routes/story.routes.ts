@@ -21,8 +21,9 @@ import {
   StoryUpdateCardImageSchema,
   StoryUpdateCoverImageSchema,
   StoryUpdateSettingSchema,
-} from '@schema/story.schema';
+} from '@schema/request/story.schema';
 import { type StoryController } from '../controllers/story.controller';
+import { type StoryCollaboratorController } from '@features/storyCollaborator/controllers/storyCollaborator.controller';
 
 // Story API Routes - following chapterAutoSave pattern
 const StoryApiRoutes = {
@@ -62,6 +63,9 @@ export { StoryApiRoutes };
 
 export async function storyRoutes(fastify: FastifyInstance) {
   const storyController = container.resolve<StoryController>(TOKENS.StoryController);
+  const storyCollaboratorController = container.resolve<StoryCollaboratorController>(
+    TOKENS.StoryCollaboratorController
+  );
 
   // ===============================
   // STORY ROUTES (BY ID)
@@ -261,7 +265,7 @@ export async function storyRoutes(fastify: FastifyInstance) {
   fastify.post(
     StoryApiRoutes.PublishBySlug,
     {
-      preHandler: [validateAuth],
+      preHandler: [validateAuth, loadStoryContextBySlug, StoryRoleGuards.canPublishStory],
       schema: {
         description: 'Publish a story by slug',
         tags: ['Stories'],
@@ -293,7 +297,7 @@ export async function storyRoutes(fastify: FastifyInstance) {
   fastify.post(
     StoryApiRoutes.UpdateSettingsBySlug,
     {
-      preHandler: [validateAuth],
+      preHandler: [validateAuth, loadStoryContextBySlug, StoryRoleGuards.canEditStorySettings],
       schema: {
         description: 'Update story settings by slug',
         tags: ['Stories'],
@@ -319,7 +323,7 @@ export async function storyRoutes(fastify: FastifyInstance) {
         response: CollaboratorResponses.collaboratorList,
       },
     },
-    storyController.getStoryCollaboratorsBySlug
+    storyCollaboratorController.getStoryCollaboratorsBySlug
   );
 
   // Create invitation for collaborator by slug
@@ -336,7 +340,7 @@ export async function storyRoutes(fastify: FastifyInstance) {
         response: CollaboratorResponses.collaboratorCreated,
       },
     },
-    storyController.createInvitationBySlug
+    storyCollaboratorController.createInvitationBySlug
   );
 
   fastify.post(
@@ -351,7 +355,7 @@ export async function storyRoutes(fastify: FastifyInstance) {
         response: StoryResponses.acceptInvitation,
       },
     },
-    storyController.acceptInvitation
+    storyCollaboratorController.acceptInvitation
   );
 
   fastify.post(
@@ -366,7 +370,7 @@ export async function storyRoutes(fastify: FastifyInstance) {
         response: StoryResponses.declineInvitation,
       },
     },
-    storyController.declineInvitation
+    storyCollaboratorController.declineInvitation
   );
 
   // Add a chapter to a story by slug
@@ -436,7 +440,7 @@ export async function storyRoutes(fastify: FastifyInstance) {
   fastify.patch(
     StoryApiRoutes.UpdateStoryCoverImageBySlug,
     {
-      // preHandler: [validateAuth],
+      preHandler: [validateAuth, loadStoryContextBySlug, StoryRoleGuards.canEditStorySettings],
       schema: {
         description: 'Update story cover image by slug',
         tags: ['Stories'],
@@ -452,7 +456,7 @@ export async function storyRoutes(fastify: FastifyInstance) {
   fastify.patch(
     StoryApiRoutes.UpdateStoryCardImageBySlug,
     {
-      preHandler: [validateAuth],
+      preHandler: [validateAuth, loadStoryContextBySlug, StoryRoleGuards.canEditStorySettings],
       schema: {
         description: 'Update story card image by slug',
         tags: ['Stories'],
