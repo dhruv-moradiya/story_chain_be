@@ -53,7 +53,7 @@ export class AutoSaveLifecycleService extends BaseModule implements IAutoSaveLif
           storyId: storyId as Types.ObjectId,
           title: input.title,
           content: input.content,
-          parentChapterId: input.parentChapterId as unknown as Types.ObjectId,
+          parentChapterSlug: input.parentChapterSlug as unknown as string,
         };
         break;
       case 'update_chapter':
@@ -64,7 +64,7 @@ export class AutoSaveLifecycleService extends BaseModule implements IAutoSaveLif
           title: input.title,
           content: input.content,
           chapterId: input.chapterId as unknown as Types.ObjectId,
-          parentChapterId: input.parentChapterId as unknown as Types.ObjectId,
+          parentChapterSlug: input.parentChapterSlug as unknown as string,
         };
         break;
     }

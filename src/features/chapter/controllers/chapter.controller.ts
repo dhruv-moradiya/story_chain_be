@@ -5,13 +5,13 @@ import { HTTP_STATUS } from '@constants/httpStatus';
 import { ApiResponse } from '@utils/apiResponse';
 import { BaseModule } from '@utils/baseClass';
 import { catchAsync } from '@utils/catchAsync';
-import { ChapterService } from '../services/chapter.service';
+import { ChapterQueryService } from '../services/chapter-query.service';
 
 @singleton()
 export class ChapterController extends BaseModule {
   constructor(
-    @inject(TOKENS.ChapterService)
-    private readonly chapterService: ChapterService
+    @inject(TOKENS.ChapterQueryService)
+    private readonly chapterQueryService: ChapterQueryService
   ) {
     super();
   }
@@ -23,7 +23,7 @@ export class ChapterController extends BaseModule {
   getMyChapters = catchAsync(async (request: FastifyRequest, reply: FastifyReply) => {
     const userId = request.user.clerkId;
 
-    const chapters = await this.chapterService.getChaptersByUser(userId);
+    const chapters = await this.chapterQueryService.getByAuthor(userId);
 
     return reply
       .code(HTTP_STATUS.OK.code)
@@ -46,7 +46,7 @@ export class ChapterController extends BaseModule {
     async (request: FastifyRequest<{ Params: { chapterId: string } }>, reply: FastifyReply) => {
       const { chapterId } = request.params;
 
-      const chapter = await this.chapterService.getChapterDetails(chapterId);
+      const chapter = await this.chapterQueryService.getDetails(chapterId);
 
       if (!chapter) {
         return reply

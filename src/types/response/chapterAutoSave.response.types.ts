@@ -21,7 +21,7 @@ interface IEnableAutoSaveNewChapter {
   storyId: ID;
   title: string;
   content: string;
-  parentChapterId: ID;
+  parentChapterSlug?: string;
 }
 
 interface IEnableAutoSaveUpdateChapter {
@@ -31,7 +31,7 @@ interface IEnableAutoSaveUpdateChapter {
   title: string;
   content: string;
   chapterId: ID;
-  parentChapterId: ID;
+  parentChapterSlug?: string;
 }
 
 type TEnableAutoSaveInput =

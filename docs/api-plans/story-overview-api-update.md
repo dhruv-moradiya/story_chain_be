@@ -151,13 +151,16 @@ Before enhancing the overview API, we need to add support for hierarchical chapt
 Current `chapterNumber` is a simple integer, but branching stories need path-based numbering:
 
 ```
-├── Chapter 1 (depth: 0) → displays as "1"
-│   ├── Chapter 1.1 (depth: 1) → displays as "1.1"
-│   └── Chapter 1.2 (depth: 1) → displays as "1.2"
-│       └── Chapter 1.2.1 (depth: 2) → displays as "1.2.1"
-└── Chapter 2 (depth: 0) → displays as "2"
-    ├── Chapter 2.1 → displays as "2.1"
-    └── Chapter 2.2 → displays as "2.2"
+└── Chapter 1 (Root, depth: 0) → displays as "1"
+    ├── Chapter 1.1 (Branch B, depth: 1) → displays as "1.1"
+    │   ├── Chapter 1.1.1 (Branch B.1, depth: 2) → displays as "1.1.1"
+    │   │   ├── Chapter 1.1.1.1 (Branch B.1.1, depth: 3) → displays as "1.1.1.1"
+    │   │   └── Chapter 1.1.1.2 (Branch B.1.2, depth: 3) → displays as "1.1.1.2"
+    │   ├── Chapter 1.1.2 (Branch B.2, depth: 2) → displays as "1.1.2"
+    │   └── Chapter 1.1.3 (Branch B.3, depth: 2) → displays as "1.1.3"
+    └── Chapter 1.2 (Branch C, depth: 1) → displays as "1.2"
+        ├── Chapter 1.2.1 (Branch C.1, depth: 2) → displays as "1.2.1"
+        └── Chapter 1.2.2 (Branch C.2, depth: 2) → displays as "1.2.2"
 ```
 
 #### Solution: Branch Index Approach
@@ -309,13 +312,13 @@ for (const story of stories) {
 
 #### Example Output
 
-| Chapter  | parentChapterId | depth | branchIndex | displayNumber |
-| -------- | --------------- | ----- | ----------- | ------------- |
-| Prologue | null            | 0     | 1           | "1"           |
-| Act 1    | null            | 0     | 2           | "2"           |
-| Scene 1a | Act 1's ID      | 1     | 1           | "2.1"         |
-| Scene 1b | Act 1's ID      | 1     | 2           | "2.2"         |
-| Variant  | Scene 1b's ID   | 2     | 1           | "2.2.1"       |
+| Chapter       | parentChapterId | depth | branchIndex | displayNumber |
+| ------------- | --------------- | ----- | ----------- | ------------- |
+| Chapter 1     | null            | 0     | 1           | "1"           |
+| Chapter 1.1   | Ch 1's ID       | 1     | 1           | "1.1"         |
+| Chapter 1.2   | Ch 1's ID       | 1     | 2           | "1.2"         |
+| Chapter 1.1.1 | Ch 1.1's ID     | 2     | 1           | "1.1.1"       |
+| Chapter 1.1.2 | Ch 1.1's ID     | 2     | 2           | "1.1.2"       |
 
 ---
 

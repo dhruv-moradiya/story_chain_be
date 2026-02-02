@@ -12,15 +12,15 @@ function buildChapterTree(chapters: IChapter[]) {
   const roots: TChapterNode[] = [];
 
   chapters.forEach((chapter) => {
-    chapterMap[chapter._id.toString()] = { ...chapter, children: [] };
+    chapterMap[chapter.slug] = { ...chapter, children: [] };
   });
 
   chapters.forEach((chapter) => {
-    const node = chapterMap[chapter._id.toString()];
-    if (chapter.parentChapterId) {
-      chapterMap[chapter.parentChapterId.toString()].children.push(node);
+    const node = chapterMap[chapter.slug];
+    if (chapter.parentChapterSlug) {
+      chapterMap[chapter.parentChapterSlug].children.push(node);
     } else {
-      roots.push(chapterMap[chapter._id.toString()]);
+      roots.push(chapterMap[chapter.slug]);
     }
   });
 

@@ -22,12 +22,30 @@ export class ChapterRepository extends BaseRepository<IChapter, IChapterDoc> {
       .exec();
   }
 
-  async findRoot(storyId: string): Promise<IChapter | null> {
-    return this.model.findOne({ storyId, parentChapterId: null }).lean<IChapter>().exec();
+  async countSiblings(
+    storySlug: string,
+    parentChapterSlug: string | null,
+    options: IOperationOptions = {}
+  ): Promise<number> {
+    const query = this.model.countDocuments({
+      storySlug,
+      parentChapterSlug,
+      status: { $in: ['PUBLISHED', 'DRAFT'] },
+    });
+
+    if (options.session) {
+      query.session(options.session);
+    }
+
+    return query.exec();
   }
 
-  async countByAuthorInStory(authorId: string, storyId: string): Promise<number> {
-    return this.model.countDocuments({ authorId, storyId }).exec();
+  async findRoot(storySlug: string): Promise<IChapter | null> {
+    return this.model.findOne({ storySlug, parentChapterSlug: null }).lean<IChapter>().exec();
+  }
+
+  async countByAuthorInStory(authorId: string, storySlug: string): Promise<number> {
+    return this.model.countDocuments({ authorId, storySlug }).exec();
   }
 
   async updateById(
@@ -51,8 +69,16 @@ export class ChapterRepository extends BaseRepository<IChapter, IChapterDoc> {
     );
   }
 
-  async findByStoryId(storyId: string): Promise<IChapter[]> {
-    return this.model.find({ storyId }).lean().exec();
+  async findByStorySlug(storySlug: string): Promise<IChapter[]> {
+    return this.model.find({ storySlug }).lean<IChapter[]>().exec();
+  }
+
+  async findBySlug(
+    slug: string,
+    projection: any = {},
+    options: QueryOptions = {}
+  ): Promise<IChapter | null> {
+    return this.model.findOne({ slug }, projection, options).lean<IChapter>().exec();
   }
 
   /**
@@ -64,8 +90,8 @@ export class ChapterRepository extends BaseRepository<IChapter, IChapterDoc> {
       {
         $lookup: {
           from: 'stories',
-          localField: 'storyId',
-          foreignField: '_id',
+          localField: 'storySlug',
+          foreignField: 'slug',
           as: 'story',
         },
       },
@@ -112,8 +138,8 @@ export class ChapterRepository extends BaseRepository<IChapter, IChapterDoc> {
       {
         $lookup: {
           from: 'stories',
-          localField: 'storyId',
-          foreignField: '_id',
+          localField: 'storySlug',
+          foreignField: 'slug',
           as: 'story',
         },
       },
@@ -133,7 +159,7 @@ export class ChapterRepository extends BaseRepository<IChapter, IChapterDoc> {
           title: 1,
           content: 1,
           status: 1,
-          parentChapterId: 1,
+          parentChapterSlug: 1,
           depth: 1,
           chapterNumber: 1,
           isEnding: 1,
@@ -207,7 +233,7 @@ export interface IChapterDetails {
   title: string;
   content: string;
   status: string;
-  parentChapterId?: string;
+  parentChapterSlug?: string;
   depth: number;
   chapterNumber?: number;
   isEnding: boolean;

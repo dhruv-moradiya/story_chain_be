@@ -43,7 +43,9 @@ import { AutoSaveQueryService } from '@features/chapterAutoSave/services/autosav
 import { AutoSaveLifecycleService } from '@features/chapterAutoSave/services/autosave-lifecycle.service';
 import { AutoSaveContentService } from '@features/chapterAutoSave/services/autosave-content.service';
 import { AutoSaveConversionService } from '@features/chapterAutoSave/services/autosave-conversion.service';
-import { ChapterService } from '@features/chapter/services/chapter.service';
+
+import { ChapterCrudService } from '@features/chapter/services/chapter-crud.service';
+import { ChapterQueryService } from '@features/chapter/services/chapter-query.service';
 
 // ═══════════════════════════════════════════
 // CONTROLLERS
@@ -104,7 +106,9 @@ export function registerServices(): void {
   container.register(TOKENS.CollaboratorLifecycleService, {
     useClass: CollaboratorLifecycleService,
   });
-  container.register(TOKENS.ChapterService, { useClass: ChapterService });
+
+  container.register(TOKENS.ChapterCrudService, { useClass: ChapterCrudService });
+  container.register(TOKENS.ChapterQueryService, { useClass: ChapterQueryService });
   container.register(TOKENS.StoryCrudService, { useClass: StoryCrudService });
   container.register(TOKENS.StoryQueryService, { useClass: StoryQueryService });
   container.register(TOKENS.StoryMediaService, { useClass: StoryMediaService });

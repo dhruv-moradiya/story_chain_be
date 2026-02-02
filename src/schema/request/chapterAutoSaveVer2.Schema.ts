@@ -28,14 +28,14 @@ const EnableAutoSaveSchemaVer2RootChapter = BaseAutoSaveContentSchema.extend({
 const EnableAutoSaveSchemaVer2NewChapter = BaseAutoSaveContentSchema.extend({
   autoSaveType: z.literal('new_chapter'),
   storySlug: z.string(),
-  parentChapterId: z.string(),
+  parentChapterSlug: z.string(),
 }).passthrough();
 
 const EnableAutoSaveSchemaVer2UpdateChapter = BaseAutoSaveContentSchema.extend({
   autoSaveType: z.literal('update_chapter'),
   storySlug: z.string(),
   chapterId: z.string(),
-  parentChapterId: z.string(),
+  parentChapterSlug: z.string(),
 }).passthrough();
 
 // When autoSaveId is provided, storySlug is optional
@@ -61,14 +61,14 @@ const AutoSaveContentSchemaVer2NewChapter = BaseAutoSaveContentSchema.extend({
   autoSaveId: ObjectIdSchema().optional(),
   autoSaveType: z.literal('new_chapter'),
   storySlug: z.string(),
-  parentChapterId: ObjectIdSchema(),
+  parentChapterSlug: z.string(),
 }).passthrough();
 
 const AutoSaveContentSchemaVer2UpdateChapter = BaseAutoSaveContentSchema.extend({
   autoSaveId: ObjectIdSchema().optional(),
   autoSaveType: z.literal('update_chapter'),
   storySlug: z.string(),
-  parentChapterId: ObjectIdSchema(),
+  parentChapterSlug: z.string(),
   chapterId: ObjectIdSchema(),
 }).passthrough();
 

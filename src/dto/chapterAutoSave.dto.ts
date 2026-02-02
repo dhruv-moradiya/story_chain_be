@@ -22,7 +22,7 @@ interface IAutoSaveContentDTO {
   title: string;
   autoSaveType: TSaveType;
   storySlug: string;
-  parentChapterId?: ID;
+  parentChapterSlug?: string;
 }
 
 interface IDisableAutoSaveDTO {
@@ -30,7 +30,7 @@ interface IDisableAutoSaveDTO {
   userId: string;
   autoSaveType: TSaveType;
   storySlug: string;
-  parentChapterId?: ID;
+  parentChapterSlug?: string;
 }
 
 interface IGetAutoSaveDraftDTO {

@@ -11,7 +11,7 @@ const StorySlugSchema = z.string({
   invalid_type_error: 'storySlug must be a string.',
 });
 
-const ParentChapterIdSchema = ObjectIdSchema().optional();
+const ParentChapterSlugSchema = z.string().optional();
 const ChapterIdSchema = ObjectIdSchema().optional();
 const AutoSaveIdSchema = ObjectIdSchema().optional();
 
@@ -47,8 +47,8 @@ const RootChapterAutoSaveSchema = BaseAutoSaveContentSchema.extend({
 const NewChapterAutoSaveSchema = BaseAutoSaveContentSchema.extend({
   autoSaveType: z.literal('new_chapter'),
   storySlug: StorySlugSchema,
-  parentChapterId: z.string({
-    required_error: 'parentChapterId is required for new chapter.',
+  parentChapterSlug: z.string({
+    required_error: 'parentChapterSlug is required for new chapter.',
   }),
   autoSaveId: AutoSaveIdSchema,
 });
@@ -59,7 +59,7 @@ const UpdateAutoSaveSchema = BaseAutoSaveContentSchema.extend({
   chapterId: z.string({
     required_error: 'chapterId is required for update.',
   }),
-  parentChapterId: ParentChapterIdSchema,
+  parentChapterSlug: ParentChapterSlugSchema,
   autoSaveId: AutoSaveIdSchema,
 });
 
@@ -76,7 +76,7 @@ const EnableAutoSaveSchema = z
     draftId: z.string().optional(),
     autoSaveType: SaveTypeSchema,
     storySlug: StorySlugSchema,
-    parentChapterId: ParentChapterIdSchema,
+    parentChapterSlug: ParentChapterSlugSchema,
     autoSaveId: AutoSaveIdSchema,
   })
   .refine((data) => data.chapterId || data.draftId || data.autoSaveId, {
@@ -92,13 +92,13 @@ const EnableAutoSaveSchema = z
         return data.storySlug;
       }
       if (data.autoSaveType === 'new_chapter') {
-        return data.parentChapterId && data.storySlug;
+        return data.parentChapterSlug && data.storySlug;
       }
       return false;
     },
     {
       message:
-        'For update: chapterId & storySlug required. For root_chapter: storySlug required. For new_chapter: parentChapterId & storySlug required.',
+        'For update: chapterId & storySlug required. For root_chapter: storySlug required. For new_chapter: parentChapterSlug & storySlug required.',
       path: ['autoSaveType'],
     }
   );
@@ -110,7 +110,7 @@ const DisableAutoSaveSchema = z
     draftId: z.string().optional(),
     autoSaveType: SaveTypeSchema,
     storySlug: StorySlugSchema,
-    parentChapterId: ParentChapterIdSchema,
+    parentChapterSlug: ParentChapterSlugSchema,
     autoSaveId: AutoSaveIdSchema,
   })
   .refine((data) => data.chapterId || data.draftId || data.autoSaveId, {
