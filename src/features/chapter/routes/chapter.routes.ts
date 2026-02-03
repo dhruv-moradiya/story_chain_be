@@ -8,7 +8,12 @@ import { type ChapterController } from '../controllers/chapter.controller';
 // Chapter API Routes
 const ChapterApiRoutes = {
   GetMyChapters: '/my',
+
+  // ID
   GetChapterById: '/:chapterId',
+
+  // Slug
+  GetChapterBySlug: '/slug/:chapterSlug',
 
   CreateChildChapter: '/child',
 } as const;
@@ -37,26 +42,26 @@ export async function chapterRoutes(fastify: FastifyInstance) {
   );
 
   /**
-   * Get chapter details by ID
+   * Get chapter details by slug
    * Response: full chapter info with story slug, story title, author details, stats, votes
    */
   fastify.get(
-    ChapterApiRoutes.GetChapterById,
+    ChapterApiRoutes.GetChapterBySlug,
     {
       schema: {
-        description: 'Get chapter details by ID with story and author info',
+        description: 'Get chapter details by slug with story and author info',
         tags: ['Chapters'],
         params: {
           type: 'object',
           properties: {
-            chapterId: { type: 'string', description: 'Chapter ID' },
+            chapterSlug: { type: 'string', description: 'Chapter slug' },
           },
-          required: ['chapterId'],
+          required: ['chapterSlug'],
         },
         response: ChapterResponses.chapterDetails,
       },
     },
-    chapterController.getChapterById
+    chapterController.getChapterBySlug
   );
 
   /**

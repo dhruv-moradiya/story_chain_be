@@ -1,10 +1,18 @@
 import { singleton } from 'tsyringe';
-import { ClientSession, PipelineStage, QueryOptions, Types, UpdateQuery } from 'mongoose';
+import {
+  ClientSession,
+  PipelineStage,
+  ProjectionType,
+  QueryOptions,
+  Types,
+  UpdateQuery,
+} from 'mongoose';
 
 import { Chapter } from '@models/chapter.model';
 import { IChapter, IChapterDoc } from '../types/chapter.types';
 import { BaseRepository } from '@utils/baseClass';
 import { IOperationOptions } from '@/types';
+import { ChapterStatus } from '../types/chapter-enum';
 
 @singleton()
 export class ChapterRepository extends BaseRepository<IChapter, IChapterDoc> {
@@ -30,7 +38,7 @@ export class ChapterRepository extends BaseRepository<IChapter, IChapterDoc> {
     const query = this.model.countDocuments({
       storySlug,
       parentChapterSlug,
-      status: { $in: ['PUBLISHED', 'DRAFT'] },
+      status: { $in: [ChapterStatus.PUBLISHED, ChapterStatus.DRAFT] },
     });
 
     if (options.session) {
@@ -75,58 +83,10 @@ export class ChapterRepository extends BaseRepository<IChapter, IChapterDoc> {
 
   async findBySlug(
     slug: string,
-    projection: any = {},
+    projection: ProjectionType<IChapter> | null = {},
     options: QueryOptions = {}
   ): Promise<IChapter | null> {
     return this.model.findOne({ slug }, projection, options).lean<IChapter>().exec();
-  }
-
-  /**
-   * Find all chapters by author with story slug populated
-   */
-  async findByAuthorWithStory(authorId: string): Promise<IChapterWithStory[]> {
-    return this.model.aggregate<IChapterWithStory>([
-      { $match: { authorId } },
-      {
-        $lookup: {
-          from: 'stories',
-          localField: 'storySlug',
-          foreignField: 'slug',
-          as: 'story',
-        },
-      },
-      { $unwind: '$story' },
-      {
-        $lookup: {
-          from: 'users',
-          localField: 'authorId',
-          foreignField: 'clerkId',
-          as: 'author',
-        },
-      },
-      { $unwind: { path: '$author', preserveNullAndEmptyArrays: true } },
-      {
-        $project: {
-          _id: 1,
-          title: 1,
-          status: 1,
-          pullRequest: 1,
-          stats: 1,
-          createdAt: 1,
-          updatedAt: 1,
-          storySlug: '$story.slug',
-          storyTitle: '$story.title',
-          author: {
-            clerkId: '$author.clerkId',
-            username: '$author.username',
-            firstName: '$author.firstName',
-            lastName: '$author.lastName',
-            imageUrl: '$author.imageUrl',
-          },
-        },
-      },
-      { $sort: { createdAt: -1 } },
-    ]);
   }
 
   /**
@@ -185,44 +145,6 @@ export class ChapterRepository extends BaseRepository<IChapter, IChapterDoc> {
 
     return results[0] || null;
   }
-
-  // async canUserEditChapter(userId: string, chapterId: string): Promise<boolean> {
-
-  // }
-}
-
-/**
- * Chapter with story slug populated (for user's chapter list)
- */
-export interface IChapterWithStory {
-  _id: string;
-  title: string;
-  status: string;
-  pullRequest: {
-    isPR: boolean;
-    prId?: string;
-    status?: string;
-    submittedAt?: Date;
-    reviewedBy?: string;
-    reviewedAt?: Date;
-    rejectionReason?: string;
-  };
-  stats: {
-    reads: number;
-    comments: number;
-    childBranches: number;
-  };
-  createdAt: Date;
-  updatedAt: Date;
-  storySlug: string;
-  storyTitle: string;
-  author: {
-    clerkId: string;
-    username: string;
-    firstName: string;
-    lastName: string;
-    imageUrl?: string;
-  };
 }
 
 /**

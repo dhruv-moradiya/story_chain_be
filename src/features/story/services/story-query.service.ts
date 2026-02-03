@@ -15,6 +15,7 @@ import { StoryRepository } from '../repositories/story.repository';
 import { StoryPipelineBuilder } from '../pipelines/storyPipeline.builder';
 import { IStory, IStorySettingsWithImages } from '../types/story.types';
 import { StoryStatus } from '../types/story-enum';
+import { PUBLIC_AUTHOR_PROJECTION } from '@/features/chapter/pipelines/chapter.projections';
 
 @singleton()
 class StoryQueryService extends BaseModule implements IStoryQueryService {
@@ -115,7 +116,7 @@ class StoryQueryService extends BaseModule implements IStoryQueryService {
 
     const pipeline = new ChapterPipelineBuilder()
       .loadChaptersForStory(story.slug)
-      .getAuthorDetails()
+      .attachAuthor({ project: PUBLIC_AUTHOR_PROJECTION })
       .buildChapterGraphNode()
       .build();
 

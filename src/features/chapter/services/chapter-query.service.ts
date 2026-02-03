@@ -1,14 +1,12 @@
-import { inject, singleton } from 'tsyringe';
-import { TOKENS } from '@container/tokens';
 import { ID, IOperationOptions } from '@/types';
+import { TOKENS } from '@container/tokens';
 import { BaseModule } from '@utils/baseClass';
+import { inject, singleton } from 'tsyringe';
+import { ChapterPipelineBuilder } from '../pipelines/chapterPipeline.builder';
+import { ChapterRepository } from '../repositories/chapter.repository';
 import { IChapter } from '../types/chapter.types';
-import {
-  ChapterRepository,
-  IChapterDetails,
-  IChapterWithStory,
-} from '../repositories/chapter.repository';
 import { IChapterQueryService } from './interfaces/chapter-query.interface';
+import { IChapterWithStoryResponse } from '@/types/response/chapter.response.types';
 
 @singleton()
 export class ChapterQueryService extends BaseModule implements IChapterQueryService {
@@ -17,6 +15,10 @@ export class ChapterQueryService extends BaseModule implements IChapterQueryServ
     private readonly chapterRepo: ChapterRepository
   ) {
     super();
+  }
+
+  async getBySlug(chapterSlug: string): Promise<IChapter | null> {
+    return this.chapterRepo.findBySlug(chapterSlug);
   }
 
   async getById(chapterId: ID, options: IOperationOptions = {}): Promise<IChapter | null> {
@@ -31,14 +33,36 @@ export class ChapterQueryService extends BaseModule implements IChapterQueryServ
   /**
    * Get all chapters created by a user with story info
    */
-  async getByAuthor(userId: string): Promise<IChapterWithStory[]> {
-    return this.chapterRepo.findByAuthorWithStory(userId);
+  async getByAuthor(authorId: string): Promise<IChapterWithStoryResponse[]> {
+    const pipeline = new ChapterPipelineBuilder()
+      .loadChaptersByAuthor(authorId)
+      .attachStory()
+      .attachAuthor()
+      .projectChapterWithStory()
+      .sortByCreatedAt()
+      .build();
+
+    return this.chapterRepo.aggregateChapters<IChapterWithStoryResponse>(pipeline);
   }
 
   /**
    * Get chapter details by ID with story and author info
    */
-  async getDetails(chapterId: string): Promise<IChapterDetails | null> {
-    return this.chapterRepo.findByIdWithDetails(chapterId);
-  }
+  // async getDetails(slug: string): Promise<IChapterDetails> {
+  //   const pipeline = new ChapterPipelineBuilder()
+  //     .findBySlug(slug)
+  //     .attachStory()
+  //     .attachAuthor()
+  //     .projectChapterWithStory()
+  //     .build();
+
+  //   const [chapter] = await this.chapterRepo.aggregateChapters(pipeline);
+  //   console.log('chapter', chapter);
+
+  //   if (!chapter) {
+  //     this.throwNotFoundError(`Chapter with slug ${slug} not found`);
+  //   }
+
+  //   return chapter;
+  // }
 }

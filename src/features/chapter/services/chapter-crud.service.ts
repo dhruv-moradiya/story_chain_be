@@ -156,6 +156,7 @@ export class ChapterCrudService extends BaseModule implements IChapterCrudServic
     const siblingCount = await this.chapterRepo.countSiblings(storySlug, parentChapterSlug, {
       session: options.session,
     });
+
     return siblingCount + 1;
   }
 

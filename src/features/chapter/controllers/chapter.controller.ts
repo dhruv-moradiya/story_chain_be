@@ -6,8 +6,8 @@ import { ApiResponse } from '@utils/apiResponse';
 import { BaseModule } from '@utils/baseClass';
 import { catchAsync } from '@utils/catchAsync';
 import { ChapterQueryService } from '../services/chapter-query.service';
-import { TCreateChapterSchema } from '@/schema/request/chapter.schema';
 import { ChapterCrudService } from '../services/chapter-crud.service';
+import { TCreateChapterSchema } from '@/schema/request/chapter.schema';
 
 @singleton()
 export class ChapterController extends BaseModule {
@@ -43,14 +43,14 @@ export class ChapterController extends BaseModule {
   });
 
   /**
-   * Get chapter details by ID
+   * Get chapter details by slug
    * Response includes: full chapter info with story slug, story title, and author details
    */
-  getChapterById = catchAsync(
-    async (request: FastifyRequest<{ Params: { chapterId: string } }>, reply: FastifyReply) => {
-      const { chapterId } = request.params;
+  getChapterBySlug = catchAsync(
+    async (request: FastifyRequest<{ Params: { chapterSlug: string } }>, reply: FastifyReply) => {
+      const { chapterSlug } = request.params;
 
-      const chapter = await this.chapterQueryService.getDetails(chapterId);
+      const chapter = await this.chapterQueryService.getBySlug(chapterSlug);
 
       if (!chapter) {
         return reply
