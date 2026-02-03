@@ -122,6 +122,6 @@ storySchema.index({ 'stats.totalReads': -1 });
 storySchema.index({ tags: 1 });
 storySchema.index({ title: 'text', description: 'text' });
 
-const Story = mongoose.model('Story', storySchema);
+const Story = mongoose.model<IStoryDoc>('Story', storySchema);
 
 export { Story };

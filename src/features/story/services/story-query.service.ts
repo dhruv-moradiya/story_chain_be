@@ -15,6 +15,7 @@ import { StoryRepository } from '../repositories/story.repository';
 import { StoryPipelineBuilder } from '../pipelines/storyPipeline.builder';
 import { IStory, IStorySettingsWithImages } from '../types/story.types';
 import { StoryStatus } from '../types/story-enum';
+import { PUBLIC_AUTHOR_PROJECTION } from '@/features/chapter/pipelines/chapter.projections';
 
 @singleton()
 class StoryQueryService extends BaseModule implements IStoryQueryService {
@@ -25,6 +26,10 @@ class StoryQueryService extends BaseModule implements IStoryQueryService {
     private readonly chapterRepo: ChapterRepository
   ) {
     super();
+  }
+
+  async getAllStories(options: IOperationOptions = {}): Promise<IStory[]> {
+    return this.storyRepo.findAll(options);
   }
 
   /**
@@ -110,8 +115,8 @@ class StoryQueryService extends BaseModule implements IStoryQueryService {
     }
 
     const pipeline = new ChapterPipelineBuilder()
-      .loadChaptersForStory(storyId)
-      .getAuthorDetails()
+      .loadChaptersForStory(story.slug)
+      .attachAuthor({ project: PUBLIC_AUTHOR_PROJECTION })
       .buildChapterGraphNode()
       .build();
 
@@ -119,7 +124,7 @@ class StoryQueryService extends BaseModule implements IStoryQueryService {
 
     if (!chapters || chapters.length === 0) {
       return {
-        storyId,
+        slug: story.slug,
         chapters: [],
       };
     }
@@ -127,7 +132,7 @@ class StoryQueryService extends BaseModule implements IStoryQueryService {
     const tree = buildChapterTree(chapters);
 
     return {
-      storyId,
+      slug: story.slug,
       chapters: tree,
     };
   }

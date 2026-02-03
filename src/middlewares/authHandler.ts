@@ -58,7 +58,8 @@ export async function validateAuth(request: FastifyRequest, reply: FastifyReply)
         message: 'Your account does not have a platform role assigned. Access is not permitted.',
       });
     }
-    request.user = { ...user, ...platformRole };
+
+    request.user = { ...user, ...platformRole.toObject() };
   } catch (error: unknown) {
     logger.error('Received error while checking auth: ', { error });
     return reply.code(500).send({

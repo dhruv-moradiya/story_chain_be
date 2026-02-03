@@ -1,31 +1,30 @@
-import { ID } from '@/types';
-import { ChapterStatus } from '../types/chapter-enum';
+import { TChapterStatus } from '../types/chapter.types';
 
 type TChapterAddRootDTO = {
-  storyId: ID;
+  storySlug: string;
   userId: string;
   title: string;
   content: string;
 };
 
 type IChapterAddChildDTO = {
-  storyId: ID;
+  storySlug: string;
   userId: string;
-  parentChapterId: ID;
+  parentChapterSlug: string;
   title: string;
   content: string;
-  ancestorIds: ID[];
+  ancestorSlugs: string[];
   depth: number;
-  status: ChapterStatus;
+  status: TChapterStatus;
 };
 
 type ICreateChildChapterSimpleDTO = {
-  storyId: ID;
+  storySlug: string;
   userId: string;
-  parentChapterId: ID;
+  parentChapterSlug: string;
   title: string;
   content: string;
-  status?: ChapterStatus;
+  status?: TChapterStatus;
 };
 
 export type { IChapterAddChildDTO, TChapterAddRootDTO, ICreateChildChapterSimpleDTO };

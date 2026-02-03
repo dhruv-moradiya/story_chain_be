@@ -117,6 +117,18 @@ export abstract class BaseRepository<TEntity, TDocument extends Document> {
     return saved.toObject() as TEntity;
   }
 
+  async find(
+    filter: FilterQuery<TDocument>,
+    projection?: ProjectionType<TDocument> | null,
+    options?: { session?: ClientSession }
+  ): Promise<TEntity[]> {
+    const query = this.model.find(filter, projection);
+
+    if (options?.session) query.session(options.session);
+
+    return query.lean<TEntity[]>().exec();
+  }
+
   // 🔍 FIND ONE
   async findOne(
     filter: FilterQuery<TDocument>,

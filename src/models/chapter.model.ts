@@ -8,9 +8,8 @@ import mongoose, { Schema } from 'mongoose';
 
 const chapterSchema = new Schema<IChapterDoc>(
   {
-    storyId: {
-      type: Schema.Types.ObjectId,
-      ref: 'Story',
+    storySlug: {
+      type: String,
       required: true,
       index: true,
     },
@@ -23,22 +22,25 @@ const chapterSchema = new Schema<IChapterDoc>(
     },
 
     // Tree structure
-    parentChapterId: {
-      type: Schema.Types.ObjectId,
-      ref: 'Chapter',
+    parentChapterSlug: {
+      type: String,
       default: null,
       index: true,
     },
-    ancestorIds: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: 'Chapter',
-      },
-    ],
+    ancestorSlugs: {
+      type: [String],
+      default: [],
+      index: true,
+    },
     depth: {
       type: Number,
       default: 0,
       min: 0,
+    },
+    branchIndex: {
+      type: Number,
+      required: true,
+      min: 1,
     },
 
     // Author
@@ -131,8 +133,8 @@ const chapterSchema = new Schema<IChapterDoc>(
 );
 
 // Indexes
-chapterSchema.index({ storyId: 1, parentChapterId: 1 });
-chapterSchema.index({ storyId: 1, depth: 1 });
+chapterSchema.index({ storySlug: 1, parentChapterSlug: 1 });
+chapterSchema.index({ storySlug: 1, ancestorSlugs: 1 });
 chapterSchema.index({ authorId: 1, createdAt: -1 });
 chapterSchema.index({ 'votes.score': -1 });
 chapterSchema.index({ status: 1 });

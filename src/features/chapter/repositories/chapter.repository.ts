@@ -1,10 +1,18 @@
 import { singleton } from 'tsyringe';
-import { ClientSession, PipelineStage, QueryOptions, Types, UpdateQuery } from 'mongoose';
+import {
+  ClientSession,
+  PipelineStage,
+  ProjectionType,
+  QueryOptions,
+  Types,
+  UpdateQuery,
+} from 'mongoose';
 
 import { Chapter } from '@models/chapter.model';
 import { IChapter, IChapterDoc } from '../types/chapter.types';
 import { BaseRepository } from '@utils/baseClass';
 import { IOperationOptions } from '@/types';
+import { ChapterStatus } from '../types/chapter-enum';
 
 @singleton()
 export class ChapterRepository extends BaseRepository<IChapter, IChapterDoc> {
@@ -22,12 +30,30 @@ export class ChapterRepository extends BaseRepository<IChapter, IChapterDoc> {
       .exec();
   }
 
-  async findRoot(storyId: string): Promise<IChapter | null> {
-    return this.model.findOne({ storyId, parentChapterId: null }).lean<IChapter>().exec();
+  async countSiblings(
+    storySlug: string,
+    parentChapterSlug: string | null,
+    options: IOperationOptions = {}
+  ): Promise<number> {
+    const query = this.model.countDocuments({
+      storySlug,
+      parentChapterSlug,
+      status: { $in: [ChapterStatus.PUBLISHED, ChapterStatus.DRAFT] },
+    });
+
+    if (options.session) {
+      query.session(options.session);
+    }
+
+    return query.exec();
   }
 
-  async countByAuthorInStory(authorId: string, storyId: string): Promise<number> {
-    return this.model.countDocuments({ authorId, storyId }).exec();
+  async findRoot(storySlug: string): Promise<IChapter | null> {
+    return this.model.findOne({ storySlug, parentChapterSlug: null }).lean<IChapter>().exec();
+  }
+
+  async countByAuthorInStory(authorId: string, storySlug: string): Promise<number> {
+    return this.model.countDocuments({ authorId, storySlug }).exec();
   }
 
   async updateById(
@@ -51,56 +77,16 @@ export class ChapterRepository extends BaseRepository<IChapter, IChapterDoc> {
     );
   }
 
-  async findByStoryId(storyId: string): Promise<IChapter[]> {
-    return this.model.find({ storyId }).lean().exec();
+  async findByStorySlug(storySlug: string): Promise<IChapter[]> {
+    return this.model.find({ storySlug }).lean<IChapter[]>().exec();
   }
 
-  /**
-   * Find all chapters by author with story slug populated
-   */
-  async findByAuthorWithStory(authorId: string): Promise<IChapterWithStory[]> {
-    return this.model.aggregate<IChapterWithStory>([
-      { $match: { authorId } },
-      {
-        $lookup: {
-          from: 'stories',
-          localField: 'storyId',
-          foreignField: '_id',
-          as: 'story',
-        },
-      },
-      { $unwind: '$story' },
-      {
-        $lookup: {
-          from: 'users',
-          localField: 'authorId',
-          foreignField: 'clerkId',
-          as: 'author',
-        },
-      },
-      { $unwind: { path: '$author', preserveNullAndEmptyArrays: true } },
-      {
-        $project: {
-          _id: 1,
-          title: 1,
-          status: 1,
-          pullRequest: 1,
-          stats: 1,
-          createdAt: 1,
-          updatedAt: 1,
-          storySlug: '$story.slug',
-          storyTitle: '$story.title',
-          author: {
-            clerkId: '$author.clerkId',
-            username: '$author.username',
-            firstName: '$author.firstName',
-            lastName: '$author.lastName',
-            imageUrl: '$author.imageUrl',
-          },
-        },
-      },
-      { $sort: { createdAt: -1 } },
-    ]);
+  async findBySlug(
+    slug: string,
+    projection: ProjectionType<IChapter> | null = {},
+    options: QueryOptions = {}
+  ): Promise<IChapter | null> {
+    return this.model.findOne({ slug }, projection, options).lean<IChapter>().exec();
   }
 
   /**
@@ -112,8 +98,8 @@ export class ChapterRepository extends BaseRepository<IChapter, IChapterDoc> {
       {
         $lookup: {
           from: 'stories',
-          localField: 'storyId',
-          foreignField: '_id',
+          localField: 'storySlug',
+          foreignField: 'slug',
           as: 'story',
         },
       },
@@ -133,7 +119,7 @@ export class ChapterRepository extends BaseRepository<IChapter, IChapterDoc> {
           title: 1,
           content: 1,
           status: 1,
-          parentChapterId: 1,
+          parentChapterSlug: 1,
           depth: 1,
           chapterNumber: 1,
           isEnding: 1,
@@ -159,44 +145,6 @@ export class ChapterRepository extends BaseRepository<IChapter, IChapterDoc> {
 
     return results[0] || null;
   }
-
-  // async canUserEditChapter(userId: string, chapterId: string): Promise<boolean> {
-
-  // }
-}
-
-/**
- * Chapter with story slug populated (for user's chapter list)
- */
-export interface IChapterWithStory {
-  _id: string;
-  title: string;
-  status: string;
-  pullRequest: {
-    isPR: boolean;
-    prId?: string;
-    status?: string;
-    submittedAt?: Date;
-    reviewedBy?: string;
-    reviewedAt?: Date;
-    rejectionReason?: string;
-  };
-  stats: {
-    reads: number;
-    comments: number;
-    childBranches: number;
-  };
-  createdAt: Date;
-  updatedAt: Date;
-  storySlug: string;
-  storyTitle: string;
-  author: {
-    clerkId: string;
-    username: string;
-    firstName: string;
-    lastName: string;
-    imageUrl?: string;
-  };
 }
 
 /**
@@ -207,7 +155,7 @@ export interface IChapterDetails {
   title: string;
   content: string;
   status: string;
-  parentChapterId?: string;
+  parentChapterSlug?: string;
   depth: number;
   chapterNumber?: number;
   isEnding: boolean;

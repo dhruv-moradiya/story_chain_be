@@ -117,9 +117,11 @@ const StoryUpdateSchema = z.object({
 });
 
 const StoryAddChapterSchema = z.object({
-  parentChapterId: ObjectIdSchema()
-    .transform((s) => s.trim())
-    .nullable(),
+  parentChapterSlug: z
+    .string()
+    .nullable()
+    .optional()
+    .describe('Parent chapter slug. Use null for root chapters.'),
   title: z
     .string()
     .min(CHAPTER_LIMITS.TITLE.MIN_LENGTH, {
@@ -141,12 +143,11 @@ const StoryAddChapterSchema = z.object({
 });
 
 const StoryAddChapterBySlugSchema = z.object({
-  parentChapterId: z
+  parentChapterSlug: z
     .string()
-    .transform((s) => s.trim().toLowerCase())
-    .refine((val) => val === 'root' || /^[a-f\d]{24}$/i.test(val), {
-      message: 'parentChapterId must be "root" or a valid ObjectId',
-    })
+    .nullable()
+    .optional()
+    .describe('Parent chapter slug. Use null for root chapters.')
     .transform((val) => (val === 'root' ? null : val)),
   title: z
     .string()

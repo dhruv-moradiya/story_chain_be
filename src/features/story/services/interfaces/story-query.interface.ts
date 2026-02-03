@@ -4,7 +4,7 @@ import { IChapter } from '@/features/chapter/types/chapter.types';
 import { IStory, IStorySettingsWithImages } from '../../types/story.types';
 
 interface IStoryTreeResult {
-  storyId: string;
+  slug: string;
   chapters: IChapter[];
 }
 

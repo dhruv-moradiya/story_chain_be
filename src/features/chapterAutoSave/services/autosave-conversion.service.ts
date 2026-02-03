@@ -2,20 +2,24 @@ import { inject, singleton } from 'tsyringe';
 import { TOKENS } from '@container/tokens';
 import { TConvertToDraftDTO, TConvertToPublishedDTO } from '@dto/chapterAutoSave.dto';
 import { BaseModule } from '@utils/baseClass';
-import { ChapterService } from '@features/chapter/services/chapter.service';
+
 import { IChapter } from '@features/chapter/types/chapter.types';
 import { IChapterAutoSave } from '../types/chapterAutoSave.types';
 import { ChapterAutoSaveRepository } from '../repositories/chapterAutoSave.repository';
 import { IAutoSaveConversionService } from './interfaces/autosave-conversion.interface';
 import { ChapterStatus } from '@/features/chapter/types/chapter-enum';
+import { IChapterCrudService } from '@features/chapter/services/interfaces/chapter-crud.interface';
+import { StoryQueryService } from '@features/story/services/story-query.service';
 
 @singleton()
 export class AutoSaveConversionService extends BaseModule implements IAutoSaveConversionService {
   constructor(
     @inject(TOKENS.ChapterAutoSaveRepository)
     private readonly chapterAutoSaveRepo: ChapterAutoSaveRepository,
-    @inject(TOKENS.ChapterService)
-    private readonly chapterService: ChapterService
+    @inject(TOKENS.ChapterCrudService)
+    private readonly chapterCrudService: IChapterCrudService,
+    @inject(TOKENS.StoryQueryService)
+    private readonly storyQueryService: StoryQueryService
   ) {
     super();
   }
@@ -30,9 +34,9 @@ export class AutoSaveConversionService extends BaseModule implements IAutoSaveCo
     }
   }
 
-  private validateParentChapter(parentChapterId: unknown): void {
-    if (!parentChapterId) {
-      this.throwBadRequest('Parent chapter ID is required for new chapter.');
+  private validateParentChapter(parentChapterSlug: unknown): void {
+    if (!parentChapterSlug) {
+      this.throwBadRequest('Parent chapter Slug is required for new chapter.');
     }
   }
 
@@ -58,8 +62,9 @@ export class AutoSaveConversionService extends BaseModule implements IAutoSaveCo
     autoSave: IChapterAutoSave,
     userId: string
   ): Promise<IChapter> {
-    return this.chapterService.createRootChapter({
-      storyId: autoSave.storyId.toString(),
+    const story = await this.storyQueryService.getById(autoSave.storyId.toString());
+    return this.chapterCrudService.createRoot({
+      storySlug: story.slug,
       userId,
       title: autoSave.title || 'Untitled Chapter',
       content: autoSave.content,
@@ -71,14 +76,16 @@ export class AutoSaveConversionService extends BaseModule implements IAutoSaveCo
     userId: string,
     status: ChapterStatus
   ): Promise<IChapter> {
-    this.validateParentChapter(autoSave.parentChapterId);
+    this.validateParentChapter(autoSave.parentChapterSlug);
 
-    return this.chapterService.createChildChapterSimple({
-      storyId: autoSave.storyId.toString(),
+    const story = await this.storyQueryService.getById(autoSave.storyId.toString());
+
+    return this.chapterCrudService.createChild({
+      storySlug: story.slug,
       userId,
       title: autoSave.title || 'Untitled Chapter',
       content: autoSave.content,
-      parentChapterId: autoSave.parentChapterId!.toString(),
+      parentChapterSlug: autoSave.parentChapterSlug!.toString(),
       status,
     });
   }

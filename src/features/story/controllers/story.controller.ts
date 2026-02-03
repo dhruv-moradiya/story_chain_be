@@ -23,7 +23,7 @@ import { StoryMediaService } from '../services/story-media.service';
 import { StoryPublishingService } from '../services/story-publishing.service';
 
 // Import chapter service
-import { ChapterService } from '@features/chapter/services/chapter.service';
+import { IChapterCrudService } from '@features/chapter/services/interfaces/chapter-crud.interface';
 
 @singleton()
 export class StoryController extends BaseModule {
@@ -36,8 +36,8 @@ export class StoryController extends BaseModule {
     private readonly storyMediaService: StoryMediaService,
     @inject(TOKENS.StoryPublishingService)
     private readonly storyPublishingService: StoryPublishingService,
-    @inject(TOKENS.ChapterService)
-    private readonly chapterService: ChapterService
+    @inject(TOKENS.ChapterCrudService)
+    private readonly chapterCrudService: IChapterCrudService
   ) {
     super();
   }
@@ -108,6 +108,14 @@ export class StoryController extends BaseModule {
   // =====================
   // QUERY OPERATIONS
   // =====================
+
+  getAllStories = catchAsync(async (_request: FastifyRequest, reply: FastifyReply) => {
+    const stories = await this.storyQueryService.getAllStories();
+    this.logInfo(`Fetched all stories`);
+    return reply
+      .code(HTTP_STATUS.OK.code)
+      .send(new ApiResponse(true, 'All stories fetched successfully', stories));
+  });
 
   // TODO: Remove this endpoint that use storyId instead of slug
   // Fetch a single story by its ID for viewing and for public access.
@@ -360,28 +368,28 @@ export class StoryController extends BaseModule {
     ) => {
       const { clerkId: userId } = request.user;
       const { slug } = request.params;
-      const { title, content, parentChapterId } = request.body;
+      const { title, content, parentChapterSlug } = request.body;
 
       // Get story by slug to get storyId
       const story = await this.storyQueryService.getBySlug(slug);
 
       let newChapter;
-      if (!parentChapterId) {
+      if (!parentChapterSlug) {
         // Create root chapter
-        newChapter = await this.chapterService.createRootChapter({
-          storyId: story._id.toString(),
+        newChapter = await this.chapterCrudService.createRoot({
+          storySlug: story.slug,
           userId,
           title,
           content,
         });
       } else {
         // Create child chapter
-        newChapter = await this.chapterService.createChildChapterSimple({
-          storyId: story._id.toString(),
+        newChapter = await this.chapterCrudService.createChild({
+          storySlug: story.slug,
           userId,
           title,
           content,
-          parentChapterId,
+          parentChapterSlug,
         });
       }
 
@@ -405,25 +413,27 @@ export class StoryController extends BaseModule {
     ) => {
       const { clerkId: userId } = request.user;
       const { storyId } = request.params;
-      const { title, content, parentChapterId } = request.body;
+      const { title, content, parentChapterSlug } = request.body;
+
+      const story = await this.storyQueryService.getById(storyId);
 
       let newChapter;
-      if (!parentChapterId) {
+      if (!parentChapterSlug) {
         // Create root chapter
-        newChapter = await this.chapterService.createRootChapter({
-          storyId,
+        newChapter = await this.chapterCrudService.createRoot({
+          storySlug: story.slug,
           userId,
           title,
           content,
         });
       } else {
         // Create child chapter
-        newChapter = await this.chapterService.createChildChapterSimple({
-          storyId,
+        newChapter = await this.chapterCrudService.createChild({
+          storySlug: story.slug,
           userId,
           title,
           content,
-          parentChapterId,
+          parentChapterSlug,
         });
       }
 

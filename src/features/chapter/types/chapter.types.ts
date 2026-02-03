@@ -15,15 +15,17 @@ export type TChapterPRStatus = (typeof CHAPTER_PR_STATUSES)[number];
 export interface IChapter {
   _id: ID;
   slug: string;
-  storyId: ID;
+  storySlug: string;
 
-  parentChapterId?: ID | null;
-  ancestorIds: ID[];
+  parentChapterSlug?: string | null;
+  ancestorSlugs: string[];
   depth: number;
   authorId: string;
   content: string;
   title: string;
   chapterNumber?: number;
+  branchIndex: number;
+  displayNumber?: string;
 
   votes: {
     upvotes: number;
@@ -59,8 +61,8 @@ export interface IChapter {
   updatedAt: Date;
 }
 
-export interface IChapterDoc extends IChapter, Document {
-  _id: Types.ObjectId;
+export interface IChapterDoc extends Omit<IChapter, '_id'>, Document {
+  ancestorSlugs: Types.Array<string>;
 }
 
 export type TChapterNode = IChapter & { children: TChapterNode[] };

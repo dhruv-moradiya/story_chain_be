@@ -24,7 +24,7 @@ interface IChapterAutoSave {
   };
   autoSaveType: TSaveType;
   storyId: ID;
-  parentChapterId?: ID;
+  parentChapterSlug?: string;
 }
 
 interface IChapterAutoSaveDoc extends Document, IChapterAutoSave {

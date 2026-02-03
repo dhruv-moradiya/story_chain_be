@@ -50,9 +50,9 @@ export class ChapterAutoSaveRepository extends BaseRepository<
     content: string;
     autoSaveType: string;
     storyId: Types.ObjectId;
-    parentChapterId?: Types.ObjectId;
+    parentChapterSlug?: string;
   }): Promise<IChapterAutoSave> {
-    const { chapterId, userId, title, content, autoSaveType, storyId, parentChapterId } = chapter;
+    const { chapterId, userId, title, content, autoSaveType, storyId, parentChapterSlug } = chapter;
 
     return this.model.findOneAndUpdate(
       { chapterId, userId },
@@ -69,7 +69,7 @@ export class ChapterAutoSaveRepository extends BaseRepository<
           saveCount: 0,
           autoSaveType,
           storyId,
-          parentChapterId,
+          parentChapterSlug,
         },
       },
       { new: true, upsert: true }
@@ -84,9 +84,9 @@ export class ChapterAutoSaveRepository extends BaseRepository<
     userId: string;
     autoSaveType: string;
     storyId: Types.ObjectId;
-    parentChapterId?: Types.ObjectId;
+    parentChapterSlug?: string;
   }) {
-    const { draftId, userId, autoSaveType, storyId, parentChapterId } = draft;
+    const { draftId, userId, autoSaveType, storyId, parentChapterSlug } = draft;
 
     return this.model.findOneAndUpdate(
       { draftId, userId },
@@ -103,7 +103,7 @@ export class ChapterAutoSaveRepository extends BaseRepository<
           saveCount: 0,
           autoSaveType,
           storyId,
-          parentChapterId,
+          parentChapterSlug,
         },
       },
       { new: true, upsert: true }
@@ -164,7 +164,7 @@ export class ChapterAutoSaveRepository extends BaseRepository<
         const newChapterInput = input as IEnableAutoSaveNewChapter;
         return this.model.create({
           ...baseFields,
-          parentChapterId: newChapterInput.parentChapterId,
+          parentChapterSlug: newChapterInput.parentChapterSlug,
         });
       }
 
@@ -173,7 +173,7 @@ export class ChapterAutoSaveRepository extends BaseRepository<
         return this.model.create({
           ...baseFields,
           chapterId: updateInput.chapterId,
-          parentChapterId: updateInput.parentChapterId,
+          parentChapterSlug: updateInput.parentChapterSlug,
         });
       }
     }

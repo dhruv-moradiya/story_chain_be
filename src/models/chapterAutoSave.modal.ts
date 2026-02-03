@@ -119,9 +119,9 @@ const chapterAutoSaveSchema = new Schema<IChapterAutoSaveDoc>(
      * USE: For new_chapter and update types - track parent relationship
      * REFERENCE: Links to Chapter document
      */
-    parentChapterId: {
-      type: Schema.Types.ObjectId,
-      ref: 'Chapter',
+    parentChapterSlug: {
+      type: String,
+      default: null,
       index: true,
     },
   },

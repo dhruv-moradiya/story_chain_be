@@ -87,18 +87,17 @@ export class AutoSaveContentService extends BaseModule implements IAutoSaveConte
         };
         break;
       case 'new_chapter':
-        if (!('parentChapterId' in input)) {
-          this.throwBadRequest('parentChapterId is required for new_chapter auto-save');
+        if (!('parentChapterSlug' in input)) {
+          this.throwBadRequest('parentChapterSlug is required for new_chapter auto-save');
         }
-        repoInput = {
-          autoSaveType,
+        return this.chapterAutoSaveRepo.enableAutoSave({
+          autoSaveType: 'new_chapter',
           userId,
           storyId: storyId as Types.ObjectId,
-          title,
-          content,
-          parentChapterId: input.parentChapterId as unknown as Types.ObjectId,
-        };
-        break;
+          title: title || '',
+          content: content || '',
+          parentChapterSlug: input.parentChapterSlug as unknown as string,
+        });
       case 'update_chapter':
         if (!('chapterId' in input) || !('parentChapterId' in input)) {
           this.throwBadRequest('chapterId and parentChapterId are required for update auto-save');
@@ -110,7 +109,7 @@ export class AutoSaveContentService extends BaseModule implements IAutoSaveConte
           title,
           content,
           chapterId: input.chapterId as unknown as Types.ObjectId,
-          parentChapterId: input.parentChapterId as unknown as Types.ObjectId,
+          parentChapterSlug: input.parentChapterSlug as unknown as string,
         };
         break;
     }
