@@ -109,6 +109,14 @@ export class StoryController extends BaseModule {
   // QUERY OPERATIONS
   // =====================
 
+  getAllStories = catchAsync(async (_request: FastifyRequest, reply: FastifyReply) => {
+    const stories = await this.storyQueryService.getAllStories();
+    this.logInfo(`Fetched all stories`);
+    return reply
+      .code(HTTP_STATUS.OK.code)
+      .send(new ApiResponse(true, 'All stories fetched successfully', stories));
+  });
+
   // TODO: Remove this endpoint that use storyId instead of slug
   // Fetch a single story by its ID for viewing and for public access.
   getStoryById = catchAsync(

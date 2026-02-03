@@ -9,6 +9,8 @@ import { type ChapterController } from '../controllers/chapter.controller';
 const ChapterApiRoutes = {
   GetMyChapters: '/my',
   GetChapterById: '/:chapterId',
+
+  CreateChildChapter: '/child',
 } as const;
 
 export { ChapterApiRoutes };
@@ -55,5 +57,24 @@ export async function chapterRoutes(fastify: FastifyInstance) {
       },
     },
     chapterController.getChapterById
+  );
+
+  /**
+   * Create a new child chapter
+   * Response: full chapter info with story slug, story title, author details, stats, votes
+   */
+  fastify.post(
+    ChapterApiRoutes.CreateChildChapter,
+    {
+      preHandler: [validateAuth],
+      schema: {
+        description: 'Create a new child chapter',
+        tags: ['Chapters'],
+        security: [{ bearerAuth: [] }],
+        // body: ChapterSchemas.createChild,
+        response: chapterController.createChild,
+      },
+    },
+    chapterController.createChild
   );
 }

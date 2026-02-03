@@ -61,7 +61,7 @@ export class ChapterCrudService extends BaseModule implements IChapterCrudServic
       title,
       content,
       parentChapterSlug,
-      status = ChapterStatus.PUBLISHED,
+      status = ChapterStatus.DRAFT,
     } = input;
 
     // 1. Validate and fetch parent

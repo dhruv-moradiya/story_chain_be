@@ -27,6 +27,10 @@ class StoryQueryService extends BaseModule implements IStoryQueryService {
     super();
   }
 
+  async getAllStories(options: IOperationOptions = {}): Promise<IStory[]> {
+    return this.storyRepo.findAll(options);
+  }
+
   /**
    * Get story by ID (throws if not found)
    * TODO: Remove this method that use storyId instead of slug
@@ -110,7 +114,7 @@ class StoryQueryService extends BaseModule implements IStoryQueryService {
     }
 
     const pipeline = new ChapterPipelineBuilder()
-      .loadChaptersForStory(storyId)
+      .loadChaptersForStory(story.slug)
       .getAuthorDetails()
       .buildChapterGraphNode()
       .build();
@@ -119,7 +123,7 @@ class StoryQueryService extends BaseModule implements IStoryQueryService {
 
     if (!chapters || chapters.length === 0) {
       return {
-        storyId,
+        slug: story.slug,
         chapters: [],
       };
     }
@@ -127,7 +131,7 @@ class StoryQueryService extends BaseModule implements IStoryQueryService {
     const tree = buildChapterTree(chapters);
 
     return {
-      storyId,
+      slug: story.slug,
       chapters: tree,
     };
   }

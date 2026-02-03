@@ -6,12 +6,16 @@ import { ApiResponse } from '@utils/apiResponse';
 import { BaseModule } from '@utils/baseClass';
 import { catchAsync } from '@utils/catchAsync';
 import { ChapterQueryService } from '../services/chapter-query.service';
+import { TCreateChapterSchema } from '@/schema/request/chapter.schema';
+import { ChapterCrudService } from '../services/chapter-crud.service';
 
 @singleton()
 export class ChapterController extends BaseModule {
   constructor(
     @inject(TOKENS.ChapterQueryService)
-    private readonly chapterQueryService: ChapterQueryService
+    private readonly chapterQueryService: ChapterQueryService,
+    @inject(TOKENS.ChapterCrudService)
+    private readonly chapterCrudService: ChapterCrudService
   ) {
     super();
   }
@@ -57,6 +61,22 @@ export class ChapterController extends BaseModule {
       return reply
         .code(HTTP_STATUS.OK.code)
         .send(new ApiResponse(true, 'Chapter details retrieved successfully.', chapter));
+    }
+  );
+
+  createChild = catchAsync(
+    async (request: FastifyRequest<{ Body: TCreateChapterSchema }>, reply: FastifyReply) => {
+      const input = request.body;
+      const userId = request.user.clerkId;
+
+      const chapter = await this.chapterCrudService.createChild({
+        ...input,
+        userId,
+      });
+
+      return reply
+        .code(HTTP_STATUS.OK.code)
+        .send(new ApiResponse(true, 'Chapter created successfully.', chapter));
     }
   );
 }

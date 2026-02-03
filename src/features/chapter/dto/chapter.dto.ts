@@ -1,4 +1,4 @@
-import { ChapterStatus } from '../types/chapter-enum';
+import { TChapterStatus } from '../types/chapter.types';
 
 type TChapterAddRootDTO = {
   storySlug: string;
@@ -15,7 +15,7 @@ type IChapterAddChildDTO = {
   content: string;
   ancestorSlugs: string[];
   depth: number;
-  status: ChapterStatus;
+  status: TChapterStatus;
 };
 
 type ICreateChildChapterSimpleDTO = {
@@ -24,7 +24,7 @@ type ICreateChildChapterSimpleDTO = {
   parentChapterSlug: string;
   title: string;
   content: string;
-  status?: ChapterStatus;
+  status?: TChapterStatus;
 };
 
 export type { IChapterAddChildDTO, TChapterAddRootDTO, ICreateChildChapterSimpleDTO };

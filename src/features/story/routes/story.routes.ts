@@ -35,6 +35,9 @@ const StoryApiRoutes = {
   GetDraft: '/draft',
   Search: '/search',
 
+  // SUPER_ADMIN only
+  GetAllStories: '/all',
+
   // By Slug
   GetBySlug: '/slug/:slug',
   PublishBySlug: '/slug/:slug/publish',
@@ -65,6 +68,25 @@ export async function storyRoutes(fastify: FastifyInstance) {
   const storyController = container.resolve<StoryController>(TOKENS.StoryController);
   const storyCollaboratorController = container.resolve<StoryCollaboratorController>(
     TOKENS.StoryCollaboratorController
+  );
+
+  // ===============================
+  // SUPER_ADMIN ROUTES
+  // ===============================
+
+  // List all stories - SUPER_ADMIN only
+  fastify.get(
+    StoryApiRoutes.GetAllStories,
+    {
+      preHandler: [validateAuth, PlatformRoleGuards.superAdmin],
+      schema: {
+        description: 'List all stories (SUPER_ADMIN only)',
+        tags: ['Stories'],
+        security: [{ bearerAuth: [] }],
+        response: StoryResponses.storyList,
+      },
+    },
+    storyController.getAllStories
   );
 
   // ===============================

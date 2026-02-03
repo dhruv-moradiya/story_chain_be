@@ -1,6 +1,4 @@
 import { PipelineStage } from 'mongoose';
-import { ID } from '@/types';
-import { toId } from '@utils/index';
 
 class ChapterPipelineBuilder {
   private pipeline: PipelineStage[] = [];
@@ -8,10 +6,10 @@ class ChapterPipelineBuilder {
   /**
    * Step 1: Load chapters for a story
    */
-  loadChaptersForStory(storyId: ID) {
+  loadChaptersForStory(storySlug: string) {
     this.pipeline.push({
       $match: {
-        storyId: toId(storyId),
+        storySlug,
       },
     });
 
