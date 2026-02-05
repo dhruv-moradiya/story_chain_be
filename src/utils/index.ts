@@ -17,10 +17,13 @@ function buildChapterTree(chapters: IChapter[]) {
 
   chapters.forEach((chapter) => {
     const node = chapterMap[chapter.slug];
-    if (chapter.parentChapterSlug) {
-      chapterMap[chapter.parentChapterSlug].children.push(node);
+    const parentSlug = chapter.parentChapterSlug;
+    const parentNode = parentSlug ? chapterMap[parentSlug] : undefined;
+
+    if (parentSlug && parentNode) {
+      parentNode.children.push(node);
     } else {
-      roots.push(chapterMap[chapter.slug]);
+      roots.push(node);
     }
   });
 
