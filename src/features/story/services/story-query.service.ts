@@ -92,7 +92,7 @@ class StoryQueryService extends BaseModule implements IStoryQueryService {
    * Get newly created stories (last 7 days)
    */
   async getNewStories(options: IOperationOptions = {}): Promise<IStory[]> {
-    const pipeline = new StoryPipelineBuilder().lastSevenDaysStories().isPublished().build();
+    const pipeline = new StoryPipelineBuilder().createdWithinLastDays().filterPublished().build();
     return this.storyRepo.aggregateStories(pipeline, options);
   }
 
@@ -155,9 +155,9 @@ class StoryQueryService extends BaseModule implements IStoryQueryService {
    */
   async getStoryOverviewBySlug(slug: string): Promise<IStoryWithCreator> {
     const pipeline = new StoryPipelineBuilder()
-      .storyBySlug(slug)
-      .storySettings(['genres', 'contentRating'])
-      .withStoryCollaborators()
+      .findBySlug(slug)
+      .projectSettings(['genres', 'contentRating'])
+      .attachCollaborators()
       .build();
 
     const stories = await this.storyRepo.aggregateStories<IStoryWithCreator>(pipeline);

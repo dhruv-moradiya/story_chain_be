@@ -1,5 +1,7 @@
 import { PipelineStage } from 'mongoose';
+import { logger } from '@/utils/logger';
 import { ID } from '@/types';
+import { toId } from '@/utils';
 import { IStorySettings } from '../types/story.types';
 import { StoryCollaboratorStatus } from '@/features/storyCollaborator/types/storyCollaborator-enum';
 import { StoryStatus } from '../types/story-enum';
@@ -7,9 +9,9 @@ import { StoryStatus } from '../types/story-enum';
 class StoryPipelineBuilder {
   private pipeline: PipelineStage[] = [];
 
-  lastSevenDaysStories() {
+  createdWithinLastDays(days = 7) {
     const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - days);
 
     this.pipeline.push({
       $match: {
@@ -19,7 +21,7 @@ class StoryPipelineBuilder {
     return this;
   }
 
-  isPublished() {
+  filterPublished() {
     this.pipeline.push({
       $match: {
         status: StoryStatus.PUBLISHED,
@@ -28,16 +30,16 @@ class StoryPipelineBuilder {
     return this;
   }
 
-  storyById(storyId: ID) {
+  findById(storyId: ID) {
     this.pipeline.push({
       $match: {
-        _id: storyId,
+        _id: toId(storyId),
       },
     });
     return this;
   }
 
-  storyBySlug(slug: string) {
+  findBySlug(slug: string) {
     this.pipeline.push({
       $match: {
         slug,
@@ -46,7 +48,7 @@ class StoryPipelineBuilder {
     return this;
   }
 
-  storySettings(keys: (keyof IStorySettings)[]) {
+  projectSettings(keys: (keyof IStorySettings)[]) {
     const fields: Partial<Record<keyof IStorySettings, string>> = {};
 
     keys.forEach((element) => {
@@ -60,7 +62,7 @@ class StoryPipelineBuilder {
     return this;
   }
 
-  withStoryCreator() {
+  attachCreator() {
     this.pipeline.push(
       {
         $lookup: {
@@ -93,7 +95,7 @@ class StoryPipelineBuilder {
     return this;
   }
 
-  withStoryCollaborators() {
+  attachCollaborators() {
     this.pipeline.push({
       $lookup: {
         from: 'storycollaborators',
@@ -134,6 +136,29 @@ class StoryPipelineBuilder {
 
   build() {
     return this.pipeline;
+  }
+
+  when(condition: boolean, callback: (builder: this) => this) {
+    return condition ? callback(this) : this;
+  }
+
+  addStage(stage: PipelineStage) {
+    this.pipeline.push(stage);
+    return this;
+  }
+
+  reset() {
+    this.pipeline = [];
+    return this;
+  }
+
+  debug() {
+    logger.debug('Pipeline stages:', JSON.stringify(this.pipeline, null, 2));
+    return this;
+  }
+
+  getPipeline() {
+    return [...this.pipeline];
   }
 }
 

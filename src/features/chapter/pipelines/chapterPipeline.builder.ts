@@ -147,11 +147,11 @@ class ChapterPipelineBuilder {
   }
 
   // const pipeline = new StoryPipelineBuilder()
-  // .storyById(storyId)
-  // .when(includeCreator, (b) => b.withStoryCreator())
-  // .when(includeCollaborators, (b) => b.withStoryCollaborators())
+  // .findById(storyId)
+  // .when(includeCreator, (b) => b.attachCreator())
+  // .when(includeCollaborators, (b) => b.attachCollaborators())
   // .when(userRole === 'admin', (b) =>
-  //   b.storySettings(['isPublic', 'allowComments'])
+  //   b.projectSettings(['isPublic', 'allowComments'])
   // )
   // .when(!!pagination, (b) => b.paginate(page, limit))
   // .build();
