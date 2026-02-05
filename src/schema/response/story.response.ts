@@ -9,6 +9,14 @@ import { apiArrayResponse, apiResponse, errorResponse } from './helpers';
 // STORY DATA SCHEMAS
 // ===============================
 
+export const ImageSchema = {
+  type: 'object',
+  properties: {
+    url: { type: 'string' },
+    publicId: { type: 'string' },
+  },
+};
+
 export const StorySettingsSchema = {
   type: 'object',
   properties: {
@@ -47,14 +55,8 @@ export const StorySchema = {
     title: { type: 'string' },
     slug: { type: 'string' },
     description: { type: 'string' },
-    coverImage: {
-      type: 'object',
-      properties: { url: { type: 'string' }, publicId: { type: 'string' } },
-    },
-    cardImage: {
-      type: 'object',
-      properties: { url: { type: 'string' }, publicId: { type: 'string' } },
-    },
+    coverImage: ImageSchema,
+    cardImage: ImageSchema,
     creatorId: { type: 'string' },
     status: { type: 'string', enum: ['DRAFT', 'PUBLISHED', 'ARCHIVED', 'DELETED'] },
     tags: { type: 'array', items: { type: 'string' } },
@@ -74,10 +76,7 @@ export const StoryOverviewSchema = {
     title: { type: 'string' },
     slug: { type: 'string' },
     description: { type: 'string' },
-    coverImage: {
-      type: 'object',
-      properties: { url: { type: 'string' }, publicId: { type: 'string' } },
-    },
+    coverImage: ImageSchema,
     creator: {
       type: 'object',
       properties: {
@@ -151,20 +150,12 @@ export const StoryTreeResponseSchema = {
 };
 
 export const StoryUpdateCoverImageSchema = {
-  type: 'object',
-  properties: {
-    url: { type: 'string' },
-    publicId: { type: 'string' },
-  },
+  ...ImageSchema,
   required: ['url', 'publicId'],
 };
 
 export const StoryUpdateCardImageSchema = {
-  type: 'object',
-  properties: {
-    url: { type: 'string' },
-    publicId: { type: 'string' },
-  },
+  ...ImageSchema,
   required: ['url', 'publicId'],
 };
 
@@ -181,13 +172,11 @@ export const StorySettingsWithImagesSchema = {
   properties: {
     settings: StorySettingsSchema,
     coverImage: {
-      type: 'object',
-      properties: { url: { type: 'string' }, publicId: { type: 'string' } },
+      ...ImageSchema,
       nullable: true,
     },
     cardImage: {
-      type: 'object',
-      properties: { url: { type: 'string' }, publicId: { type: 'string' } },
+      ...ImageSchema,
       nullable: true,
     },
   },

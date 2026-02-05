@@ -9,16 +9,16 @@ const readingHistorySchema = new Schema<IReadingHistoryDoc>(
       required: true,
       index: true,
     },
-    storyId: {
-      type: Schema.Types.ObjectId,
+    storySlug: {
+      type: String,
       ref: 'Story',
       required: true,
       index: true,
     },
 
     // Current position
-    currentChapterId: {
-      type: Schema.Types.ObjectId,
+    currentChapterSlug: {
+      type: String,
       ref: 'Chapter',
       required: true,
     },
@@ -26,7 +26,7 @@ const readingHistorySchema = new Schema<IReadingHistoryDoc>(
     // Path taken
     chaptersRead: [
       {
-        chapterId: { type: Schema.Types.ObjectId, ref: 'Chapter' },
+        chapterSlug: { type: String, ref: 'Chapter' },
         readAt: { type: Date, default: Date.now },
       },
     ],
@@ -51,7 +51,7 @@ const readingHistorySchema = new Schema<IReadingHistoryDoc>(
 );
 
 // Unique: one history per user per story
-readingHistorySchema.index({ userId: 1, storyId: 1 }, { unique: true });
+readingHistorySchema.index({ userId: 1, storySlug: 1 }, { unique: true });
 readingHistorySchema.index({ userId: 1, lastReadAt: -1 });
 
 const ReadingHistory = mongoose.model('ReadingHistory', readingHistorySchema);

@@ -1,6 +1,6 @@
 import { logger } from '@/utils/logger';
 import { PipelineStage } from 'mongoose';
-import { CHAPTER_WITH_STORY_PROJECTION } from './chapter.projections';
+import { CHAPTER_WITH_STORY_PROJECTION, PUBLIC_AUTHOR_PROJECTION } from './chapter.projections';
 import { ID } from '@/types';
 import { toId } from '@/utils';
 
@@ -125,7 +125,7 @@ class ChapterPipelineBuilder {
    * Normalizes chapter data into a graph-friendly structure.
    * Flattens author data and removes heavy or internal fields.
    */
-  buildChapterGraphNode() {
+  prepareChapterForGraph() {
     this.pipeline.push(
       {
         $set: {
@@ -142,16 +142,132 @@ class ChapterPipelineBuilder {
     return this;
   }
 
+  /**
+   * Attaches ancestor details to the chapter.
+   */
+  attachAncestors() {
+    this.pipeline.push({
+      $lookup: {
+        from: 'chapters',
+        let: { ancestorSlugs: '$ancestorSlugs' },
+        pipeline: [
+          {
+            $match: {
+              $expr: { $in: ['$slug', '$$ancestorSlugs'] },
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              slug: 1,
+              branchIndex: 1,
+            },
+          },
+        ],
+        as: 'ancestorDetails',
+      },
+    });
+
+    return this;
+  }
+
+  /**
+   * Orders ancestor details by slug.
+   */
+  orderAncestorsBySlug() {
+    this.pipeline.push({
+      $addFields: {
+        ancestorDetails: {
+          $map: {
+            input: '$ancestorSlugs',
+            as: 'ancestorSlug',
+            in: {
+              $arrayElemAt: [
+                {
+                  $filter: {
+                    input: '$ancestorDetails',
+                    cond: {
+                      $eq: ['$$this.slug', '$$ancestorSlug'],
+                    },
+                  },
+                },
+                0,
+              ],
+            },
+          },
+        },
+      },
+    });
+
+    return this;
+  }
+
+  /**
+   * Builds the display number for the chapter.
+   */
+  buildDisplayNumber() {
+    this.pipeline.push({
+      $addFields: {
+        displayNumber: {
+          $cond: {
+            if: {
+              $eq: [{ $size: { $ifNull: ['$ancestorSlugs', []] } }, 0],
+            },
+            then: { $toString: '$branchIndex' },
+            else: {
+              $concat: [
+                {
+                  $reduce: {
+                    input: '$ancestorDetails',
+                    initialValue: '',
+                    in: {
+                      $concat: [
+                        '$$value',
+                        {
+                          $cond: [{ $eq: ['$$value', ''] }, '', '.'],
+                        },
+                        { $toString: '$$this.branchIndex' },
+                      ],
+                    },
+                  },
+                },
+                '.',
+                { $toString: '$branchIndex' },
+              ],
+            },
+          },
+        },
+      },
+    });
+
+    return this;
+  }
+
+  /**
+   * Skips chapters with no ancestors.
+   */
+  skipIfNoAncestors() {
+    this.pipeline.push({
+      $match: {
+        $expr: {
+          $gt: [{ $size: { $ifNull: ['$ancestorSlugs', []] } }, 0],
+        },
+      },
+    });
+
+    return this;
+  }
+
   build() {
     return this.pipeline;
   }
 
   // const pipeline = new StoryPipelineBuilder()
-  // .findById(storyId)
-  // .when(includeCreator, (b) => b.attachCreator())
-  // .when(includeCollaborators, (b) => b.attachCollaborators())
+  // .storyById(storyId)
+  // .when(includeCreator, (b) => b.withStoryCreator())
+  // .when(includeCollaborators, (b) => b.withStoryCollaborators())
   // .when(userRole === 'admin', (b) =>
-  //   b.projectSettings(['isPublic', 'allowComments'])
+  //   b.storySettings(['isPublic', 'allowComments'])
   // )
   // .when(!!pagination, (b) => b.paginate(page, limit))
   // .build();
@@ -159,8 +275,8 @@ class ChapterPipelineBuilder {
     return condition ? callback(this) : this;
   }
 
-  addStage(stage: PipelineStage) {
-    this.pipeline.push(stage);
+  addStage(stage: PipelineStage[]) {
+    this.pipeline.push(...stage);
     return this;
   }
 
@@ -176,6 +292,16 @@ class ChapterPipelineBuilder {
 
   getPipeline() {
     return [...this.pipeline];
+  }
+
+  // Presets for chapter pipelines
+  buildStoryChapterTreePreset(storySlug: string) {
+    return this.loadChaptersForStory(storySlug)
+      .attachAuthor({ project: PUBLIC_AUTHOR_PROJECTION })
+      .prepareChapterForGraph()
+      .attachAncestors()
+      .orderAncestorsBySlug()
+      .buildDisplayNumber();
   }
 }
 

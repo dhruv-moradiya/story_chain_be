@@ -4,10 +4,10 @@ import { ID } from '@/types';
 export interface IReadingHistory {
   _id: ID;
   userId: string;
-  storyId: ID;
-  currentChapterId: ID;
+  storySlug: string;
+  currentChapterSlug: string;
   chaptersRead: {
-    chapterId: ID;
+    chapterSlug: string;
     readAt: Date;
   }[];
   lastReadAt: Date;
