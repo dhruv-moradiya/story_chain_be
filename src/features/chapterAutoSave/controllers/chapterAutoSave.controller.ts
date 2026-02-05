@@ -5,9 +5,10 @@ import { HTTP_STATUS } from '@constants/httpStatus';
 import { TDisableAutoSaveSchema } from '@schema/request/chapterAutoSave.schema';
 import {
   TAutoSaveContentSchemaVer2,
-  TConvertAutoSaveToDraftSchema,
-  TConvertAutoSaveToPublishedSchema,
+  TConvertAutoSaveQuerySchema,
+  TConvertAutoSaveSchema,
   TEnableAutoSaveSchemaVer2Type,
+  TGetAutoSaveDraftQuerySchema,
 } from '@schema/request/chapterAutoSaveVer2.Schema';
 import { ApiResponse } from '@utils/apiResponse';
 import { BaseModule } from '@utils/baseClass';
@@ -67,13 +68,13 @@ export class ChapterAutoSaveController extends BaseModule {
   disableAutoSave = catchAsync(
     async (request: FastifyRequest<{ Body: TDisableAutoSaveSchema }>, reply: FastifyReply) => {
       const userId = request.user.clerkId;
-      const { chapterId } = request.body;
+      const { chapterSlug } = request.body;
 
-      if (!chapterId) {
-        this.throwBadRequest('chapterId is required');
+      if (!chapterSlug) {
+        this.throwBadRequest('chapterSlug is required');
       }
 
-      await this.lifecycleService.disableAutoSave(chapterId, userId);
+      await this.lifecycleService.disableAutoSave(chapterSlug, userId);
 
       return reply
         .code(HTTP_STATUS.CREATED.code)
@@ -81,62 +82,51 @@ export class ChapterAutoSaveController extends BaseModule {
     }
   );
 
-  getAutoSaveDraft = catchAsync(async (request: FastifyRequest, reply: FastifyReply) => {
-    const userId = request.user.clerkId;
-
-    const result = await this.queryService.getByUser(userId);
-
-    return reply
-      .code(HTTP_STATUS.OK.code)
-      .send(new ApiResponse(true, 'Auto-save draft retrieved successfully.', result));
-  });
-
-  /**
-   * Convert AutoSave to Draft Chapter
-   * - Only the owner of the autosave can convert it
-   * - No story role permission required
-   */
-  convertToDraft = catchAsync(
+  getAutoSaveDraft = catchAsync(
     async (
-      request: FastifyRequest<{ Body: TConvertAutoSaveToDraftSchema }>,
+      request: FastifyRequest<{ Querystring: TGetAutoSaveDraftQuerySchema }>,
       reply: FastifyReply
     ) => {
       const userId = request.user.clerkId;
-      const { autoSaveId } = request.body;
+      const { page, limit } = request.query;
 
-      await this.conversionService.convertToDraft({
-        autoSaveId,
-        userId,
-      });
+      const result = await this.queryService.getByUser({ userId, page, limit });
 
       return reply
-        .code(HTTP_STATUS.CREATED.code)
-        .send(new ApiResponse(true, 'Auto-save converted to draft chapter successfully.', {}));
+        .code(HTTP_STATUS.OK.code)
+        .send(new ApiResponse(true, 'Auto-save draft retrieved successfully.', result));
     }
   );
 
   /**
-   * Convert AutoSave to Published Chapter
-   * - Requires `canWriteChapters` permission in the story
-   * - Permission is verified by route middleware (RBAC)
+   * Convert AutoSave to Draft or Published Chapter
    */
-  convertToPublished = catchAsync(
+  convertAutoSave = catchAsync(
     async (
-      request: FastifyRequest<{ Body: TConvertAutoSaveToPublishedSchema }>,
+      request: FastifyRequest<{
+        Querystring: TConvertAutoSaveQuerySchema;
+        Body: TConvertAutoSaveSchema;
+      }>,
       reply: FastifyReply
     ) => {
       const userId = request.user.clerkId;
       const { autoSaveId } = request.body;
+      const { type } = request.query;
 
-      const chapter = await this.conversionService.convertToPublished({
+      await this.conversionService.convert({
         autoSaveId,
         userId,
+        type: type as 'draft' | 'publish',
       });
 
       return reply
         .code(HTTP_STATUS.CREATED.code)
         .send(
-          new ApiResponse(true, 'Auto-save converted to published chapter successfully.', chapter)
+          new ApiResponse(
+            true,
+            `Auto-save (${autoSaveId}) converted to ${type === 'publish' ? 'published' : 'draft'} chapter successfully.`,
+            {}
+          )
         );
     }
   );

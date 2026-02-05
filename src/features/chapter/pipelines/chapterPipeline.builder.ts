@@ -37,13 +37,23 @@ class ChapterPipelineBuilder {
   /**
    * Attaches story details to the chapter.
    */
-  attachStory() {
+  /**
+   * Attaches story details to the chapter.
+   */
+  attachStory(options?: { project?: PipelineStage.Project['$project'] }) {
     this.pipeline.push(
       {
         $lookup: {
           from: 'stories',
-          localField: 'storySlug',
-          foreignField: 'slug',
+          let: { storySlug: '$storySlug' },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ['$slug', '$$storySlug'] },
+              },
+            },
+            ...(options && options.project ? [{ $project: options.project }] : []),
+          ],
           as: 'story',
         },
       },

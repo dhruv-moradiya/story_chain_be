@@ -12,7 +12,7 @@ type TSaveType = 'update_chapter' | 'new_chapter' | 'root_chapter';
 interface IChapterAutoSave {
   _id: ID;
   title: string;
-  chapterId?: ID;
+  chapterSlug?: string;
   userId: string;
   content: string;
   lastSavedAt: Date;
@@ -23,7 +23,7 @@ interface IChapterAutoSave {
     deletionsCount: number;
   };
   autoSaveType: TSaveType;
-  storyId: ID;
+  storySlug: string;
   parentChapterSlug?: string;
 }
 

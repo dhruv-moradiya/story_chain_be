@@ -26,8 +26,12 @@ export class ChapterController extends BaseModule {
    */
   getMyChapters = catchAsync(async (request: FastifyRequest, reply: FastifyReply) => {
     const userId = request.user.clerkId;
+    const { page, limit } = request.query as { page?: number; limit?: number };
 
-    const chapters = await this.chapterQueryService.getByAuthor(userId);
+    const chapters = await this.chapterQueryService.getByAuthor(userId, {
+      page: Number(page) || 1,
+      limit: Number(limit) || 10,
+    });
 
     return reply
       .code(HTTP_STATUS.OK.code)
