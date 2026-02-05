@@ -15,7 +15,6 @@ import { StoryRepository } from '../repositories/story.repository';
 import { StoryPipelineBuilder } from '../pipelines/storyPipeline.builder';
 import { IStory, IStorySettingsWithImages } from '../types/story.types';
 import { StoryStatus } from '../types/story-enum';
-import { PUBLIC_AUTHOR_PROJECTION } from '@/features/chapter/pipelines/chapter.projections';
 
 @singleton()
 class StoryQueryService extends BaseModule implements IStoryQueryService {
@@ -92,7 +91,7 @@ class StoryQueryService extends BaseModule implements IStoryQueryService {
    * Get newly created stories (last 7 days)
    */
   async getNewStories(options: IOperationOptions = {}): Promise<IStory[]> {
-    const pipeline = new StoryPipelineBuilder().createdWithinLastDays().filterPublished().build();
+    const pipeline = new StoryPipelineBuilder().createdWithinLastDays(7).filterPublished().build();
     return this.storyRepo.aggregateStories(pipeline, options);
   }
 
@@ -114,11 +113,7 @@ class StoryQueryService extends BaseModule implements IStoryQueryService {
       this.throwNotFoundError('Story not found. Unable to generate chapter tree.');
     }
 
-    const pipeline = new ChapterPipelineBuilder()
-      .loadChaptersForStory(story.slug)
-      .attachAuthor({ project: PUBLIC_AUTHOR_PROJECTION })
-      .buildChapterGraphNode()
-      .build();
+    const pipeline = new ChapterPipelineBuilder().buildStoryChapterTreePreset(story.slug).build();
 
     const chapters = await this.chapterRepo.aggregateChapters(pipeline);
 

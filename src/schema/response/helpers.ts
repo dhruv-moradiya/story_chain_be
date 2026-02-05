@@ -39,6 +39,8 @@ export const errorResponse = (description: string) => ({
   properties: {
     success: { type: 'boolean' },
     message: { type: 'string' },
+    statusCode: { type: 'number' },
+    data: { type: 'null' },
     ...(process.env.NODE_ENV === 'development' && { stack: { type: 'string' } }),
   },
 });
