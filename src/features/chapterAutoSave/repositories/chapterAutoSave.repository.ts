@@ -1,6 +1,5 @@
-import { Types } from 'mongoose';
 import { ChapterAutoSave } from '@models/chapterAutoSave.modal';
-import { ID } from '@/types';
+import { ID, IOperationOptions } from '@/types';
 import {
   IEnableAutoSaveNewChapter,
   IEnableAutoSaveUpdateChapter,
@@ -20,20 +19,28 @@ export class ChapterAutoSaveRepository extends BaseRepository<
   // ───────────────────────────────────────────────
   // Finds
   // ───────────────────────────────────────────────
-  findByChapterIdAndUser(chapterId: ID, userId: string) {
-    return this.model.findOne({ chapterId, userId });
+  findByChapterSlugAndUser(chapterSlug: string, userId: string) {
+    return this.model.findOne({ chapterSlug, userId });
   }
 
   findByDraftIdAndUser(draftId: string, userId: string) {
     return this.model.findOne({ draftId, userId });
   }
 
-  findByUser(userId: string): Promise<IChapterAutoSave[]> {
-    return this.model.find({ userId });
+  findByUser(userId: string, page: number, limit: number): Promise<IChapterAutoSave[]> {
+    return this.model
+      .find({ userId })
+      .sort({ lastSavedAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
   }
 
-  disableAutoSaveForExistingChapter(chapterId: ID) {
-    return this.findOneAndUpdate({ chapterId: chapterId }, { isEnabled: false }, { new: true });
+  countByUser(userId: string): Promise<number> {
+    return this.model.countDocuments({ userId });
+  }
+
+  disableAutoSaveForExistingChapter(chapterSlug: string) {
+    return this.findOneAndUpdate({ chapterSlug: chapterSlug }, { isEnabled: false }, { new: true });
   }
 
   disableAutoSaveForSraftAutoSave(id: ID) {
@@ -44,31 +51,32 @@ export class ChapterAutoSaveRepository extends BaseRepository<
   // Create autosave for NEW chapter
   // ───────────────────────────────────────────────
   enableAutoSaveForChapter(chapter: {
-    chapterId: Types.ObjectId;
+    chapterSlug: string;
     userId: string;
     title: string;
     content: string;
     autoSaveType: string;
-    storyId: Types.ObjectId;
+    storySlug: string;
     parentChapterSlug?: string;
   }): Promise<IChapterAutoSave> {
-    const { chapterId, userId, title, content, autoSaveType, storyId, parentChapterSlug } = chapter;
+    const { chapterSlug, userId, title, content, autoSaveType, storySlug, parentChapterSlug } =
+      chapter;
 
     return this.model.findOneAndUpdate(
-      { chapterId, userId },
+      { chapterSlug, userId },
       {
         $set: {
           isEnabled: true,
           lastSavedAt: new Date(),
         },
         $setOnInsert: {
-          chapterId,
+          chapterSlug,
           userId,
           title,
           content,
           saveCount: 0,
           autoSaveType,
-          storyId,
+          storySlug,
           parentChapterSlug,
         },
       },
@@ -83,10 +91,10 @@ export class ChapterAutoSaveRepository extends BaseRepository<
     draftId: string;
     userId: string;
     autoSaveType: string;
-    storyId: Types.ObjectId;
+    storySlug: string;
     parentChapterSlug?: string;
   }) {
-    const { draftId, userId, autoSaveType, storyId, parentChapterSlug } = draft;
+    const { draftId, userId, autoSaveType, storySlug, parentChapterSlug } = draft;
 
     return this.model.findOneAndUpdate(
       { draftId, userId },
@@ -102,7 +110,7 @@ export class ChapterAutoSaveRepository extends BaseRepository<
           content: '',
           saveCount: 0,
           autoSaveType,
-          storyId,
+          storySlug,
           parentChapterSlug,
         },
       },
@@ -120,12 +128,12 @@ export class ChapterAutoSaveRepository extends BaseRepository<
   // ───────────────────────────────────────────────
   // When chapter is officially created → attach draft
   // ───────────────────────────────────────────────
-  linkDraftToChapter(userId: string, draftId: string, chapterId: Types.ObjectId) {
+  linkDraftToChapter(userId: string, draftId: string, chapterSlug: string) {
     return this.model.findOneAndUpdate(
       { userId, draftId },
       {
         $set: {
-          chapterId,
+          chapterSlug,
           draftId: null,
         },
       },
@@ -136,18 +144,24 @@ export class ChapterAutoSaveRepository extends BaseRepository<
   // ───────────────────────────────────────────────
   // Delete autosave by ID
   // ───────────────────────────────────────────────
-  deleteById(id: ID): Promise<IChapterAutoSave | null> {
-    return this.model.findByIdAndDelete(id).lean<IChapterAutoSave>().exec();
+  deleteById(id: ID, options?: IOperationOptions): Promise<IChapterAutoSave | null> {
+    const query = this.model.findByIdAndDelete(id);
+
+    if (options?.session) {
+      query.session(options.session);
+    }
+
+    return query.lean<IChapterAutoSave>().exec();
   }
 
   // ───────────────────────────────────────────────
   // Enable auto-save (handles all auto-save types)
   // ───────────────────────────────────────────────
   enableAutoSave(input: TEnableAutoSaveInput): Promise<IChapterAutoSave> {
-    const { autoSaveType, userId, storyId, title, content } = input;
+    const { autoSaveType, userId, storySlug, title, content } = input;
     const baseFields = {
       userId,
-      storyId,
+      storySlug,
       title,
       content,
       autoSaveType,
@@ -172,10 +186,12 @@ export class ChapterAutoSaveRepository extends BaseRepository<
         const updateInput = input as IEnableAutoSaveUpdateChapter;
         return this.model.create({
           ...baseFields,
-          chapterId: updateInput.chapterId,
+          chapterSlug: updateInput.chapterSlug,
           parentChapterSlug: updateInput.parentChapterSlug,
         });
       }
+      default:
+        throw new Error(`Unsupported autoSaveType: ${autoSaveType}`);
     }
   }
 }

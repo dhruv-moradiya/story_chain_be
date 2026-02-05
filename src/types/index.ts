@@ -29,6 +29,8 @@ interface IInviteTokenPayload {
 
 interface IOperationOptions {
   session?: ClientSession;
+  page?: number;
+  limit?: number;
 }
 
 export type { ID, IOperationOptions, IInviteTokenPayload };

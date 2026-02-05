@@ -1,8 +1,9 @@
 import { ID } from '..';
+import { IChapterAutoSave } from '@/features/chapterAutoSave/types/chapterAutoSave.types';
 
 interface IChapterAutoSaveResponse {
   _id: ID;
-  chapterId?: ID;
+  chapterSlug?: string;
   draftId?: string;
   userId: string;
 }
@@ -10,7 +11,7 @@ interface IChapterAutoSaveResponse {
 interface IEnableAutoSaveRootChapter {
   autoSaveType: 'root_chapter';
   userId: string;
-  storyId: ID;
+  storySlug: string;
   title: string;
   content: string;
 }
@@ -18,7 +19,7 @@ interface IEnableAutoSaveRootChapter {
 interface IEnableAutoSaveNewChapter {
   autoSaveType: 'new_chapter';
   userId: string;
-  storyId: ID;
+  storySlug: string;
   title: string;
   content: string;
   parentChapterSlug?: string;
@@ -27,11 +28,24 @@ interface IEnableAutoSaveNewChapter {
 interface IEnableAutoSaveUpdateChapter {
   autoSaveType: 'update_chapter';
   userId: string;
-  storyId: ID;
+  storySlug: string;
   title: string;
   content: string;
-  chapterId: ID;
+  chapterSlug: string;
   parentChapterSlug?: string;
+}
+
+interface IChapterAutoSavePaginatedResponse {
+  docs: IChapterAutoSave[];
+  totalDocs: number;
+  limit: number;
+  totalPages: number;
+  page: number;
+  pagingCounter: number;
+  hasPrevPage: boolean;
+  hasNextPage: boolean;
+  prevPage: number | null;
+  nextPage: number | null;
 }
 
 type TEnableAutoSaveInput =
@@ -45,4 +59,5 @@ export type {
   IEnableAutoSaveNewChapter,
   IEnableAutoSaveUpdateChapter,
   TEnableAutoSaveInput,
+  IChapterAutoSavePaginatedResponse,
 };

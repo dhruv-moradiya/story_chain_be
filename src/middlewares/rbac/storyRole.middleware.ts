@@ -2,13 +2,13 @@ import { FastifyRequest, FastifyReply } from 'fastify';
 import { container } from 'tsyringe';
 import { TOKENS } from '@container/tokens';
 import { HTTP_STATUS } from '@constants/httpStatus';
-import { extractStoryIdFromRequest, extractSlugFromRequest } from '@utils/extractors';
+import { extractSlugFromRequest } from '@utils/extractors';
 import { StoryQueryService } from '@features/story/services/story-query.service';
 import { CollaboratorQueryService } from '@features/storyCollaborator/services/collaborator-query.service';
 import { StoryCollaboratorRole } from '@features/storyCollaborator/types/storyCollaborator-enum';
 
 // Roles that can write chapters
-const WRITE_CHAPTER_ROLES: string[] = [
+export const WRITE_CHAPTER_ROLES: string[] = [
   StoryCollaboratorRole.OWNER,
   StoryCollaboratorRole.CO_AUTHOR,
   StoryCollaboratorRole.CONTRIBUTOR,
@@ -27,63 +27,7 @@ const PUBLISH_STORY_ROLES: string[] = [
 ];
 
 /**
- * Loads the story context by storyId and attaches story role info to the request.
- * This middleware assumes that the user is already authenticated and user info is attached to request.user.
- *
- * @responsibility
- * - Resolves the story from the database using storyId in request params
- * - Attaches the story context to request.storyContext
- * - Attaches the user's story role to request.userStoryRole
- * - If story not found, responds with 404 and stops request processing.
- */
-export async function loadStoryContext(request: FastifyRequest, reply: FastifyReply) {
-  const storyId = extractStoryIdFromRequest(request);
-
-  if (!storyId) {
-    return reply.code(HTTP_STATUS.BAD_REQUEST.code).send({
-      success: false,
-      error: 'Bad Request',
-      message: 'Story ID is required in the request.',
-    });
-  }
-
-  const storyQueryService = container.resolve<StoryQueryService>(TOKENS.StoryQueryService);
-  const collaboratorQueryService = container.resolve<CollaboratorQueryService>(
-    TOKENS.CollaboratorQueryService
-  );
-
-  try {
-    const story = await storyQueryService.getById(storyId);
-
-    request.storyContext = {
-      storyId: story._id.toString(),
-      creatorId: story.creatorId,
-      status: story.status,
-    };
-
-    if (request.user) {
-      const userId = request.user.clerkId;
-      request.userStoryRole = await collaboratorQueryService.getCollaboratorRole(
-        userId,
-        story.slug
-      );
-    } else {
-      request.userStoryRole = null;
-    }
-  } catch (error: unknown) {
-    if (error && typeof error === 'object' && 'statusCode' in error && error.statusCode === 404) {
-      return reply.code(HTTP_STATUS.NOT_FOUND.code).send({
-        success: false,
-        error: 'Not Found',
-        message: 'Story not found.',
-      });
-    }
-    throw error;
-  }
-}
-
-/**
- * Loads the story context by slug and attaches story role info to the request.
+ * Loads the story context by slug (or storySlug) and attaches story role info to the request.
  * This middleware assumes that the user is already authenticated and user info is attached to request.user.
  *
  * @responsibility
@@ -92,7 +36,7 @@ export async function loadStoryContext(request: FastifyRequest, reply: FastifyRe
  * - Attaches the user's story role to request.userStoryRole
  * - If story not found, responds with 404 and stops request processing.
  */
-export async function loadStoryContextBySlug(request: FastifyRequest, reply: FastifyReply) {
+export async function loadStoryContext(request: FastifyRequest, reply: FastifyReply) {
   const slug = extractSlugFromRequest(request);
 
   if (!slug) {
@@ -119,10 +63,7 @@ export async function loadStoryContextBySlug(request: FastifyRequest, reply: Fas
 
     if (request.user) {
       const userId = request.user.clerkId;
-      request.userStoryRole = await collaboratorQueryService.getCollaboratorRole(
-        userId,
-        story._id.toString()
-      );
+      request.userStoryRole = await collaboratorQueryService.getCollaboratorRole(userId, slug);
     } else {
       request.userStoryRole = null;
     }
@@ -141,7 +82,7 @@ export async function loadStoryContextBySlug(request: FastifyRequest, reply: Fas
 /**
  * Story role guard functions for RBAC.
  * These middlewares check if the user has the required role to perform an action.
- * They must be used AFTER loadStoryContext or loadStoryContextBySlug middleware.
+ * They must be used AFTER loadStoryContext middleware.
  */
 export const StoryRoleGuards = {
   /**

@@ -3,11 +3,7 @@ import zodToJsonSchema from 'zod-to-json-schema';
 import { container } from 'tsyringe';
 import { TOKENS } from '@/container';
 import { validateAuth } from '@middleware/authHandler';
-import {
-  loadStoryContext,
-  loadStoryContextBySlug,
-  StoryRoleGuards,
-} from '@middleware/rbac/storyRole.middleware';
+import { loadStoryContext, StoryRoleGuards } from '@middleware/rbac/storyRole.middleware';
 import { PlatformRoleGuards } from '@middleware/rbac/platformRole.middleware';
 import { ChapterResponses, CollaboratorResponses, StoryResponses } from '@schema/response.schema';
 import {
@@ -262,13 +258,13 @@ export async function storyRoutes(fastify: FastifyInstance) {
     storyController.updateStorySetting
   );
 
-  // Add a chapter to a story by ID
+  // Add a chapter to a story by ID (now using slug)
   fastify.post(
     StoryApiRoutes.AddChapter,
     {
       preHandler: [validateAuth, loadStoryContext, StoryRoleGuards.canWriteChapters],
       schema: {
-        description: 'Add a chapter to a story by ID',
+        description: 'Add a chapter to a story by slug',
         tags: ['Chapters'],
         security: [{ bearerAuth: [] }],
         body: zodToJsonSchema(StoryAddChapterSchema),
@@ -287,7 +283,7 @@ export async function storyRoutes(fastify: FastifyInstance) {
   fastify.post(
     StoryApiRoutes.PublishBySlug,
     {
-      preHandler: [validateAuth, loadStoryContextBySlug, StoryRoleGuards.canPublishStory],
+      preHandler: [validateAuth, loadStoryContext, StoryRoleGuards.canPublishStory],
       schema: {
         description: 'Publish a story by slug',
         tags: ['Stories'],
@@ -319,7 +315,7 @@ export async function storyRoutes(fastify: FastifyInstance) {
   fastify.post(
     StoryApiRoutes.UpdateSettingsBySlug,
     {
-      preHandler: [validateAuth, loadStoryContextBySlug, StoryRoleGuards.canEditStorySettings],
+      preHandler: [validateAuth, loadStoryContext, StoryRoleGuards.canEditStorySettings],
       schema: {
         description: 'Update story settings by slug',
         tags: ['Stories'],
@@ -399,7 +395,7 @@ export async function storyRoutes(fastify: FastifyInstance) {
   fastify.post(
     StoryApiRoutes.AddChapterBySlug,
     {
-      preHandler: [validateAuth, loadStoryContextBySlug, StoryRoleGuards.canWriteChapters],
+      preHandler: [validateAuth, loadStoryContext, StoryRoleGuards.canWriteChapters],
       schema: {
         description:
           'Add a chapter to a story by slug. Use "root" as parentChapterId for root chapters.',
@@ -462,7 +458,7 @@ export async function storyRoutes(fastify: FastifyInstance) {
   fastify.patch(
     StoryApiRoutes.UpdateStoryCoverImageBySlug,
     {
-      preHandler: [validateAuth, loadStoryContextBySlug, StoryRoleGuards.canEditStorySettings],
+      preHandler: [validateAuth, loadStoryContext, StoryRoleGuards.canEditStorySettings],
       schema: {
         description: 'Update story cover image by slug',
         tags: ['Stories'],
@@ -478,7 +474,7 @@ export async function storyRoutes(fastify: FastifyInstance) {
   fastify.patch(
     StoryApiRoutes.UpdateStoryCardImageBySlug,
     {
-      preHandler: [validateAuth, loadStoryContextBySlug, StoryRoleGuards.canEditStorySettings],
+      preHandler: [validateAuth, loadStoryContext, StoryRoleGuards.canEditStorySettings],
       schema: {
         description: 'Update story card image by slug',
         tags: ['Stories'],

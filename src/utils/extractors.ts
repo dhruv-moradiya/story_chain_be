@@ -15,5 +15,5 @@ export function extractStoryIdFromRequest(request: FastifyRequest): string | und
  */
 export function extractSlugFromRequest(request: FastifyRequest): string | undefined {
   const params = request.params as Record<string, string>;
-  return params.slug;
+  return params.slug || params.storySlug;
 }

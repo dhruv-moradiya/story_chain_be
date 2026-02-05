@@ -3,6 +3,7 @@ import { TOKENS } from '@container/tokens';
 import { BaseModule } from '@utils/baseClass';
 import { inject, singleton } from 'tsyringe';
 import { ChapterPipelineBuilder } from '../pipelines/chapterPipeline.builder';
+import { PUBLIC_AUTHOR_PROJECTION } from '../pipelines/chapter.projections';
 import { ChapterRepository } from '../repositories/chapter.repository';
 import { IChapter } from '../types/chapter.types';
 import { IChapterQueryService } from './interfaces/chapter-query.interface';
@@ -33,16 +34,19 @@ export class ChapterQueryService extends BaseModule implements IChapterQueryServ
   /**
    * Get all chapters created by a user with story info
    */
-  async getByAuthor(authorId: string): Promise<IChapterWithStoryResponse[]> {
+  async getByAuthor(
+    authorId: string,
+    options: IOperationOptions = {}
+  ): Promise<IChapterWithStoryResponse[]> {
     const pipeline = new ChapterPipelineBuilder()
       .loadChaptersByAuthor(authorId)
-      .attachStory()
-      .attachAuthor()
+      .attachStory({ project: { title: 1, slug: 1, status: 1 } })
+      .attachAuthor({ project: PUBLIC_AUTHOR_PROJECTION })
       .projectChapterWithStory()
       .sortByCreatedAt()
       .build();
 
-    return this.chapterRepo.aggregateChapters<IChapterWithStoryResponse>(pipeline);
+    return this.chapterRepo.aggregateChapters<IChapterWithStoryResponse>(pipeline, options);
   }
 
   /**

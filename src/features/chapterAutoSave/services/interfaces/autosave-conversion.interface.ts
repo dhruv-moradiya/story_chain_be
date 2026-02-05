@@ -1,4 +1,4 @@
-import { TConvertToDraftDTO, TConvertToPublishedDTO } from '@dto/chapterAutoSave.dto';
+import { TConvertAutoSaveDTO } from '@dto/chapterAutoSave.dto';
 import { IChapter } from '@features/chapter/types/chapter.types';
 
 /**
@@ -6,12 +6,7 @@ import { IChapter } from '@features/chapter/types/chapter.types';
  */
 export interface IAutoSaveConversionService {
   /**
-   * Convert autosave to draft chapter
+   * Convert autosave to chapter (draft or published)
    */
-  convertToDraft(input: TConvertToDraftDTO): Promise<IChapter>;
-
-  /**
-   * Convert autosave to published chapter
-   */
-  convertToPublished(input: TConvertToPublishedDTO): Promise<IChapter>;
+  convert(input: TConvertAutoSaveDTO): Promise<IChapter>;
 }

@@ -1,65 +1,24 @@
-import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import { FastifyInstance } from 'fastify';
 import zodToJsonSchema from 'zod-to-json-schema';
 import { container } from 'tsyringe';
 import { TOKENS } from '@/container';
 import { validateAuth } from '@middleware/authHandler';
-import { loadStoryContext, StoryRoleGuards } from '@middleware/rbac/storyRole.middleware';
-import { DisableAutoSaveSchema } from '@schema/request/chapterAutoSave.schema';
 import {
   AutoSaveContentSchemaVer2,
-  ConvertAutoSaveToDraftSchema,
-  ConvertAutoSaveToPublishedSchema,
+  ConvertAutoSaveQuerySchema,
+  ConvertAutoSaveSchema,
   EnableAutoSaveSchemaVer2,
+  GetAutoSaveDraftQuerySchema,
 } from '@schema/request/chapterAutoSaveVer2.Schema';
 import { AutoSaveResponses } from '@schema/response.schema';
-import { HTTP_STATUS } from '@constants/httpStatus';
 import { type ChapterAutoSaveController } from '../controllers/chapterAutoSave.controller';
-import { AutoSaveQueryService } from '../services/autosave-query.service';
 
 enum ChapterAutoSaveApiRoutes {
   EnableAutoSave = '/enable',
   AutoSaveContent = '/save',
-  DisableAutoSave = '/disable',
+  // DisableAutoSave = '/disable',
   GetAutoSaveDraft = '/draft',
-  ConvertToDraft = '/convert-to-draft',
-  ConvertToPublished = '/convert-to-published',
-}
-
-/**
- * Middleware to load story context from autoSaveId in request body
- * This is needed for RBAC checks on the convertToPublished endpoint
- */
-async function loadStoryContextFromAutoSave(
-  request: FastifyRequest,
-  reply: FastifyReply
-): Promise<void> {
-  const { autoSaveId } = request.body as { autoSaveId?: string };
-
-  if (!autoSaveId) {
-    return reply.code(HTTP_STATUS.BAD_REQUEST.code).send({
-      success: false,
-      error: 'Bad Request',
-      message: 'autoSaveId is required.',
-    });
-  }
-
-  const autoSaveQueryService = container.resolve<AutoSaveQueryService>(TOKENS.AutoSaveQueryService);
-
-  const autoSave = await autoSaveQueryService.getById(autoSaveId);
-
-  if (!autoSave) {
-    return reply.code(HTTP_STATUS.NOT_FOUND.code).send({
-      success: false,
-      error: 'Not Found',
-      message: 'Auto-save not found.',
-    });
-  }
-
-  // Set storyId in params so loadStoryContext can use it
-  (request.params as { storyId: string }).storyId = autoSave.storyId.toString();
-
-  // Now call the standard loadStoryContext
-  await loadStoryContext(request, reply);
+  Convert = '/convert',
 }
 
 export async function chapterAutoSaveRoutes(fastify: FastifyInstance) {
@@ -93,20 +52,23 @@ export async function chapterAutoSaveRoutes(fastify: FastifyInstance) {
     controller.autoSaveContent
   );
 
-  fastify.post(
-    ChapterAutoSaveApiRoutes.DisableAutoSave,
-    {
-      preHandler: [validateAuth],
-      schema: {
-        description: 'Disable auto-save for a chapter',
-        tags: ['Chapter Auto-Save'],
-        body: zodToJsonSchema(DisableAutoSaveSchema),
-        response: AutoSaveResponses.disabled,
-      },
-    },
-    controller.disableAutoSave
-  );
+  // fastify.post(
+  //   ChapterAutoSaveApiRoutes.DisableAutoSave,
+  //   {
+  //     preHandler: [validateAuth],
+  //     schema: {
+  //       description: 'Disable auto-save for a chapter',
+  //       tags: ['Chapter Auto-Save'],
+  //       body: zodToJsonSchema(DisableAutoSaveSchema),
+  //       response: AutoSaveResponses.disabled,
+  //     },
+  //   },
+  //   controller.disableAutoSave
+  // );
 
+  /**
+   * Get auto-save draft for user
+   */
   fastify.get(
     ChapterAutoSaveApiRoutes.GetAutoSaveDraft,
     {
@@ -114,6 +76,7 @@ export async function chapterAutoSaveRoutes(fastify: FastifyInstance) {
       schema: {
         description: 'Get auto-save draft for a chapter',
         tags: ['Chapter Auto-Save'],
+        querystring: zodToJsonSchema(GetAutoSaveDraftQuerySchema),
         response: AutoSaveResponses.draft,
       },
     },
@@ -121,40 +84,21 @@ export async function chapterAutoSaveRoutes(fastify: FastifyInstance) {
   );
 
   /**
-   * Convert AutoSave to Draft Chapter
-   * - Only requires authentication (owner check is done in service)
-   * - No story role permission required
+   * Convert AutoSave to Draft or Published Chapter
+   * - type=draft: Only the owner of the autosave can convert it (no role required)
+   * - type=publish: Requires canWriteChapters permission in the story
    */
   fastify.post(
-    ChapterAutoSaveApiRoutes.ConvertToDraft,
+    ChapterAutoSaveApiRoutes.Convert,
     {
       preHandler: [validateAuth],
       schema: {
-        description: 'Convert auto-save to a draft chapter (owned by user)',
+        description: 'Convert auto-save to a draft or published chapter',
         tags: ['Chapter Auto-Save'],
-        body: zodToJsonSchema(ConvertAutoSaveToDraftSchema),
+        querystring: zodToJsonSchema(ConvertAutoSaveQuerySchema),
+        body: zodToJsonSchema(ConvertAutoSaveSchema),
       },
     },
-    controller.convertToDraft
-  );
-
-  /**
-   * Convert AutoSave to Published Chapter
-   * - Requires authentication
-   * - Requires `canWriteChapters` permission in the story
-   * - Middleware loads story context from autoSaveId and checks permission
-   */
-  fastify.post(
-    ChapterAutoSaveApiRoutes.ConvertToPublished,
-    {
-      preHandler: [validateAuth, loadStoryContextFromAutoSave, StoryRoleGuards.canWriteChapters],
-      schema: {
-        description:
-          'Convert auto-save to a published chapter (requires canWriteChapters permission)',
-        tags: ['Chapter Auto-Save'],
-        body: zodToJsonSchema(ConvertAutoSaveToPublishedSchema),
-      },
-    },
-    controller.convertToPublished
+    controller.convertAutoSave
   );
 }

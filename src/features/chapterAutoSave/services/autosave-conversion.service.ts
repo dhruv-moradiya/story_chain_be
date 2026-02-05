@@ -1,7 +1,8 @@
 import { inject, singleton } from 'tsyringe';
 import { TOKENS } from '@container/tokens';
-import { TConvertToDraftDTO, TConvertToPublishedDTO } from '@dto/chapterAutoSave.dto';
+import { TConvertAutoSaveDTO } from '@dto/chapterAutoSave.dto';
 import { BaseModule } from '@utils/baseClass';
+import { WRITE_CHAPTER_ROLES } from '@/middlewares/rbac/storyRole.middleware';
 
 import { IChapter } from '@features/chapter/types/chapter.types';
 import { IChapterAutoSave } from '../types/chapterAutoSave.types';
@@ -10,6 +11,9 @@ import { IAutoSaveConversionService } from './interfaces/autosave-conversion.int
 import { ChapterStatus } from '@/features/chapter/types/chapter-enum';
 import { IChapterCrudService } from '@features/chapter/services/interfaces/chapter-crud.interface';
 import { StoryQueryService } from '@features/story/services/story-query.service';
+import { CollaboratorQueryService } from '@features/storyCollaborator/services/collaborator-query.service';
+import { ClientSession } from 'mongoose';
+import { withTransaction } from '@utils/withTransaction';
 
 @singleton()
 export class AutoSaveConversionService extends BaseModule implements IAutoSaveConversionService {
@@ -19,7 +23,9 @@ export class AutoSaveConversionService extends BaseModule implements IAutoSaveCo
     @inject(TOKENS.ChapterCrudService)
     private readonly chapterCrudService: IChapterCrudService,
     @inject(TOKENS.StoryQueryService)
-    private readonly storyQueryService: StoryQueryService
+    private readonly storyQueryService: StoryQueryService,
+    @inject(TOKENS.CollaboratorQueryService)
+    private readonly collaboratorQueryService: CollaboratorQueryService
   ) {
     super();
   }
@@ -60,34 +66,42 @@ export class AutoSaveConversionService extends BaseModule implements IAutoSaveCo
 
   private async createRootChapterFromAutoSave(
     autoSave: IChapterAutoSave,
-    userId: string
+    userId: string,
+    session?: ClientSession
   ): Promise<IChapter> {
-    const story = await this.storyQueryService.getById(autoSave.storyId.toString());
-    return this.chapterCrudService.createRoot({
-      storySlug: story.slug,
-      userId,
-      title: autoSave.title || 'Untitled Chapter',
-      content: autoSave.content,
-    });
+    const story = await this.storyQueryService.getBySlug(autoSave.storySlug, { session });
+    return this.chapterCrudService.createRoot(
+      {
+        storySlug: story.slug,
+        userId,
+        title: autoSave.title || 'Untitled Chapter',
+        content: autoSave.content,
+      },
+      { session }
+    );
   }
 
   private async createChildChapterFromAutoSave(
     autoSave: IChapterAutoSave,
     userId: string,
-    status: ChapterStatus
+    status: ChapterStatus,
+    session?: ClientSession
   ): Promise<IChapter> {
     this.validateParentChapter(autoSave.parentChapterSlug);
 
-    const story = await this.storyQueryService.getById(autoSave.storyId.toString());
+    const story = await this.storyQueryService.getBySlug(autoSave.storySlug, { session });
 
-    return this.chapterCrudService.createChild({
-      storySlug: story.slug,
-      userId,
-      title: autoSave.title || 'Untitled Chapter',
-      content: autoSave.content,
-      parentChapterSlug: autoSave.parentChapterSlug!.toString(),
-      status,
-    });
+    return this.chapterCrudService.createChild(
+      {
+        storySlug: story.slug,
+        userId,
+        title: autoSave.title || 'Untitled Chapter',
+        content: autoSave.content,
+        parentChapterSlug: autoSave.parentChapterSlug!.toString(),
+        status,
+      },
+      { session }
+    );
   }
 
   /**
@@ -96,19 +110,21 @@ export class AutoSaveConversionService extends BaseModule implements IAutoSaveCo
    * @param userId - The user creating the chapter
    * @param status - Chapter status (defaults to DRAFT)
    */
-  private async createChapterFromAutoSave(
-    autoSave: IChapterAutoSave,
-    userId: string,
-    status: ChapterStatus = ChapterStatus.DRAFT
-  ): Promise<IChapter> {
+  private async createChapterFromAutoSave(input: {
+    autoSave: IChapterAutoSave;
+    userId: string;
+    status?: ChapterStatus;
+    session?: ClientSession;
+  }): Promise<IChapter> {
+    const { autoSave, userId, status = ChapterStatus.DRAFT, session } = input;
     this.validateContent(autoSave.content);
 
     switch (autoSave.autoSaveType) {
       case 'root_chapter':
-        return this.createRootChapterFromAutoSave(autoSave, userId);
+        return this.createRootChapterFromAutoSave(autoSave, userId, session);
 
       case 'new_chapter':
-        return this.createChildChapterFromAutoSave(autoSave, userId, status);
+        return this.createChildChapterFromAutoSave(autoSave, userId, status, session);
 
       case 'update_chapter':
         throw this.throwBadRequest(
@@ -128,25 +144,45 @@ export class AutoSaveConversionService extends BaseModule implements IAutoSaveCo
    * Common conversion flow: validate, create chapter, delete autosave
    */
   private async performConversion(
-    autoSaveId: string,
+    autoSave: IChapterAutoSave,
     userId: string,
     status: ChapterStatus
   ): Promise<IChapter> {
+    const autoSaveId = autoSave._id.toString();
+    return withTransaction(`Convert AutoSave ${autoSaveId}`, async (session) => {
+      this.verifyOwnership(autoSave, userId);
+
+      const chapter = await this.createChapterFromAutoSave({
+        autoSave,
+        userId,
+        status,
+        session,
+      });
+
+      await this.chapterAutoSaveRepo.deleteById(autoSaveId, { session });
+
+      return chapter;
+    });
+  }
+
+  async convert(input: TConvertAutoSaveDTO): Promise<IChapter> {
+    const { autoSaveId, userId, type } = input;
+
     const autoSave = await this.findAutoSaveOrThrow(autoSaveId);
-    this.verifyOwnership(autoSave, userId);
 
-    const chapter = await this.createChapterFromAutoSave(autoSave, userId, status);
+    if (type === 'publish') {
+      const userStoryRole = await this.collaboratorQueryService.getCollaboratorRole(
+        userId,
+        autoSave.storySlug
+      );
 
-    await this.chapterAutoSaveRepo.deleteById(autoSaveId);
+      if (!userStoryRole || !WRITE_CHAPTER_ROLES.includes(userStoryRole)) {
+        this.throwForbiddenError('You do not have permission to publish chapters in this story.');
+      }
+    }
 
-    return chapter;
-  }
+    const status = type === 'publish' ? ChapterStatus.PUBLISHED : ChapterStatus.DRAFT;
 
-  async convertToDraft(input: TConvertToDraftDTO): Promise<IChapter> {
-    return this.performConversion(input.autoSaveId, input.userId, ChapterStatus.DRAFT);
-  }
-
-  async convertToPublished(input: TConvertToPublishedDTO): Promise<IChapter> {
-    return this.performConversion(input.autoSaveId, input.userId, ChapterStatus.PUBLISHED);
+    return this.performConversion(autoSave, userId, status);
   }
 }

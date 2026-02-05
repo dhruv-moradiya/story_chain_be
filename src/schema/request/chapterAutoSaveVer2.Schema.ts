@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { ObjectIdSchema } from '@utils/index';
 
+const AutoSaveIdSchema = ObjectIdSchema().optional();
+
 const BaseAutoSaveContentSchema = z.object({
   // userId: UserIdSchema,
   title: z
@@ -16,6 +18,11 @@ const BaseAutoSaveContentSchema = z.object({
       invalid_type_error: 'content must be a string.',
     })
     .max(10000000),
+});
+
+const GetAutoSaveDraftQuerySchema = z.object({
+  page: z.number().optional(),
+  limit: z.number().optional(),
 });
 
 // Note: .passthrough() is required to prevent AJV from stripping properties
@@ -34,7 +41,7 @@ const EnableAutoSaveSchemaVer2NewChapter = BaseAutoSaveContentSchema.extend({
 const EnableAutoSaveSchemaVer2UpdateChapter = BaseAutoSaveContentSchema.extend({
   autoSaveType: z.literal('update_chapter'),
   storySlug: z.string(),
-  chapterId: z.string(),
+  chapterSlug: z.string(),
   parentChapterSlug: z.string(),
 }).passthrough();
 
@@ -69,7 +76,7 @@ const AutoSaveContentSchemaVer2UpdateChapter = BaseAutoSaveContentSchema.extend(
   autoSaveType: z.literal('update_chapter'),
   storySlug: z.string(),
   parentChapterSlug: z.string(),
-  chapterId: ObjectIdSchema(),
+  chapterSlug: z.string(),
 }).passthrough();
 
 const AutoSaveContentSchemaVer2DisableAutoSave = z.object({
@@ -77,20 +84,16 @@ const AutoSaveContentSchemaVer2DisableAutoSave = z.object({
 });
 
 /**
- * Convert AutoSave to Draft Chapter
- * - Only the owner of the autosave can convert it to draft
- * - No role permission required (user owns their own drafts)
+ * Convert AutoSave
+ * - type: 'draft' (user draft) or 'publish' (published chapter)
  */
-const ConvertAutoSaveToDraftSchema = z.object({
-  autoSaveId: ObjectIdSchema(),
+const ConvertAutoSaveQuerySchema = z.object({
+  type: z.enum(['draft', 'publish'], {
+    required_error: 'type is required (draft or publish)',
+  }),
 });
 
-/**
- * Convert AutoSave to Published Chapter
- * - Requires `canWriteChapters` permission in the story
- * - OWNER, CO_AUTHOR, MODERATOR, REVIEWER, CONTRIBUTOR can publish
- */
-const ConvertAutoSaveToPublishedSchema = z.object({
+const ConvertAutoSaveSchema = z.object({
   autoSaveId: ObjectIdSchema(),
 });
 
@@ -105,6 +108,10 @@ const AutoSaveContentSchemaVer2 = z.union([
   AutoSaveContentSchemaVer2NewChapter,
   AutoSaveContentSchemaVer2UpdateChapter,
 ]);
+
+type TAutoSaveIdSchema = z.infer<typeof AutoSaveIdSchema>;
+
+type TGetAutoSaveDraftQuerySchema = z.infer<typeof GetAutoSaveDraftQuerySchema>;
 
 // ENABLE AUTO SAVE
 type TEnableAutoSaveSchemaVer2RootChapter = z.infer<typeof EnableAutoSaveSchemaVer2RootChapter>;
@@ -125,13 +132,13 @@ type TAutoSaveContentSchemaVer2DisableAutoSave = z.infer<
   typeof AutoSaveContentSchemaVer2DisableAutoSave
 >;
 
-// CONVERT TO DRAFT
-type TConvertAutoSaveToDraftSchema = z.infer<typeof ConvertAutoSaveToDraftSchema>;
-
-// CONVERT TO PUBLISHED
-type TConvertAutoSaveToPublishedSchema = z.infer<typeof ConvertAutoSaveToPublishedSchema>;
+// CONVERT
+type TConvertAutoSaveQuerySchema = z.infer<typeof ConvertAutoSaveQuerySchema>;
+type TConvertAutoSaveSchema = z.infer<typeof ConvertAutoSaveSchema>;
 
 export {
+  AutoSaveIdSchema,
+  GetAutoSaveDraftQuerySchema,
   BaseAutoSaveContentSchema,
   EnableAutoSaveSchemaVer2,
   EnableAutoSaveSchemaVer2NewChapter,
@@ -142,11 +149,13 @@ export {
   AutoSaveContentSchemaVer2NewChapter,
   AutoSaveContentSchemaVer2UpdateChapter,
   AutoSaveContentSchemaVer2DisableAutoSave,
-  ConvertAutoSaveToDraftSchema,
-  ConvertAutoSaveToPublishedSchema,
+  ConvertAutoSaveQuerySchema,
+  ConvertAutoSaveSchema,
 };
 
 export type {
+  TAutoSaveIdSchema,
+  TGetAutoSaveDraftQuerySchema,
   TEnableAutoSaveSchemaVer2Type,
   TEnableAutoSaveSchemaVer2RootChapter,
   TEnableAutoSaveSchemaVer2NewChapter,
@@ -156,6 +165,6 @@ export type {
   TAutoSaveContentSchemaVer2NewChapter,
   TAutoSaveContentSchemaVer2UpdateChapter,
   TAutoSaveContentSchemaVer2DisableAutoSave,
-  TConvertAutoSaveToDraftSchema,
-  TConvertAutoSaveToPublishedSchema,
+  TConvertAutoSaveQuerySchema,
+  TConvertAutoSaveSchema,
 };

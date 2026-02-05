@@ -1,9 +1,8 @@
-import { ID } from '@/types';
 import { TSaveType } from '@features/chapterAutoSave/types/chapterAutoSave.types';
 import {
   TAutoSaveContentSchemaVer2,
-  TConvertAutoSaveToDraftSchema,
-  TConvertAutoSaveToPublishedSchema,
+  TConvertAutoSaveQuerySchema,
+  TConvertAutoSaveSchema,
   TEnableAutoSaveSchemaVer2Type,
 } from '@schema/request/chapterAutoSaveVer2.Schema';
 
@@ -15,8 +14,16 @@ type TAutoSaveContentDTO = TAutoSaveContentSchemaVer2 & {
   userId: string;
 };
 
+/**
+ * Convert AutoSave to Chapter
+ */
+type TConvertAutoSaveDTO = TConvertAutoSaveSchema &
+  TConvertAutoSaveQuerySchema & {
+    userId: string;
+  };
+
 interface IAutoSaveContentDTO {
-  chapterId?: ID;
+  chapterSlug?: string;
   userId: string;
   content: string;
   title: string;
@@ -26,7 +33,7 @@ interface IAutoSaveContentDTO {
 }
 
 interface IDisableAutoSaveDTO {
-  chapterId?: ID;
+  chapterSlug?: string;
   userId: string;
   autoSaveType: TSaveType;
   storySlug: string;
@@ -35,25 +42,9 @@ interface IDisableAutoSaveDTO {
 
 interface IGetAutoSaveDraftDTO {
   userId: string;
+  page?: number;
+  limit?: number;
 }
-
-/**
- * Convert AutoSave to Draft Chapter
- * - Only requires ownership of the autosave (no story role required)
- * - Creates a chapter with status = DRAFT (not visible to others)
- */
-type TConvertToDraftDTO = TConvertAutoSaveToDraftSchema & {
-  userId: string;
-};
-
-/**
- * Convert AutoSave to Published Chapter
- * - Requires `canWriteChapters` permission in the story
- * - Creates a chapter with status = PUBLISHED
- */
-type TConvertToPublishedDTO = TConvertAutoSaveToPublishedSchema & {
-  userId: string;
-};
 
 export type {
   TEnableChapterAutoSaveDTO,
@@ -61,6 +52,5 @@ export type {
   IAutoSaveContentDTO,
   IDisableAutoSaveDTO,
   IGetAutoSaveDraftDTO,
-  TConvertToDraftDTO,
-  TConvertToPublishedDTO,
+  TConvertAutoSaveDTO,
 };

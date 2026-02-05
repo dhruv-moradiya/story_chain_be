@@ -8,9 +8,10 @@ const chapterAutoSaveSchema = new Schema<IChapterAutoSaveDoc>(
      * USE: Link autosave to chapter
      * REFERENCE: Links to Chapter document
      */
-    chapterId: {
-      type: Schema.Types.ObjectId,
-      ref: 'Chapter',
+    chapterSlug: {
+      type: String,
+      default: null,
+      index: true,
     },
 
     /**
@@ -107,9 +108,8 @@ const chapterAutoSaveSchema = new Schema<IChapterAutoSaveDoc>(
      * USE: Link autosave to story for all save types
      * REFERENCE: Links to Story document
      */
-    storyId: {
-      type: Schema.Types.ObjectId,
-      ref: 'Story',
+    storySlug: {
+      type: String,
       required: true,
       index: true,
     },
