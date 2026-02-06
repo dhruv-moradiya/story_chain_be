@@ -1,13 +1,12 @@
 import { BaseModule } from '@/utils/baseClass';
 import { inject, singleton } from 'tsyringe';
-import { ICollaboratorInvitationService, ICollaboratorQueryService } from './interfaces';
+import { ICollaboratorInvitationService } from './interfaces';
 import { IStoryCollaborator } from '../types/storyCollaborator.types';
-import { TOKENS } from '@/container';
+import { TOKENS } from '@/container/tokens';
 import { TStoryCreateInviteLinkDTO } from '@/dto/story.dto';
 import { StoryCollaboratorRepository } from '../repositories/storyCollaborator.repository';
 import { StoryCollaboratorRole, StoryCollaboratorStatus } from '../types/storyCollaborator-enum';
 import { withTransaction } from '@/utils/withTransaction';
-import { IStoryCollaboratorDetailsResponse } from '@/types/response/story.response.types';
 import { StoryCollaboratorRules } from '@/domain/storyCollaborator.rules';
 import { IStoryCollaboratorUpdateStatusDTO } from '@/dto/storyCollaborator.dto';
 import { IOperationOptions } from '@/types';
@@ -19,18 +18,12 @@ class CollaboratorInvitationService extends BaseModule implements ICollaboratorI
   constructor(
     @inject(TOKENS.StoryCollaboratorRepository)
     private readonly collabRepo: StoryCollaboratorRepository,
-    @inject(TOKENS.CollaboratorQueryService)
-    private readonly collabQueryService: ICollaboratorQueryService,
     @inject(TOKENS.StoryRepository)
     private readonly storyRepo: StoryRepository,
     @inject(TOKENS.NotificationService)
     private readonly notificationService: NotificationService
   ) {
     super();
-  }
-
-  private getStoryMembersIds(collaborators: IStoryCollaboratorDetailsResponse[]): string[] {
-    return collaborators.map((collaborator) => collaborator.user.clerkId);
   }
 
   async createInvite(input: TStoryCreateInviteLinkDTO): Promise<IStoryCollaborator> {
@@ -55,28 +48,24 @@ class CollaboratorInvitationService extends BaseModule implements ICollaboratorI
         this.throwForbiddenError('You do not have permission to send invitations for this story.');
       }
 
-      const storyCollaborators = await this.collabQueryService.getCollaboratorsByStorySlug({
-        slug: input.slug,
-      });
-
-      if (
-        storyCollaborators
-          .filter((c) => c.role === StoryCollaboratorRole.OWNER)
-          .some((owner) => owner.user.clerkId === input.invitedUser.id)
-      ) {
+      if (story.creatorId === input.invitedUser.id) {
         this.throwConflictError('The user is already the owner of this story.');
       }
 
-      if (storyCollaborators.filter((c) => c.user.clerkId === input.invitedUser.id).length > 0) {
+      const existingCollaborator = await this.collabRepo.findOne(
+        {
+          slug: input.slug,
+          userId: input.invitedUser.id,
+        },
+        {},
+        { session }
+      );
+
+      if (existingCollaborator) {
+        if (existingCollaborator.role === StoryCollaboratorRole.OWNER) {
+          this.throwConflictError('The user is already the owner of this story.');
+        }
         this.throwConflictError('The user is already a collaborator of this story.');
-      }
-
-      const storyMemberIds = this.getStoryMembersIds(storyCollaborators);
-
-      if (
-        !StoryCollaboratorRules.isInvitorIsCollaboratorOfStory(input.inviterUser.id, storyMemberIds)
-      ) {
-        this.throwForbiddenError('You must be a collaborator of this story to send invitations.');
       }
 
       if (!StoryCollaboratorRules.ensureInviterHasSufficientRole(inviter.role)) {
