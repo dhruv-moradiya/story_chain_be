@@ -33,17 +33,16 @@ interface IGetStoryOverviewBySlugResponse {
   updatedAt: Date;
 }
 
-interface IStoryWithCreator
-  extends Omit<
-    IStory,
-    | 'creatorId'
-    | 'collaboratorIds'
-    | 'settings'
-    | 'cardImage'
-    | 'trendingScore'
-    | 'createdAt'
-    | 'updatedAt'
-  > {
+interface IStoryWithCreator extends Omit<
+  IStory,
+  | 'creatorId'
+  | 'collaboratorIds'
+  | 'settings'
+  | 'cardImage'
+  | 'trendingScore'
+  | 'createdAt'
+  | 'updatedAt'
+> {
   creator: IStoryCreator;
   genres: TStoryGenre[];
   contentRating: TStoryContentRating;
