@@ -2,12 +2,23 @@ import {
   STORY_CONTENT_RATINGS,
   STORY_GENRES,
   STORY_STATUSES,
-} from '@/features/story/types/story-enum';
-import { apiArrayResponse, apiResponse, errorResponse } from './helpers';
+} from '@/features/story/types/story-enum.js';
+import {
+  apiArrayResponse,
+  apiResponse,
+  createdResponse,
+  badRequestResponse,
+  unauthorizedResponse,
+  forbiddenResponse,
+  notFoundResponse,
+  conflictResponse,
+  validationErrorResponse,
+  internalErrorResponse,
+} from './helpers.js';
 
-// ===============================
+// ═══════════════════════════════════════════
 // STORY DATA SCHEMAS
-// ===============================
+// ═══════════════════════════════════════════
 
 export const ImageSchema = {
   type: 'object',
@@ -182,41 +193,97 @@ export const StorySettingsWithImagesSchema = {
   },
 };
 
-// ===============================
+// ═══════════════════════════════════════════
 // STORY RESPONSE OBJECTS
-// ===============================
+// ═══════════════════════════════════════════
 
 export const StoryResponses = {
-  storyCreated: { 201: apiResponse(StoryCreateResponseSchema, 'Story created successfully') },
+  storyCreated: {
+    201: createdResponse(StoryCreateResponseSchema, 'Story created successfully'),
+    400: badRequestResponse('Invalid story data'),
+    401: unauthorizedResponse(),
+    409: conflictResponse('Story with this slug already exists'),
+    422: validationErrorResponse('Validation failed'),
+    500: internalErrorResponse(),
+  },
   storyDetails: {
-    200: apiResponse(StorySchema, 'Story details'),
-    404: errorResponse('Story not found'),
+    200: apiResponse(StorySchema, 'Story details retrieved successfully'),
+    401: unauthorizedResponse(),
+    403: forbiddenResponse('You do not have access to this story'),
+    404: notFoundResponse('Story not found'),
+    500: internalErrorResponse(),
   },
   storyOverview: {
-    200: apiResponse(StoryOverviewSchema, 'Story overview'),
-    404: errorResponse('Story not found'),
+    200: apiResponse(StoryOverviewSchema, 'Story overview retrieved successfully'),
+    404: notFoundResponse('Story not found'),
+    500: internalErrorResponse(),
   },
   storySettings: {
-    200: apiResponse(StorySettingsWithImagesSchema, 'Story settings with images'),
-    404: errorResponse('Story not found'),
+    200: apiResponse(StorySettingsWithImagesSchema, 'Story settings retrieved successfully'),
+    401: unauthorizedResponse(),
+    403: forbiddenResponse('You do not have access to story settings'),
+    404: notFoundResponse('Story not found'),
+    500: internalErrorResponse(),
   },
-  storyList: { 200: apiArrayResponse(StorySchema, 'List of stories') },
-  storySearch: { 200: apiArrayResponse(StorySearchResultSchema, 'Search results') },
-  storyPublished: { 200: apiResponse(StoryPublishResponseSchema, 'Story published successfully') },
-  storyTree: { 200: apiResponse(StoryTreeResponseSchema, 'Story chapter tree') },
-  signatureUrl: { 200: apiResponse(StorySignatureSchema, 'Signature URL generated successfully') },
+  storyList: {
+    200: apiArrayResponse(StorySchema, 'List of stories retrieved successfully'),
+    400: badRequestResponse('Invalid query parameters'),
+    401: unauthorizedResponse(),
+    500: internalErrorResponse(),
+  },
+  storySearch: {
+    200: apiArrayResponse(StorySearchResultSchema, 'Search results retrieved successfully'),
+    400: badRequestResponse('Invalid search parameters'),
+    500: internalErrorResponse(),
+  },
+  storyPublished: {
+    200: apiResponse(StoryPublishResponseSchema, 'Story published successfully'),
+    400: badRequestResponse('Story cannot be published'),
+    401: unauthorizedResponse(),
+    403: forbiddenResponse('You do not have permission to publish'),
+    404: notFoundResponse('Story not found'),
+    500: internalErrorResponse(),
+  },
+  storyTree: {
+    200: apiResponse(StoryTreeResponseSchema, 'Story chapter tree retrieved successfully'),
+    404: notFoundResponse('Story not found'),
+    500: internalErrorResponse(),
+  },
+  signatureUrl: {
+    200: apiResponse(StorySignatureSchema, 'Signature URL generated successfully'),
+    401: unauthorizedResponse(),
+    500: internalErrorResponse(),
+  },
   storyCoverImageUpdated: {
     200: apiResponse(StoryUpdateCoverImageSchema, 'Story cover image updated successfully'),
+    400: badRequestResponse('Invalid image data'),
+    401: unauthorizedResponse(),
+    403: forbiddenResponse('You do not have permission to update cover image'),
+    404: notFoundResponse('Story not found'),
+    500: internalErrorResponse(),
   },
   storyCardImageUpdated: {
     200: apiResponse(StoryUpdateCardImageSchema, 'Story card image updated successfully'),
+    400: badRequestResponse('Invalid image data'),
+    401: unauthorizedResponse(),
+    403: forbiddenResponse('You do not have permission to update card image'),
+    404: notFoundResponse('Story not found'),
+    500: internalErrorResponse(),
   },
   acceptInvitation: {
-    200: apiResponse({}, 'Invitation accepted successfully'),
-    404: errorResponse('Invitation not found'),
+    200: apiResponse({ type: 'object' }, 'Invitation accepted successfully'),
+    400: badRequestResponse('Invalid invitation'),
+    401: unauthorizedResponse(),
+    404: notFoundResponse('Invitation not found'),
+    409: conflictResponse('Invitation already processed'),
+    500: internalErrorResponse(),
   },
   declineInvitation: {
-    200: apiResponse({}, 'Invitation declined successfully'),
-    404: errorResponse('Invitation not found'),
+    200: apiResponse({ type: 'object' }, 'Invitation declined successfully'),
+    400: badRequestResponse('Invalid invitation'),
+    401: unauthorizedResponse(),
+    404: notFoundResponse('Invitation not found'),
+    409: conflictResponse('Invitation already processed'),
+    500: internalErrorResponse(),
   },
 };

@@ -25,6 +25,6 @@ export class NotificationController extends BaseModule {
 
     return reply
       .code(HTTP_STATUS.OK.code)
-      .send(new ApiResponse(true, 'Notifications fetched successfully.', notifications));
+      .send(ApiResponse.fetched(notifications, 'Notifications fetched successfully.'));
   });
 }

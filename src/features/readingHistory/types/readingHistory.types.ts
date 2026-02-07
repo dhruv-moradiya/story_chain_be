@@ -12,6 +12,7 @@ export interface IReadingHistory {
   }[];
   lastReadAt: Date;
   totalReadTime: number;
+  completedEndingChapters: string[];
   completedPaths: number;
   createdAt?: Date;
   updatedAt?: Date;

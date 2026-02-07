@@ -25,7 +25,8 @@ class UserWebhookController {
     if (!event?.type) {
       return reply
         .code(HTTP_STATUS.BAD_REQUEST.code)
-        .send(new ApiResponse(false, 'Invalid webhook payload'));
+        .send(ApiResponse.fetched({}, 'Invalid webhook payload'));
+      // .send(new ApiResponse(false, 'Invalid webhook payload'));
     }
 
     switch (event.type) {
@@ -43,7 +44,8 @@ class UserWebhookController {
 
         return reply
           .code(HTTP_STATUS.CREATED.code)
-          .send(new ApiResponse(true, 'User created', { userId: user.clerkId }));
+          .send(ApiResponse.created({ userId: user.clerkId }, 'User created'));
+        // .send(new ApiResponse(true, 'User created', { userId: user.clerkId }));
       }
 
       // ----------------------------
@@ -54,13 +56,15 @@ class UserWebhookController {
 
         await this.userService.createSession(parsed);
 
-        return reply.code(HTTP_STATUS.CREATED.code).send(new ApiResponse(true, 'Session created'));
+        return reply
+          .code(HTTP_STATUS.CREATED.code)
+          .send(ApiResponse.created({}, 'Session created'));
       }
 
       default:
         return reply
           .code(HTTP_STATUS.OK.code)
-          .send(new ApiResponse(true, `Ignored event: ${event.type}`));
+          .send(ApiResponse.fetched({}, `Ignored event: ${event.type}`));
     }
   });
 }

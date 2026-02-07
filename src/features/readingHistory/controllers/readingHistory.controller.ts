@@ -6,13 +6,13 @@ import { FastifyReply, FastifyRequest } from 'fastify';
 import { inject, singleton } from 'tsyringe';
 import { HTTP_STATUS } from '@/constants/httpStatus';
 import { ApiResponse } from '@/utils/apiResponse';
-import { IReadingHistoryService } from '../services/interfaces';
+import { ReadingHistoryService } from '../services/readingHistory.service';
 
 @singleton()
 class ReadingHistoryController extends BaseModule {
   constructor(
     @inject(TOKENS.ReadingHistoryService)
-    private readonly readingHistoryService: IReadingHistoryService
+    private readonly readingHistoryService: ReadingHistoryService
   ) {
     super();
   }
@@ -29,7 +29,7 @@ class ReadingHistoryController extends BaseModule {
 
       return reply
         .code(HTTP_STATUS.CREATED.code)
-        .send(new ApiResponse(true, 'Heartbeat recorded successfully', readingHistory));
+        .send(ApiResponse.created(readingHistory, 'Heartbeat recorded successfully'));
     }
   );
 }

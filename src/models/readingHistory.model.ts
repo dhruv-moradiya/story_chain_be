@@ -43,6 +43,11 @@ const readingHistorySchema = new Schema<IReadingHistoryDoc>(
       default: 0,
     },
 
+    completedEndingChapters: {
+      type: [String],
+      default: [],
+    },
+
     completedPaths: {
       type: Number,
       default: 0,

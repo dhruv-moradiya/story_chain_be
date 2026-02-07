@@ -36,12 +36,11 @@ export class ChapterController extends BaseModule {
     return reply
       .code(HTTP_STATUS.OK.code)
       .send(
-        new ApiResponse(
-          true,
+        ApiResponse.fetched(
+          chapters,
           chapters.length === 0
             ? 'No chapters found.'
-            : `${chapters.length} chapter${chapters.length > 1 ? 's' : ''} found.`,
-          chapters
+            : `${chapters.length} chapter${chapters.length > 1 ? 's' : ''} found.`
         )
       );
   });
@@ -64,7 +63,7 @@ export class ChapterController extends BaseModule {
 
       return reply
         .code(HTTP_STATUS.OK.code)
-        .send(new ApiResponse(true, 'Chapter details retrieved successfully.', chapter));
+        .send(ApiResponse.fetched(chapter, 'Chapter details retrieved successfully.'));
     }
   );
 
@@ -80,7 +79,7 @@ export class ChapterController extends BaseModule {
 
       return reply
         .code(HTTP_STATUS.OK.code)
-        .send(new ApiResponse(true, 'Chapter created successfully.', chapter));
+        .send(ApiResponse.created(chapter, 'Chapter created successfully.'));
     }
   );
 }

@@ -7,9 +7,9 @@ import {
   QueryOptions,
   UpdateQuery,
 } from 'mongoose';
-import { ID } from '@/types';
-import { ApiError } from './apiResponse';
-import { logger } from './logger';
+import { ID } from '@/types/index.js';
+import { ApiError, ErrorCode } from './apiResponse.js';
+import { logger } from './logger.js';
 
 export class BaseModule {
   protected logger = logger;
@@ -41,54 +41,198 @@ export class BaseModule {
   }
 
   // ===========================================
-  // 🚨 Error Throw Helpers (Integrated from ApiError)
+  // 🚨 Error Throw Helpers (With Error Codes)
   // ===========================================
-  protected throwBadRequest(message?: string): never {
-    throw ApiError.badRequest(message);
+
+  /**
+   * Throw a custom error with specific code
+   * @example this.throwError('STORY_NOT_FOUND', 404, 'Story not found');
+   */
+  protected throwError(
+    code: ErrorCode,
+    statusCode: number,
+    message?: string,
+    field?: string
+  ): never {
+    throw new ApiError(code, statusCode, message, { field });
   }
 
-  protected throwValidationError(message?: string): never {
-    throw ApiError.validationError(message);
+  /**
+   * Throw a bad request (400) error
+   * @example this.throwBadRequest('SLUG_REQUIRED', 'Slug is required', 'slug');
+   */
+  protected throwBadRequest(
+    codeOrMessage: ErrorCode | string = 'INVALID_INPUT',
+    message?: string,
+    field?: string
+  ): never {
+    // Support legacy usage: throwBadRequest('Some message')
+    if (codeOrMessage && !this.isErrorCode(codeOrMessage)) {
+      throw ApiError.badRequest('INVALID_INPUT', codeOrMessage);
+    }
+    throw ApiError.badRequest(codeOrMessage as ErrorCode, message, field);
   }
 
-  protected throwUnauthorizedError(message?: string): never {
-    throw ApiError.unauthorized(message);
+  /**
+   * Throw a validation (422) error
+   * @example this.throwValidationError('VALIDATION_FAILED', 'Invalid data');
+   */
+  protected throwValidationError(
+    codeOrMessage: ErrorCode | string = 'VALIDATION_FAILED',
+    message?: string,
+    details?: Record<string, unknown>
+  ): never {
+    if (codeOrMessage && !this.isErrorCode(codeOrMessage)) {
+      throw ApiError.validationError('VALIDATION_FAILED', codeOrMessage);
+    }
+    throw ApiError.validationError(codeOrMessage as ErrorCode, message, details);
   }
 
-  protected throwForbiddenError(message?: string): never {
-    throw ApiError.forbidden(message);
+  /**
+   * Throw an unauthorized (401) error
+   * @example this.throwUnauthorizedError('AUTH_TOKEN_EXPIRED');
+   */
+  protected throwUnauthorizedError(
+    codeOrMessage: ErrorCode | string = 'UNAUTHORIZED',
+    message?: string
+  ): never {
+    if (codeOrMessage && !this.isErrorCode(codeOrMessage)) {
+      throw ApiError.unauthorized('UNAUTHORIZED', codeOrMessage);
+    }
+    throw ApiError.unauthorized(codeOrMessage as ErrorCode, message);
   }
 
-  protected throwNotFoundError(message?: string): never {
-    throw ApiError.notFound(message);
+  /**
+   * Throw a forbidden (403) error
+   * @example this.throwForbiddenError('PERMISSION_DENIED', 'You cannot do this');
+   */
+  protected throwForbiddenError(
+    codeOrMessage: ErrorCode | string = 'FORBIDDEN',
+    message?: string
+  ): never {
+    if (codeOrMessage && !this.isErrorCode(codeOrMessage)) {
+      throw ApiError.forbidden('FORBIDDEN', codeOrMessage);
+    }
+    throw ApiError.forbidden(codeOrMessage as ErrorCode, message);
   }
 
-  protected throwMethodNotAllowedError(message?: string): never {
-    throw ApiError.methodNotAllowed(message);
+  /**
+   * Throw a not found (404) error
+   * @example this.throwNotFoundError('STORY_NOT_FOUND', 'Story not found');
+   */
+  protected throwNotFoundError(
+    codeOrMessage: ErrorCode | string = 'NOT_FOUND',
+    message?: string
+  ): never {
+    if (codeOrMessage && !this.isErrorCode(codeOrMessage)) {
+      throw ApiError.notFound('NOT_FOUND', codeOrMessage);
+    }
+    throw ApiError.notFound(codeOrMessage as ErrorCode, message);
   }
 
-  protected throwConflictError(message?: string): never {
-    throw ApiError.conflict(message);
+  /**
+   * Throw a method not allowed (405) error
+   */
+  protected throwMethodNotAllowedError(
+    codeOrMessage: ErrorCode | string = 'NOT_FOUND',
+    message?: string
+  ): never {
+    if (codeOrMessage && !this.isErrorCode(codeOrMessage)) {
+      throw ApiError.methodNotAllowed('NOT_FOUND', codeOrMessage);
+    }
+    throw ApiError.methodNotAllowed(codeOrMessage as ErrorCode, message);
   }
 
-  protected throwUnprocessableEntityError(message?: string): never {
-    throw ApiError.unprocessableEntity(message);
+  /**
+   * Throw a conflict (409) error
+   * @example this.throwConflictError('USER_ALREADY_COLLABORATOR');
+   */
+  protected throwConflictError(
+    codeOrMessage: ErrorCode | string = 'CONFLICT',
+    message?: string
+  ): never {
+    if (codeOrMessage && !this.isErrorCode(codeOrMessage)) {
+      throw ApiError.conflict('CONFLICT', codeOrMessage);
+    }
+    throw ApiError.conflict(codeOrMessage as ErrorCode, message);
   }
 
-  protected throwTooManyRequestsError(message?: string): never {
-    throw ApiError.tooManyRequests(message);
+  /**
+   * Throw an unprocessable entity (422) error
+   */
+  protected throwUnprocessableEntityError(
+    codeOrMessage: ErrorCode | string = 'VALIDATION_FAILED',
+    message?: string,
+    details?: Record<string, unknown>
+  ): never {
+    if (codeOrMessage && !this.isErrorCode(codeOrMessage)) {
+      throw ApiError.unprocessableEntity('VALIDATION_FAILED', codeOrMessage);
+    }
+    throw ApiError.unprocessableEntity(codeOrMessage as ErrorCode, message, details);
   }
 
-  protected throwBadGatewayError(message?: string): never {
-    throw ApiError.badGateway(message);
+  /**
+   * Throw a too many requests (429) error
+   */
+  protected throwTooManyRequestsError(
+    codeOrMessage: ErrorCode | string = 'RATE_LIMIT_EXCEEDED',
+    message?: string
+  ): never {
+    if (codeOrMessage && !this.isErrorCode(codeOrMessage)) {
+      throw ApiError.tooManyRequests('RATE_LIMIT_EXCEEDED', codeOrMessage);
+    }
+    throw ApiError.tooManyRequests(codeOrMessage as ErrorCode, message);
   }
 
-  protected throwInternalError(message?: string): never {
-    throw ApiError.internalError(message);
+  /**
+   * Throw a bad gateway (502) error
+   */
+  protected throwBadGatewayError(
+    codeOrMessage: ErrorCode | string = 'EXTERNAL_SERVICE_ERROR',
+    message?: string
+  ): never {
+    if (codeOrMessage && !this.isErrorCode(codeOrMessage)) {
+      throw ApiError.badGateway('EXTERNAL_SERVICE_ERROR', codeOrMessage);
+    }
+    throw ApiError.badGateway(codeOrMessage as ErrorCode, message);
   }
 
-  protected throwServiceUnavailableError(message?: string): never {
-    throw ApiError.serviceUnavailable(message);
+  /**
+   * Throw an internal server (500) error
+   * @example this.throwInternalError('DATABASE_ERROR', 'DB connection failed');
+   */
+  protected throwInternalError(
+    codeOrMessage: ErrorCode | string = 'INTERNAL_SERVER_ERROR',
+    message?: string
+  ): never {
+    if (codeOrMessage && !this.isErrorCode(codeOrMessage)) {
+      throw ApiError.internalError('INTERNAL_SERVER_ERROR', codeOrMessage);
+    }
+    throw ApiError.internalError(codeOrMessage as ErrorCode, message);
+  }
+
+  /**
+   * Throw a service unavailable (503) error
+   */
+  protected throwServiceUnavailableError(
+    codeOrMessage: ErrorCode | string = 'SERVICE_UNAVAILABLE',
+    message?: string
+  ): never {
+    if (codeOrMessage && !this.isErrorCode(codeOrMessage)) {
+      throw ApiError.serviceUnavailable('SERVICE_UNAVAILABLE', codeOrMessage);
+    }
+    throw ApiError.serviceUnavailable(codeOrMessage as ErrorCode, message);
+  }
+
+  // ===========================================
+  // 🎯 Helper Methods
+  // ===========================================
+
+  /**
+   * Check if a string looks like an error code (UPPER_SNAKE_CASE)
+   */
+  private isErrorCode(value: string): boolean {
+    return /^[A-Z][A-Z0-9_]+$/.test(value);
   }
 }
 

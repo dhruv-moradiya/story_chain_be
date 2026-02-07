@@ -39,12 +39,11 @@ export class StoryCollaboratorController extends BaseModule {
       return reply
         .code(HTTP_STATUS.OK.code)
         .send(
-          new ApiResponse(
-            true,
+          ApiResponse.fetched(
+            collaborators,
             collaborators.length === 0
               ? `No collaborators found for this story.`
-              : `${collaborators.length} user${collaborators.length > 1 ? 's' : ''} found.`,
-            collaborators
+              : `${collaborators.length} user${collaborators.length > 1 ? 's' : ''} found.`
           )
         );
     }
@@ -75,7 +74,7 @@ export class StoryCollaboratorController extends BaseModule {
 
       return reply
         .code(HTTP_STATUS.CREATED.code)
-        .send(new ApiResponse(true, 'Invitation created successfully', invitation));
+        .send(ApiResponse.created(invitation, 'Invitation created successfully'));
     }
   );
 
@@ -92,7 +91,7 @@ export class StoryCollaboratorController extends BaseModule {
 
       return reply
         .code(HTTP_STATUS.OK.code)
-        .send(new ApiResponse(true, 'Invitation accepted successfully', result));
+        .send(ApiResponse.updated(result, 'Invitation accepted successfully'));
     }
   );
 
@@ -109,7 +108,7 @@ export class StoryCollaboratorController extends BaseModule {
 
       return reply
         .code(HTTP_STATUS.OK.code)
-        .send(new ApiResponse(true, 'Invitation declined successfully', result));
+        .send(ApiResponse.updated(result, 'Invitation declined successfully'));
     }
   );
 }

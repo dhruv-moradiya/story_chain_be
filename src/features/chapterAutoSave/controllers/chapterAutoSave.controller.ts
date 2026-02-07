@@ -45,7 +45,7 @@ export class ChapterAutoSaveController extends BaseModule {
 
       return reply
         .code(HTTP_STATUS.CREATED.code)
-        .send(new ApiResponse(true, 'Auto-save enabled successfully.', result));
+        .send(ApiResponse.created(result, 'Auto-save enabled successfully.'));
     }
   );
 
@@ -57,10 +57,13 @@ export class ChapterAutoSaveController extends BaseModule {
       const result = await this.contentService.autoSaveContent({ ...input, userId });
 
       return reply.code(HTTP_STATUS.CREATED.code).send(
-        new ApiResponse(true, 'Content auto-saved successfully.', {
-          _id: result._id,
-          saveCount: result.saveCount,
-        })
+        ApiResponse.created(
+          {
+            _id: result._id,
+            saveCount: result.saveCount,
+          },
+          'Content auto-saved successfully.'
+        )
       );
     }
   );
@@ -78,7 +81,7 @@ export class ChapterAutoSaveController extends BaseModule {
 
       return reply
         .code(HTTP_STATUS.CREATED.code)
-        .send(new ApiResponse(true, 'Auto-save disabled successfully.', {}));
+        .send(ApiResponse.created({}, 'Auto-save disabled successfully.'));
     }
   );
 
@@ -94,7 +97,7 @@ export class ChapterAutoSaveController extends BaseModule {
 
       return reply
         .code(HTTP_STATUS.OK.code)
-        .send(new ApiResponse(true, 'Auto-save draft retrieved successfully.', result));
+        .send(ApiResponse.fetched(result, 'Auto-save draft retrieved successfully.'));
     }
   );
 
@@ -122,10 +125,9 @@ export class ChapterAutoSaveController extends BaseModule {
       return reply
         .code(HTTP_STATUS.CREATED.code)
         .send(
-          new ApiResponse(
-            true,
-            `Auto-save (${autoSaveId}) converted to ${type === 'publish' ? 'published' : 'draft'} chapter successfully.`,
-            {}
+          ApiResponse.created(
+            {},
+            `Auto-save (${autoSaveId}) converted to ${type === 'publish' ? 'published' : 'draft'} chapter successfully.`
           )
         );
     }
@@ -148,7 +150,7 @@ export class ChapterAutoSaveController extends BaseModule {
 
       return reply
         .code(HTTP_STATUS.OK.code)
-        .send(new ApiResponse(true, 'Auto-save retrieved successfully.', autoSave));
+        .send(ApiResponse.fetched(autoSave, 'Auto-save retrieved successfully.'));
     }
   );
 }
