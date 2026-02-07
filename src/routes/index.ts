@@ -4,6 +4,7 @@ import { storyRoutes } from '@features/story/routes/story.routes';
 import { chapterRoutes } from '@features/chapter/routes/chapter.routes';
 import { notificationRoutes } from '@features/notification/routes/notification.router';
 import { chapterAutoSaveRoutes } from '@features/chapterAutoSave/routes/chapterAutoSave.routes';
+import { readingHistoryRoutes } from '@/features/readingHistory/routes/readingHistory.router';
 
 enum ApiRoute {
   USERS = '/api/users',
@@ -11,6 +12,7 @@ enum ApiRoute {
   CHAPTERS = '/api/chapters',
   NOTIFICATIONS = '/api/notifications',
   CHAPTERAUTOSAVE = '/api/auto-save',
+  READINGHISTORY = '/api/reading-history',
 }
 
 export async function registerRoutes(fastify: FastifyInstance) {
@@ -19,4 +21,5 @@ export async function registerRoutes(fastify: FastifyInstance) {
   fastify.register(chapterRoutes, { prefix: ApiRoute.CHAPTERS });
   fastify.register(notificationRoutes, { prefix: ApiRoute.NOTIFICATIONS });
   fastify.register(chapterAutoSaveRoutes, { prefix: ApiRoute.CHAPTERAUTOSAVE });
+  fastify.register(readingHistoryRoutes, { prefix: ApiRoute.READINGHISTORY });
 }

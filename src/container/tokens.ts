@@ -33,6 +33,7 @@ export const TOKENS = {
   NotificationRepository: Symbol.for('NotificationRepository'),
   PlatformRoleRepository: Symbol.for('PlatformRoleRepository'),
   StoryCollaboratorRepository: Symbol.for('StoryCollaboratorRepository'),
+  ReadingHistoryRepository: Symbol.for('ReadingHistoryRepository'),
 
   // ═══════════════════════════════════════════
   // FEATURE SERVICES

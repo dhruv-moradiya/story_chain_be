@@ -9,6 +9,7 @@ const readingHistorySchema = new Schema<IReadingHistoryDoc>(
       required: true,
       index: true,
     },
+
     storySlug: {
       type: String,
       ref: 'Story',
@@ -36,10 +37,12 @@ const readingHistorySchema = new Schema<IReadingHistoryDoc>(
       type: Date,
       default: Date.now,
     },
+
     totalReadTime: {
       type: Number,
       default: 0,
     },
+
     completedPaths: {
       type: Number,
       default: 0,
@@ -54,6 +57,6 @@ const readingHistorySchema = new Schema<IReadingHistoryDoc>(
 readingHistorySchema.index({ userId: 1, storySlug: 1 }, { unique: true });
 readingHistorySchema.index({ userId: 1, lastReadAt: -1 });
 
-const ReadingHistory = mongoose.model('ReadingHistory', readingHistorySchema);
+const ReadingHistory = mongoose.model<IReadingHistoryDoc>('ReadingHistory', readingHistorySchema);
 
 export { ReadingHistory };

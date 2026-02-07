@@ -25,6 +25,7 @@ import { StoryCollaboratorRepository } from '@features/storyCollaborator/reposit
 import { NotificationRepository } from '@features/notification/repositories/notification.repository';
 import { ChapterAutoSaveRepository } from '@features/chapterAutoSave/repositories/chapterAutoSave.repository';
 import { ChapterRepository } from '@features/chapter/repositories/chapter.repository';
+import { ReadingHistoryRepository } from '@/features/readingHistory/repositories/readingHistory.repository';
 
 // ═══════════════════════════════════════════
 // FEATURE SERVICES
@@ -47,6 +48,8 @@ import { AutoSaveConversionService } from '@features/chapterAutoSave/services/au
 import { ChapterCrudService } from '@features/chapter/services/chapter-crud.service';
 import { ChapterQueryService } from '@features/chapter/services/chapter-query.service';
 
+import { ReadingHistoryService } from '@/features/readingHistory/services/readingHistory.service';
+
 // ═══════════════════════════════════════════
 // CONTROLLERS
 // ═══════════════════════════════════════════
@@ -57,6 +60,7 @@ import { ChapterController } from '@features/chapter/controllers/chapter.control
 import { ChapterAutoSaveController } from '@features/chapterAutoSave/controllers/chapterAutoSave.controller';
 import { NotificationController } from '@features/notification/controllers/notification.controller';
 import { StoryCollaboratorController } from '@features/storyCollaborator/controllers/storyCollaborator.controller';
+import { ReadingHistoryController } from '@/features/readingHistory/controllers/readingHistory.controller';
 
 // ═══════════════════════════════════════════
 // MIDDLEWARE FACTORIES
@@ -92,6 +96,7 @@ export function registerServices(): void {
   container.register(TOKENS.NotificationRepository, { useClass: NotificationRepository });
   container.register(TOKENS.ChapterAutoSaveRepository, { useClass: ChapterAutoSaveRepository });
   container.register(TOKENS.ChapterRepository, { useClass: ChapterRepository });
+  container.register(TOKENS.ReadingHistoryRepository, { useClass: ReadingHistoryRepository });
 
   // ═══════════════════════════════════════════
   // FEATURE SERVICES
@@ -117,6 +122,7 @@ export function registerServices(): void {
   container.register(TOKENS.AutoSaveLifecycleService, { useClass: AutoSaveLifecycleService });
   container.register(TOKENS.AutoSaveContentService, { useClass: AutoSaveContentService });
   container.register(TOKENS.AutoSaveConversionService, { useClass: AutoSaveConversionService });
+  container.register(TOKENS.ReadingHistoryService, { useClass: ReadingHistoryService });
 
   // ═══════════════════════════════════════════
   // CONTROLLERS
@@ -128,6 +134,7 @@ export function registerServices(): void {
   container.register(TOKENS.ChapterAutoSaveController, { useClass: ChapterAutoSaveController });
   container.register(TOKENS.NotificationController, { useClass: NotificationController });
   container.register(TOKENS.StoryCollaboratorController, { useClass: StoryCollaboratorController });
+  container.register(TOKENS.ReadingHistoryController, { useClass: ReadingHistoryController });
 
   // ═══════════════════════════════════════════
   // MIDDLEWARE FACTORIES
