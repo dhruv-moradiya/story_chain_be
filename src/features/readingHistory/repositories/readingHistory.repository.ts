@@ -11,12 +11,26 @@ class ReadingHistoryRepository extends BaseRepository<IReadingHistory, IReadingH
     super(ReadingHistory);
   }
 
-  async upsert(data: IRecordHeartBeatDTO): Promise<IReadingHistory> {
+  /**
+   * Upsert reading history with heartbeat data
+   * @param data - The heartbeat data (userId, storySlug, chapterSlug, duration)
+   * @param isEnding - Whether the chapter is an ending chapter (determined by service)
+   */
+  async upsert(data: IRecordHeartBeatDTO, isEnding: boolean = false): Promise<IReadingHistory> {
     const { userId, storySlug, chapterSlug, duration } = data;
 
-    const pipeline = new ReadingHistoryPipelineBuilder()
-      .upsertHeartBeat(chapterSlug, duration)
-      .build();
+    const pipelineBuilder = new ReadingHistoryPipelineBuilder().upsertHeartBeat(
+      chapterSlug,
+      duration
+    );
+
+    // If this chapter is an ending chapter, mark it as completed
+    // This will only increment completedPaths if user hasn't completed this ending before
+    if (isEnding) {
+      pipelineBuilder.markEndingChapterCompleted(chapterSlug);
+    }
+
+    const pipeline = pipelineBuilder.build();
 
     const readingHistory = this.model.findOneAndUpdate({ userId, storySlug }, pipeline, {
       upsert: true,

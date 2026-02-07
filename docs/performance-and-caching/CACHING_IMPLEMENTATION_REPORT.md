@@ -22,12 +22,12 @@ This report provides a comprehensive guide for implementing a robust caching lay
 
 ### 1.1 Existing Infrastructure
 
-| Component | Status | Details |
-|-----------|--------|---------|
-| Redis Service | ✅ Configured | `src/config/services/redis.service.ts` with ioredis |
-| Cache Token | ✅ Registered | `TOKENS.CacheService` exists in DI container |
-| Cache Implementation | ❌ Missing | No actual CacheService implementation |
-| Repository Caching | ❌ None | Direct DB queries without cache layer |
+| Component            | Status        | Details                                             |
+| -------------------- | ------------- | --------------------------------------------------- |
+| Redis Service        | ✅ Configured | `src/config/services/redis.service.ts` with ioredis |
+| Cache Token          | ✅ Registered | `TOKENS.CacheService` exists in DI container        |
+| Cache Implementation | ❌ Missing    | No actual CacheService implementation               |
+| Repository Caching   | ❌ None       | Direct DB queries without cache layer               |
 
 ### 1.2 Current Models (20 Total)
 
@@ -43,15 +43,15 @@ This report provides a comprehensive guide for implementing a robust caching lay
 
 ### 1.3 Query Patterns Identified
 
-| Pattern | Frequency | Cache Priority |
-|---------|-----------|----------------|
-| `findById` / `findBySlug` | Very High | 🔴 Critical |
-| User by ClerkId | Very High | 🔴 Critical |
-| Story with collaborators | High | 🟠 High |
-| Chapter tree aggregation | High | 🟠 High |
-| List queries (paginated) | Medium | 🟡 Medium |
-| Count queries | Medium | 🟡 Medium |
-| Complex aggregations | Low-Medium | 🟢 Low |
+| Pattern                   | Frequency  | Cache Priority |
+| ------------------------- | ---------- | -------------- |
+| `findById` / `findBySlug` | Very High  | 🔴 Critical    |
+| User by ClerkId           | Very High  | 🔴 Critical    |
+| Story with collaborators  | High       | 🟠 High        |
+| Chapter tree aggregation  | High       | 🟠 High        |
+| List queries (paginated)  | Medium     | 🟡 Medium      |
+| Count queries             | Medium     | 🟡 Medium      |
+| Complex aggregations      | Low-Medium | 🟢 Low         |
 
 ---
 
@@ -99,12 +99,12 @@ This report provides a comprehensive guide for implementing a robust caching lay
 
 ### 2.2 Key Components
 
-| Component | Responsibility |
-|-----------|----------------|
-| `CacheService` | High-level caching operations with serialization |
-| `CacheKeyBuilder` | Centralized, type-safe key generation |
-| `CacheInvalidator` | Tag-based and pattern-based invalidation |
-| `RedisService` | Low-level Redis client wrapper (existing) |
+| Component          | Responsibility                                   |
+| ------------------ | ------------------------------------------------ |
+| `CacheService`     | High-level caching operations with serialization |
+| `CacheKeyBuilder`  | Centralized, type-safe key generation            |
+| `CacheInvalidator` | Tag-based and pattern-based invalidation         |
+| `RedisService`     | Low-level Redis client wrapper (existing)        |
 
 ---
 
@@ -116,12 +116,12 @@ This report provides a comprehensive guide for implementing a robust caching lay
 <prefix>:<entity>:<identifier>:<qualifier>
 ```
 
-| Segment | Description | Examples |
-|---------|-------------|----------|
-| `prefix` | Application namespace | `sc` (storychain) |
-| `entity` | Model/resource name | `story`, `user`, `chapter` |
-| `identifier` | Primary key or unique field | `{id}`, `{slug}`, `{clerkId}` |
-| `qualifier` | Optional sub-resource or query params | `tree`, `settings`, `list:1:20` |
+| Segment      | Description                           | Examples                        |
+| ------------ | ------------------------------------- | ------------------------------- |
+| `prefix`     | Application namespace                 | `sc` (storychain)               |
+| `entity`     | Model/resource name                   | `story`, `user`, `chapter`      |
+| `identifier` | Primary key or unique field           | `{id}`, `{slug}`, `{clerkId}`   |
+| `qualifier`  | Optional sub-resource or query params | `tree`, `settings`, `list:1:20` |
 
 ### 3.2 CacheKeyBuilder Implementation
 
@@ -129,11 +129,25 @@ This report provides a comprehensive guide for implementing a robust caching lay
 // src/services/cache/cacheKey.builder.ts
 
 export type CacheEntity =
-  | 'user' | 'story' | 'chapter' | 'storyCollaborator'
-  | 'notification' | 'platformRole' | 'pullRequest'
-  | 'chapterVersion' | 'chapterAutoSave' | 'comment'
-  | 'vote' | 'bookmark' | 'follow' | 'readingHistory'
-  | 'session' | 'report' | 'prComment' | 'prReview' | 'prVote';
+  | 'user'
+  | 'story'
+  | 'chapter'
+  | 'storyCollaborator'
+  | 'notification'
+  | 'platformRole'
+  | 'pullRequest'
+  | 'chapterVersion'
+  | 'chapterAutoSave'
+  | 'comment'
+  | 'vote'
+  | 'bookmark'
+  | 'follow'
+  | 'readingHistory'
+  | 'session'
+  | 'report'
+  | 'prComment'
+  | 'prReview'
+  | 'prVote';
 
 export class CacheKeyBuilder {
   private static readonly PREFIX = 'sc';
@@ -264,10 +278,8 @@ export class CacheKeyBuilder {
   static tag = {
     entity: (entity: CacheEntity, id: string) =>
       CacheKeyBuilder.build(CacheKeyBuilder.TAG_PREFIX, entity, id),
-    user: (userId: string) =>
-      CacheKeyBuilder.build(CacheKeyBuilder.TAG_PREFIX, 'user', userId),
-    story: (storyId: string) =>
-      CacheKeyBuilder.build(CacheKeyBuilder.TAG_PREFIX, 'story', storyId),
+    user: (userId: string) => CacheKeyBuilder.build(CacheKeyBuilder.TAG_PREFIX, 'user', userId),
+    story: (storyId: string) => CacheKeyBuilder.build(CacheKeyBuilder.TAG_PREFIX, 'story', storyId),
     chapter: (chapterId: string) =>
       CacheKeyBuilder.build(CacheKeyBuilder.TAG_PREFIX, 'chapter', chapterId),
   };
@@ -311,18 +323,18 @@ export class CacheKeyBuilder {
 
 ### 3.3 Key Examples
 
-| Use Case | Generated Key |
-|----------|---------------|
-| User by ClerkId | `sc:user:clerk:user_abc123` |
-| Story by Slug | `sc:story:slug:my-awesome-story` |
-| Story Overview | `sc:story:my-awesome-story:overview` |
-| Chapter Tree | `sc:story:507f1f77bcf86cd:tree` |
-| Story List (page 1, 20 items) | `sc:story:list:1:20` |
-| New Stories | `sc:story:new:last7days` |
-| Story Collaborators | `sc:story:my-story:collaborators` |
+| Use Case                      | Generated Key                          |
+| ----------------------------- | -------------------------------------- |
+| User by ClerkId               | `sc:user:clerk:user_abc123`            |
+| Story by Slug                 | `sc:story:slug:my-awesome-story`       |
+| Story Overview                | `sc:story:my-awesome-story:overview`   |
+| Chapter Tree                  | `sc:story:507f1f77bcf86cd:tree`        |
+| Story List (page 1, 20 items) | `sc:story:list:1:20`                   |
+| New Stories                   | `sc:story:new:last7days`               |
+| Story Collaborators           | `sc:story:my-story:collaborators`      |
 | User's Notifications (page 2) | `sc:notification:user:user_abc:page:2` |
-| Complex Query Hash | `sc:query:story:a1b2c3d4e5f6` |
-| Tag for Story | `sc:tag:story:507f1f77bcf86cd` |
+| Complex Query Hash            | `sc:query:story:a1b2c3d4e5f6`          |
+| Tag for Story                 | `sc:tag:story:507f1f77bcf86cd`         |
 
 ---
 
@@ -340,9 +352,9 @@ import { logger } from '@utils/logger';
 import { CacheKeyBuilder } from './cacheKey.builder';
 
 export interface CacheOptions {
-  ttl?: number;           // Time-to-live in seconds
-  tags?: string[];        // Tags for grouped invalidation
-  skipCache?: boolean;    // Bypass cache (useful for transactions)
+  ttl?: number; // Time-to-live in seconds
+  tags?: string[]; // Tags for grouped invalidation
+  skipCache?: boolean; // Bypass cache (useful for transactions)
 }
 
 export interface CacheStats {
@@ -357,14 +369,14 @@ export class CacheService {
 
   // Default TTLs by entity type (in seconds)
   private readonly DEFAULT_TTL: Record<string, number> = {
-    user: 3600,           // 1 hour
-    story: 1800,          // 30 minutes
-    chapter: 1800,        // 30 minutes
+    user: 3600, // 1 hour
+    story: 1800, // 30 minutes
+    chapter: 1800, // 30 minutes
     storyCollaborator: 900, // 15 minutes
-    notification: 300,    // 5 minutes
-    platformRole: 7200,   // 2 hours (rarely changes)
-    list: 300,            // 5 minutes for lists
-    aggregation: 600,     // 10 minutes for aggregations
+    notification: 300, // 5 minutes
+    platformRole: 7200, // 2 hours (rarely changes)
+    list: 300, // 5 minutes for lists
+    aggregation: 600, // 10 minutes for aggregations
   };
 
   constructor(
@@ -460,7 +472,7 @@ export class CacheService {
       const client = this.redis.getClient();
       const pipeline = client.pipeline();
 
-      keys.forEach(key => pipeline.del(key));
+      keys.forEach((key) => pipeline.del(key));
       await pipeline.exec();
     } catch (error) {
       logger.error('Cache DELETE_MANY error:', error);
@@ -481,13 +493,7 @@ export class CacheService {
       let cursor = '0';
 
       do {
-        const [nextCursor, foundKeys] = await client.scan(
-          cursor,
-          'MATCH',
-          pattern,
-          'COUNT',
-          100
-        );
+        const [nextCursor, foundKeys] = await client.scan(cursor, 'MATCH', pattern, 'COUNT', 100);
         cursor = nextCursor;
         keys.push(...foundKeys);
       } while (cursor !== '0');
@@ -513,7 +519,7 @@ export class CacheService {
 
       for (const tag of tags) {
         const members = await client.smembers(`${tag}:members`);
-        members.forEach(key => keysToDelete.add(key));
+        members.forEach((key) => keysToDelete.add(key));
       }
 
       if (keysToDelete.size > 0) {
@@ -521,7 +527,7 @@ export class CacheService {
 
         // Clean up tag sets
         const pipeline = client.pipeline();
-        tags.forEach(tag => pipeline.del(`${tag}:members`));
+        tags.forEach((tag) => pipeline.del(`${tag}:members`));
         await pipeline.exec();
       }
     } catch (error) {
@@ -542,10 +548,7 @@ export class CacheService {
   // ═══════════════════════════════════════════════════════════════
 
   async invalidateStory(storyId: string, slug?: string): Promise<void> {
-    const keys = [
-      CacheKeyBuilder.story.byId(storyId),
-      CacheKeyBuilder.story.tree(storyId),
-    ];
+    const keys = [CacheKeyBuilder.story.byId(storyId), CacheKeyBuilder.story.tree(storyId)];
 
     if (slug) {
       keys.push(
@@ -578,10 +581,7 @@ export class CacheService {
     const keys = [CacheKeyBuilder.chapter.byId(chapterId)];
 
     if (storyId) {
-      keys.push(
-        CacheKeyBuilder.story.tree(storyId),
-        CacheKeyBuilder.chapter.byStory(storyId)
-      );
+      keys.push(CacheKeyBuilder.story.tree(storyId), CacheKeyBuilder.chapter.byStory(storyId));
     }
 
     await this.deleteMany(keys);
@@ -595,7 +595,7 @@ export class CacheService {
     const client = this.redis.getClient();
     const pipeline = client.pipeline();
 
-    tags.forEach(tag => {
+    tags.forEach((tag) => {
       pipeline.sadd(`${tag}:members`, key);
     });
 
@@ -673,17 +673,17 @@ async pipeline(): Promise<ReturnType<Redis['pipeline']>> {
 
 ### 5.1 Invalidation Matrix
 
-| Action | Keys to Invalidate |
-|--------|-------------------|
-| Story Created | `story:list:*`, `story:drafts:{creatorId}`, `story:creator:{creatorId}` |
-| Story Updated | `story:{id}`, `story:slug:{slug}`, `story:{slug}:overview`, `story:{slug}:settings` |
-| Story Published | All story keys + `story:new:last7days`, `story:list:*` |
-| Story Deleted | All story keys + chapter keys + collaborator keys |
-| Chapter Created | `story:{storyId}:tree`, `chapter:story:{storyId}`, parent chapter keys |
-| Chapter Updated | `chapter:{id}`, `story:{storyId}:tree` |
-| User Updated | `user:{id}`, `user:clerk:{clerkId}`, `user:{clerkId}:profile` |
-| Collaborator Added | `story:{slug}:collaborators`, `collaborator:story:{slug}` |
-| Notification Created | `notification:user:{userId}:*`, `notification:{userId}:unread` |
+| Action               | Keys to Invalidate                                                                  |
+| -------------------- | ----------------------------------------------------------------------------------- |
+| Story Created        | `story:list:*`, `story:drafts:{creatorId}`, `story:creator:{creatorId}`             |
+| Story Updated        | `story:{id}`, `story:slug:{slug}`, `story:{slug}:overview`, `story:{slug}:settings` |
+| Story Published      | All story keys + `story:new:last7days`, `story:list:*`                              |
+| Story Deleted        | All story keys + chapter keys + collaborator keys                                   |
+| Chapter Created      | `story:{storyId}:tree`, `chapter:story:{storyId}`, parent chapter keys              |
+| Chapter Updated      | `chapter:{id}`, `story:{storyId}:tree`                                              |
+| User Updated         | `user:{id}`, `user:clerk:{clerkId}`, `user:{clerkId}:profile`                       |
+| Collaborator Added   | `story:{slug}:collaborators`, `collaborator:story:{slug}`                           |
+| Notification Created | `notification:user:{userId}:*`, `notification:{userId}:unread`                      |
 
 ### 5.2 Write-Through Pattern Example
 
@@ -773,11 +773,7 @@ export class CachingRepository<T> {
     return this.cache.getOrSet(key, fetcher, { ttl });
   }
 
-  async findManyCached(
-    qualifier: string,
-    fetcher: () => Promise<T[]>,
-    ttl?: number
-  ): Promise<T[]> {
+  async findManyCached(qualifier: string, fetcher: () => Promise<T[]>, ttl?: number): Promise<T[]> {
     const key = `${CacheKeyBuilder.entity(this.entity, 'list')}:${qualifier}`;
     return this.cache.getOrSet(key, fetcher, { ttl });
   }
@@ -794,7 +790,8 @@ export class StoryService extends BaseModule {
   constructor(
     @inject(TOKENS.StoryRepository) private readonly storyRepo: StoryRepository,
     @inject(TOKENS.CacheService) private readonly cache: CacheService,
-    @inject(TOKENS.StoryCollaboratorService) private readonly collabService: StoryCollaboratorService
+    @inject(TOKENS.StoryCollaboratorService)
+    private readonly collabService: StoryCollaboratorService
   ) {
     super();
   }
@@ -837,7 +834,7 @@ export class StoryService extends BaseModule {
       },
       {
         ttl: 900, // 15 minutes for complex aggregations
-        tags: [CacheKeyBuilder.tag.story(slug)]
+        tags: [CacheKeyBuilder.tag.story(slug)],
       }
     );
   }
@@ -886,15 +883,15 @@ export class StoryService extends BaseModule {
 
 ### 7.1 TTL Strategy
 
-| Data Type | Recommended TTL | Rationale |
-|-----------|-----------------|-----------|
-| User profile | 1 hour | Changes infrequently |
-| Platform roles | 2 hours | Rarely modified |
-| Story metadata | 30 minutes | Moderate change frequency |
-| Story tree | 10 minutes | Changes with chapter additions |
-| Story lists | 5 minutes | New stories affect lists |
-| Notifications | 5 minutes | Real-time requirement |
-| Session data | Match session expiry | Security requirement |
+| Data Type      | Recommended TTL      | Rationale                      |
+| -------------- | -------------------- | ------------------------------ |
+| User profile   | 1 hour               | Changes infrequently           |
+| Platform roles | 2 hours              | Rarely modified                |
+| Story metadata | 30 minutes           | Moderate change frequency      |
+| Story tree     | 10 minutes           | Changes with chapter additions |
+| Story lists    | 5 minutes            | New stories affect lists       |
+| Notifications  | 5 minutes            | Real-time requirement          |
+| Session data   | Match session expiry | Security requirement           |
 
 ### 7.2 Cache Warming
 
@@ -910,10 +907,7 @@ export class CacheWarmerService {
   ) {}
 
   async warmOnStartup(): Promise<void> {
-    await Promise.all([
-      this.warmPlatformRoles(),
-      this.warmPopularStories(),
-    ]);
+    await Promise.all([this.warmPlatformRoles(), this.warmPopularStories()]);
   }
 
   private async warmPlatformRoles(): Promise<void> {
@@ -930,11 +924,7 @@ export class CacheWarmerService {
     );
 
     for (const story of stories) {
-      await this.cache.set(
-        CacheKeyBuilder.story.bySlug(story.slug),
-        story,
-        { ttl: 1800 }
-      );
+      await this.cache.set(CacheKeyBuilder.story.bySlug(story.slug), story, { ttl: 1800 });
     }
   }
 }

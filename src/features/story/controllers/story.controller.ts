@@ -61,7 +61,7 @@ export class StoryController extends BaseModule {
 
       return reply
         .code(HTTP_STATUS.CREATED.code)
-        .send(new ApiResponse(true, 'Story created successfully as a draft.', newStory));
+        .send(ApiResponse.created(newStory, 'Story created successfully as a draft.'));
     }
   );
 
@@ -82,7 +82,7 @@ export class StoryController extends BaseModule {
 
       return reply
         .code(HTTP_STATUS.OK.code)
-        .send(new ApiResponse(true, 'Story setting updated successfully', story));
+        .send(ApiResponse.updated(story, 'Story setting updated successfully'));
     }
   );
 
@@ -101,7 +101,7 @@ export class StoryController extends BaseModule {
 
       return reply
         .code(HTTP_STATUS.OK.code)
-        .send(new ApiResponse(true, 'Story setting updated successfully', story));
+        .send(ApiResponse.updated(story, 'Story setting updated successfully'));
     }
   );
 
@@ -114,7 +114,7 @@ export class StoryController extends BaseModule {
     this.logInfo(`Fetched all stories`);
     return reply
       .code(HTTP_STATUS.OK.code)
-      .send(new ApiResponse(true, 'All stories fetched successfully', stories));
+      .send(ApiResponse.fetched(stories, 'All stories fetched successfully'));
   });
 
   // TODO: Remove this endpoint that use storyId instead of slug
@@ -129,7 +129,7 @@ export class StoryController extends BaseModule {
 
       return reply
         .code(HTTP_STATUS.OK.code)
-        .send(new ApiResponse(true, 'Story retrieved successfully', story));
+        .send(ApiResponse.fetched(story, 'Story retrieved successfully'));
     }
   );
 
@@ -143,7 +143,7 @@ export class StoryController extends BaseModule {
 
       return reply
         .code(HTTP_STATUS.OK.code)
-        .send(new ApiResponse(true, 'Story retrieved successfully', story));
+        .send(ApiResponse.fetched(story, 'Story retrieved successfully'));
     }
   );
 
@@ -154,7 +154,7 @@ export class StoryController extends BaseModule {
     this.logInfo(`Fetched stories`);
     return reply
       .code(HTTP_STATUS.OK.code)
-      .send(new ApiResponse(true, 'All stories fetched successfully', stories));
+      .send(ApiResponse.fetched(stories, 'All stories fetched successfully'));
   });
 
   // For public feed - only stories created in last 7 days
@@ -163,7 +163,7 @@ export class StoryController extends BaseModule {
     this.logInfo(`Fetched new stories`);
     return reply
       .code(HTTP_STATUS.OK.code)
-      .send(new ApiResponse(true, 'Latest stories fetched successfully', stories));
+      .send(ApiResponse.fetched(stories, 'Latest stories fetched successfully'));
   });
 
   // Get all stories created by the authenticated user.
@@ -176,7 +176,7 @@ export class StoryController extends BaseModule {
     this.logInfo(`Fetched stories for user ${userId}`);
     return reply
       .code(HTTP_STATUS.OK.code)
-      .send(new ApiResponse(true, 'Your stories fetched successfully', stories));
+      .send(ApiResponse.fetched(stories, 'Your stories fetched successfully'));
   });
 
   // Get all draft stories created by the authenticated user.
@@ -189,7 +189,7 @@ export class StoryController extends BaseModule {
     this.logInfo(`Fetched draft stories for user ${userId}`);
     return reply
       .code(HTTP_STATUS.OK.code)
-      .send(new ApiResponse(true, 'Your draft stories fetched successfully', stories));
+      .send(ApiResponse.fetched(stories, 'Your draft stories fetched successfully'));
   });
 
   // TODO: Remove this endpoint that use storyId instead of slug
@@ -202,7 +202,7 @@ export class StoryController extends BaseModule {
       this.logInfo(`Fetched story tree for story ${storyId}`);
       return reply
         .code(HTTP_STATUS.OK.code)
-        .send(new ApiResponse(true, 'Story tree loaded successfully', storyTree));
+        .send(ApiResponse.fetched(storyTree, 'Story tree loaded successfully'));
     }
   );
 
@@ -215,7 +215,7 @@ export class StoryController extends BaseModule {
       this.logInfo(`Fetched story tree for story ${slug}`);
       return reply
         .code(HTTP_STATUS.OK.code)
-        .send(new ApiResponse(true, 'Story tree loaded successfully', storyTree));
+        .send(ApiResponse.fetched(storyTree, 'Story tree loaded successfully'));
     }
   );
 
@@ -229,7 +229,7 @@ export class StoryController extends BaseModule {
 
       return reply
         .code(HTTP_STATUS.OK.code)
-        .send(new ApiResponse(true, 'Story overview fetched successfully', overview));
+        .send(ApiResponse.fetched(overview, 'Story overview fetched successfully'));
     }
   );
 
@@ -241,7 +241,7 @@ export class StoryController extends BaseModule {
       this.logInfo(`Fetched story settings for story ${slug}`);
       return reply
         .code(HTTP_STATUS.OK.code)
-        .send(new ApiResponse(true, 'Story settings fetched successfully', settings));
+        .send(ApiResponse.fetched(settings, 'Story settings fetched successfully'));
     }
   );
 
@@ -255,7 +255,7 @@ export class StoryController extends BaseModule {
 
       return reply
         .code(HTTP_STATUS.OK.code)
-        .send(new ApiResponse(true, `Found ${stories.length} stories`, stories));
+        .send(ApiResponse.fetched(stories, `Found ${stories.length} stories`));
     }
   );
 
@@ -278,7 +278,7 @@ export class StoryController extends BaseModule {
 
       return reply
         .code(HTTP_STATUS.OK.code)
-        .send(new ApiResponse(true, 'Story published successfully', publishedStory));
+        .send(ApiResponse.updated(publishedStory, 'Story published successfully'));
     }
   );
 
@@ -294,7 +294,7 @@ export class StoryController extends BaseModule {
 
       return reply
         .code(HTTP_STATUS.OK.code)
-        .send(new ApiResponse(true, 'Story published successfully', publishedStory));
+        .send(ApiResponse.updated(publishedStory, 'Story published successfully'));
     }
   );
 
@@ -311,7 +311,7 @@ export class StoryController extends BaseModule {
 
       return reply
         .code(HTTP_STATUS.OK.code)
-        .send(new ApiResponse(true, 'Upload parameters generated successfully', uploadParams));
+        .send(ApiResponse.fetched(uploadParams, 'Upload parameters generated successfully'));
     }
   );
 
@@ -330,7 +330,7 @@ export class StoryController extends BaseModule {
 
       return reply
         .code(HTTP_STATUS.OK.code)
-        .send(new ApiResponse(true, 'Story cover image updated successfully', coverImage));
+        .send(ApiResponse.updated(coverImage, 'Story cover image updated successfully'));
     }
   );
 
@@ -349,7 +349,7 @@ export class StoryController extends BaseModule {
 
       return reply
         .code(HTTP_STATUS.OK.code)
-        .send(new ApiResponse(true, 'Story card image updated successfully', cardImage));
+        .send(ApiResponse.updated(cardImage, 'Story card image updated successfully'));
     }
   );
 
@@ -397,7 +397,7 @@ export class StoryController extends BaseModule {
 
       return reply
         .code(HTTP_STATUS.CREATED.code)
-        .send(new ApiResponse(true, 'Chapter added successfully', newChapter));
+        .send(ApiResponse.created(newChapter, 'Chapter added successfully'));
     }
   );
 
@@ -441,7 +441,7 @@ export class StoryController extends BaseModule {
 
       return reply
         .code(HTTP_STATUS.CREATED.code)
-        .send(new ApiResponse(true, 'Chapter added successfully', newChapter));
+        .send(ApiResponse.created(newChapter, 'Chapter added successfully'));
     }
   );
 }

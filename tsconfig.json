@@ -36,7 +36,8 @@
       "@schema/*": ["schema/*"],
       "@domain/*": ["domain/*"],
       "@transformer/*": ["transformer/*"],
-      "@services/*": ["services/*"]
+      "@services/*": ["services/*"],
+      "@infrastructure/*": ["infrastructure/*"]
     }
   },
   "include": ["src/**/*"],

@@ -31,7 +31,7 @@ class UserController extends BaseModule {
 
       return reply
         .code(HTTP_STATUS.OK.code)
-        .send(new ApiResponse(true, 'Login successful', { ...token }));
+        .send(ApiResponse.fetched({ ...token }, 'Login successful'));
     }
   );
 
@@ -42,7 +42,7 @@ class UserController extends BaseModule {
 
     return reply
       .code(HTTP_STATUS.OK.code)
-      .send(new ApiResponse(true, 'User details fetched successfully', responseData));
+      .send(ApiResponse.fetched(responseData, 'User details fetched successfully'));
   });
 
   getUserById = catchAsync(
@@ -59,7 +59,7 @@ class UserController extends BaseModule {
 
       return reply
         .code(HTTP_STATUS.OK.code)
-        .send(new ApiResponse(true, 'User fetched successfully', responseData));
+        .send(ApiResponse.fetched(responseData, 'User fetched successfully'));
     }
   );
 
@@ -77,7 +77,7 @@ class UserController extends BaseModule {
 
       return reply
         .code(HTTP_STATUS.OK.code)
-        .send(new ApiResponse(true, 'User fetched successfully', responseData));
+        .send(ApiResponse.fetched(responseData, 'User fetched successfully'));
     }
   );
 
@@ -92,12 +92,11 @@ class UserController extends BaseModule {
       return reply
         .code(HTTP_STATUS.OK.code)
         .send(
-          new ApiResponse(
-            true,
+          ApiResponse.fetched(
+            responseData,
             users.length === 0
               ? `No users found matching "${username}".`
-              : `${users.length} user${users.length > 1 ? 's' : ''} found.`,
-            responseData
+              : `${users.length} user${users.length > 1 ? 's' : ''} found.`
           )
         );
     }
