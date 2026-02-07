@@ -3,6 +3,7 @@ import { IChapterWithStoryResponse } from '@/types/response/chapter.response.typ
 import { IChapter } from '../../types/chapter.types';
 
 interface IChapterQueryService {
+  getBySlug(chapterSlug: string): Promise<IChapter | null>;
   getById(chapterId: string, options?: IOperationOptions): Promise<IChapter | null>;
   getByStory(storySlug: string): Promise<IChapter[]>;
   getByAuthor(userId: string): Promise<IChapterWithStoryResponse[]>;
