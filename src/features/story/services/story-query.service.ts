@@ -149,13 +149,20 @@ class StoryQueryService extends BaseModule implements IStoryQueryService {
    * Get story overview with collaborators (throws if not found)
    */
   async getStoryOverviewBySlug(slug: string): Promise<IStoryWithCreator> {
-    const pipeline = new StoryPipelineBuilder()
+    // const chapterPipeline = new ChapterPipelineBuilder()
+    //   .getByStorySlug(slug)
+    //   .sortByCreatedAt()
+    //   .limit(4)
+    //   .build();
+
+    const storyPipeline = new StoryPipelineBuilder()
       .findBySlug(slug)
       .projectSettings(['genres', 'contentRating'])
       .attachCollaborators()
+      .attachLatestChapters(2)
       .build();
 
-    const stories = await this.storyRepo.aggregateStories<IStoryWithCreator>(pipeline);
+    const stories = await this.storyRepo.aggregateStories<IStoryWithCreator>(storyPipeline);
 
     if (!stories.length) {
       this.throwNotFoundError('Story not found');
