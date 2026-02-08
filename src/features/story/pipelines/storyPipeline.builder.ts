@@ -1,35 +1,16 @@
-import { PipelineStage } from 'mongoose';
-import { logger } from '@/utils/logger';
+import { BasePipelineBuilder } from '@/shared/pipelines/base.pipeline.builder';
+import { getDisplayNumberStages, PUBLIC_USER_PROJECTION } from '@/shared/pipelines/stages';
 import { ID } from '@/types';
 import { toId } from '@/utils';
 import { IStorySettings } from '../types/story.types';
 import { StoryCollaboratorStatus } from '@/features/storyCollaborator/types/storyCollaborator-enum';
 import { StoryStatus } from '../types/story-enum';
+import { ChapterStatus } from '@/features/chapter/types/chapter-enum';
 
-class StoryPipelineBuilder {
-  private pipeline: PipelineStage[] = [];
-
-  createdWithinLastDays(days = 7) {
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - days);
-
-    this.pipeline.push({
-      $match: {
-        createdAt: { $gte: sevenDaysAgo, $lt: new Date() },
-      },
-    });
-    return this;
-  }
-
-  filterPublished() {
-    this.pipeline.push({
-      $match: {
-        status: StoryStatus.PUBLISHED,
-      },
-    });
-    return this;
-  }
-
+class StoryPipelineBuilder extends BasePipelineBuilder<StoryPipelineBuilder> {
+  /**
+   * Matches a story by its ID.
+   */
   findById(storyId: ID) {
     this.pipeline.push({
       $match: {
@@ -39,6 +20,9 @@ class StoryPipelineBuilder {
     return this;
   }
 
+  /**
+   * Matches a story by its slug.
+   */
   findBySlug(slug: string) {
     this.pipeline.push({
       $match: {
@@ -48,6 +32,36 @@ class StoryPipelineBuilder {
     return this;
   }
 
+  /**
+   * Filters stories created within the last N days.
+   */
+  createdWithinLastDays(days = 7) {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    this.pipeline.push({
+      $match: {
+        createdAt: { $gte: startDate, $lt: new Date() },
+      },
+    });
+    return this;
+  }
+
+  /**
+   * Filters only published stories.
+   */
+  filterPublished() {
+    this.pipeline.push({
+      $match: {
+        status: StoryStatus.PUBLISHED,
+      },
+    });
+    return this;
+  }
+
+  /**
+   * Projects specific settings keys as top-level fields.
+   */
   projectSettings(keys: (keyof IStorySettings)[]) {
     const fields: Partial<Record<keyof IStorySettings, string>> = {};
 
@@ -62,6 +76,9 @@ class StoryPipelineBuilder {
     return this;
   }
 
+  /**
+   * Attaches creator details to the story.
+   */
   attachCreator() {
     this.pipeline.push(
       {
@@ -95,6 +112,9 @@ class StoryPipelineBuilder {
     return this;
   }
 
+  /**
+   * Attaches collaborator details with user info.
+   */
   attachCollaborators() {
     this.pipeline.push({
       $lookup: {
@@ -134,31 +154,64 @@ class StoryPipelineBuilder {
     return this;
   }
 
-  build() {
-    return this.pipeline;
-  }
+  /**
+   * Attaches the latest chapters with author and displayNumber.
+   * Uses shared stages for ancestor/displayNumber calculation.
+   */
+  attachLatestChapters(limit: number) {
+    this.pipeline.push({
+      $lookup: {
+        from: 'chapters',
+        let: { storySlug: '$slug' },
+        pipeline: [
+          {
+            $match: {
+              $expr: { $eq: ['$storySlug', '$$storySlug'] },
+              status: ChapterStatus.PUBLISHED,
+            },
+          },
+          { $sort: { createdAt: -1 } },
+          { $limit: limit },
+          {
+            $project: {
+              title: 1,
+              slug: 1,
+              createdAt: 1,
+              authorId: 1,
+              ancestorSlugs: 1,
+              branchIndex: 1,
+            },
+          },
+          // Attach creator/author
+          {
+            $lookup: {
+              from: 'users',
+              let: { userId: '$authorId' },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: { $eq: ['$clerkId', '$$userId'] },
+                  },
+                },
+                { $project: PUBLIC_USER_PROJECTION },
+              ],
+              as: 'creator',
+            },
+          },
+          {
+            $unwind: {
+              path: '$creator',
+              preserveNullAndEmptyArrays: true,
+            },
+          },
+          // Use shared stages for displayNumber calculation
+          ...getDisplayNumberStages(),
+        ],
+        as: 'latestChapters',
+      },
+    });
 
-  when(condition: boolean, callback: (builder: this) => this) {
-    return condition ? callback(this) : this;
-  }
-
-  addStage(stage: PipelineStage) {
-    this.pipeline.push(stage);
     return this;
-  }
-
-  reset() {
-    this.pipeline = [];
-    return this;
-  }
-
-  debug() {
-    logger.debug('Pipeline stages:', JSON.stringify(this.pipeline, null, 2));
-    return this;
-  }
-
-  getPipeline() {
-    return [...this.pipeline];
   }
 }
 

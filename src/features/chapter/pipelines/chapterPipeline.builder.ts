@@ -1,25 +1,43 @@
-import { logger } from '@/utils/logger';
 import { PipelineStage } from 'mongoose';
+import { BasePipelineBuilder } from '@/shared/pipelines/base.pipeline.builder';
+import {
+  attachAncestorDetailsStage,
+  orderAncestorsBySlugStage,
+  buildDisplayNumberStage,
+  extractPrIdStage,
+} from '@/shared/pipelines/stages';
 import { CHAPTER_WITH_STORY_PROJECTION, PUBLIC_AUTHOR_PROJECTION } from './chapter.projections';
 import { ID } from '@/types';
 import { toId } from '@/utils';
 
-class ChapterPipelineBuilder {
-  private pipeline: PipelineStage[] = [];
+class ChapterPipelineBuilder extends BasePipelineBuilder<ChapterPipelineBuilder> {
+  /**
+   * Matches chapters by story slug.
+   */
+  getByStorySlug(storySlug: string) {
+    this.pipeline.push({
+      $match: { storySlug },
+    });
+    return this;
+  }
 
+  /**
+   * Matches a chapter by its ID.
+   */
   findById(chapterId: ID) {
     this.pipeline.push({
       $match: { _id: toId(chapterId) },
     });
-
     return this;
   }
 
+  /**
+   * Matches a chapter by its slug.
+   */
   findBySlug(chapterSlug: string) {
     this.pipeline.push({
       $match: { slug: chapterSlug },
     });
-
     return this;
   }
 
@@ -30,13 +48,9 @@ class ChapterPipelineBuilder {
     this.pipeline.push({
       $match: { authorId },
     });
-
     return this;
   }
 
-  /**
-   * Attaches story details to the chapter.
-   */
   /**
    * Attaches story details to the chapter.
    */
@@ -61,7 +75,6 @@ class ChapterPipelineBuilder {
         $unwind: '$story',
       }
     );
-
     return this;
   }
 
@@ -92,7 +105,6 @@ class ChapterPipelineBuilder {
         },
       }
     );
-
     return this;
   }
 
@@ -103,32 +115,15 @@ class ChapterPipelineBuilder {
     this.pipeline.push({
       $project: CHAPTER_WITH_STORY_PROJECTION,
     });
-
-    return this;
-  }
-
-  /**
-   * Sorts chapters by creation date.
-   */
-  sortByCreatedAt(order: 1 | -1 = -1) {
-    this.pipeline.push({
-      $sort: { createdAt: order },
-    });
-
     return this;
   }
 
   /**
    * Filters chapters belonging to a specific story using its slug.
+   * Alias for getByStorySlug for readability.
    */
   loadChaptersForStory(storySlug: string) {
-    this.pipeline.push({
-      $match: {
-        storySlug,
-      },
-    });
-
-    return this;
+    return this.getByStorySlug(storySlug);
   }
 
   /**
@@ -136,120 +131,36 @@ class ChapterPipelineBuilder {
    * Flattens author data and removes heavy or internal fields.
    */
   prepareChapterForGraph() {
-    this.pipeline.push(
-      {
-        $set: {
-          prId: {
-            $ifNull: ['$pullRequest.prId', null],
-          },
-        },
-      },
-      {
-        $unset: ['authorId', 'content', 'pullRequest'],
-      }
-    );
-
+    this.pipeline.push(extractPrIdStage(), {
+      $unset: ['authorId', 'content', 'pullRequest'],
+    });
     return this;
   }
 
   /**
    * Attaches ancestor details to the chapter.
+   * Uses shared stage from @/shared/pipelines/stages
    */
   attachAncestors() {
-    this.pipeline.push({
-      $lookup: {
-        from: 'chapters',
-        let: { ancestorSlugs: '$ancestorSlugs' },
-        pipeline: [
-          {
-            $match: {
-              $expr: { $in: ['$slug', '$$ancestorSlugs'] },
-            },
-          },
-          {
-            $project: {
-              _id: 0,
-              slug: 1,
-              branchIndex: 1,
-            },
-          },
-        ],
-        as: 'ancestorDetails',
-      },
-    });
-
+    this.pipeline.push(attachAncestorDetailsStage());
     return this;
   }
 
   /**
    * Orders ancestor details by slug.
+   * Uses shared stage from @/shared/pipelines/stages
    */
   orderAncestorsBySlug() {
-    this.pipeline.push({
-      $addFields: {
-        ancestorDetails: {
-          $map: {
-            input: '$ancestorSlugs',
-            as: 'ancestorSlug',
-            in: {
-              $arrayElemAt: [
-                {
-                  $filter: {
-                    input: '$ancestorDetails',
-                    cond: {
-                      $eq: ['$$this.slug', '$$ancestorSlug'],
-                    },
-                  },
-                },
-                0,
-              ],
-            },
-          },
-        },
-      },
-    });
-
+    this.pipeline.push(orderAncestorsBySlugStage());
     return this;
   }
 
   /**
    * Builds the display number for the chapter.
+   * Uses shared stage from @/shared/pipelines/stages
    */
   buildDisplayNumber() {
-    this.pipeline.push({
-      $addFields: {
-        displayNumber: {
-          $cond: {
-            if: {
-              $eq: [{ $size: { $ifNull: ['$ancestorSlugs', []] } }, 0],
-            },
-            then: { $toString: '$branchIndex' },
-            else: {
-              $concat: [
-                {
-                  $reduce: {
-                    input: '$ancestorDetails',
-                    initialValue: '',
-                    in: {
-                      $concat: [
-                        '$$value',
-                        {
-                          $cond: [{ $eq: ['$$value', ''] }, '', '.'],
-                        },
-                        { $toString: '$$this.branchIndex' },
-                      ],
-                    },
-                  },
-                },
-                '.',
-                { $toString: '$branchIndex' },
-              ],
-            },
-          },
-        },
-      },
-    });
-
+    this.pipeline.push(buildDisplayNumberStage());
     return this;
   }
 
@@ -264,47 +175,15 @@ class ChapterPipelineBuilder {
         },
       },
     });
-
     return this;
   }
 
-  build() {
-    return this.pipeline;
-  }
+  // ==================== PRESETS ====================
 
-  // const pipeline = new StoryPipelineBuilder()
-  // .storyById(storyId)
-  // .when(includeCreator, (b) => b.withStoryCreator())
-  // .when(includeCollaborators, (b) => b.withStoryCollaborators())
-  // .when(userRole === 'admin', (b) =>
-  //   b.storySettings(['isPublic', 'allowComments'])
-  // )
-  // .when(!!pagination, (b) => b.paginate(page, limit))
-  // .build();
-  when(condition: boolean, callback: (builder: this) => this) {
-    return condition ? callback(this) : this;
-  }
-
-  addStage(stage: PipelineStage[]) {
-    this.pipeline.push(...stage);
-    return this;
-  }
-
-  reset() {
-    this.pipeline = [];
-    return this;
-  }
-
-  debug() {
-    logger.debug('Pipeline stages:', JSON.stringify(this.pipeline, null, 2));
-    return this;
-  }
-
-  getPipeline() {
-    return [...this.pipeline];
-  }
-
-  // Presets for chapter pipelines
+  /**
+   * Preset for building a story's chapter tree.
+   * Combines multiple stages for graph visualization.
+   */
   buildStoryChapterTreePreset(storySlug: string) {
     return this.loadChaptersForStory(storySlug)
       .attachAuthor({ project: PUBLIC_AUTHOR_PROJECTION })
