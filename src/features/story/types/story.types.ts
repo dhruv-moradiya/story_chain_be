@@ -21,7 +21,10 @@ interface IStoryStats {
   totalChapters: number;
   totalBranches: number;
   totalReads: number;
-  totalVotes: number;
+  totalVotes: number; // Keep for backward compatibility or alias
+  upvotes: number;
+  downvotes: number;
+  score: number;
   uniqueContributors: number;
   averageRating: number;
 }

@@ -1,16 +1,15 @@
 import { Document, Types } from 'mongoose';
 import { ID } from '@/types';
 
-export interface IBookmark {
+export interface ICommentVote {
   _id: ID;
+  commentId: ID;
   userId: string;
-  storySlug: string;
-  chapterSlug: string;
-  note?: string;
+  voteType: 'upvote' | 'downvote';
   createdAt: Date;
   updatedAt: Date;
 }
 
-export interface IBookmarkDoc extends Document, IBookmark {
+export interface ICommentVoteDoc extends Document, ICommentVote {
   _id: Types.ObjectId;
 }

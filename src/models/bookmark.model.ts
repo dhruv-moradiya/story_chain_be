@@ -7,17 +7,15 @@ const bookmarkSchema = new Schema<IBookmarkDoc>(
       type: String,
       ref: 'User',
       required: true,
-      index: true,
     },
-    storyId: {
-      type: Schema.Types.ObjectId,
-      ref: 'Story',
+    storySlug: {
+      type: String,
       required: true,
       index: true,
     },
-    chapterId: {
-      type: Schema.Types.ObjectId,
-      ref: 'Chapter',
+    chapterSlug: {
+      type: String,
+      required: true,
     },
     note: {
       type: String,
@@ -30,8 +28,8 @@ const bookmarkSchema = new Schema<IBookmarkDoc>(
 );
 
 // Unique: one bookmark per user per story
-bookmarkSchema.index({ userId: 1, storyId: 1 }, { unique: true });
+bookmarkSchema.index({ userId: 1, chapterSlug: 1 }, { unique: true });
 
-const Bookmark = mongoose.model('Bookmark', bookmarkSchema);
+const Bookmark = mongoose.model<IBookmarkDoc>('Bookmark', bookmarkSchema);
 
 export { Bookmark };

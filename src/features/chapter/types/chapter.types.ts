@@ -51,6 +51,17 @@ export interface IChapter {
 
   stats: {
     reads: number;
+    uniqueReaders: number;
+
+    completions: number;
+    dropOffs: number;
+
+    totalReadTime: number; // sum of all users
+    avgReadTime: number;
+
+    completionRate: number; // percentage
+    engagementScore: number; // 0-100 score
+
     comments: number;
     childBranches: number;
   };

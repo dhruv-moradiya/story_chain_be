@@ -34,8 +34,8 @@ class ReadingHistoryPipelineBuilder {
         $set: {
           currentChapterSlug: chapterSlug,
           lastReadAt: new Date(),
-          totalReadTime: {
-            $add: [{ $ifNull: ['$totalReadTime', 0] }, duration],
+          totalStoryReadTime: {
+            $add: [{ $ifNull: ['$totalStoryReadTime', 0] }, duration],
           },
         },
       }

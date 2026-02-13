@@ -375,6 +375,7 @@ export class StoryController extends BaseModule {
 
       let newChapter;
       if (!parentChapterSlug) {
+        this.logDebug('Creating root chapter');
         // Create root chapter
         newChapter = await this.chapterCrudService.createRoot({
           storySlug: story.slug,
@@ -383,6 +384,7 @@ export class StoryController extends BaseModule {
           content,
         });
       } else {
+        this.logDebug('Creating child chapter');
         // Create child chapter
         newChapter = await this.chapterCrudService.createChild({
           storySlug: story.slug,

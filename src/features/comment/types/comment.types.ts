@@ -17,7 +17,6 @@ export interface IComment {
   deletedAt?: Date;
   reportCount: number;
   createdAt: Date;
-  updatedAt: Date;
 }
 
 export interface ICommentDoc extends Document, IComment {

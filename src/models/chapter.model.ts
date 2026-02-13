@@ -113,6 +113,17 @@ const chapterSchema = new Schema<IChapterDoc>(
     // Statistics
     stats: {
       reads: { type: Number, default: 0 },
+      uniqueReaders: { type: Number, default: 0 },
+
+      completions: { type: Number, default: 0 },
+      dropOffs: { type: Number, default: 0 },
+
+      totalReadTime: { type: Number, default: 0 }, // sum of all users
+      avgReadTime: { type: Number, default: 0 },
+
+      completionRate: { type: Number, default: 0 }, // percentage
+      engagementScore: { type: Number, default: 0 }, // 0-100 score
+
       comments: { type: Number, default: 0 },
       childBranches: { type: Number, default: 0 },
     },
@@ -139,6 +150,6 @@ chapterSchema.index({ authorId: 1, createdAt: -1 });
 chapterSchema.index({ 'votes.score': -1 });
 chapterSchema.index({ status: 1 });
 
-const Chapter = mongoose.model('Chapter', chapterSchema);
+const Chapter = mongoose.model<IChapterDoc>('Chapter', chapterSchema);
 
 export { Chapter };

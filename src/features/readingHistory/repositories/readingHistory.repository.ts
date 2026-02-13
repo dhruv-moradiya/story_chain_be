@@ -16,6 +16,11 @@ class ReadingHistoryRepository extends BaseRepository<IReadingHistory, IReadingH
    * @param data - The heartbeat data (userId, storySlug, chapterSlug, duration)
    * @param isEnding - Whether the chapter is an ending chapter (determined by service)
    */
+  /**
+   * Upsert reading history with heartbeat data
+   * @param data - The heartbeat data (userId, storySlug, chapterSlug, duration)
+   * @param isEnding - Whether the chapter is an ending chapter (determined by service)
+   */
   async upsert(data: IRecordHeartBeatDTO, isEnding: boolean = false): Promise<IReadingHistory> {
     const { userId, storySlug, chapterSlug, duration } = data;
 
@@ -40,23 +45,175 @@ class ReadingHistoryRepository extends BaseRepository<IReadingHistory, IReadingH
     return readingHistory;
   }
 
-  // async markAsCompleted(data: IMarkAsCompletedDTO): Promise<IReadingHistory> {
-  //   const { userId, storySlug, chapterSlug } = data;
+  async initializeSession(input: { userId: string; storySlug: string }): Promise<IReadingHistory> {
+    const now = new Date();
+    return this.model.findOneAndUpdate(
+      {
+        userId: input.userId,
+        storySlug: input.storySlug,
+      },
+      {
+        $setOnInsert: {
+          userId: input.userId,
+          storySlug: input.storySlug,
+          currentChapterSlug: null,
+          chaptersRead: [],
+          totalStoryReadTime: 0,
+          completedEndingChapters: [],
+          completedPaths: 0,
+          createdAt: now,
+        },
+      },
+      {
+        new: true,
+        upsert: true,
+      }
+    );
+  }
 
-  //   // const readingHistory = this.model.findOneAndUpdate(
-  //   //     { userId, storySlug },
-  //   //     { $set: { currentChapterSlug: chapterSlug, lastReadAt: new Date() } },
-  //   //     { upsert: true, new: true }
-  //   // );
+  async tryUpdateSession(input: {
+    userId: string;
+    storySlug: string;
+    chapterSlug: string;
+    sessionId: string;
+  }) {
+    const now = new Date();
+    return this.model.findOneAndUpdate(
+      {
+        userId: input.userId,
+        storySlug: input.storySlug,
+        'chaptersRead.chapterSlug': input.chapterSlug,
+      },
+      {
+        $set: {
+          'chaptersRead.$.activeSessionId': input.sessionId,
+          'chaptersRead.$.lastHeartbeatAt': now,
+          lastReadAt: now,
+        },
+      }
+    );
+  }
 
-  //   // return readingHistory
-  // }
+  async addNewChapterSession(input: {
+    userId: string;
+    storySlug: string;
+    chapterSlug: string;
+    sessionId: string;
+  }) {
+    const now = new Date();
+    return this.model.findOneAndUpdate(
+      {
+        userId: input.userId,
+        storySlug: input.storySlug,
+      },
+      {
+        $push: {
+          chaptersRead: {
+            chapterSlug: input.chapterSlug,
+            totalReadTime: 0,
+            lastHeartbeatAt: now,
+            activeSessionId: input.sessionId,
+            hasQualifiedRead: false,
+          },
+        },
+        $set: {
+          lastReadAt: now,
+        },
+      }
+    );
+  }
 
-  // async getReadingHistory(userId: string): Promise<IReadingHistory[]> {
-  //   const readingHistory = this.model.find({ userId });
+  async updateHeartbeat(
+    input: {
+      userId: string;
+      storySlug: string;
+      chapterSlug: string;
+      sessionId: string;
+    },
+    options: {
+      maxAllowedGap: number;
+      incrementAmount: number;
+    }
+  ) {
+    const now = new Date();
+    return this.model.findOneAndUpdate(
+      {
+        userId: input.userId,
+        storySlug: input.storySlug,
+        'chaptersRead.chapterSlug': input.chapterSlug,
+        'chaptersRead.activeSessionId': input.sessionId,
+        'chaptersRead.lastHeartbeatAt': {
+          $gte: new Date(Date.now() - options.maxAllowedGap * 1000),
+        },
+      },
+      {
+        $inc: {
+          'chaptersRead.$.totalReadTime': options.incrementAmount,
+          totalStoryReadTime: options.incrementAmount,
+        },
+        $set: {
+          'chaptersRead.$.lastHeartbeatAt': now,
+          lastReadAt: now,
+        },
+      }
+    );
+  }
 
-  //   return readingHistory;
-  // }
+  async resetActiveSession(input: {
+    userId: string;
+    storySlug: string;
+    chapterSlug: string;
+    sessionId: string;
+  }) {
+    return this.model.findOneAndUpdate(
+      {
+        userId: input.userId,
+        storySlug: input.storySlug,
+        'chaptersRead.chapterSlug': input.chapterSlug,
+      },
+      {
+        $set: {
+          'chaptersRead.$.activeSessionId': input.sessionId,
+          'chaptersRead.$.lastHeartbeatAt': new Date(),
+        },
+      }
+    );
+  }
+
+  async getUnqualifiedChapterSession(
+    userId: string,
+    storySlug: string,
+    chapterSlug: string
+  ): Promise<IReadingHistory | null> {
+    return this.model.findOne(
+      {
+        userId,
+        storySlug,
+        'chaptersRead.chapterSlug': chapterSlug,
+        'chaptersRead.hasQualifiedRead': false,
+      },
+      {
+        'chaptersRead.$': 1,
+      }
+    );
+  }
+
+  async markChapterAsQualified(userId: string, storySlug: string, chapterSlug: string) {
+    return this.model.findOneAndUpdate(
+      {
+        userId,
+        storySlug,
+        'chaptersRead.chapterSlug': chapterSlug,
+        'chaptersRead.hasQualifiedRead': false,
+      },
+      {
+        $set: {
+          'chaptersRead.$.hasQualifiedRead': true,
+          currentChapterSlug: chapterSlug,
+        },
+      }
+    );
+  }
 }
 
 export { ReadingHistoryRepository };

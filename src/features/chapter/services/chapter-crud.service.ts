@@ -21,6 +21,17 @@ export class ChapterCrudService extends BaseModule implements IChapterCrudServic
   async createRoot(input: TChapterAddRootDTO, options: IOperationOptions = {}): Promise<IChapter> {
     const { storySlug, userId, title, content } = input;
 
+    // Check if alredy root chapter exist
+    const rootChapter = await this.chapterRepo.findOne(
+      { storySlug, parentChapterSlug: null },
+      { _id: 1 },
+      { session: options.session }
+    );
+
+    if (rootChapter) {
+      this.throwBadRequest('Root chapter already exists.');
+    }
+
     // 1. Calculate branch index for root (among other roots)
     const branchIndex = await this._getNextBranchIndex(storySlug, null, options);
 

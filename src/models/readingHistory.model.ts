@@ -1,5 +1,42 @@
 import mongoose, { Schema } from 'mongoose';
-import { IReadingHistoryDoc } from '@features/readingHistory/types/readingHistory.types';
+import {
+  IReadingHistoryDoc,
+  IChapterReadDoc,
+} from '@features/readingHistory/types/readingHistory.types';
+
+const chapterReadSchema = new Schema<IChapterReadDoc>(
+  {
+    chapterSlug: {
+      type: String,
+      ref: 'Chapter',
+      required: true,
+    },
+
+    // Time tracking
+    totalReadTime: {
+      type: Number, // seconds
+      default: 0,
+    },
+
+    lastHeartbeatAt: {
+      type: Date,
+      default: null,
+    },
+
+    // Multi-tab protection
+    activeSessionId: {
+      type: String,
+      default: null,
+    },
+
+    // Unique reader flag
+    hasQualifiedRead: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  { _id: false }
+);
 
 const readingHistorySchema = new Schema<IReadingHistoryDoc>(
   {
@@ -21,16 +58,11 @@ const readingHistorySchema = new Schema<IReadingHistoryDoc>(
     currentChapterSlug: {
       type: String,
       ref: 'Chapter',
-      required: true,
+      default: null,
     },
 
     // Path taken
-    chaptersRead: [
-      {
-        chapterSlug: { type: String, ref: 'Chapter' },
-        readAt: { type: Date, default: Date.now },
-      },
-    ],
+    chaptersRead: [chapterReadSchema],
 
     // Statistics
     lastReadAt: {
@@ -38,7 +70,7 @@ const readingHistorySchema = new Schema<IReadingHistoryDoc>(
       default: Date.now,
     },
 
-    totalReadTime: {
+    totalStoryReadTime: {
       type: Number,
       default: 0,
     },
@@ -54,7 +86,7 @@ const readingHistorySchema = new Schema<IReadingHistoryDoc>(
     },
   },
   {
-    timestamps: true,
+    timestamps: false,
   }
 );
 
@@ -63,5 +95,6 @@ readingHistorySchema.index({ userId: 1, storySlug: 1 }, { unique: true });
 readingHistorySchema.index({ userId: 1, lastReadAt: -1 });
 
 const ReadingHistory = mongoose.model<IReadingHistoryDoc>('ReadingHistory', readingHistorySchema);
+const ChapterRead = mongoose.model<IChapterReadDoc>('ChapterRead', chapterReadSchema);
 
-export { ReadingHistory };
+export { ReadingHistory, ChapterRead };

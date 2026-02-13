@@ -162,7 +162,7 @@ export class AutoSaveContentService extends BaseModule implements IAutoSaveConte
   private isUpdateRequest(
     input: TAutoSaveContentDTO
   ): input is TAutoSaveContentDTO & { autoSaveId: string } {
-    return Boolean((input as any).autoSaveId);
+    return Boolean(input?.autoSaveId);
   }
 
   private async getAutoSaveOrFail(autoSaveId: string): Promise<IChapterAutoSave> {

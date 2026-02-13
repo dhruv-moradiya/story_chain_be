@@ -145,6 +145,20 @@ export class ChapterRepository extends BaseRepository<IChapter, IChapterDoc> {
 
     return results[0] || null;
   }
+  async incrementReads(slug: string) {
+    return this.model
+      .findOneAndUpdate(
+        { slug },
+        {
+          $inc: {
+            'stats.reads': 1,
+            'stats.uniqueReaders': 1,
+          },
+        }
+      )
+      .lean()
+      .exec();
+  }
 }
 
 /**

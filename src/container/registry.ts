@@ -49,6 +49,7 @@ import { ChapterCrudService } from '@features/chapter/services/chapter-crud.serv
 import { ChapterQueryService } from '@features/chapter/services/chapter-query.service';
 
 import { ReadingHistoryService } from '@/features/readingHistory/services/readingHistory.service';
+import { BookmarkService } from '@/features/bookmark/services/bookmark.service';
 
 // ═══════════════════════════════════════════
 // CONTROLLERS
@@ -61,6 +62,7 @@ import { ChapterAutoSaveController } from '@features/chapterAutoSave/controllers
 import { NotificationController } from '@features/notification/controllers/notification.controller';
 import { StoryCollaboratorController } from '@features/storyCollaborator/controllers/storyCollaborator.controller';
 import { ReadingHistoryController } from '@/features/readingHistory/controllers/readingHistory.controller';
+import { BookmarkController } from '@/features/bookmark/controllers/bookmark.controller';
 
 // ═══════════════════════════════════════════
 // MIDDLEWARE FACTORIES
@@ -123,6 +125,7 @@ export function registerServices(): void {
   container.register(TOKENS.AutoSaveContentService, { useClass: AutoSaveContentService });
   container.register(TOKENS.AutoSaveConversionService, { useClass: AutoSaveConversionService });
   container.register(TOKENS.ReadingHistoryService, { useClass: ReadingHistoryService });
+  container.register(TOKENS.BookmarkService, { useClass: BookmarkService });
 
   // ═══════════════════════════════════════════
   // CONTROLLERS
@@ -135,6 +138,7 @@ export function registerServices(): void {
   container.register(TOKENS.NotificationController, { useClass: NotificationController });
   container.register(TOKENS.StoryCollaboratorController, { useClass: StoryCollaboratorController });
   container.register(TOKENS.ReadingHistoryController, { useClass: ReadingHistoryController });
+  container.register(TOKENS.BookmarkController, { useClass: BookmarkController });
 
   // ═══════════════════════════════════════════
   // MIDDLEWARE FACTORIES
