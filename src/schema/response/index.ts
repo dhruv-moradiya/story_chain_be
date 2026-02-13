@@ -80,7 +80,4 @@ export { CollaboratorSchema, CollaboratorResponses } from './collaborator.respon
 export { AutoSaveDraftSchema, AutoSaveResponses } from './autoSave.response.js';
 
 // Reading History
-export {
-  ReadingHistoryResponseSchema,
-  ReadingHistoryResponses,
-} from './readingHistory.response.js';
+export { ReadingHistoryResponses } from './readingHistory.response.js';
