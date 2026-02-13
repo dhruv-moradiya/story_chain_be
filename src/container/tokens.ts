@@ -34,6 +34,7 @@ export const TOKENS = {
   PlatformRoleRepository: Symbol.for('PlatformRoleRepository'),
   StoryCollaboratorRepository: Symbol.for('StoryCollaboratorRepository'),
   ReadingHistoryRepository: Symbol.for('ReadingHistoryRepository'),
+  CommentRepository: Symbol.for('CommentRepository'),
 
   // ═══════════════════════════════════════════
   // FEATURE SERVICES

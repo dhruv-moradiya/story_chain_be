@@ -72,6 +72,14 @@ class RedisService {
     const result = await this.getClient().exists(key);
     return result === 1;
   }
+
+  async incr(key: string): Promise<number> {
+    return this.getClient().incr(key);
+  }
+
+  async expire(key: string, seconds: number): Promise<void> {
+    await this.getClient().expire(key, seconds);
+  }
 }
 
 export { RedisService };

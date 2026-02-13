@@ -63,6 +63,9 @@ import { NotificationController } from '@features/notification/controllers/notif
 import { StoryCollaboratorController } from '@features/storyCollaborator/controllers/storyCollaborator.controller';
 import { ReadingHistoryController } from '@/features/readingHistory/controllers/readingHistory.controller';
 import { BookmarkController } from '@/features/bookmark/controllers/bookmark.controller';
+import { CommentController } from '@/features/comment/controllers/comment.controller';
+import { CommentService } from '@/features/comment/services/comment.service';
+import { CommentRepository } from '@/features/comment/repositories/comment.repository';
 
 // ═══════════════════════════════════════════
 // MIDDLEWARE FACTORIES
@@ -99,6 +102,7 @@ export function registerServices(): void {
   container.register(TOKENS.ChapterAutoSaveRepository, { useClass: ChapterAutoSaveRepository });
   container.register(TOKENS.ChapterRepository, { useClass: ChapterRepository });
   container.register(TOKENS.ReadingHistoryRepository, { useClass: ReadingHistoryRepository });
+  container.register(TOKENS.CommentRepository, { useClass: CommentRepository });
 
   // ═══════════════════════════════════════════
   // FEATURE SERVICES
@@ -126,6 +130,7 @@ export function registerServices(): void {
   container.register(TOKENS.AutoSaveConversionService, { useClass: AutoSaveConversionService });
   container.register(TOKENS.ReadingHistoryService, { useClass: ReadingHistoryService });
   container.register(TOKENS.BookmarkService, { useClass: BookmarkService });
+  container.register(TOKENS.CommentService, { useClass: CommentService });
 
   // ═══════════════════════════════════════════
   // CONTROLLERS
@@ -139,6 +144,7 @@ export function registerServices(): void {
   container.register(TOKENS.StoryCollaboratorController, { useClass: StoryCollaboratorController });
   container.register(TOKENS.ReadingHistoryController, { useClass: ReadingHistoryController });
   container.register(TOKENS.BookmarkController, { useClass: BookmarkController });
+  container.register(TOKENS.CommentController, { useClass: CommentController });
 
   // ═══════════════════════════════════════════
   // MIDDLEWARE FACTORIES

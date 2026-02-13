@@ -315,6 +315,17 @@ export abstract class BaseRepository<TEntity, TDocument extends Document> {
     return query.lean<TEntity>().exec();
   }
 
+  async findOneAndDelete(
+    filter: FilterQuery<TDocument>,
+    options?: { session?: ClientSession }
+  ): Promise<TEntity | null> {
+    const query = this.model.findOneAndDelete(filter);
+
+    if (options?.session) query.session(options.session);
+
+    return query.lean<TEntity>().exec();
+  }
+
   // 📜 PAGINATION / FIND MANY
   async findMany(
     filter: FilterQuery<TDocument>,

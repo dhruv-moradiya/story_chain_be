@@ -9,9 +9,9 @@ import { IComment } from '../../types/comment.types';
 
 interface ICommentCrudService {
   addComment(comment: IAddCommentDTO): Promise<IComment>;
-  updateComment(comment: IUpdateCommentDTO): Promise<IComment>;
-  deleteComment(comment: IDeleteCommentDTO): Promise<IComment>;
-  getComment(comment: IGetCommentDTO): Promise<IComment>;
+  updateComment(comment: IUpdateCommentDTO): Promise<IComment | null>;
+  deleteComment(comment: IDeleteCommentDTO): Promise<IComment | null>;
+  getComment(comment: IGetCommentDTO): Promise<IComment | null>;
   getComments(comment: IGetCommentsDTO): Promise<IComment[]>;
 }
 

@@ -2,9 +2,8 @@ import mongoose, { Schema } from 'mongoose';
 import { ICommentDoc } from '@features/comment/types/comment.types';
 
 const commentSchema = new Schema<ICommentDoc>({
-  chapterId: {
-    type: Schema.Types.ObjectId,
-    ref: 'Chapter',
+  chapterSlug: {
+    type: String,
     required: true,
     index: true,
   },
@@ -59,10 +58,10 @@ const commentSchema = new Schema<ICommentDoc>({
 });
 
 // Indexes
-commentSchema.index({ chapterId: 1, createdAt: -1 });
+commentSchema.index({ chapterSlug: 1, createdAt: -1 });
 commentSchema.index({ userId: 1, createdAt: -1 });
 commentSchema.index({ parentCommentId: 1 });
 
-const Comment = mongoose.model('Comment', commentSchema);
+const Comment = mongoose.model<ICommentDoc>('Comment', commentSchema);
 
 export { Comment };

@@ -20,6 +20,9 @@ interface IGetCommentDTO {
 
 interface IGetCommentsDTO {
   chapterSlug: string;
+  limit?: number;
+  cursor?: string;
+  parentCommentId?: string;
 }
 
 export type {

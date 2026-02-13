@@ -3,7 +3,7 @@ import { ID } from '@/types';
 
 export interface IComment {
   _id: ID;
-  chapterId: ID;
+  chapterSlug: string;
   userId: string;
   parentCommentId?: ID | null;
   content: string;
