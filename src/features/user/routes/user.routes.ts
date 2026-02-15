@@ -6,7 +6,6 @@ import {
   SearchUserByUsernameSchema,
   GetUserByIdSchema,
   GetUserByUsernameSchema,
-  LoginUserSchema,
 } from '@schema/request/user.schema';
 import { UserResponses } from '@schema/response.schema';
 import { container } from 'tsyringe';
@@ -18,8 +17,6 @@ import { type UserWebhookController } from '../controllers/user.webhook.controll
 const UserApiRoutes = {
   // Webhook
   Webhook: '/webhook',
-
-  Login: '/login',
 
   // Current User
   GetMe: '/me',
@@ -40,20 +37,6 @@ export async function userRoutes(fastify: FastifyInstance) {
   const userController = container.resolve<UserController>(TOKENS.UserController);
   const userWebhookController = container.resolve<UserWebhookController>(
     TOKENS.UserWebhookController
-  );
-
-  fastify.post(
-    UserApiRoutes.Login,
-    {
-      schema: {
-        description: 'User login (for testing purposes)',
-        tags: ['Users'],
-        hide: true,
-        body: zodToJsonSchema(LoginUserSchema),
-        response: UserResponses.login,
-      },
-    },
-    userController.login
   );
 
   // Clerk Webhook

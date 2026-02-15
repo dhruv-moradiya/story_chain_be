@@ -22,8 +22,8 @@ interface IUserStats {
 interface IConnectedAccount {
   provider: TAuthProvider;
   providerAccountId: string;
-  email: string;
-  username: string;
+  email?: string;
+  username?: string;
   avatarUrl?: string;
   connectedAt: Date;
 }

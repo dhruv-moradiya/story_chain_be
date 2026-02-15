@@ -1,11 +1,11 @@
-import { clerkClient, SignInToken } from '@clerk/fastify';
 import { TOKENS } from '@container/tokens';
+import type { User } from '@clerk/fastify';
 import { UserRules } from '@domain/user.rules';
 import {
-  ILoginUserDTO,
   ISearchUserByUsernameDTO,
   ISessionCreateDTO,
   IUserCreateDTO,
+  IUserUpdateDTO,
 } from '@dto/user.dto';
 import { PlatformRoleService } from '@features/platformRole/services/platformRole.service';
 import { BaseModule } from '@utils/baseClass';
@@ -14,7 +14,7 @@ import { withTransaction } from '@utils/withTransaction';
 import { inject, singleton } from 'tsyringe';
 import { IUserService } from '../interfaces';
 import { UserRepository } from '../repositories/user.repository';
-import { IUser } from '../types/user.types';
+import { IConnectedAccount, IUser, TAuthProvider } from '../types/user.types';
 
 @singleton()
 class UserService extends BaseModule implements IUserService {
@@ -25,20 +25,6 @@ class UserService extends BaseModule implements IUserService {
     private readonly platformRoleService: PlatformRoleService
   ) {
     super();
-  }
-
-  // For POSTMAN testing purposes
-  async loginUser(input: ILoginUserDTO): Promise<SignInToken> {
-    const signToken = await clerkClient.signInTokens.createSignInToken({
-      userId: input.userId,
-      expiresInSeconds: 2592000,
-    });
-
-    if (!signToken.token) {
-      this.throwUnauthorizedError('Failed to generate sign-in token.');
-    }
-
-    return signToken;
   }
 
   /**
@@ -68,6 +54,10 @@ class UserService extends BaseModule implements IUserService {
       email: clerkUser.email,
       username: clerkUser.username,
       avatarUrl: clerkUser.avatarUrl,
+      authProvider: 'email',
+      primaryAuthMethod: 'email',
+      connectedAccounts: [],
+      emailVerified: true, // Assumed verified if fetching from Clerk successfully
     });
 
     this.logInfo(`[JIT] User ${clerkId} created successfully`);
@@ -120,6 +110,64 @@ class UserService extends BaseModule implements IUserService {
 
   async createSession(input: ISessionCreateDTO) {
     this.logInfo('Session is created', { input });
+  }
+
+  async updateUserFromClerk(input: IUserUpdateDTO): Promise<void> {
+    const user = await this.userRepo.findByClerkId(input.clerkId);
+
+    if (!user) {
+      this.logInfo(`[UpdateUser] User ${input.clerkId} not found for update`);
+      return;
+    }
+
+    // Check for email conflicts before updating
+    if (input.email && input.email !== user.email) {
+      const existingUser = await this.userRepo.findByEmail(input.email);
+      if (existingUser && existingUser.clerkId !== input.clerkId) {
+        this.logError(`[UpdateUser] Email ${input.email} already in use by another user`);
+        return;
+      }
+    }
+
+    await this.userRepo.updateByClerkId(input.clerkId, input);
+    this.logInfo(`[UpdateUser] User ${input.clerkId} updated successfully`);
+  }
+
+  async handleUserDeleted(clerkId: string): Promise<void> {
+    const user = await this.userRepo.findByClerkId(clerkId);
+    if (!user) {
+      this.logInfo(`[DeleteUser] User ${clerkId} not found for deletion`);
+      return;
+    }
+
+    await this.platformRoleService.deleteRole(clerkId);
+    await this.userRepo.deleteByClerkId(clerkId);
+    this.logInfo(`[DeleteUser] User ${clerkId} deleted successfully`);
+  }
+
+  async syncConnectedAccounts(clerkId: string, externalAccounts: User['externalAccounts']) {
+    const providersMap = new Map<string, IConnectedAccount>();
+
+    for (const account of externalAccounts) {
+      let provider: TAuthProvider;
+      if (account.provider.includes('google')) provider = 'google';
+      else if (account.provider.includes('github')) provider = 'github';
+      else if (account.provider.includes('discord')) provider = 'discord';
+      else continue;
+
+      providersMap.set(provider, {
+        provider,
+        providerAccountId: account.id,
+        email: account.emailAddress,
+        username: account.username || undefined,
+        avatarUrl: account.imageUrl || undefined,
+        connectedAt: new Date(Date.now()),
+      });
+    }
+
+    const connectedAccounts = Array.from(providersMap.values());
+
+    await this.userRepo.updateByClerkId(clerkId, { connectedAccounts });
   }
 
   async getUserById(userId: string): Promise<IUser | null> {

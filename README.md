@@ -161,6 +161,72 @@ PORT=3000
 
 ---
 
+## 🐳 Docker Setup
+
+You can run the entire backend stack (App + MongoDB Replica Set + Redis) using Docker Compose.
+
+### Prerequisites
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running.
+
+### 🚀 Running the App
+
+1.  **Configure Environment**:
+    Make sure you have a `.env` file in the root directory. The `docker-compose.yml` will load secrets from it.
+    _Note: `MONGODB_URI`, `REDIS_HOST`, and `REDIS_PORT` are automatically overridden by Docker Compose to point to the containerized services._
+
+2.  **Start Services**:
+    Run the following command to build the image and start all services:
+
+    ```bash
+    docker-compose up --build
+    ```
+
+    - This starts:
+      - `app`: The backend server (Port 4000)
+      - `mongo`: MongoDB instance (Port 27017)
+      - `redis`: Redis instance (Port 6379)
+      - `mongo-init`: A temporary container that initializes the MongoDB Replica Set.
+
+3.  **Verify**:
+    - Check logs for `Replica Set initialized.`
+    - The backend should be accessible at `http://localhost:4000`.
+
+### 🛑 Stopping Services
+
+To stop the containers and remove the network:
+
+```bash
+docker-compose down
+```
+
+To stop and **remove volumes** (WARNING: Deletes all database data):
+
+```bash
+docker-compose down -v
+```
+
+### 🛠️ Useful Commands
+
+- **View Logs**:
+  ```bash
+  docker-compose logs -f
+  ```
+- **Restart App Only**:
+  ```bash
+  docker-compose restart app
+  ```
+- **Rebuild App Only**:
+  ```bash
+  docker-compose up -d --no-deps --build app
+  ```
+- **Access MongoDB Shell**:
+  ```bash
+  docker-compose exec mongo mongosh
+  ```
+
+---
+
 ## 📚 API Routes
 
 ### Story Routes (`/api/stories`)
@@ -245,6 +311,12 @@ All services and controllers extend `BaseModule` which provides:
 - `{Feature}LifecycleService` - Create/remove entity lifecycle
 
 ---
+
+## 🔧 Localtunnel
+
+```bash
+lt --port 3000 --subdomain storychain-be
+```
 
 ## 📄 License
 

@@ -1,15 +1,24 @@
 import { z } from 'zod';
-import { UserCreateDTO, SessionCreateDTO } from '@schema/request/user.schema';
-
-interface ILoginUserDTO {
-  userId: string;
-}
+import {
+  UserCreateDTO,
+  SessionCreateDTO,
+  UserUpdateDTO,
+  ConnectedAccountSchema,
+} from '@schema/request/user.schema';
 
 interface ISearchUserByUsernameDTO {
   username: string;
 }
 
 type IUserCreateDTO = z.infer<typeof UserCreateDTO>;
+type IUserUpdateDTO = z.infer<typeof UserUpdateDTO>;
 type ISessionCreateDTO = z.infer<typeof SessionCreateDTO>;
+type IConnectedAccount = z.infer<typeof ConnectedAccountSchema>;
 
-export type { IUserCreateDTO, ISessionCreateDTO, ISearchUserByUsernameDTO, ILoginUserDTO };
+export type {
+  IUserCreateDTO,
+  IUserUpdateDTO,
+  ISessionCreateDTO,
+  ISearchUserByUsernameDTO,
+  IConnectedAccount,
+};

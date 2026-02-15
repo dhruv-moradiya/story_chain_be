@@ -55,4 +55,8 @@ export class UserRepository extends BaseRepository<IUser, IUserDoc> implements I
   async countAllUsers(options?: { session?: any }) {
     return this.count({}, options);
   }
+
+  async deleteByClerkId(clerkId: string): Promise<void> {
+    await this.model.deleteOne({ clerkId });
+  }
 }

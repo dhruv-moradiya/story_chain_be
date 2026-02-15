@@ -7,7 +7,6 @@ import {
   TSearchUserByUsernameSchema,
   TGetUserByIdSchema,
   TGetUserByUsernameSchema,
-  TLoginUserSchema,
 } from '@schema/request/user.schema';
 import { UserService } from '../services/user.service';
 import { UserTransformer } from '@transformer/user.transformer';
@@ -22,18 +21,6 @@ class UserController extends BaseModule {
   ) {
     super();
   }
-
-  login = catchAsync(
-    async (request: FastifyRequest<{ Body: TLoginUserSchema }>, reply: FastifyReply) => {
-      const { userId } = request.body;
-
-      const token = await this.userService.loginUser({ userId });
-
-      return reply
-        .code(HTTP_STATUS.OK.code)
-        .send(ApiResponse.fetched({ ...token }, 'Login successful'));
-    }
-  );
 
   getCurrentUserDetails = catchAsync(async (request: FastifyRequest, reply: FastifyReply) => {
     const user = request.user;

@@ -21,12 +21,10 @@ class UserWebhookController {
   handle = catchAsync(async (req: FastifyRequest, reply: FastifyReply) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const event = (req as any).clerkEvent as WebhookEvent;
-
     if (!event?.type) {
       return reply
         .code(HTTP_STATUS.BAD_REQUEST.code)
         .send(ApiResponse.fetched({}, 'Invalid webhook payload'));
-      // .send(new ApiResponse(false, 'Invalid webhook payload'));
     }
 
     switch (event.type) {
@@ -45,7 +43,15 @@ class UserWebhookController {
         return reply
           .code(HTTP_STATUS.CREATED.code)
           .send(ApiResponse.created({ userId: user.clerkId }, 'User created'));
-        // .send(new ApiResponse(true, 'User created', { userId: user.clerkId }));
+      }
+
+      // ----------------------------
+      // NEW: USER UPDATED (OAuth account linked)
+      // ----------------------------
+      case 'user.updated': {
+        const parsed = this.transformer.transformUserUpdated(event.data);
+        await this.userService.updateUserFromClerk(parsed);
+        return reply.code(HTTP_STATUS.OK.code).send(new ApiResponse(true, 'User updated'));
       }
 
       // ----------------------------
@@ -59,6 +65,16 @@ class UserWebhookController {
         return reply
           .code(HTTP_STATUS.CREATED.code)
           .send(ApiResponse.created({}, 'Session created'));
+      }
+
+      // ----------------------------
+      // NEW: USER DELETED
+      // ----------------------------
+      case 'user.deleted': {
+        if (event.data.id) {
+          await this.userService.handleUserDeleted(event.data.id);
+        }
+        return reply.code(HTTP_STATUS.OK.code).send(new ApiResponse(true, 'User deleted'));
       }
 
       default:

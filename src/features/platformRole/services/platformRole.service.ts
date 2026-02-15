@@ -36,4 +36,21 @@ export class PlatformRoleService {
       assignedAt: new Date(),
     });
   }
+
+  async deleteRole(userId: string): Promise<void> {
+    try {
+      await this.repo.deleteByUserId(userId);
+    } catch (error: unknown) {
+      // Ignore if role not found
+      if (
+        error &&
+        typeof error === 'object' &&
+        'statusCode' in error &&
+        (error as { statusCode: number }).statusCode === 404
+      ) {
+        return;
+      }
+      throw error;
+    }
+  }
 }

@@ -1,0 +1,57 @@
+services:
+  app:
+    build: .
+    ports:
+      - '4000:8080' # Map host port 4000 to container port 8080
+    environment:
+      - NODE_ENV=development
+      - PORT=8080
+      - HOST=0.0.0.0
+      - MONGODB_URI=mongodb://mongo:27017/storychain?replicaSet=rs0
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      # Add other environment variables from .env here as needed
+      # You can also use env_file: .env to load them all, but be careful with localhost references
+    depends_on:
+      - mongo
+      - redis
+    networks:
+      - storychain-network
+
+  mongo:
+    image: mongo:7.0
+    command: ['--replSet', 'rs0', '--bind_ip_all']
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - storychain-network
+
+  mongo-init:
+    image: mongo:7.0
+    restart: 'no'
+    depends_on:
+      - mongo
+    volumes:
+      - ./mongo-init.sh:/scripts/mongo-init.sh
+    command: ['bash', '/scripts/mongo-init.sh']
+    networks:
+      - storychain-network
+
+  redis:
+    image: redis:alpine
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis-data:/data
+    networks:
+      - storychain-network
+
+networks:
+  storychain-network:
+    driver: bridge
+
+volumes:
+  mongo-data:
+  redis-data:

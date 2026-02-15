@@ -15,10 +15,6 @@ const UsernameSchema = z
   .min(3, 'Username must be at least 3 characters.')
   .max(30, 'Username cannot exceed 30 characters.');
 
-const LoginUserSchema = z.object({
-  userId: UserIdSchema,
-});
-
 // Search User By Username Schema
 const SearchUserByUsernameSchema = z.object({
   username: z
@@ -52,12 +48,41 @@ const UpdateUserPreferencesSchema = z.object({
   theme: z.enum(['light', 'dark', 'auto']).optional(),
 });
 
+const ConnectedAccountSchema = z.object({
+  provider: z.enum(['google', 'github', 'discord']),
+  providerAccountId: z.string(),
+  email: z.string().email().optional(),
+  username: z.string().optional(),
+  avatarUrl: z.string().url().optional(),
+  connectedAt: z.date().default(() => new Date()),
+});
+
 // User Create DTO Schema
 const UserCreateDTO = z.object({
   clerkId: z.string(),
   email: z.string().email(),
   username: z.string(),
   avatarUrl: z.string().optional(),
+
+  // OAuth fields
+  authProvider: z.enum(['email', 'google', 'github', 'discord']).default('email'),
+  primaryAuthMethod: z.enum(['email', 'google', 'github', 'discord']).default('email'),
+  connectedAccounts: z.array(ConnectedAccountSchema).default([]),
+  emailVerified: z.boolean().default(false),
+
+  // Optional profile fields from OAuth
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+});
+
+// User Update DTO Schema
+const UserUpdateDTO = z.object({
+  clerkId: z.string(),
+  email: z.string().email().optional(),
+  username: z.string().optional(),
+  avatarUrl: z.string().url().optional(),
+  connectedAccounts: z.array(ConnectedAccountSchema).optional(),
+  emailVerified: z.boolean().optional(),
 });
 
 // Session Create DTO Schema
@@ -72,7 +97,6 @@ const SessionCreateDTO = z.object({
 });
 
 // Type exports
-type TLoginUserSchema = z.infer<typeof LoginUserSchema>;
 type TSearchUserByUsernameSchema = z.infer<typeof SearchUserByUsernameSchema>;
 type TGetUserByIdSchema = z.infer<typeof GetUserByIdSchema>;
 type TGetUserByUsernameSchema = z.infer<typeof GetUserByUsernameSchema>;
@@ -82,18 +106,18 @@ type TUpdateUserPreferencesSchema = z.infer<typeof UpdateUserPreferencesSchema>;
 export {
   UserIdSchema,
   UsernameSchema,
-  LoginUserSchema,
   SearchUserByUsernameSchema,
   GetUserByIdSchema,
   GetUserByUsernameSchema,
   UpdateUserProfileSchema,
   UpdateUserPreferencesSchema,
   UserCreateDTO,
+  UserUpdateDTO,
+  ConnectedAccountSchema,
   SessionCreateDTO,
 };
 
 export type {
-  TLoginUserSchema,
   TSearchUserByUsernameSchema,
   TGetUserByIdSchema,
   TGetUserByUsernameSchema,
