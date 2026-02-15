@@ -15,10 +15,14 @@ import { StoryRepository } from '../repositories/story.repository';
 import { StoryPipelineBuilder } from '../pipelines/storyPipeline.builder';
 import { IStory, IStorySettingsWithImages } from '../types/story.types';
 import { StoryStatus } from '../types/story-enum';
+import { CacheService } from '@/infrastructure/cache/cache.service';
+import { CACHE_TTL, CacheKeyBuilder } from '@/infrastructure';
 
 @singleton()
 class StoryQueryService extends BaseModule implements IStoryQueryService {
   constructor(
+    @inject(TOKENS.CacheService)
+    private readonly cacheService: CacheService,
     @inject(TOKENS.StoryRepository)
     private readonly storyRepo: StoryRepository,
     @inject(TOKENS.ChapterRepository)
@@ -62,7 +66,13 @@ class StoryQueryService extends BaseModule implements IStoryQueryService {
    * Get all stories created by a specific user
    */
   async getAllByUserId(userId: string, options: IOperationOptions = {}): Promise<IStory[]> {
-    return this.storyRepo.findByCreatorId(userId, options);
+    const stories = await this.cacheService.getOrSet(
+      CacheKeyBuilder.userStories(userId),
+      () => this.storyRepo.findByCreatorId(userId, options),
+      { ttl: CACHE_TTL.USER_STORIES }
+    );
+
+    return stories;
   }
 
   /**

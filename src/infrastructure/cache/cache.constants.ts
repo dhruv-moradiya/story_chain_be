@@ -44,7 +44,7 @@ export const CACHE_TTL = {
   AUTOSAVE_LOCK: 60 * 2, // 2 minutes
 } as const;
 
-export type CacheTTLKey = keyof typeof CACHE_TTL;
+export type TCacheTTLKey = keyof typeof CACHE_TTL;
 
 /**
  * Cache key prefixes for different entities

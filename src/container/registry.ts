@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 
-import { container } from 'tsyringe';
+import { container, Lifecycle } from 'tsyringe';
 import { TOKENS } from './tokens';
 
 // ═══════════════════════════════════════════
@@ -9,6 +9,11 @@ import { TOKENS } from './tokens';
 import { ConfigService } from '@config/services/config.service';
 import { DatabaseService } from '@config/services/database.service';
 import { RedisService } from '@config/services/redis.service';
+
+// ═══════════════════════════════════════════
+// CACHING & QUEUE SERVICES
+// ═══════════════════════════════════════════
+import { CacheService } from '@infrastructure/cache/cache.service';
 
 // ═══════════════════════════════════════════
 // TRANSFORMERS
@@ -82,9 +87,30 @@ export function registerServices(): void {
   // ═══════════════════════════════════════════
   // CONFIG SERVICES (register first - no dependencies)
   // ═══════════════════════════════════════════
-  container.register(TOKENS.ConfigService, { useClass: ConfigService });
-  container.register(TOKENS.DatabaseService, { useClass: DatabaseService });
-  container.register(TOKENS.RedisService, { useClass: RedisService });
+  container.register(
+    TOKENS.ConfigService,
+    { useClass: ConfigService },
+    { lifecycle: Lifecycle.Singleton }
+  );
+  container.register(
+    TOKENS.DatabaseService,
+    { useClass: DatabaseService },
+    { lifecycle: Lifecycle.Singleton }
+  );
+  container.register(
+    TOKENS.RedisService,
+    { useClass: RedisService },
+    { lifecycle: Lifecycle.Singleton }
+  );
+
+  // ═══════════════════════════════════════════
+  // CACHING & QUEUE SERVICES
+  // ═══════════════════════════════════════════
+  container.register(
+    TOKENS.CacheService,
+    { useClass: CacheService },
+    { lifecycle: Lifecycle.Singleton }
+  );
 
   // ═══════════════════════════════════════════
   // TRANSFORMERS
