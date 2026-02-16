@@ -15,6 +15,10 @@ import {
   validationErrorResponse,
   internalErrorResponse,
 } from './helpers.js';
+import {
+  STORY_COLLABORATOR_ROLES,
+  STORY_COLLABORATOR_STATUSES,
+} from '@/features/storyCollaborator/types/storyCollaborator-enum.js';
 
 // ═══════════════════════════════════════════
 // STORY DATA SCHEMAS
@@ -65,15 +69,23 @@ export const StorySchema = {
     _id: { type: 'string' },
     title: { type: 'string' },
     slug: { type: 'string' },
-    description: { type: 'string' },
     coverImage: ImageSchema,
     cardImage: ImageSchema,
     creatorId: { type: 'string' },
-    status: { type: 'string', enum: ['DRAFT', 'PUBLISHED', 'ARCHIVED', 'DELETED'] },
+    status: { type: 'string', enum: STORY_STATUSES },
     tags: { type: 'array', items: { type: 'string' } },
-    settings: StorySettingsSchema,
+    genres: {
+      type: 'array',
+      items: {
+        type: 'string',
+        enum: STORY_GENRES,
+      },
+    },
+    contentRating: { type: 'string', enum: STORY_CONTENT_RATINGS },
     stats: StoryStatsSchema,
     trendingScore: { type: 'number' },
+    role: { type: 'string', enum: STORY_COLLABORATOR_ROLES },
+    roleStatus: { type: 'string', enum: STORY_COLLABORATOR_STATUSES },
     lastActivityAt: { type: 'string', format: 'date-time' },
     publishedAt: { type: 'string', format: 'date-time' },
     createdAt: { type: 'string', format: 'date-time' },

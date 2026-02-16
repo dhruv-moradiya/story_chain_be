@@ -2,7 +2,7 @@ import { BasePipelineBuilder } from '@/shared/pipelines/base.pipeline.builder';
 import { getDisplayNumberStages, PUBLIC_USER_PROJECTION } from '@/shared/pipelines/stages';
 import { ID } from '@/types';
 import { toId } from '@/utils';
-import { IStorySettings } from '../types/story.types';
+import { IStory, IStorySettings } from '../types/story.types';
 import { StoryCollaboratorStatus } from '@/features/storyCollaborator/types/storyCollaborator-enum';
 import { StoryStatus } from '../types/story-enum';
 import { ChapterStatus } from '@/features/chapter/types/chapter-enum';
@@ -27,6 +27,18 @@ class StoryPipelineBuilder extends BasePipelineBuilder<StoryPipelineBuilder> {
     this.pipeline.push({
       $match: {
         slug,
+      },
+    });
+    return this;
+  }
+
+  /**
+   * Matches stories created by a specific user.
+   */
+  createdByUser(userId: string) {
+    this.pipeline.push({
+      $match: {
+        creatorId: userId,
       },
     });
     return this;
@@ -76,6 +88,51 @@ class StoryPipelineBuilder extends BasePipelineBuilder<StoryPipelineBuilder> {
     return this;
   }
 
+  removeFields(fields: (keyof IStory)[]) {
+    this.pipeline.push({
+      $unset: fields,
+    });
+    return this;
+  }
+
+  resolveUserStoryAccess(userId: string) {
+    this.pipeline.push(
+      {
+        $lookup: {
+          from: 'storycollaborators',
+          let: { storySlug: '$slug' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$slug', '$$storySlug'] },
+                    {
+                      $eq: ['$userId', userId],
+                    },
+                  ],
+                },
+              },
+            },
+            {
+              $project: { role: 1, status: 1, _id: 0 },
+            },
+          ],
+          as: 'collaboratorRole',
+        },
+      },
+      {
+        $addFields: {
+          role: { $first: '$collaboratorRole.role' },
+          roleStatus: {
+            $first: '$collaboratorRole.status',
+          },
+        },
+      }
+    );
+
+    return this;
+  }
   /**
    * Attaches creator details to the story.
    */
@@ -212,6 +269,15 @@ class StoryPipelineBuilder extends BasePipelineBuilder<StoryPipelineBuilder> {
     });
 
     return this;
+  }
+
+  // ==================== PRESETS ====================
+  getCurrentUserStoryPreset(userId: string) {
+    return this.createdByUser(userId)
+      .projectSettings(['genres', 'contentRating'])
+      .removeFields(['description'])
+      .resolveUserStoryAccess(userId)
+      .build();
   }
 }
 

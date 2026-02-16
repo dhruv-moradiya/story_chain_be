@@ -18,10 +18,13 @@ import {
 import { IStoryCrudService } from './interfaces/story-crud.interface';
 import { StoryRepository } from '../repositories/story.repository';
 import { IStory } from '../types/story.types';
+import { CacheService } from '@/infrastructure/cache/cache.service';
 
 @singleton()
 class StoryCrudService extends BaseModule implements IStoryCrudService {
   constructor(
+    @inject(TOKENS.CacheService)
+    private readonly cacheService: CacheService,
     @inject(TOKENS.StoryRepository) private readonly storyRepo: StoryRepository,
     @inject(TOKENS.CollaboratorLifecycleService)
     private readonly collaboratorLifecycleService: CollaboratorLifecycleService
@@ -62,6 +65,8 @@ class StoryCrudService extends BaseModule implements IStoryCrudService {
         },
         options
       );
+
+      await this.cacheService.invalidateStory(story.slug);
 
       return story;
     });

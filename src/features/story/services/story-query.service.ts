@@ -66,9 +66,11 @@ class StoryQueryService extends BaseModule implements IStoryQueryService {
    * Get all stories created by a specific user
    */
   async getAllByUserId(userId: string, options: IOperationOptions = {}): Promise<IStory[]> {
+    const pipeline = new StoryPipelineBuilder().getCurrentUserStoryPreset(userId);
+
     const stories = await this.cacheService.getOrSet(
       CacheKeyBuilder.userStories(userId),
-      () => this.storyRepo.findByCreatorId(userId, options),
+      () => this.storyRepo.aggregateStories(pipeline, options),
       { ttl: CACHE_TTL.USER_STORIES }
     );
 

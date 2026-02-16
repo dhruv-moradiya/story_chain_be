@@ -2,7 +2,6 @@ import { getAuth } from '@clerk/fastify';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { container } from 'tsyringe';
 import { TOKENS } from '@container/tokens';
-import { HTTP_STATUS } from '@constants/httpStatus';
 import { IUser } from '@features/user/types/user.types';
 import { IPlatformRole } from '@features/platformRole/types/platformRole.types';
 import { TStoryCollaboratorRole } from '@features/storyCollaborator/types/storyCollaborator.types';
@@ -10,6 +9,7 @@ import { IStoryContext } from '@features/story/types/story.types';
 import { logger } from '@utils/logger';
 import { UserService } from '@features/user/services/user.service';
 import { PlatformRoleRepository } from '@features/platformRole/repositories/platformRole.repository';
+import { AppError } from '@infrastructure/errors/app-error';
 
 type AuthUser = IUser & IPlatformRole;
 
@@ -25,15 +25,12 @@ declare module 'fastify' {
  * Authentication middleware that validates user and attaches to request
  * Uses DI to resolve repositories
  */
-export async function validateAuth(request: FastifyRequest, reply: FastifyReply) {
+export async function validateAuth(request: FastifyRequest, _reply: FastifyReply) {
   try {
     const auth = getAuth(request);
 
     if (!auth?.userId) {
-      return reply.code(HTTP_STATUS.UNAUTHORIZED.code).send({
-        error: 'Authentication required',
-        message: 'You must be logged in to access this resource.',
-      });
+      throw AppError.unauthorized('UNAUTHORIZED', 'You must be logged in to access this resource.');
     }
 
     const userService = container.resolve<UserService>(TOKENS.UserService);
@@ -46,25 +43,30 @@ export async function validateAuth(request: FastifyRequest, reply: FastifyReply)
 
     const platformRole = await platformRoleRepo.findByUserId(auth.userId);
     if (!user) {
-      return reply.code(HTTP_STATUS.UNAUTHORIZED.code).send({
-        error: 'User not found',
-        message: 'Your account could not be located. Please contact support if this continues.',
-      });
+      throw AppError.unauthorized(
+        'UNAUTHORIZED',
+        'Your account could not be located. Please contact support if this continues.'
+      );
     }
 
     if (!platformRole) {
-      return reply.code(HTTP_STATUS.FORBIDDEN.code).send({
-        error: 'Access denied',
-        message: 'Your account does not have a platform role assigned. Access is not permitted.',
-      });
+      throw AppError.forbidden(
+        'FORBIDDEN',
+        'Your account does not have a platform role assigned. Access is not permitted.'
+      );
     }
 
     request.user = { ...user, ...platformRole.toObject() };
   } catch (error: unknown) {
     logger.error('Received error while checking auth: ', { error });
-    return reply.code(500).send({
-      error: 'Unexpected server error',
-      message: 'Something went wrong while verifying your authentication. Please try again.',
-    });
+
+    // Pass strictly typed AppErrors through
+    if (error instanceof AppError) {
+      throw error;
+    }
+
+    throw AppError.internal(
+      'Something went wrong while verifying your authentication. Please try again.'
+    );
   }
 }

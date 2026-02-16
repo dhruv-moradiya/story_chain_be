@@ -1,3 +1,7 @@
+import {
+  STORY_COLLABORATOR_ROLES,
+  STORY_COLLABORATOR_STATUSES,
+} from '@/features/storyCollaborator/types/storyCollaborator-enum';
 import { apiResponse, apiArrayResponse } from './helpers';
 
 // ===============================
@@ -9,8 +13,8 @@ export const CollaboratorSchema = {
   properties: {
     storyId: { type: 'string' },
     userId: { type: 'string' },
-    role: { type: 'string', enum: ['OWNER', 'CO_AUTHOR', 'MODERATOR', 'REVIEWER', 'CONTRIBUTOR'] },
-    status: { type: 'string', enum: ['PENDING', 'ACCEPTED', 'DECLINED'] },
+    role: { type: 'string', enum: STORY_COLLABORATOR_ROLES },
+    status: { type: 'string', enum: STORY_COLLABORATOR_STATUSES },
     user: {
       type: 'object',
       properties: {
