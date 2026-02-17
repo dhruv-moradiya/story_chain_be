@@ -34,77 +34,92 @@ class CollaboratorInvitationService extends BaseModule implements ICollaboratorI
   }
 
   async createInvite(input: TStoryCreateInviteLinkDTO): Promise<IStoryCollaborator> {
-    return withTransaction('Creating collaborator invitation', async (session) => {
-      // Verify story exists
-      const story = await this.storyRepo.findBySlug(input.slug, { session });
-      if (!story) {
-        this.throwNotFoundError(`Story not found for slug: ${input.slug}`);
-      }
+    const { invitation, story } = await withTransaction(
+      'Creating collaborator invitation',
+      async (session) => {
+        // Verify story exists
+        const story = await this.storyRepo.findBySlug(input.slug, { session });
+        if (!story) {
+          this.throwNotFoundError(`Story not found for slug: ${input.slug}`);
+        }
 
-      const inviter = await this.collabRepo.findOne(
-        {
-          slug: input.slug,
-          userId: input.inviterUser.id,
-          status: StoryCollaboratorStatus.ACCEPTED,
-        },
-        {},
-        { session }
-      );
-
-      if (!inviter) {
-        this.throwForbiddenError('You do not have permission to send invitations for this story.');
-      }
-
-      const storyCollaborators = await this.collabQueryService.getCollaboratorsByStorySlug({
-        slug: input.slug,
-      });
-
-      if (
-        storyCollaborators
-          .filter((c) => c.role === StoryCollaboratorRole.OWNER)
-          .some((owner) => owner.user.clerkId === input.invitedUser.id)
-      ) {
-        this.throwConflictError('The user is already the owner of this story.');
-      }
-
-      if (storyCollaborators.filter((c) => c.user.clerkId === input.invitedUser.id).length > 0) {
-        this.throwConflictError('The user is already a collaborator of this story.');
-      }
-
-      const storyMemberIds = this.getStoryMembersIds(storyCollaborators);
-
-      if (
-        !StoryCollaboratorRules.isInvitorIsCollaboratorOfStory(input.inviterUser.id, storyMemberIds)
-      ) {
-        this.throwForbiddenError('You must be a collaborator of this story to send invitations.');
-      }
-
-      if (!StoryCollaboratorRules.ensureInviterHasSufficientRole(inviter.role)) {
-        this.throwForbiddenError('Your role does not allow sending collaborator invitations.');
-      }
-
-      if (!StoryCollaboratorRules.checkRoleHierarchy(inviter.role, input.role)) {
-        this.throwForbiddenError(
-          `You cannot assign the role '${input.role}' because it is higher than your current role '${inviter.role}'.`
+        const inviter = await this.collabRepo.findOne(
+          {
+            slug: input.slug,
+            userId: input.inviterUser.id,
+            status: StoryCollaboratorStatus.ACCEPTED,
+          },
+          {},
+          { session }
         );
+
+        if (!inviter) {
+          this.throwForbiddenError(
+            'You do not have permission to send invitations for this story.'
+          );
+        }
+
+        const storyCollaborators = await this.collabQueryService.getCollaboratorsByStorySlug({
+          slug: input.slug,
+        });
+
+        if (
+          storyCollaborators
+            .filter((c) => c.role === StoryCollaboratorRole.OWNER)
+            .some((owner) => owner.user.clerkId === input.invitedUser.id)
+        ) {
+          this.throwConflictError('The user is already the owner of this story.');
+        }
+
+        if (storyCollaborators.filter((c) => c.user.clerkId === input.invitedUser.id).length > 0) {
+          this.throwConflictError('The user is already a collaborator of this story.');
+        }
+
+        const storyMemberIds = this.getStoryMembersIds(storyCollaborators);
+
+        if (
+          !StoryCollaboratorRules.isInvitorIsCollaboratorOfStory(
+            input.inviterUser.id,
+            storyMemberIds
+          )
+        ) {
+          this.throwForbiddenError('You must be a collaborator of this story to send invitations.');
+        }
+
+        if (!StoryCollaboratorRules.ensureInviterHasSufficientRole(inviter.role)) {
+          this.throwForbiddenError('Your role does not allow sending collaborator invitations.');
+        }
+
+        if (!StoryCollaboratorRules.checkRoleHierarchy(inviter.role, input.role)) {
+          this.throwForbiddenError(
+            `You cannot assign the role '${input.role}' because it is higher than your current role '${inviter.role}'.`
+          );
+        }
+
+        const invitation = this.collabRepo.createInvitation(input, { session });
+
+        if (!invitation) {
+          this.throwInternalError('Invitation could not be created due to an unexpected error.');
+        }
+
+        return { invitation, story };
       }
+    );
 
-      const invitation = this.collabRepo.createInvitation(input, { session });
-
-      if (!invitation) {
-        this.throwInternalError('Invitation could not be created due to an unexpected error.');
-      }
-
-      // TODO: Add in queue
+    // TODO: Add in queue
+    try {
       await this.notificationService.createNotificationForCollabInvitation({
         invitedUser: input.invitedUser,
         inviterUser: input.inviterUser,
         role: input.role,
         story,
       });
+    } catch (error) {
+      // We do not throw here to ensure the invitation remains valid even if notification fails
+      console.error('Failed to send notification for collaborator invite', error);
+    }
 
-      return invitation;
-    });
+    return invitation;
   }
 
   async updateCollaboratorStatus(

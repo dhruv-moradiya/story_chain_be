@@ -1,11 +1,10 @@
 import { BasePipelineBuilder } from '@/shared/pipelines/base.pipeline.builder';
-import { getDisplayNumberStages, PUBLIC_USER_PROJECTION } from '@/shared/pipelines/stages';
+
 import { ID } from '@/types';
 import { toId } from '@/utils';
 import { IStory, IStorySettings } from '../types/story.types';
-import { StoryCollaboratorStatus } from '@/features/storyCollaborator/types/storyCollaborator-enum';
+
 import { StoryStatus } from '../types/story-enum';
-import { ChapterStatus } from '@/features/chapter/types/chapter-enum';
 
 class StoryPipelineBuilder extends BasePipelineBuilder<StoryPipelineBuilder> {
   /**
@@ -141,28 +140,28 @@ class StoryPipelineBuilder extends BasePipelineBuilder<StoryPipelineBuilder> {
       {
         $lookup: {
           from: 'users',
-          localField: 'creatorId',
-          foreignField: 'clerkId',
-          as: 'creator',
+          let: { clerkId: '$creatorId' },
           pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ['$clerkId', '$$clerkId'],
+                },
+              },
+            },
             {
               $project: {
                 clerkId: 1,
-                email: 1,
                 username: 1,
-                avatarUrl: 1,
+                email: 1,
               },
             },
           ],
+          as: 'creator',
         },
       },
       {
-        $set: {
-          creator: { $arrayElemAt: ['$creator', 0] },
-        },
-      },
-      {
-        $unset: 'creatorId',
+        $unwind: '$creator',
       }
     );
 
@@ -180,27 +179,42 @@ class StoryPipelineBuilder extends BasePipelineBuilder<StoryPipelineBuilder> {
         pipeline: [
           {
             $match: {
-              $expr: { $eq: ['$slug', '$$storySlug'] },
-              status: StoryCollaboratorStatus.ACCEPTED,
+              $expr: {
+                $eq: ['$slug', '$$storySlug'],
+              },
             },
           },
-          { $project: { userId: 1, role: 1 } },
           {
             $lookup: {
               from: 'users',
-              localField: 'userId',
-              foreignField: 'clerkId',
-              pipeline: [{ $project: { username: 1, clerkId: 1, avatarUrl: 1 } }],
-              as: 'user',
+              let: { collaboratorId: '$userId' },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ['$clerkId', '$$collaboratorId'],
+                    },
+                  },
+                },
+                {
+                  $project: {
+                    clerkId: 1,
+                    username: 1,
+                    email: 1,
+                  },
+                },
+              ],
+              as: 'details',
             },
           },
-          { $unwind: '$user' },
+          {
+            $unwind: '$details',
+          },
           {
             $project: {
-              username: '$user.username',
-              clerkId: '$user.clerkId',
-              avatarUrl: '$user.avatarUrl',
-              role: '$role',
+              role: 1,
+              status: 1,
+              details: 1,
             },
           },
         ],
@@ -223,46 +237,122 @@ class StoryPipelineBuilder extends BasePipelineBuilder<StoryPipelineBuilder> {
         pipeline: [
           {
             $match: {
-              $expr: { $eq: ['$storySlug', '$$storySlug'] },
-              status: ChapterStatus.PUBLISHED,
+              $expr: {
+                $eq: ['$storySlug', '$$storySlug'],
+              },
             },
           },
           { $sort: { createdAt: -1 } },
           { $limit: limit },
           {
-            $project: {
-              title: 1,
-              slug: 1,
-              createdAt: 1,
-              authorId: 1,
-              ancestorSlugs: 1,
-              branchIndex: 1,
-            },
-          },
-          // Attach creator/author
-          {
             $lookup: {
-              from: 'users',
-              let: { userId: '$authorId' },
+              from: 'chapters',
+              let: {
+                ancestorSlugs: '$ancestorSlugs',
+              },
               pipeline: [
                 {
                   $match: {
-                    $expr: { $eq: ['$clerkId', '$$userId'] },
+                    $expr: {
+                      $in: ['$slug', '$$ancestorSlugs'],
+                    },
                   },
                 },
-                { $project: PUBLIC_USER_PROJECTION },
+                {
+                  $project: {
+                    _id: 0,
+                    slug: 1,
+                    branchIndex: 1,
+                  },
+                },
               ],
-              as: 'creator',
+              as: 'ancestorDetails',
             },
           },
           {
-            $unwind: {
-              path: '$creator',
-              preserveNullAndEmptyArrays: true,
+            $addFields: {
+              ancestorDetails: {
+                $map: {
+                  input: '$ancestorSlugs',
+                  as: 'ancestorSlug',
+                  in: {
+                    $arrayElemAt: [
+                      {
+                        $filter: {
+                          input: '$ancestorDetails',
+                          cond: {
+                            $eq: ['$$this.slug', '$$ancestorSlug'],
+                          },
+                        },
+                      },
+                      0,
+                    ],
+                  },
+                },
+              },
             },
           },
-          // Use shared stages for displayNumber calculation
-          ...getDisplayNumberStages(),
+          {
+            $addFields: {
+              displayNumber: {
+                $cond: {
+                  if: {
+                    $eq: [
+                      {
+                        $size: {
+                          $ifNull: ['$ancestorSlugs', []],
+                        },
+                      },
+                      0,
+                    ],
+                  },
+                  then: {
+                    $toString: '$branchIndex',
+                  },
+                  else: {
+                    $concat: [
+                      {
+                        $reduce: {
+                          input: '$ancestorDetails',
+                          initialValue: '',
+                          in: {
+                            $concat: [
+                              '$$value',
+                              {
+                                $cond: [
+                                  {
+                                    $eq: ['$$value', ''],
+                                  },
+                                  '',
+                                  '.',
+                                ],
+                              },
+                              {
+                                $toString: '$$this.branchIndex',
+                              },
+                            ],
+                          },
+                        },
+                      },
+                      '.',
+                      { $toString: '$branchIndex' },
+                    ],
+                  },
+                },
+              },
+            },
+          },
+          {
+            $project: {
+              storySlug: 1,
+              slug: 1,
+              ancestorDetails: 1,
+              ancestorSlugs: 1,
+              displayNumber: 1,
+              stats: 1,
+              vote: 1,
+            },
+          },
         ],
         as: 'latestChapters',
       },
@@ -278,6 +368,14 @@ class StoryPipelineBuilder extends BasePipelineBuilder<StoryPipelineBuilder> {
       .removeFields(['description'])
       .resolveUserStoryAccess(userId)
       .build();
+  }
+
+  getStoryOverviewPreset(slug: string) {
+    return this.findBySlug(slug)
+      .projectSettings(['genres', 'contentRating'])
+      .attachCollaborators()
+      .attachLatestChapters(2)
+      .removeFields(['createdAt', 'updatedAt', 'creatorId']);
   }
 }
 

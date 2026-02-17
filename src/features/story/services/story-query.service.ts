@@ -167,12 +167,7 @@ class StoryQueryService extends BaseModule implements IStoryQueryService {
     //   .limit(4)
     //   .build();
 
-    const storyPipeline = new StoryPipelineBuilder()
-      .findBySlug(slug)
-      .projectSettings(['genres', 'contentRating'])
-      .attachCollaborators()
-      .attachLatestChapters(2)
-      .build();
+    const storyPipeline = new StoryPipelineBuilder().getStoryOverviewPreset(slug).build();
 
     const stories = await this.storyRepo.aggregateStories<IStoryWithCreator>(storyPipeline);
 

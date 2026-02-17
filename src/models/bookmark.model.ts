@@ -29,6 +29,7 @@ const bookmarkSchema = new Schema<IBookmarkDoc>(
 
 // Unique: one bookmark per user per story
 bookmarkSchema.index({ userId: 1, chapterSlug: 1 }, { unique: true });
+bookmarkSchema.index({ userId: 1, storySlug: 1 });
 
 const Bookmark = mongoose.model<IBookmarkDoc>('Bookmark', bookmarkSchema);
 
