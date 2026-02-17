@@ -31,7 +31,7 @@ const envSchema = z.object({
   CLOUDINARY_API_KEY: z.string(),
   CLOUDINARY_API_SECRET: z.string(),
 
-  RAILWAY_URL: z.string(),
+  RAILWAY_URL: z.string().optional(),
 });
 
 type EnvConfig = z.infer<typeof envSchema>;

@@ -36,7 +36,7 @@ export const createApp = async () => {
         {
           url:
             env.NODE_ENV === 'production'
-              ? env.RAILWAY_URL
+              ? env.RAILWAY_URL || 'https://api.storychain.com' // Fallback for production
               : `http://localhost:${env.PORT || 3000}`,
           description: env.NODE_ENV === 'production' ? 'Production server' : 'Development server',
         },
