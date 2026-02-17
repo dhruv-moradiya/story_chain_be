@@ -684,17 +684,17 @@ export enum ChapterStatus {
 }
 
 export enum PRStatus {
-  OPEN = 'OPEN',
-  APPROVED = 'APPROVED',
-  REJECTED = 'REJECTED',
-  CLOSED = 'CLOSED',
-  MERGED = 'MERGED',
+  OPEN = 'open',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+  CLOSED = 'closed',
+  MERGED = 'merged',
 }
 
 export enum PRType {
-  NEW_CHAPTER = 'NEW_CHAPTER',
-  EDIT_CHAPTER = 'EDIT_CHAPTER',
-  DELETE_CHAPTER = 'DELETE_CHAPTER',
+  NEW_CHAPTER = 'new_chapter',
+  EDIT_CHAPTER = 'edit_chapter',
+  DELETE_CHAPTER = 'delete_chapter',
 }
 
 export enum CollaboratorRole {

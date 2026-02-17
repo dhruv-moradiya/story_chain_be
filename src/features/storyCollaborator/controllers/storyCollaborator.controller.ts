@@ -52,10 +52,13 @@ export class StoryCollaboratorController extends BaseModule {
   // Create invitation by slug
   createInvitationBySlug = catchAsync(
     async (
-      request: FastifyRequest<{ Params: TStorySlugSchema; Body: TStoryCreateInviteLinkSchema }>,
+      request: FastifyRequest<{
+        Params: TStorySlugSchema;
+        Body: TStoryCreateInviteLinkSchema;
+      }>,
       reply: FastifyReply
     ) => {
-      const { clerkId: userId, username } = request.user;
+      const { clerkId: userId, username, email, avatarUrl } = request.user;
       const { slug } = request.params;
       const { role, invitedUserId, invitedUserName } = request.body;
 
@@ -72,9 +75,19 @@ export class StoryCollaboratorController extends BaseModule {
         },
       });
 
+      const response = {
+        ...invitation,
+        invitedBy: {
+          clerkId: userId,
+          username,
+          email,
+          avatarUrl,
+        },
+      };
+
       return reply
         .code(HTTP_STATUS.CREATED.code)
-        .send(ApiResponse.created(invitation, 'Invitation created successfully'));
+        .send(ApiResponse.created(response, 'Invitation created successfully'));
     }
   );
 

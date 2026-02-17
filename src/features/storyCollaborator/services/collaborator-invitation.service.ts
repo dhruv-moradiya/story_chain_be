@@ -5,7 +5,11 @@ import { IStoryCollaborator } from '../types/storyCollaborator.types';
 import { TOKENS } from '@/container';
 import { TStoryCreateInviteLinkDTO } from '@/dto/story.dto';
 import { StoryCollaboratorRepository } from '../repositories/storyCollaborator.repository';
-import { StoryCollaboratorRole, StoryCollaboratorStatus } from '../types/storyCollaborator-enum';
+import {
+  STORY_COLLABORATOR_ROLE_CONFIG,
+  StoryCollaboratorRole,
+  StoryCollaboratorStatus,
+} from '../types/storyCollaborator-enum';
 import { withTransaction } from '@/utils/withTransaction';
 import { IStoryCollaboratorDetailsResponse } from '@/types/response/story.response.types';
 import { StoryCollaboratorRules } from '@/domain/storyCollaborator.rules';
@@ -13,10 +17,14 @@ import { IStoryCollaboratorUpdateStatusDTO } from '@/dto/storyCollaborator.dto';
 import { IOperationOptions } from '@/types';
 import { NotificationService } from '@features/notification/services/notification.service';
 import { StoryRepository } from '@features/story/repositories/story.repository';
+import { CacheService } from '@/infrastructure/cache/cache.service';
+import { CACHE_TTL, CacheKeyBuilder } from '@/infrastructure';
 
 @singleton()
 class CollaboratorInvitationService extends BaseModule implements ICollaboratorInvitationService {
   constructor(
+    @inject(TOKENS.CacheService)
+    private readonly cacheService: CacheService,
     @inject(TOKENS.StoryCollaboratorRepository)
     private readonly collabRepo: StoryCollaboratorRepository,
     @inject(TOKENS.CollaboratorQueryService)
@@ -38,7 +46,13 @@ class CollaboratorInvitationService extends BaseModule implements ICollaboratorI
       'Creating collaborator invitation',
       async (session) => {
         // Verify story exists
-        const story = await this.storyRepo.findBySlug(input.slug, { session });
+
+        const story = await this.cacheService.getOrSet(
+          CacheKeyBuilder.storyDetail(input.slug),
+          () => this.storyRepo.findBySlug(input.slug, { session }),
+          { ttl: CACHE_TTL.STORY_DETAIL }
+        );
+
         if (!story) {
           this.throwNotFoundError(`Story not found for slug: ${input.slug}`);
         }
@@ -53,7 +67,10 @@ class CollaboratorInvitationService extends BaseModule implements ICollaboratorI
           { session }
         );
 
-        if (!inviter) {
+        if (
+          !inviter ||
+          !STORY_COLLABORATOR_ROLE_CONFIG[inviter.role].permissions.canInviteCollaborators
+        ) {
           this.throwForbiddenError(
             'You do not have permission to send invitations for this story.'
           );
@@ -96,7 +113,7 @@ class CollaboratorInvitationService extends BaseModule implements ICollaboratorI
           );
         }
 
-        const invitation = this.collabRepo.createInvitation(input, { session });
+        const invitation = await this.collabRepo.createInvitation(input, { session });
 
         if (!invitation) {
           this.throwInternalError('Invitation could not be created due to an unexpected error.');
@@ -116,7 +133,7 @@ class CollaboratorInvitationService extends BaseModule implements ICollaboratorI
       });
     } catch (error) {
       // We do not throw here to ensure the invitation remains valid even if notification fails
-      console.error('Failed to send notification for collaborator invite', error);
+      this.logError('Failed to send notification for collaborator invite', { error });
     }
 
     return invitation;

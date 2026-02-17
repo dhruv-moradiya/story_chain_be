@@ -1,23 +1,11 @@
 import { Document, Types } from 'mongoose';
 import { ID } from '@/types';
 
-// ===========================
-// ENUMS
-// ===========================
-export const PR_TYPE = ['NEW_CHAPTER', 'EDIT_CHAPTER', 'DELETE_CHAPTER'] as const;
-export type PRType = (typeof PR_TYPE)[number];
+import { PR_TYPES, PR_STATUSES, PR_LABELS } from './pullRequest-enum';
 
-export const PR_STATUS = ['OPEN', 'APPROVED', 'REJECTED', 'CLOSED', 'MERGED'] as const;
-export type PRStatus = (typeof PR_STATUS)[number];
-
-export const PR_LABELS = [
-  'NEEDS_REVIEW',
-  'QUALITY_ISSUE',
-  'GRAMMAR',
-  'PLOT_HOLE',
-  'GOOD_FIRST_PR',
-] as const;
-export type PRLabel = (typeof PR_LABELS)[number];
+export type TPRType = (typeof PR_TYPES)[number];
+export type TPRStatus = (typeof PR_STATUSES)[number];
+export type TPRLabel = (typeof PR_LABELS)[number];
 
 // ===========================
 // INTERFACES
@@ -54,13 +42,13 @@ export interface IPullRequest {
   description: string;
 
   // Story/Chapter References
-  storyId: Types.ObjectId;
-  chapterId: Types.ObjectId;
-  parentChapterId: Types.ObjectId;
+  storySlug: string;
+  chapterSlug: string;
+  parentChapterSlug: string;
   authorId: string;
 
   // PR Type
-  prType: 'NEW_CHAPTER' | 'EDIT_CHAPTER' | 'DELETE_CHAPTER';
+  prType: TPRType;
 
   // Changes
   changes: {
@@ -73,7 +61,7 @@ export interface IPullRequest {
   };
 
   // Status
-  status: 'OPEN' | 'APPROVED' | 'REJECTED' | 'CLOSED' | 'MERGED';
+  status: TPRStatus;
 
   // Voting Aggregate (counts only, actual votes in PRVote schema)
   votes: {
@@ -93,7 +81,7 @@ export interface IPullRequest {
   };
 
   // Labels
-  labels: string[];
+  labels: TPRLabel[];
 
   // Merge Info
   mergedAt?: Date;

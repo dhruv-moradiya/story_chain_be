@@ -5,7 +5,7 @@ export interface IReport {
   _id: ID;
   reporterId: string;
   reportType: 'CHAPTER' | 'COMMENT' | 'USER' | 'STORY';
-  relatedChapterId?: ID;
+  relatedChapterSlug?: string;
   relatedCommentId?: ID;
   relatedUserId?: string;
   relatedStorySlug?: string;

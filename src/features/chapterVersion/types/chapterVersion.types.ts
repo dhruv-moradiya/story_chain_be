@@ -28,7 +28,7 @@ export interface IModerationInfo {
  */
 export interface IChapterVersion {
   _id: ID;
-  chapterId: ID;
+  chapterSlug: string;
   version: number;
   content: string;
   title?: string;

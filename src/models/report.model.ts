@@ -16,7 +16,7 @@ const reportSchema = new Schema<IReportDoc>(
       required: true,
       enum: ['CHAPTER', 'COMMENT', 'USER', 'STORY'],
     },
-    relatedChapterId: { type: Schema.Types.ObjectId, ref: 'Chapter' },
+    relatedChapterSlug: { type: String, ref: 'Chapter' },
     relatedCommentId: { type: Schema.Types.ObjectId, ref: 'Comment' },
     relatedUserId: { type: String, ref: 'User' },
     relatedStorySlug: { type: String, ref: 'Story' },

@@ -4,9 +4,8 @@ import { CHAPTER_VERSION_EDIT_TYPES } from '@features/chapterVersion/types/chapt
 
 const chapterVersionSchema = new Schema<IChapterVersionDoc>(
   {
-    chapterId: {
-      type: Schema.Types.ObjectId,
-      ref: 'Chapter',
+    chapterSlug: {
+      type: String,
       required: true,
       index: true,
     },
@@ -72,7 +71,7 @@ const chapterVersionSchema = new Schema<IChapterVersionDoc>(
 );
 
 // Indexes
-chapterVersionSchema.index({ chapterId: 1, version: -1 });
+chapterVersionSchema.index({ chapterSlug: 1, version: -1 });
 chapterVersionSchema.index({ isVisible: 1 });
 
 const ChapterVersion = mongoose.model('ChapterVersion', chapterVersionSchema);

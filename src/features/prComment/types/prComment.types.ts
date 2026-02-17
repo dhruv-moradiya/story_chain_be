@@ -1,7 +1,8 @@
 import { Document, Types } from 'mongoose';
 import { ID } from '@/types';
 
-export type PRCommentType = 'GENERAL' | 'SUGGESTION' | 'QUESTION' | 'APPROVAL' | 'REQUEST_CHANGES';
+import { PR_COMMENT_TYPES } from './prComment-enum';
+export type PRCommentType = (typeof PR_COMMENT_TYPES)[number];
 
 export interface IPRComment {
   _id: ID;

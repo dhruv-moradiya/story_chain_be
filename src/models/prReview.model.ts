@@ -1,5 +1,6 @@
 import mongoose, { Schema } from 'mongoose';
 import { IPRReviewDoc } from '@features/prReview/types/prReview.types';
+import { PRReviewStatus, PR_REVIEW_STATUSES } from '@features/prReview/types/prReview-enum';
 
 const prReviewSchema = new Schema<IPRReviewDoc>(
   {
@@ -35,8 +36,8 @@ const prReviewSchema = new Schema<IPRReviewDoc>(
      */
     reviewStatus: {
       type: String,
-      enum: ['PENDING_REVIEW', 'IN_REVIEW', 'CHANGES_REQUESTED', 'APPROVED', 'NEEDS_WORK', 'DRAFT'],
-      default: 'PENDING_REVIEW',
+      enum: PR_REVIEW_STATUSES,
+      default: PRReviewStatus.PENDING_REVIEW,
       index: true,
     },
     summary: {

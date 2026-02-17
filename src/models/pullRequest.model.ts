@@ -1,5 +1,12 @@
 import mongoose, { Schema } from 'mongoose';
 import { IPullRequestDoc } from '@features/pullRequest/types/pullRequest.types';
+import {
+  PR_LABELS,
+  PR_STATUSES,
+  PR_TYPES,
+  PRStatus,
+  PRType,
+} from '@features/pullRequest/types/pullRequest-enum';
 
 const pullRequestSchema = new Schema<IPullRequestDoc>(
   {
@@ -16,29 +23,26 @@ const pullRequestSchema = new Schema<IPullRequestDoc>(
     },
 
     // References
-    storyId: {
-      type: Schema.Types.ObjectId,
-      ref: 'Story',
+    storySlug: {
+      type: String,
       required: true,
       index: true,
     },
-    chapterId: {
-      type: Schema.Types.ObjectId,
-      ref: 'Chapter',
+    chapterSlug: {
+      type: String,
       required: true,
       index: true,
     },
 
     /**
-     * PARENT_CHAPTER_ID: Which chapter is this branching from?
+     * PARENT_CHAPTER_SLUG: Which chapter is this branching from?
      * USE: For branch management, understand the chapter tree
      * UPDATE: Set once on creation for branching PRs
      * REFERENCE: Links to parent Chapter in story structure
-     * NOTE: For edits to main chapter, this equals chapterId
+     * NOTE: For edits to main chapter, this equals chapterSlug
      */
-    parentChapterId: {
-      type: Schema.Types.ObjectId,
-      ref: 'Chapter',
+    parentChapterSlug: {
+      type: String,
       required: true,
       index: true,
     },
@@ -66,8 +70,8 @@ const pullRequestSchema = new Schema<IPullRequestDoc>(
      */
     prType: {
       type: String,
-      enum: ['NEW_CHAPTER', 'EDIT_CHAPTER', 'DELETE_CHAPTER'],
-      default: 'NEW_CHAPTER',
+      enum: PR_TYPES,
+      default: PRType.NEW_CHAPTER,
     },
 
     // ==================== CHANGES ====================
@@ -160,8 +164,8 @@ const pullRequestSchema = new Schema<IPullRequestDoc>(
      */
     status: {
       type: String,
-      enum: ['OPEN', 'APPROVED', 'REJECTED', 'CLOSED', 'MERGED'],
-      default: 'OPEN',
+      enum: PR_STATUSES,
+      default: PRStatus.OPEN,
       required: true,
       index: true,
     },
@@ -315,7 +319,7 @@ const pullRequestSchema = new Schema<IPullRequestDoc>(
     labels: [
       {
         type: String,
-        enum: ['NEEDS_REVIEW', 'QUALITY_ISSUE', 'GRAMMAR', 'PLOT_HOLE', 'GOOD_FIRST_PR'],
+        enum: PR_LABELS,
       },
     ],
 
@@ -660,7 +664,7 @@ const pullRequestSchema = new Schema<IPullRequestDoc>(
 );
 
 // Indexes
-pullRequestSchema.index({ storyId: 1, status: 1, createdAt: -1 });
+pullRequestSchema.index({ storySlug: 1, status: 1, createdAt: -1 });
 pullRequestSchema.index({ authorId: 1, status: 1 });
 pullRequestSchema.index({ 'votes.score': -1 });
 

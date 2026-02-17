@@ -1,5 +1,6 @@
 import mongoose, { Schema } from 'mongoose';
 import { IPRCommentDoc } from '@features/prComment/types/prComment.types';
+import { PRCommentType, PR_COMMENT_TYPES } from '@features/prComment/types/prComment-enum';
 
 const prCommentSchema = new Schema<IPRCommentDoc>(
   {
@@ -78,8 +79,8 @@ const prCommentSchema = new Schema<IPRCommentDoc>(
      */
     commentType: {
       type: String,
-      enum: ['GENERAL', 'SUGGESTION', 'QUESTION', 'APPROVAL', 'REQUEST_CHANGES'],
-      default: 'GENERAL',
+      enum: PR_COMMENT_TYPES,
+      default: PRCommentType.GENERAL,
     },
     /**
      * SUGGESTION: Proposed text change (for SUGGESTION type)

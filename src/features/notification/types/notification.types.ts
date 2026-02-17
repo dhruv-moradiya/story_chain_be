@@ -50,7 +50,7 @@ export interface INotification {
   type: TNotificationType;
 
   relatedStorySlug?: string;
-  relatedChapterId?: ID;
+  relatedChapterSlug?: string;
   relatedPullRequestId?: ID;
   relatedCommentId?: ID;
   relatedUserId?: string; // Who triggered it

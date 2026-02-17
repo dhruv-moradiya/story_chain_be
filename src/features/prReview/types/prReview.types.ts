@@ -1,16 +1,9 @@
 import { Document, Types } from 'mongoose';
 import { ID } from '@/types';
 
-export enum PRReviewStatusEnum {
-  PENDING_REVIEW = 'PENDING_REVIEW',
-  IN_REVIEW = 'IN_REVIEW',
-  CHANGES_REQUESTED = 'CHANGES_REQUESTED',
-  APPROVED = 'APPROVED',
-  NEEDS_WORK = 'NEEDS_WORK',
-  DRAFT = 'DRAFT',
-}
+import { PR_REVIEW_STATUSES } from './prReview-enum';
 
-export type TPRReviewStatus = keyof typeof PRReviewStatusEnum;
+export type TPRReviewStatus = (typeof PR_REVIEW_STATUSES)[number];
 
 export interface IPRFeedback {
   section?: string;
