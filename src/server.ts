@@ -15,7 +15,7 @@ const bootstrap = async () => {
   const redisService = container.resolve<RedisService>(TOKENS.RedisService);
   await redisService.connect();
 
-  // Create appgit
+  // Create app
   const app = await createApp();
   return app;
 };
