@@ -1,12 +1,11 @@
 import 'reflect-metadata';
-import {TOKENS} from "../src/container/tokens"
-import {container} from "../src/container/index"
-import {createApp} from "../src/app"
-import {DatabaseService} from "../src/config/services/database.service"
-import {RedisService} from "../src/config/services/redis.service"
-import {env} from "../src/config/env"
-import {logger} from "../src/utils/logger"
+import { container, TOKENS } from './container';
+import { createApp } from './app';
+import { env } from '@config/env';
+import { logger } from '@utils/logger';
 import type { IncomingMessage, ServerResponse } from 'http';
+import type { DatabaseService } from '@config/services/database.service';
+import type { RedisService } from '@config/services/redis.service';
 
 const bootstrap = async () => {
   // Connect to databases
