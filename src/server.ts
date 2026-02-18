@@ -1,4 +1,4 @@
-import { container, TOKENS } from '@container/index';
+import { container, TOKENS } from './container';
 import { createApp } from './app';
 import { env } from '@config/env';
 import { logger } from '@utils/logger';
