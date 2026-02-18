@@ -4,7 +4,9 @@ import { ApiError } from '@utils/apiResponse';
 import { ClientSession, PipelineStage } from 'mongoose';
 import { BaseRepository } from '@utils/baseClass';
 import { IStoryCollaboratorInvitationDTO } from '@dto/storyCollaborator.dto';
-import { ID, IOperationOptions } from '@/types';
+import { IOperationOptions } from '@/types';
+
+import { StoryCollaboratorStatus } from '../types/storyCollaborator-enum';
 
 export class StoryCollaboratorRepository extends BaseRepository<
   IStoryCollaborator,
@@ -40,8 +42,8 @@ export class StoryCollaboratorRepository extends BaseRepository<
     return doc.toObject();
   }
 
-  async findByStoryAndUser(storyId: string, userId: string) {
-    return StoryCollaborator.findOne({ storyId, userId });
+  async findByStoryAndUser(slug: string, userId: string) {
+    return StoryCollaborator.findOne({ slug, userId });
   }
 
   async addCollaborator(data: IStoryCollaborator, options?: { session?: ClientSession }) {
@@ -49,27 +51,27 @@ export class StoryCollaboratorRepository extends BaseRepository<
   }
 
   async updateCollaborator(
-    storyId: string,
+    slug: string,
     userId: string,
     data: Partial<IStoryCollaborator>,
     options?: { session?: ClientSession }
   ) {
-    return StoryCollaborator.findOneAndUpdate({ storyId, userId }, data, {
+    return StoryCollaborator.findOneAndUpdate({ slug, userId }, data, {
       new: true,
       session: options?.session,
     });
   }
 
-  async removeCollaborator(storyId: string, userId: string, options?: { session?: ClientSession }) {
-    const result = await StoryCollaborator.deleteOne({ storyId, userId }, options);
+  async removeCollaborator(slug: string, userId: string, options?: { session?: ClientSession }) {
+    const result = await StoryCollaborator.deleteOne({ slug, userId }, options);
     if (result.deletedCount === 0) throw ApiError.notFound('Collaborator not found');
   }
 
-  async findStoryCollaborators(storyId: ID): Promise<IStoryCollaborator[]> {
-    return StoryCollaborator.find({ storyId });
+  async findStoryCollaborators(slug: string): Promise<IStoryCollaborator[]> {
+    return StoryCollaborator.find({ slug });
   }
 
   async findUserStories(userId: string) {
-    return StoryCollaborator.find({ userId, status: 'ACCEPTED' });
+    return StoryCollaborator.find({ userId, status: StoryCollaboratorStatus.ACCEPTED });
   }
 }

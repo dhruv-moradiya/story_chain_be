@@ -55,6 +55,9 @@ import { ChapterQueryService } from '@features/chapter/services/chapter-query.se
 
 import { ReadingHistoryService } from '@/features/readingHistory/services/readingHistory.service';
 import { BookmarkService } from '@/features/bookmark/services/bookmark.service';
+import { PullRequestService } from '@/features/pullRequest/services/pullRequest.service';
+import { PullRequestValidator } from '@features/pullRequest/validators/pullRequest.validator';
+import { PullRequestDiffService } from '@features/pullRequest/services/pullRequestDiff.service';
 
 // ═══════════════════════════════════════════
 // CONTROLLERS
@@ -71,6 +74,8 @@ import { BookmarkController } from '@/features/bookmark/controllers/bookmark.con
 import { CommentController } from '@/features/comment/controllers/comment.controller';
 import { CommentService } from '@/features/comment/services/comment.service';
 import { CommentRepository } from '@/features/comment/repositories/comment.repository';
+import { PullRequestController } from '@/features/pullRequest/controllers/pullRequest.controller';
+import { PullRequestRepository } from '@/features/pullRequest/repositories/pullRequest.repository';
 
 // ═══════════════════════════════════════════
 // MIDDLEWARE FACTORIES
@@ -123,12 +128,15 @@ export function registerServices(): void {
   container.register(TOKENS.UserRepository, { useClass: UserRepository });
   container.register(TOKENS.PlatformRoleRepository, { useClass: PlatformRoleRepository });
   container.register(TOKENS.StoryRepository, { useClass: StoryRepository });
-  container.register(TOKENS.StoryCollaboratorRepository, { useClass: StoryCollaboratorRepository });
+  container.register(TOKENS.StoryCollaboratorRepository, {
+    useClass: StoryCollaboratorRepository,
+  });
   container.register(TOKENS.NotificationRepository, { useClass: NotificationRepository });
   container.register(TOKENS.ChapterAutoSaveRepository, { useClass: ChapterAutoSaveRepository });
   container.register(TOKENS.ChapterRepository, { useClass: ChapterRepository });
   container.register(TOKENS.ReadingHistoryRepository, { useClass: ReadingHistoryRepository });
   container.register(TOKENS.CommentRepository, { useClass: CommentRepository });
+  container.register(TOKENS.PullRequestRepository, { useClass: PullRequestRepository });
 
   // ═══════════════════════════════════════════
   // FEATURE SERVICES
@@ -157,6 +165,9 @@ export function registerServices(): void {
   container.register(TOKENS.ReadingHistoryService, { useClass: ReadingHistoryService });
   container.register(TOKENS.BookmarkService, { useClass: BookmarkService });
   container.register(TOKENS.CommentService, { useClass: CommentService });
+  container.register(TOKENS.PullRequestValidator, { useClass: PullRequestValidator });
+  container.register(TOKENS.PullRequestDiffService, { useClass: PullRequestDiffService });
+  container.register(TOKENS.PullRequestService, { useClass: PullRequestService });
 
   // ═══════════════════════════════════════════
   // CONTROLLERS
@@ -167,10 +178,13 @@ export function registerServices(): void {
   container.register(TOKENS.ChapterController, { useClass: ChapterController });
   container.register(TOKENS.ChapterAutoSaveController, { useClass: ChapterAutoSaveController });
   container.register(TOKENS.NotificationController, { useClass: NotificationController });
-  container.register(TOKENS.StoryCollaboratorController, { useClass: StoryCollaboratorController });
+  container.register(TOKENS.StoryCollaboratorController, {
+    useClass: StoryCollaboratorController,
+  });
   container.register(TOKENS.ReadingHistoryController, { useClass: ReadingHistoryController });
   container.register(TOKENS.BookmarkController, { useClass: BookmarkController });
   container.register(TOKENS.CommentController, { useClass: CommentController });
+  container.register(TOKENS.PullRequestController, { useClass: PullRequestController });
 
   // ═══════════════════════════════════════════
   // MIDDLEWARE FACTORIES

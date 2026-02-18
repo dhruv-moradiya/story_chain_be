@@ -49,6 +49,9 @@ const storyCollaboratorSchema = new Schema<IStoryCollaboratorDoc>(
 // Unique: one role per user per story
 storyCollaboratorSchema.index({ slug: 1, userId: 1 }, { unique: true });
 
-const StoryCollaborator = mongoose.model('StoryCollaborator', storyCollaboratorSchema);
+const StoryCollaborator = mongoose.model<IStoryCollaboratorDoc>(
+  'StoryCollaborator',
+  storyCollaboratorSchema
+);
 
 export { StoryCollaborator };

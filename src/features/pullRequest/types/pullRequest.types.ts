@@ -53,7 +53,7 @@ export interface IPullRequest {
   // Changes
   changes: {
     original?: string;
-    proposed: string;
+    proposed?: string;
     diff?: string;
     lineCount?: number;
     additionsCount?: number;

@@ -668,6 +668,6 @@ pullRequestSchema.index({ storySlug: 1, status: 1, createdAt: -1 });
 pullRequestSchema.index({ authorId: 1, status: 1 });
 pullRequestSchema.index({ 'votes.score': -1 });
 
-const PullRequest = mongoose.model('PullRequest', pullRequestSchema);
+const PullRequest = mongoose.model<IPullRequestDoc>('PullRequest', pullRequestSchema);
 
 export { PullRequest };
