@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import { container, TOKENS } from './container';
 import { createApp } from './app';
 import { env } from '@config/env';
@@ -14,7 +15,7 @@ const bootstrap = async () => {
   const redisService = container.resolve<RedisService>(TOKENS.RedisService);
   await redisService.connect();
 
-  // Create app
+  // Create appgit
   const app = await createApp();
   return app;
 };
