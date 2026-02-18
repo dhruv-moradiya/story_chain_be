@@ -2,17 +2,21 @@
     "version": 2,
     "builds": [
         {
-            "src": "dist/server.js",
+            "src": "src/server.ts",
             "use": "@vercel/node",
             "config": {
-                "includeFiles": ["dist/**"]
+                "esbuildOptions": {
+                    "banner": {
+                        "js": "require('reflect-metadata');"
+                    }
+                }
             }
         }
     ],
     "routes": [
         {
             "src": "/(.*)",
-            "dest": "/dist/server.js"
+            "dest": "/src/server.ts"
         }
     ],
     "headers": [
