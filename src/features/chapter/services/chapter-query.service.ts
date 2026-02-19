@@ -8,6 +8,7 @@ import { ChapterRepository } from '../repositories/chapter.repository';
 import { IChapter } from '../types/chapter.types';
 import { IChapterQueryService } from './interfaces/chapter-query.interface';
 import { IChapterWithStoryResponse } from '@/types/response/chapter.response.types';
+import { getDisplayNumberStages } from '@/shared/pipelines';
 
 @singleton()
 export class ChapterQueryService extends BaseModule implements IChapterQueryService {
@@ -42,6 +43,7 @@ export class ChapterQueryService extends BaseModule implements IChapterQueryServ
       .loadChaptersByAuthor(authorId)
       .attachStory({ project: { title: 1, slug: 1, status: 1 } })
       .attachAuthor({ project: PUBLIC_AUTHOR_PROJECTION })
+      .addStages(getDisplayNumberStages())
       .projectChapterWithStory()
       .sortByCreatedAt()
       .build();

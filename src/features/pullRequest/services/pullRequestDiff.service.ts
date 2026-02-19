@@ -14,18 +14,18 @@ export class PullRequestDiffService extends BaseModule {
   /**
    * Resolves the changes based on PR type, computing diffs for edits.
    */
-  resolveChanges(prType: string, changes: IPullRequestDto['changes']): IPullRequest['changes'] {
+  resolveChanges(input: IPullRequestDto): IPullRequest['changes'] {
     // ── new_chapter: brand new content ────────────
-    if (prType === PRType.NEW_CHAPTER) {
+    if (input.prType === PRType.NEW_CHAPTER) {
       return {
-        proposed: changes.proposed!,
+        proposed: input.changes.proposed,
       };
     }
 
     // ── edit_chapter: compute HTML diff ─────────
-    if (prType === PRType.EDIT_CHAPTER) {
-      const original = changes.original!;
-      const proposed = changes.proposed!;
+    if (input.prType === PRType.EDIT_CHAPTER) {
+      const original = input.changes.original;
+      const proposed = input.changes.proposed;
 
       const diff = this.computeHtmlDiff(original, proposed);
       const { lineCount, additionsCount, deletionsCount } = this.computeDiffStats(
@@ -44,14 +44,14 @@ export class PullRequestDiffService extends BaseModule {
     }
 
     // ── delete_chapter: record removal ──────────
-    if (prType === PRType.DELETE_CHAPTER) {
+    if (input.prType === PRType.DELETE_CHAPTER) {
       return {
-        original: changes.original!,
+        original: input.changes.original,
         proposed: '',
       };
     }
 
-    this.throwBadRequest('INVALID_INPUT', `Unknown PR type: ${prType}`);
+    this.throwBadRequest('INVALID_INPUT', `Unknown PR type: ${(input as IPullRequestDto).prType}`);
     throw new Error('Unreachable');
   }
 

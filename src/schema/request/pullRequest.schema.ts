@@ -6,12 +6,7 @@ const BasePullRequestSchema = z.object({
     .min(1, 'Title is required')
     .max(200, 'Title must be under 200 characters')
     .trim(),
-  description: z
-    .string()
-    .max(2000, 'Description must be under 2000 characters')
-    .trim()
-    .optional()
-    .default(''),
+  description: z.string().max(2000, 'Description must be under 2000 characters').trim().optional(),
   storySlug: z
     .string()
     .min(1, 'Story slug is required')
@@ -20,7 +15,7 @@ const BasePullRequestSchema = z.object({
       /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
       'Story slug must be URL-friendly (lowercase, hyphen-separated)'
     ),
-  isDraft: z.boolean().optional().default(false),
+  isDraft: z.boolean().optional(),
 });
 
 const CreateNewChapterPRSchema = BasePullRequestSchema.extend({

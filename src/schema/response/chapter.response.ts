@@ -24,40 +24,47 @@ export const ChapterWithStorySchema = {
   properties: {
     _id: { type: 'string' },
     title: { type: 'string' },
-    status: { type: 'string' },
-    storySlug: { type: 'string' },
+    slug: { type: 'string' },
     storyTitle: { type: 'string' },
-    pullRequest: {
+    storySlug: { type: 'string' },
+    chapterNumber: { type: 'number' },
+    status: { type: 'string' },
+    isEnding: { type: 'boolean' },
+    version: { type: 'number' },
+    displayNumber: { type: 'string' },
+
+    votes: {
       type: 'object',
       properties: {
-        isPR: { type: 'boolean' },
-        prId: { type: 'string' },
-        status: { type: 'string' },
-        submittedAt: { type: 'string', format: 'date-time' },
-        reviewedBy: { type: 'string' },
-        reviewedAt: { type: 'string', format: 'date-time' },
-        rejectionReason: { type: 'string' },
+        upvotes: { type: 'number' },
+        downvotes: { type: 'number' },
       },
     },
+
     stats: {
       type: 'object',
       properties: {
         reads: { type: 'number' },
         comments: { type: 'number' },
         childBranches: { type: 'number' },
+        uniqueReaders: { type: 'number' },
+        completionRate: { type: 'number' },
       },
     },
-    author: {
+
+    pullRequest: {
       type: 'object',
       properties: {
-        clerkId: { type: 'string' },
-        username: { type: 'string' },
-        firstName: { type: 'string' },
-        lastName: { type: 'string' },
-        imageUrl: { type: 'string' },
+        isPR: { type: 'boolean' },
+        status: { type: 'string' },
+        prId: { type: 'string' },
       },
     },
-    createdAt: { type: 'string', format: 'date-time' },
+
+    // Moderation
+    reportCount: { type: 'number' },
+    isFlagged: { type: 'boolean' },
+
     updatedAt: { type: 'string', format: 'date-time' },
   },
 };

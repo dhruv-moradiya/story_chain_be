@@ -1,18 +1,7 @@
-import { TPRType } from '@features/pullRequest/types/pullRequest.types';
+import { TCreatePullRequestSchema } from '@schema/request/pullRequest.schema';
 
-interface IPullRequestDto {
+type IPullRequestDto = TCreatePullRequestSchema & {
   userId: string;
-  title: string;
-  description: string;
-  storySlug: string;
-  chapterSlug: string;
-  parentChapterSlug: string;
-  prType: TPRType;
-  changes: {
-    proposed?: string;
-    original?: string;
-  };
-  isDraft?: boolean;
-}
+};
 
 export type { IPullRequestDto };

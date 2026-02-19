@@ -43,7 +43,6 @@ export class PullRequestService extends BaseModule implements ICreatePullRequest
       prType,
       title,
       description,
-      changes,
       isDraft,
     } = input;
 
@@ -58,12 +57,12 @@ export class PullRequestService extends BaseModule implements ICreatePullRequest
     );
 
     // ── 2. Build Changes (Diff) ──────────────────────────────────────────────
-    const resolvedChanges = this.pullRequestDiffService.resolveChanges(prType, changes);
+    const resolvedChanges = this.pullRequestDiffService.resolveChanges(input);
 
     // ── 3. Create PR ─────────────────────────────────────────────────────────
     const pr = await this.pullRequestRepository.create({
       title,
-      description,
+      description: description ?? '',
       storySlug,
       chapterSlug,
       parentChapterSlug,
