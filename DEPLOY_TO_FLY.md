@@ -1,144 +1,420 @@
-# Deploying StoryChain BE to Fly.io
+# Deploying StoryChain Backend to Fly.io
 
-This guide will walk you through deploying your **StoryChain Backend** (Fastify + TypeScript) to [Fly.io](https://fly.io).
+This guide gives detailed step-by-step instructions for every scenario:
+deploying for the first time, redeploying after code changes, updating secrets,
+rolling back, and running locally with Docker.
 
-## Prerequisites
+> **Architecture in Production (Fly.io)**
+>
+> - App runs inside a Docker container on Fly.io
+> - MongoDB → **MongoDB Atlas** (external, no local container)
+> - Redis → **Redis Cloud / Upstash** (external, no local container)
+> - `docker-compose.yml` is **only** for local development
 
-1.  **Fly.io Account**: [Sign up here](https://fly.io/app/sign-up).
-2.  **Fly CLI**: [Install the Fly CLI](https://fly.io/docs/hands-on/install-flyctl/).
-    - Windows PowerShell: `pwsh -Command "iwr https://fly.io/install.ps1 -useb | iex"`
-3.  **Login**: Run `fly auth login` in your terminal.
+---
 
-## Step 1: Dockerize the Application
+## Table of Contents
 
-Since your project does not have a `Dockerfile`, you need to create one to tell Fly.io how to build and run your app.
+1. [Prerequisites](#1-prerequisites)
+2. [First-Time Deployment](#2-first-time-deployment)
+3. [Setting Environment Secrets](#3-setting-environment-secrets)
+4. [Redeploying After Code Changes](#4-redeploying-after-code-changes)
+5. [Checking Logs & Status](#5-checking-logs--status)
+6. [Rolling Back a Deployment](#6-rolling-back-a-deployment)
+7. [Scaling the App](#7-scaling-the-app)
+8. [Local Development with Docker](#8-local-development-with-docker)
+9. [Troubleshooting Common Issues](#9-troubleshooting-common-issues)
 
-### 1. Create `Dockerfile`
+---
 
-Create a file named `Dockerfile` (no extension) in the root of your project (`e:\Mine\Turorials\storychain-be\Dockerfile`) with the following content:
+## 1. Prerequisites
 
-```dockerfile
-# Stage 1: Build
-FROM node:20-alpine AS builder
+| Tool                   | Install Command                                             | Purpose                                        |
+| ---------------------- | ----------------------------------------------------------- | ---------------------------------------------- | ----------------------------- |
+| **Fly CLI (`flyctl`)** | `pwsh -Command "iwr https://fly.io/install.ps1 -useb        | iex"`                                          | Manage Fly apps from terminal |
+| **Docker Desktop**     | [Download](https://www.docker.com/products/docker-desktop/) | Build images locally (optional for Fly builds) |
+| **Fly Account**        | [Sign up](https://fly.io/app/sign-up)                       | Required to deploy                             |
 
-WORKDIR /app
+**Login to Fly:**
 
-# Install dependencies included in package.json (including devDependencies for build)
-COPY package*.json ./
-RUN npm install
-
-# Copy source code
-COPY . .
-
-# Build the application (tsc && tsc-alias)
-RUN npm run build
-
-# Stage 2: Runner
-FROM node:20-alpine AS runner
-
-WORKDIR /app
-
-ENV NODE_ENV=production
-# Set the port to 8080 (Fly.io default)
-ENV PORT=8080
-
-# Copy package files and install ONLY production dependencies
-COPY --from=builder /app/package*.json ./
-RUN npm ci --only=production
-
-# Copy the built application from the builder stage
-COPY --from=builder /app/dist ./dist
-
-# Expose the listening port
-EXPOSE 8080
-
-# Start the server
-CMD ["node", "dist/server.js"]
+```powershell
+fly auth login
 ```
 
-### 2. Create `.dockerignore`
+---
 
-Create a `.dockerignore` file to prevent unnecessary files from being sent to the build context:
+## 2. First-Time Deployment
 
-```text
-node_modules
-dist
-.git
-.github
-.env
-logs
-```
+Run this **once** when you first set up the app on Fly.io.
 
-## Step 2: Initialize Fly App
-
-Open your terminal in the project root and run:
+### Step 1 — Launch the app
 
 ```powershell
 fly launch
 ```
 
-1.  **Choose an app name**: (e.g., `storychain-be`).
-2.  **Choose a region**: Select one close to you or your users (e.g., `sin`, `bom`, `ams`).
-3.  **Configuration**:
-    - It might ask to tweak settings. You can accept defaults.
-    - It will create a `fly.toml` file.
-4.  **Database**: It might ask to set up a Postgres/Redis. **Say No** since you are using MongoDB Atlas and Redis Labs.
-5.  **Deploy now?**: You can say **No** for now, as we need to set secrets first.
+Fly will ask a series of questions:
 
-## Step 3: Configure Environment Variables
+- **App name**: Enter `storychain-be` (or any name, this becomes your URL)
+- **Region**: Choose closest to your users (e.g., `sin` for Singapore, `bom` for Mumbai, `iad` for US East)
+- **Database / Redis**: **Say NO** — you are using MongoDB Atlas and Redis Cloud
+- **Deploy now?**: **Say NO** — you need to set secrets first
 
-Your application requires several sensitive environment variables (Secrets). You must set these in Fly.io.
+This creates a `fly.toml` config file in your project root.
 
-Run the following command (replace the values with your actual credentials):
+### Step 2 — Set secrets (see [Section 3](#3-setting-environment-secrets))
 
-```powershell
-fly secrets set ^
-  NODE_ENV=production ^
-  MONGODB_URI="your_mongodb_atlas_connection_string" ^
-  REDIS_USERNAME="your_redis_lab_username" ^
-  REDIS_PASSWORD="your_redis_lab_password" ^
-  REDIS_HOST="your_redis_lab_host" ^
-  REDIS_PORT="your_redis_lab_port" ^
-  CLOUDINARY_CLOUD_NAME="your_cloud_name" ^
-  CLOUDINARY_API_KEY="your_api_key" ^
-  CLOUDINARY_API_SECRET="your_api_secret" ^
-  CLERK_PUBLISHABLE_KEY="your_clerk_publishable_key" ^
-  CLERK_SECRET_KEY="your_clerk_secret_key" ^
-  CLERK_WEBHOOK_SECRET="your_clerk_webhook_secret" ^
-  RAILWAY_URL="https://your-app-name.fly.dev"
-```
-
-> **Note**: I noticed `RAILWAY_URL` is required in your config. I've mapped it to your future Fly.io URL (e.g., `https://storychain-be.fly.dev`). If your code uses it specifically for Railway-specific logic, you might need to adjust your code.
-
-> **Important**: Ensure your `MONGODB_URI` includes the database name if needed (e.g. `mongodb+srv://user:pass@cluster.mongodb.net/storychain?retryWrites=true&w=majority`).
-
-## Step 4: Verification and Code Adjustments
-
-### 1. Host Binding
-
-Your `src/config/env.ts` sets `HOST` to `0.0.0.0` by default, which is correct for Docker.
-Your `PORT` defaults to `4000`, but the Dockerfile sets `ENV PORT=8080`. Your `env.ts` uses `z.coerce.number()`, so it will pick up `8080`. This is correct.
-
-### 2. Redis Configuration
-
-I noticed `REDIS_URL` is commented out in `src/config/env.ts`, but `src/config/services/config.service.ts` requires `REDIS_USERNAME`, `PASSWORD`, `HOST`, and `PORT`.
-**Ensure these matching variables are set in `fly secrets` as shown in Step 3.**
-If you connect via a single URL string instead, you might need to adjust your `RedisService` or `ConfigService` to parse that URL, but the current code expects broken-down parameters.
-
-## Step 5: Deploy
-
-Once the file is created and secrets are set, deploy required:
+### Step 3 — Deploy
 
 ```powershell
 fly deploy
 ```
 
-Fly will build your Docker image remotely and deploy it.
+Your app will be live at `https://<your-app-name>.fly.dev`.
 
-## Step 6: Troubleshooting
+---
 
-- **Logs**: If the deployment fails or app crashes, check logs:
-  ```powershell
-  fly logs
-  ```
-- **Connection Issues**: Ensure your MongoDB Atlas Network Access is set to **Allow Access from Anywhere** (0.0.0.0/0) or whitelists Fly.io IPs (which vary). For Redis Labs, also ensure the firewall allows connections.
+## 3. Setting Environment Secrets
+
+Fly.io secrets are environment variables injected into your container at runtime.
+They are **never** stored in your code or `fly.toml`.
+
+### Set all secrets at once (Windows PowerShell)
+
+Replace **every** placeholder value with your real credentials:
+
+```powershell
+fly secrets set `
+  NODE_ENV="production" `
+  PORT="8080" `
+  HOST="0.0.0.0" `
+  MONGODB_URI="mongodb+srv://<user>:<pass>@cluster.mongodb.net/storychain?retryWrites=true&w=majority" `
+  REDIS_HOST="<your-redis-host>" `
+  REDIS_PORT="<your-redis-port>" `
+  REDIS_USERNAME="<your-redis-username>" `
+  REDIS_PASSWORD="<your-redis-password>" `
+  CORS_ORIGIN="https://your-frontend-domain.com" `
+  CLERK_PUBLISHABLE_KEY="pk_live_..." `
+  CLERK_SECRET_KEY="sk_live_..." `
+  CLERK_WEBHOOK_SECRET="whsec_..." `
+  CLOUDINARY_CLOUD_NAME="your-cloud-name" `
+  CLOUDINARY_API_KEY="your-api-key" `
+  CLOUDINARY_API_SECRET="your-api-secret"
+```
+
+> **Note**: On `cmd.exe` replace the backtick `` ` `` with `^` for line continuation.
+
+### View currently set secrets (values are hidden)
+
+```powershell
+fly secrets list
+```
+
+### Update a single secret
+
+```powershell
+fly secrets set CLERK_SECRET_KEY="sk_live_new_value"
+```
+
+Setting a secret triggers an **automatic redeploy** of your app.
+
+### Delete a secret
+
+```powershell
+fly secrets unset SOME_OLD_SECRET
+```
+
+---
+
+## 4. Redeploying After Code Changes
+
+Every time you push code changes and want them live on Fly.io:
+
+```powershell
+# Option A: Deploy directly from your local machine (Fly builds the image remotely)
+fly deploy
+
+# Option B: Build locally first, then push (faster if you have a fast local machine)
+fly deploy --local-only
+```
+
+> Fly.io will rebuild the Docker image using your `Dockerfile`,
+> run health checks, and only route traffic to the new version
+> if it passes. If it fails, the old version keeps running.
+
+### Deploy specific Dockerfile
+
+```powershell
+fly deploy --dockerfile Dockerfile
+```
+
+---
+
+## 5. Checking Logs & Status
+
+### Live-streaming logs (most useful for debugging)
+
+```powershell
+fly logs
+```
+
+### Check app status and instance health
+
+```powershell
+fly status
+```
+
+### List all deployments
+
+```powershell
+fly releases
+```
+
+### Open the app in browser
+
+```powershell
+fly open
+```
+
+### SSH into the running container (for advanced debugging)
+
+```powershell
+fly ssh console
+```
+
+---
+
+## 6. Rolling Back a Deployment
+
+If a new deployment breaks something, you can roll back to a previous release instantly.
+
+### List all past releases
+
+```powershell
+fly releases
+```
+
+Example output:
+
+```
+VERSION  STATUS   DESCRIPTION  USER  DATE
+v10      deployed Deploy image  me   5 mins ago
+v9       deployed Deploy image  me   1 hour ago
+v8       deployed Deploy image  me   3 hours ago
+```
+
+### Roll back to a specific version
+
+```powershell
+fly deploy --image registry.fly.io/<your-app-name>:deployment-<version>
+```
+
+Or using the short form:
+
+```powershell
+fly releases rollback v9
+```
+
+---
+
+## 7. Scaling the App
+
+### Scale the number of instances (machines)
+
+```powershell
+# Run 2 instances for redundancy
+fly scale count 2
+
+# Scale back to 1
+fly scale count 1
+```
+
+### Scale memory/CPU of each instance
+
+```powershell
+# List available VM sizes
+fly platform vm-sizes
+
+# Choose a size
+fly scale vm shared-cpu-1x  # Smallest (free tier)
+fly scale vm shared-cpu-2x  # More CPU
+fly scale vm performance-1x # Dedicated CPU
+```
+
+### View current scale settings
+
+```powershell
+fly scale show
+```
+
+---
+
+## 8. Local Development with Docker
+
+The `docker-compose.yml` runs a **complete local environment** with:
+
+- The app (built from your Dockerfile)
+- MongoDB 7.0 with a replica set (required for transactions)
+- Redis 7
+
+### Start everything locally
+
+```powershell
+docker-compose up --build
+```
+
+App will be accessible at: `http://localhost:4000`
+
+### Stop all containers
+
+```powershell
+docker-compose down
+```
+
+### Stop and delete all data (volumes)
+
+```powershell
+docker-compose down -v
+```
+
+### Rebuild only the app container (after code changes)
+
+```powershell
+docker-compose up --build app
+```
+
+### View logs from local containers
+
+```powershell
+# All services
+docker-compose logs -f
+
+# Only the app
+docker-compose logs -f app
+```
+
+> **Important**: For local Docker development, create a `.env` file in the
+> project root with your Clerk and Cloudinary keys. The `docker-compose.yml`
+> will load it automatically via `env_file: .env`. MongoDB and Redis
+> connection strings are already overridden in the compose file to use
+> the local containers.
+
+### Example `.env` for local Docker development
+
+```dotenv
+# These are loaded by docker-compose.yml
+# MongoDB and Redis are overridden by docker-compose, so values below are ignored for those
+MONGODB_URI=mongodb://localhost:27017/storychain  # ignored by docker-compose
+REDIS_HOST=localhost                              # ignored by docker-compose
+REDIS_PORT=6379                                   # ignored by docker-compose
+REDIS_USERNAME=default
+REDIS_PASSWORD=
+
+# These must be real values
+CLERK_PUBLISHABLE_KEY=pk_test_...
+CLERK_SECRET_KEY=sk_test_...
+CLERK_WEBHOOK_SECRET=whsec_...
+CLOUDINARY_CLOUD_NAME=your-cloud-name
+CLOUDINARY_API_KEY=your-api-key
+CLOUDINARY_API_SECRET=your-api-secret
+CORS_ORIGIN=http://localhost:3000
+```
+
+---
+
+## 9. Troubleshooting Common Issues
+
+### App crashes on startup
+
+```powershell
+fly logs
+```
+
+Look for the error message. Common causes:
+
+- Missing secret (e.g., `CLERK_SECRET_KEY` not set) → set it with `fly secrets set`
+- Wrong `MONGODB_URI` format → ensure it includes `?retryWrites=true&w=majority`
+- MongoDB Atlas network access not allowing Fly.io IP ranges
+
+### MongoDB connection refused
+
+Fly.io machines have **dynamic IP addresses**. To allow connections from Fly.io:
+
+1. Go to MongoDB Atlas → **Network Access**
+2. Add `0.0.0.0/0` (Allow Access from Anywhere)
+
+> **More secure option**: Use [Fly.io static IPs](https://fly.io/docs/networking/static-egress-ip/)
+> and whitelist only those IPs in Atlas.
+
+### Redis connection refused
+
+If using **Upstash Redis** (recommended for Fly.io):
+
+1. Use the connection details from your Upstash dashboard
+2. The `REDIS_HOST`, `REDIS_PORT`, `REDIS_USERNAME`, `REDIS_PASSWORD` must all be set correctly
+
+If using **Redis Cloud**:
+
+1. Enable public endpoint in Redis Cloud
+2. Use the endpoint, port, username, and password
+
+### Health check failing
+
+The Dockerfile includes a health check at `GET /health`.
+If your app doesn't have this endpoint, the container will be marked unhealthy.
+
+Add a health check route to your Fastify app:
+
+```typescript
+fastify.get('/health', async () => ({ status: 'ok' }));
+```
+
+### `fly deploy` says "No changes detected"
+
+Force a redeploy:
+
+```powershell
+fly deploy --strategy=rolling
+```
+
+### Check what fly.toml looks like (after `fly launch`)
+
+```toml
+app = "storychain-be"
+primary_region = "sin"
+
+[build]
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[vm]]
+  memory = "256mb"
+  cpu_kind = "shared"
+  cpus = 1
+```
+
+> Set `min_machines_running = 1` if you don't want cold starts (costs money).
+
+---
+
+## Quick Reference Cheat Sheet
+
+| Task                       | Command                                        |
+| -------------------------- | ---------------------------------------------- |
+| First deploy               | `fly launch` → set secrets → `fly deploy`      |
+| Redeploy after code change | `fly deploy`                                   |
+| View live logs             | `fly logs`                                     |
+| Check app health           | `fly status`                                   |
+| Update a secret            | `fly secrets set KEY="value"`                  |
+| View all secrets           | `fly secrets list`                             |
+| Rollback                   | `fly releases` then `fly releases rollback vN` |
+| Scale to 2 instances       | `fly scale count 2`                            |
+| SSH into container         | `fly ssh console`                              |
+| Open app in browser        | `fly open`                                     |
+| Run locally with Docker    | `docker-compose up --build`                    |
+| Stop local Docker          | `docker-compose down`                          |

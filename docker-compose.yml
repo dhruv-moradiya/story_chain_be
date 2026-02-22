@@ -1,25 +1,57 @@
+# ============================================================
+# docker-compose.yml — LOCAL DEVELOPMENT ONLY
+#
+# ⚠️  This file is NOT used by Fly.io.
+#     Fly.io uses the Dockerfile directly and reads secrets
+#     from `fly secrets`.
+#
+# Use this file to run the app locally with Docker,
+# with local MongoDB (replica set) and Redis containers.
+# The app will connect to MongoDB Atlas and Redis Cloud
+# only in production (Fly.io). Locally it uses the services
+# defined below.
+# ============================================================
+
 services:
+  # ─────────────────────────────────────────
+  # Application
+  # ─────────────────────────────────────────
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: storychain-app
     ports:
-      - '4000:8080' # Map host port 4000 to container port 8080
+      - '4000:8080' # Access the app at http://localhost:4000
     environment:
       - NODE_ENV=development
       - PORT=8080
       - HOST=0.0.0.0
+      # Local MongoDB with replica set (required for transactions)
       - MONGODB_URI=mongodb://mongo:27017/storychain?replicaSet=rs0
+      # Local Redis
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      # Add other environment variables from .env here as needed
-      # You can also use env_file: .env to load them all, but be careful with localhost references
+      - REDIS_USERNAME=default
+      - REDIS_PASSWORD=
+      # Load the rest from a .env file (Clerk, Cloudinary keys, etc.)
+    env_file:
+      - .env
     depends_on:
-      - mongo
-      - redis
+      mongo-init:
+        condition: service_completed_successfully
+      redis:
+        condition: service_started
     networks:
       - storychain-network
+    restart: unless-stopped
 
+  # ─────────────────────────────────────────
+  # MongoDB (with Replica Set for transactions)
+  # ─────────────────────────────────────────
   mongo:
     image: mongo:7.0
+    container_name: storychain-mongo
     command: ['--replSet', 'rs0', '--bind_ip_all']
     ports:
       - '27017:27017'
@@ -27,26 +59,46 @@ services:
       - mongo-data:/data/db
     networks:
       - storychain-network
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'mongosh', '--eval', "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
+  # Initializes the replica set (runs once and exits)
   mongo-init:
     image: mongo:7.0
+    container_name: storychain-mongo-init
     restart: 'no'
     depends_on:
-      - mongo
+      mongo:
+        condition: service_healthy
     volumes:
       - ./mongo-init.sh:/scripts/mongo-init.sh
     command: ['bash', '/scripts/mongo-init.sh']
     networks:
       - storychain-network
 
+  # ─────────────────────────────────────────
+  # Redis (local cache)
+  # ─────────────────────────────────────────
   redis:
-    image: redis:alpine
+    image: redis:7-alpine
+    container_name: storychain-redis
     ports:
       - '6379:6379'
     volumes:
       - redis-data:/data
     networks:
       - storychain-network
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 networks:
   storychain-network:
