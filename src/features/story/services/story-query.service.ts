@@ -1,7 +1,7 @@
 import { inject, singleton } from 'tsyringe';
 
 import { BaseModule } from '@/utils/baseClass';
-import { buildChapterTree, toId } from '@/utils/index';
+import { buildChapterTree } from '@/utils/index';
 
 import { TOKENS } from '@/container';
 import { IOperationOptions } from '@/types';
@@ -33,20 +33,6 @@ class StoryQueryService extends BaseModule implements IStoryQueryService {
 
   async getAllStories(options: IOperationOptions = {}): Promise<IStory[]> {
     return this.storyRepo.findAll(options);
-  }
-
-  /**
-   * Get story by ID (throws if not found)
-   * TODO: Remove this method that use storyId instead of slug
-   */
-  async getById(storyId: string, options: IOperationOptions = {}): Promise<IStory> {
-    const story = await this.storyRepo.findById(toId(storyId), {}, options);
-
-    if (!story) {
-      this.throwNotFoundError('Story not found');
-    }
-
-    return story;
   }
 
   /**
@@ -115,11 +101,10 @@ class StoryQueryService extends BaseModule implements IStoryQueryService {
   }
 
   /**
-   * Get story tree with all chapters (throws if story not found)
-   * TODO: Remove this method that use storyId instead of slug
+   * Get story tree by slug (throws if story not found)
    */
-  async getStoryTree(storyId: string): Promise<IStoryTreeResult> {
-    const story = await this.storyRepo.findById(toId(storyId));
+  async getStoryTreeBySlug(slug: string): Promise<IStoryTreeResult> {
+    const story = await this.storyRepo.findBySlug(slug);
 
     if (!story) {
       this.throwNotFoundError('Story not found. Unable to generate chapter tree.');
@@ -142,19 +127,6 @@ class StoryQueryService extends BaseModule implements IStoryQueryService {
       slug: story.slug,
       chapters: tree,
     };
-  }
-
-  /**
-   * Get story tree by slug (throws if story not found)
-   */
-  async getStoryTreeBySlug(slug: string): Promise<IStoryTreeResult> {
-    const story = await this.storyRepo.findBySlug(slug);
-
-    if (!story) {
-      this.throwNotFoundError('Story not found');
-    }
-
-    return this.getStoryTree(story._id.toString());
   }
 
   /**

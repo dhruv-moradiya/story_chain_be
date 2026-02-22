@@ -30,7 +30,7 @@ interface IStoryStats {
 }
 
 interface IStoryContext {
-  storyId: string;
+  storySlug: string;
   creatorId: string;
   status: string;
   collaborators?: Array<{

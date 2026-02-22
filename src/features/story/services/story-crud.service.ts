@@ -95,22 +95,7 @@ class StoryCrudService extends BaseModule implements IStoryCrudService {
     return updated;
   }
 
-  // TODO: Remove this method that use storyId instead of slug
-  async updateSettings(input: IStoryUpdateSettingDTO): Promise<IStory> {
-    const { storyId, ...update } = input;
-
-    const story = await this.storyRepo.updateStorySetting(storyId, update);
-
-    if (!story) {
-      this.throwNotFoundError('Unable to update settings: the story does not exist.');
-    }
-
-    return story;
-  }
-
-  async updateSettingsBySlug(
-    input: Omit<IStoryUpdateSettingDTO, 'storyId'> & { slug: string }
-  ): Promise<IStory> {
+  async updateSettingsBySlug(input: IStoryUpdateSettingDTO): Promise<IStory> {
     const { slug, ...update } = input;
 
     const story = await this.storyRepo.updateStorySettingBySlug(slug, update);

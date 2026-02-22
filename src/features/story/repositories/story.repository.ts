@@ -110,19 +110,6 @@ export class StoryRepository extends BaseRepository<IStory, IStoryDoc> {
       .exec();
   }
 
-  /** Update story settings */
-  async updateStorySetting(
-    storyId: ID,
-    update: Partial<IStory['settings']>
-  ): Promise<IStory | null> {
-    const updated = this.model
-      .findByIdAndUpdate(storyId, { $set: { settings: update } }, { new: true })
-      .lean()
-      .exec();
-
-    return updated;
-  }
-
   /** Update story settings by slug */
   async updateStorySettingBySlug(
     slug: string,

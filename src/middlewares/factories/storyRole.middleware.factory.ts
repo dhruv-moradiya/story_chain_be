@@ -1,10 +1,10 @@
-import { FastifyRequest, FastifyReply } from 'fastify';
-import { inject, singleton } from 'tsyringe';
-import { TOKENS } from '@container/tokens';
 import { HTTP_STATUS } from '@constants/httpStatus';
-import { extractStoryIdFromRequest, extractSlugFromRequest } from '@utils/extractors';
+import { TOKENS } from '@container/tokens';
 import { StoryQueryService } from '@features/story/services/story-query.service';
 import { CollaboratorQueryService } from '@features/storyCollaborator/services/collaborator-query.service';
+import { extractSlugFromRequest } from '@utils/extractors';
+import { FastifyReply, FastifyRequest } from 'fastify';
+import { inject, singleton } from 'tsyringe';
 
 /**
  * Factory class for creating story role middlewares.
@@ -25,9 +25,9 @@ export class StoryRoleMiddlewareFactory {
    */
   createLoadContextById() {
     return async (request: FastifyRequest, reply: FastifyReply) => {
-      const storyId = extractStoryIdFromRequest(request);
+      const storySlug = extractSlugFromRequest(request);
 
-      if (!storyId) {
+      if (!storySlug) {
         return reply.code(HTTP_STATUS.BAD_REQUEST.code).send({
           success: false,
           error: 'Bad Request',
@@ -36,10 +36,10 @@ export class StoryRoleMiddlewareFactory {
       }
 
       try {
-        const story = await this.storyQueryService.getById(storyId);
+        const story = await this.storyQueryService.getBySlug(storySlug);
 
         request.storyContext = {
-          storyId: story._id.toString(),
+          storySlug: story.slug,
           creatorId: story.creatorId,
           status: story.status,
         };
@@ -90,7 +90,7 @@ export class StoryRoleMiddlewareFactory {
         const story = await this.storyQueryService.getBySlug(slug);
 
         request.storyContext = {
-          storyId: story._id.toString(),
+          storySlug: story.slug,
           creatorId: story.creatorId,
           status: story.status,
         };

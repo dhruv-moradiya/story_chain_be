@@ -10,7 +10,6 @@ interface IStoryTreeResult {
 
 interface IStoryQueryService {
   // Basic getters (throws if not found)
-  getById(storyId: string, options?: IOperationOptions): Promise<IStory>;
   getBySlug(slug: string, options?: IOperationOptions): Promise<IStory>;
 
   // User-specific queries
@@ -23,7 +22,6 @@ interface IStoryQueryService {
   listStories(options?: IOperationOptions): Promise<IStory[]>;
 
   // Story tree queries (throws if story not found)
-  getStoryTree(storyId: string): Promise<IStoryTreeResult>;
   getStoryTreeBySlug(slug: string): Promise<IStoryTreeResult>;
 
   // Overview and settings (throws if not found)

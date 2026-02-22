@@ -56,7 +56,7 @@ export async function loadStoryContext(request: FastifyRequest, reply: FastifyRe
     const story = await storyQueryService.getBySlug(slug);
 
     request.storyContext = {
-      storyId: story._id.toString(),
+      storySlug: story.slug,
       creatorId: story.creatorId,
       status: story.status,
     };

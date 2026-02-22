@@ -4,7 +4,6 @@ import { IStoryUpdateCardImageBySlugDTO, IStoryUpdateSettingDTO } from '@dto/sto
 import {
   TStoryAddChapterSchema,
   TStoryCreateSchema,
-  TStoryIDSchema,
   TStorySearchSchema,
   TStorySlugSchema,
   TStoryUpdateCoverImageSchema,
@@ -65,27 +64,6 @@ export class StoryController extends BaseModule {
     }
   );
 
-  // TODO: Remove this endpoint that use storyId instead of slug
-  updateStorySetting = catchAsync(
-    async (
-      request: FastifyRequest<{ Params: TStoryIDSchema; Body: TStoryUpdateSettingSchema }>,
-      reply: FastifyReply
-    ) => {
-      const { storyId } = request.params;
-
-      const input: IStoryUpdateSettingDTO = {
-        ...request.body,
-        storyId,
-      };
-
-      const story = await this.storyCrudService.updateSettings(input);
-
-      return reply
-        .code(HTTP_STATUS.OK.code)
-        .send(ApiResponse.updated(story, 'Story setting updated successfully'));
-    }
-  );
-
   // Update story settings by slug
   updateStorySettingBySlug = catchAsync(
     async (
@@ -94,10 +72,12 @@ export class StoryController extends BaseModule {
     ) => {
       const { slug } = request.params;
 
-      const story = await this.storyCrudService.updateSettingsBySlug({
+      const input: IStoryUpdateSettingDTO = {
         ...request.body,
         slug,
-      });
+      };
+
+      const story = await this.storyCrudService.updateSettingsBySlug(input);
 
       return reply
         .code(HTTP_STATUS.OK.code)
@@ -116,22 +96,6 @@ export class StoryController extends BaseModule {
       .code(HTTP_STATUS.OK.code)
       .send(ApiResponse.fetched(stories, 'All stories fetched successfully'));
   });
-
-  // TODO: Remove this endpoint that use storyId instead of slug
-  // Fetch a single story by its ID for viewing and for public access.
-  getStoryById = catchAsync(
-    async (request: FastifyRequest<{ Params: { storyId: string } }>, reply: FastifyReply) => {
-      const { storyId } = request.params;
-
-      const story = await this.storyQueryService.getById(storyId);
-
-      this.logInfo(`Fetched story ${storyId}`);
-
-      return reply
-        .code(HTTP_STATUS.OK.code)
-        .send(ApiResponse.fetched(story, 'Story retrieved successfully'));
-    }
-  );
 
   getStoryBySlug = catchAsync(
     async (request: FastifyRequest<{ Params: { slug: string } }>, reply: FastifyReply) => {
@@ -192,20 +156,6 @@ export class StoryController extends BaseModule {
       .send(ApiResponse.fetched(stories, 'Your draft stories fetched successfully'));
   });
 
-  // TODO: Remove this endpoint that use storyId instead of slug
-  // Get story tree by ID
-  getStoryTree = catchAsync(
-    async (request: FastifyRequest<{ Params: { storyId: string } }>, reply: FastifyReply) => {
-      const { storyId } = request.params;
-      const storyTree = await this.storyQueryService.getStoryTree(storyId);
-
-      this.logInfo(`Fetched story tree for story ${storyId}`);
-      return reply
-        .code(HTTP_STATUS.OK.code)
-        .send(ApiResponse.fetched(storyTree, 'Story tree loaded successfully'));
-    }
-  );
-
   // Get story tree by slug
   getStoryTreeBySlug = catchAsync(
     async (request: FastifyRequest<{ Params: TStorySlugSchema }>, reply: FastifyReply) => {
@@ -262,25 +212,6 @@ export class StoryController extends BaseModule {
   // =====================
   // PUBLISHING OPERATIONS
   // =====================
-
-  // TODO: Remove this endpoint that use storyId instead of slug
-  // Publish a story by ID
-  publishStory = catchAsync(
-    async (request: FastifyRequest<{ Params: TStoryIDSchema }>, reply: FastifyReply) => {
-      const { storyId } = request.params;
-      const { clerkId: userId } = request.user;
-
-      // Get story first to get slug, then publish
-      const story = await this.storyQueryService.getById(storyId);
-      const publishedStory = await this.storyPublishingService.publish(story.slug, userId);
-
-      this.logInfo(`Published story ${storyId} by user ${userId}`);
-
-      return reply
-        .code(HTTP_STATUS.OK.code)
-        .send(ApiResponse.updated(publishedStory, 'Story published successfully'));
-    }
-  );
 
   // Publish a story by slug
   publishStoryBySlug = catchAsync(
@@ -396,50 +327,6 @@ export class StoryController extends BaseModule {
       }
 
       this.logInfo(`Added chapter to story ${slug} by user ${userId}`);
-
-      return reply
-        .code(HTTP_STATUS.CREATED.code)
-        .send(ApiResponse.created(newChapter, 'Chapter added successfully'));
-    }
-  );
-
-  // TODO: Remove this endpoint that use storyId instead of slug
-  // Add a chapter to a story by the authenticated user.
-  addChapterToStory = catchAsync(
-    async (
-      request: FastifyRequest<{
-        Body: TStoryAddChapterSchema;
-        Params: { storyId: string };
-      }>,
-      reply: FastifyReply
-    ) => {
-      const { clerkId: userId } = request.user;
-      const { storyId } = request.params;
-      const { title, content, parentChapterSlug } = request.body;
-
-      const story = await this.storyQueryService.getById(storyId);
-
-      let newChapter;
-      if (!parentChapterSlug) {
-        // Create root chapter
-        newChapter = await this.chapterCrudService.createRoot({
-          storySlug: story.slug,
-          userId,
-          title,
-          content,
-        });
-      } else {
-        // Create child chapter
-        newChapter = await this.chapterCrudService.createChild({
-          storySlug: story.slug,
-          userId,
-          title,
-          content,
-          parentChapterSlug,
-        });
-      }
-
-      this.logInfo(`Added chapter to story ${storyId} by user ${userId}`);
 
       return reply
         .code(HTTP_STATUS.CREATED.code)

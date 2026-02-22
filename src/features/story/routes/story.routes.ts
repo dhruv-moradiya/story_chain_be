@@ -8,10 +8,8 @@ import { PlatformRoleGuards } from '@middleware/rbac/platformRole.middleware';
 import { ChapterResponses, CollaboratorResponses, StoryResponses } from '@schema/response.schema';
 import {
   StoryAddChapterBySlugSchema,
-  StoryAddChapterSchema,
   StoryCreateInviteLinkSchema,
   StoryCreateSchema,
-  StoryIdSchema,
   StorySearchSchema,
   StorySlugSchema,
   StoryUpdateCardImageSchema,
@@ -49,13 +47,6 @@ const StoryApiRoutes = {
   GetSignatureUrlBySlug: '/slug/:slug/signature-url',
   GetStoryOverviewBySlug: '/slug/:slug/overview',
   GetStorySettingsBySlug: '/slug/:slug/settings',
-
-  // By ID
-  GetById: '/id/:storyId',
-  Publish: '/id/:storyId/publish',
-  UpdateSettings: '/id/:storyId/settings',
-  GetTree: '/id/:storyId/tree',
-  AddChapter: '/id/:storyId/chapters',
 } as const;
 
 export { StoryApiRoutes };
@@ -191,88 +182,6 @@ export async function storyRoutes(fastify: FastifyInstance) {
       },
     },
     storyController.getStoryBySlug
-  );
-
-  // Fetch a single story by its ID
-  fastify.get(
-    StoryApiRoutes.GetById,
-    {
-      preHandler: [validateAuth],
-      schema: {
-        description: 'Get story by ID',
-        tags: ['Stories'],
-        security: [{ bearerAuth: [] }],
-        params: zodToJsonSchema(StoryIdSchema),
-        response: StoryResponses.storyDetails,
-      },
-    },
-    storyController.getStoryById
-  );
-
-  // Publish a story by ID
-  fastify.post(
-    StoryApiRoutes.Publish,
-    {
-      preHandler: [validateAuth],
-      schema: {
-        description: 'Publish a story by ID',
-        tags: ['Stories'],
-        security: [{ bearerAuth: [] }],
-        params: zodToJsonSchema(StoryIdSchema),
-        response: StoryResponses.storyPublished,
-      },
-    },
-    storyController.publishStory
-  );
-
-  // Get story tree by ID
-  fastify.get(
-    StoryApiRoutes.GetTree,
-    {
-      preHandler: [validateAuth],
-      schema: {
-        description: 'Get story chapter tree structure by ID',
-        tags: ['Stories'],
-        security: [{ bearerAuth: [] }],
-        params: zodToJsonSchema(StoryIdSchema),
-        response: StoryResponses.storyTree,
-      },
-    },
-    storyController.getStoryTree
-  );
-
-  // Update story settings by ID
-  fastify.post(
-    StoryApiRoutes.UpdateSettings,
-    {
-      preHandler: [validateAuth],
-      schema: {
-        description: 'Update story settings by ID',
-        tags: ['Stories'],
-        security: [{ bearerAuth: [] }],
-        body: zodToJsonSchema(StoryUpdateSettingSchema),
-        params: zodToJsonSchema(StoryIdSchema),
-        response: StoryResponses.storySettings,
-      },
-    },
-    storyController.updateStorySetting
-  );
-
-  // Add a chapter to a story by ID (now using slug)
-  fastify.post(
-    StoryApiRoutes.AddChapter,
-    {
-      preHandler: [validateAuth, loadStoryContext, StoryRoleGuards.canWriteChapters],
-      schema: {
-        description: 'Add a chapter to a story by slug',
-        tags: ['Chapters'],
-        security: [{ bearerAuth: [] }],
-        body: zodToJsonSchema(StoryAddChapterSchema),
-        params: zodToJsonSchema(StoryIdSchema),
-        response: ChapterResponses.chapterCreated,
-      },
-    },
-    storyController.addChapterToStory
   );
 
   // ===============================

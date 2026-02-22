@@ -248,7 +248,7 @@ interface IStoryCollaboratorAcceptInvitationDTO {
 }
 
 interface IStoryUpdateSettingDTO {
-  storyId: ID;
+  slug: string;
   isPublic: boolean;
   allowBranching: boolean;
   requireApproval: boolean;
@@ -259,7 +259,7 @@ interface IStoryUpdateSettingDTO {
 }
 
 interface IStoryUpdateCoverImageBySlugDTO {
-  slug: ID;
+  slug: string;
   coverImage: {
     url: string;
     publicId: string;
@@ -267,7 +267,7 @@ interface IStoryUpdateCoverImageBySlugDTO {
 }
 
 interface IStoryUpdateCardImageBySlugDTO {
-  slug: ID;
+  slug: string;
   cardImage: {
     url: string;
     publicId: string;
