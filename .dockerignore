@@ -16,7 +16,7 @@
 **\*.log
 **\npm-debug.log*
 
-**\package-lock.json
+# package-lock.json MUST be present — npm ci requires it
 
 # OS files
 **\.DS_Store

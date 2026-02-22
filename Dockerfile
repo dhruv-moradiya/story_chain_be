@@ -8,8 +8,10 @@ WORKDIR /app
 # Copy package files first for better layer caching
 COPY package*.json ./
 
-# Install ALL dependencies (including devDependencies needed for tsc build)
-RUN npm ci
+# Install ALL dependencies (including devDependencies needed for tsc build).
+# --ignore-scripts prevents "prepare" (husky) from running inside Docker
+# where there is no .git directory.
+RUN npm ci --ignore-scripts
 
 # Copy source code
 COPY . .
@@ -30,7 +32,8 @@ ENV NODE_ENV=production
 ENV PORT=8080
 ENV HOST=0.0.0.0
 
-# Copy package files and install ONLY production dependencies
+# Copy package files and install ONLY production dependencies.
+# --ignore-scripts prevents "prepare" (husky) from running.
 COPY --from=builder /app/package*.json ./
 RUN npm ci --omit=dev --ignore-scripts
 
