@@ -121,6 +121,36 @@ export const authorSummarySchema = {
   },
 };
 
+/**
+ * Minimal user summary: clerkId, username, email, avatarUrl.
+ * Used wherever a user is embedded inside another resource
+ * (chapter author, collaborator details, invitedBy, etc.).
+ */
+export const UserSummarySchema = {
+  type: 'object',
+  properties: {
+    clerkId: { type: 'string' },
+    username: { type: 'string' },
+    email: { type: 'string' },
+    avatarUrl: { type: 'string' },
+  },
+};
+
+// ═══════════════════════════════════════════
+// IMAGE SCHEMA
+// ═══════════════════════════════════════════
+/**
+ * Cloudinary image reference: url + publicId.
+ * Used in story cover/card images.
+ */
+export const ImageSchema = {
+  type: 'object',
+  properties: {
+    url: { type: 'string' },
+    publicId: { type: 'string' },
+  },
+};
+
 // ═══════════════════════════════════════════
 // TIMESTAMPS SCHEMA
 // ═══════════════════════════════════════════

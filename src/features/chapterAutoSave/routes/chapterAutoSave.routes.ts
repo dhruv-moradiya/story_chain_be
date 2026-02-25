@@ -12,6 +12,8 @@ import {
 } from '@schema/request/chapterAutoSaveVer2.Schema';
 import { AutoSaveResponses } from '@schema/response.schema';
 import { type ChapterAutoSaveController } from '../controllers/chapterAutoSave.controller';
+import { RateLimits } from '@/constants/rateLimits';
+import type {} from '@fastify/rate-limit';
 
 enum ChapterAutoSaveApiRoutes {
   EnableAutoSave = '/enable',
@@ -28,6 +30,7 @@ export async function chapterAutoSaveRoutes(fastify: FastifyInstance) {
     ChapterAutoSaveApiRoutes.EnableAutoSave,
     {
       preHandler: [validateAuth],
+      config: { rateLimit: RateLimits.WRITE },
       schema: {
         description: 'Enable auto-save for a chapter',
         tags: ['Chapter Auto-Save'],
@@ -42,6 +45,7 @@ export async function chapterAutoSaveRoutes(fastify: FastifyInstance) {
     ChapterAutoSaveApiRoutes.AutoSaveContent,
     {
       preHandler: [validateAuth],
+      config: { rateLimit: RateLimits.FAST_WRITE },
       schema: {
         description: 'Auto-save chapter content',
         tags: ['Chapter Auto-Save'],
@@ -73,6 +77,7 @@ export async function chapterAutoSaveRoutes(fastify: FastifyInstance) {
     ChapterAutoSaveApiRoutes.GetAutoSaveDraft,
     {
       preHandler: [validateAuth],
+      config: { rateLimit: RateLimits.AUTHENTICATED },
       schema: {
         description: 'Get auto-save draft for a chapter',
         tags: ['Chapter Auto-Save'],
@@ -92,6 +97,7 @@ export async function chapterAutoSaveRoutes(fastify: FastifyInstance) {
     ChapterAutoSaveApiRoutes.Convert,
     {
       preHandler: [validateAuth],
+      config: { rateLimit: RateLimits.WRITE },
       schema: {
         description: 'Convert auto-save to a draft or published chapter',
         tags: ['Chapter Auto-Save'],

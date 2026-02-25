@@ -1,8 +1,44 @@
-import { apiResponse, apiArrayResponse, errorResponse } from './helpers';
+import { apiResponse, apiArrayResponse, errorResponse } from './helpers.js';
+import { votesSchema, UserSummarySchema } from './common.js';
 
-// ===============================
+// ═══════════════════════════════════════════
 // CHAPTER DATA SCHEMAS
-// ===============================
+// ═══════════════════════════════════════════
+
+/**
+ * Full chapter stats used across chapter lists and story overview.
+ */
+export const ChapterStatsSchema = {
+  type: 'object',
+  properties: {
+    reads: { type: 'number' },
+    uniqueReaders: { type: 'number' },
+    completions: { type: 'number' },
+    dropOffs: { type: 'number' },
+    totalReadTime: { type: 'number' },
+    avgReadTime: { type: 'number' },
+    completionRate: { type: 'number' },
+    engagementScore: { type: 'number' },
+    comments: { type: 'number' },
+    childBranches: { type: 'number' },
+  },
+};
+
+/**
+ * Pull-request metadata embedded in chapter responses.
+ */
+export const ChapterPullRequestSchema = {
+  type: 'object',
+  properties: {
+    isPR: { type: 'boolean' },
+    prId: { type: 'string' },
+    status: { type: 'string' },
+    submittedAt: { type: 'string', format: 'date-time' },
+    reviewedBy: { type: 'string' },
+    reviewedAt: { type: 'string', format: 'date-time' },
+    rejectionReason: { type: 'string' },
+  },
+};
 
 export const ChapterSchema = {
   type: 'object',
@@ -17,7 +53,7 @@ export const ChapterSchema = {
 };
 
 /**
- * Schema for chapter with story info (used in user's chapter list)
+ * Schema for chapter with story info (used in user's chapter list).
  */
 export const ChapterWithStorySchema = {
   type: 'object',
@@ -32,15 +68,7 @@ export const ChapterWithStorySchema = {
     isEnding: { type: 'boolean' },
     version: { type: 'number' },
     displayNumber: { type: 'string' },
-
-    votes: {
-      type: 'object',
-      properties: {
-        upvotes: { type: 'number' },
-        downvotes: { type: 'number' },
-      },
-    },
-
+    votes: votesSchema,
     stats: {
       type: 'object',
       properties: {
@@ -51,26 +79,15 @@ export const ChapterWithStorySchema = {
         completionRate: { type: 'number' },
       },
     },
-
-    pullRequest: {
-      type: 'object',
-      properties: {
-        isPR: { type: 'boolean' },
-        status: { type: 'string' },
-        prId: { type: 'string' },
-      },
-    },
-
-    // Moderation
+    pullRequest: ChapterPullRequestSchema,
     reportCount: { type: 'number' },
     isFlagged: { type: 'boolean' },
-
     updatedAt: { type: 'string', format: 'date-time' },
   },
 };
 
 /**
- * Schema for full chapter details (used for single chapter view)
+ * Schema for full chapter details (used for single chapter view).
  */
 export const ChapterDetailsSchema = {
   type: 'object',
@@ -87,18 +104,7 @@ export const ChapterDetailsSchema = {
     storyId: { type: 'string' },
     storySlug: { type: 'string' },
     storyTitle: { type: 'string' },
-    pullRequest: {
-      type: 'object',
-      properties: {
-        isPR: { type: 'boolean' },
-        prId: { type: 'string' },
-        status: { type: 'string' },
-        submittedAt: { type: 'string', format: 'date-time' },
-        reviewedBy: { type: 'string' },
-        reviewedAt: { type: 'string', format: 'date-time' },
-        rejectionReason: { type: 'string' },
-      },
-    },
+    pullRequest: ChapterPullRequestSchema,
     stats: {
       type: 'object',
       properties: {
@@ -107,32 +113,16 @@ export const ChapterDetailsSchema = {
         childBranches: { type: 'number' },
       },
     },
-    votes: {
-      type: 'object',
-      properties: {
-        upvotes: { type: 'number' },
-        downvotes: { type: 'number' },
-        score: { type: 'number' },
-      },
-    },
-    author: {
-      type: 'object',
-      properties: {
-        clerkId: { type: 'string' },
-        username: { type: 'string' },
-        firstName: { type: 'string' },
-        lastName: { type: 'string' },
-        imageUrl: { type: 'string' },
-      },
-    },
+    votes: votesSchema,
+    author: UserSummarySchema,
     createdAt: { type: 'string', format: 'date-time' },
     updatedAt: { type: 'string', format: 'date-time' },
   },
 };
 
-// ===============================
+// ═══════════════════════════════════════════
 // CHAPTER RESPONSE OBJECTS
-// ===============================
+// ═══════════════════════════════════════════
 
 export const ChapterResponses = {
   chapterCreated: { 201: apiResponse(ChapterSchema, 'Chapter added successfully') },

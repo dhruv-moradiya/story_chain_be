@@ -8,8 +8,16 @@ import { clerkPlugin } from '@clerk/fastify';
 import 'dotenv/config';
 import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
+import rateLimit from '@fastify/rate-limit';
+import { container } from 'tsyringe';
+import { RedisService } from './config/services';
+import { TOKENS } from './container';
+import { FastifyRequest } from 'fastify';
+import { ApiError } from './utils/apiResponse';
 
 export const createApp = async () => {
+  const redisService = container.resolve<RedisService>(TOKENS.RedisService);
+
   const app = Fastify({
     logger: env.NODE_ENV === 'development',
   });
@@ -22,6 +30,23 @@ export const createApp = async () => {
   });
   await app.register(helmet);
   await app.register(clerkPlugin);
+
+  await app.register(rateLimit, {
+    global: true,
+    max: 50,
+    timeWindow: '1 minute',
+    redis: redisService.getClient(),
+    keyGenerator: (request: FastifyRequest): string => {
+      // Use authenticated userId if available, fallback to IP
+      return request.user?.clerkId ?? request.ip ?? 'unknown';
+    },
+    errorResponseBuilder: (_request: FastifyRequest, context) => {
+      return ApiError.tooManyRequests(
+        'RATE_LIMIT_EXCEEDED',
+        `Too many requests — retry after ${context.after}`
+      );
+    },
+  });
 
   // Register Swagger
   await app.register(fastifySwagger, {

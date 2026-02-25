@@ -18,6 +18,9 @@ export {
   timestampsSchema,
   votesSchema,
   statsSchema,
+  // Shared entity schemas
+  UserSummarySchema,
+  ImageSchema,
 } from './common.js';
 
 // ═══════════════════════════════════════════
@@ -63,18 +66,32 @@ export {
   StorySettingsSchema,
   StoryStatsSchema,
   StorySchema,
+  StoryOverviewSchema,
   StorySignatureSchema,
   StoryCreateResponseSchema,
   StoryPublishResponseSchema,
   StoryTreeResponseSchema,
+  StorySettingsWithImagesSchema,
   StoryResponses,
+  LatestChapterSchema,
 } from './story.response.js';
 
 // Chapter
-export { ChapterSchema, ChapterResponses } from './chapter.response.js';
+export {
+  ChapterSchema,
+  ChapterStatsSchema,
+  ChapterPullRequestSchema,
+  ChapterWithStorySchema,
+  ChapterDetailsSchema,
+  ChapterResponses,
+} from './chapter.response.js';
 
 // Collaborator
-export { CollaboratorSchema, CollaboratorResponses } from './collaborator.response.js';
+export {
+  CollaboratorSchema,
+  EmbeddedCollaboratorSchema,
+  CollaboratorResponses,
+} from './collaborator.response.js';
 
 // Auto-save
 export { AutoSaveDraftSchema, AutoSaveResponses } from './autoSave.response.js';

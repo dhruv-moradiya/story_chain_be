@@ -4,6 +4,8 @@ import { TOKENS } from '@/container';
 import { validateAuth } from '@middleware/authHandler';
 import { ChapterResponses } from '@schema/response.schema';
 import { type ChapterController } from '../controllers/chapter.controller';
+import { RateLimits } from '@/constants/rateLimits';
+import type {} from '@fastify/rate-limit';
 
 // Chapter API Routes
 const ChapterApiRoutes = {
@@ -31,6 +33,7 @@ export async function chapterRoutes(fastify: FastifyInstance) {
     ChapterApiRoutes.GetMyChapters,
     {
       preHandler: [validateAuth],
+      config: { rateLimit: RateLimits.AUTHENTICATED },
       schema: {
         description: 'Get all chapters created by the current authenticated user',
         tags: ['Chapters'],
@@ -48,6 +51,7 @@ export async function chapterRoutes(fastify: FastifyInstance) {
   fastify.get(
     ChapterApiRoutes.GetChapterBySlug,
     {
+      config: { rateLimit: RateLimits.PUBLIC_READ },
       schema: {
         description: 'Get chapter details by slug with story and author info',
         tags: ['Chapters'],
@@ -72,6 +76,7 @@ export async function chapterRoutes(fastify: FastifyInstance) {
     ChapterApiRoutes.CreateChildChapter,
     {
       preHandler: [validateAuth],
+      config: { rateLimit: RateLimits.CREATION_HOURLY },
       schema: {
         description: 'Create a new child chapter',
         tags: ['Chapters'],

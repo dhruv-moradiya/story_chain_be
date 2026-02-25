@@ -1,4 +1,5 @@
 import { FastifyInstance } from 'fastify';
+import type {} from '@fastify/rate-limit';
 import zodToJsonSchema from 'zod-to-json-schema';
 import { container } from 'tsyringe';
 import { TOKENS } from '@/container';
@@ -18,6 +19,7 @@ import {
 } from '@schema/request/story.schema';
 import { type StoryController } from '../controllers/story.controller';
 import { type StoryCollaboratorController } from '@features/storyCollaborator/controllers/storyCollaborator.controller';
+import { RateLimits } from '@/constants/rateLimits';
 
 // Story API Routes - following chapterAutoSave pattern
 const StoryApiRoutes = {
@@ -66,6 +68,7 @@ export async function storyRoutes(fastify: FastifyInstance) {
     StoryApiRoutes.GetAllStories,
     {
       preHandler: [validateAuth, PlatformRoleGuards.superAdmin],
+      config: { rateLimit: RateLimits.AUTHENTICATED },
       schema: {
         description: 'List all stories (SUPER_ADMIN only)',
         tags: ['Stories'],
@@ -85,6 +88,7 @@ export async function storyRoutes(fastify: FastifyInstance) {
     StoryApiRoutes.Create,
     {
       preHandler: [validateAuth],
+      config: { rateLimit: RateLimits.CREATION_HOURLY },
       schema: {
         description: 'Create a new story',
         tags: ['Stories'],
@@ -101,6 +105,7 @@ export async function storyRoutes(fastify: FastifyInstance) {
     StoryApiRoutes.GetAll,
     {
       preHandler: [validateAuth, PlatformRoleGuards.superAdmin],
+      config: { rateLimit: RateLimits.AUTHENTICATED },
       schema: {
         description: 'List all stories (SUPER_ADMIN only)',
         tags: ['Stories'],
@@ -115,6 +120,7 @@ export async function storyRoutes(fastify: FastifyInstance) {
   fastify.get(
     StoryApiRoutes.GetNew,
     {
+      config: { rateLimit: RateLimits.PUBLIC_READ },
       schema: {
         description: 'Get new/trending stories for public feed (no authentication required)',
         tags: ['Stories'],
@@ -129,6 +135,7 @@ export async function storyRoutes(fastify: FastifyInstance) {
     StoryApiRoutes.GetMy,
     {
       preHandler: [validateAuth],
+      config: { rateLimit: RateLimits.AUTHENTICATED },
       schema: {
         description: "Get authenticated user's stories",
         tags: ['Stories'],
@@ -144,6 +151,7 @@ export async function storyRoutes(fastify: FastifyInstance) {
     StoryApiRoutes.GetDraft,
     {
       preHandler: [validateAuth],
+      config: { rateLimit: RateLimits.AUTHENTICATED },
       schema: {
         description: "Get user's draft stories",
         tags: ['Stories'],
@@ -158,6 +166,7 @@ export async function storyRoutes(fastify: FastifyInstance) {
   fastify.get(
     StoryApiRoutes.Search,
     {
+      config: { rateLimit: RateLimits.PUBLIC_READ },
       schema: {
         description: 'Search stories by title',
         tags: ['Stories'],
@@ -173,6 +182,7 @@ export async function storyRoutes(fastify: FastifyInstance) {
     StoryApiRoutes.GetBySlug,
     {
       preHandler: [validateAuth],
+      config: { rateLimit: RateLimits.PUBLIC_READ },
       schema: {
         description: 'Get story by slug',
         tags: ['Stories'],
@@ -193,6 +203,7 @@ export async function storyRoutes(fastify: FastifyInstance) {
     StoryApiRoutes.PublishBySlug,
     {
       preHandler: [validateAuth, loadStoryContext, StoryRoleGuards.canPublishStory],
+      config: { rateLimit: RateLimits.CRITICAL },
       schema: {
         description: 'Publish a story by slug',
         tags: ['Stories'],
@@ -209,6 +220,7 @@ export async function storyRoutes(fastify: FastifyInstance) {
     StoryApiRoutes.GetTreeBySlug,
     {
       preHandler: [validateAuth],
+      config: { rateLimit: RateLimits.PUBLIC_READ },
       schema: {
         description: 'Get story chapter tree structure by slug',
         tags: ['Stories'],
@@ -225,6 +237,7 @@ export async function storyRoutes(fastify: FastifyInstance) {
     StoryApiRoutes.UpdateSettingsBySlug,
     {
       preHandler: [validateAuth, loadStoryContext, StoryRoleGuards.canEditStorySettings],
+      config: { rateLimit: RateLimits.WRITE },
       schema: {
         description: 'Update story settings by slug',
         tags: ['Stories'],
@@ -242,6 +255,7 @@ export async function storyRoutes(fastify: FastifyInstance) {
     StoryApiRoutes.GetCollaboratorsBySlug,
     {
       preHandler: [validateAuth],
+      config: { rateLimit: RateLimits.PUBLIC_READ },
       schema: {
         description: 'Get story collaborators by slug',
         tags: ['Story Collaborators'],
@@ -258,6 +272,7 @@ export async function storyRoutes(fastify: FastifyInstance) {
     StoryApiRoutes.CreateInvitationBySlug,
     {
       preHandler: [validateAuth],
+      config: { rateLimit: RateLimits.CRITICAL },
       schema: {
         description: 'Create collaborator invitation by slug',
         tags: ['Story Collaborators'],
@@ -274,6 +289,7 @@ export async function storyRoutes(fastify: FastifyInstance) {
     StoryApiRoutes.AcceptInvitationById,
     {
       preHandler: [validateAuth],
+      config: { rateLimit: RateLimits.CRITICAL },
       schema: {
         description: 'Accept collaborator invitation by slug',
         tags: ['Story Collaborators'],
@@ -289,6 +305,7 @@ export async function storyRoutes(fastify: FastifyInstance) {
     StoryApiRoutes.DeclineInvitationById,
     {
       preHandler: [validateAuth],
+      config: { rateLimit: RateLimits.CRITICAL },
       schema: {
         description: 'Decline collaborator invitation by slug',
         tags: ['Story Collaborators'],
@@ -305,6 +322,7 @@ export async function storyRoutes(fastify: FastifyInstance) {
     StoryApiRoutes.AddChapterBySlug,
     {
       preHandler: [validateAuth, loadStoryContext, StoryRoleGuards.canWriteChapters],
+      config: { rateLimit: RateLimits.CREATION_HOURLY },
       schema: {
         description:
           'Add a chapter to a story by slug. Use "root" as parentChapterId for root chapters.',
@@ -323,6 +341,7 @@ export async function storyRoutes(fastify: FastifyInstance) {
     StoryApiRoutes.GetSignatureUrlBySlug,
     {
       preHandler: [validateAuth],
+      config: { rateLimit: RateLimits.WRITE },
       schema: {
         description: 'Get image upload signature URL by slug',
         tags: ['Stories'],
@@ -338,6 +357,7 @@ export async function storyRoutes(fastify: FastifyInstance) {
     StoryApiRoutes.GetStoryOverviewBySlug,
     {
       preHandler: [validateAuth],
+      config: { rateLimit: RateLimits.PUBLIC_READ },
       schema: {
         description: 'Get story overview by slug',
         tags: ['Stories'],
@@ -353,6 +373,7 @@ export async function storyRoutes(fastify: FastifyInstance) {
     StoryApiRoutes.GetStorySettingsBySlug,
     {
       preHandler: [validateAuth],
+      config: { rateLimit: RateLimits.AUTHENTICATED },
       schema: {
         description: 'Get story settings by slug',
         tags: ['Stories'],
@@ -368,6 +389,7 @@ export async function storyRoutes(fastify: FastifyInstance) {
     StoryApiRoutes.UpdateStoryCoverImageBySlug,
     {
       preHandler: [validateAuth, loadStoryContext, StoryRoleGuards.canEditStorySettings],
+      config: { rateLimit: RateLimits.WRITE },
       schema: {
         description: 'Update story cover image by slug',
         tags: ['Stories'],
@@ -384,6 +406,7 @@ export async function storyRoutes(fastify: FastifyInstance) {
     StoryApiRoutes.UpdateStoryCardImageBySlug,
     {
       preHandler: [validateAuth, loadStoryContext, StoryRoleGuards.canEditStorySettings],
+      config: { rateLimit: RateLimits.WRITE },
       schema: {
         description: 'Update story card image by slug',
         tags: ['Stories'],

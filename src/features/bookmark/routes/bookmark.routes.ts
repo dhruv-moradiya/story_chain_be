@@ -6,6 +6,8 @@ import { validateAuth } from '@middleware/authHandler';
 import { createBookmarkSchema } from '../schema/bookmark.schema';
 import { BookmarkController } from '../controllers/bookmark.controller';
 import { BookmarkResponses } from '../schema/response/bookmark.response.schema';
+import { RateLimits } from '@/constants/rateLimits';
+import type {} from '@fastify/rate-limit';
 
 const BookmarkApiRoutes = {
   Toggle: '/toggle',
@@ -18,6 +20,7 @@ export async function bookmarkRoutes(fastify: FastifyInstance) {
     BookmarkApiRoutes.Toggle,
     {
       preHandler: [validateAuth],
+      config: { rateLimit: RateLimits.WRITE },
       schema: {
         description: 'Toggle bookmark for a story chapter',
         tags: ['Bookmarks'],

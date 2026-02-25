@@ -10,6 +10,8 @@ import {
   StartSessionSchema,
 } from '@/schema/request/readingHistory.schema';
 import { ReadingHistoryResponses } from '@/schema/response/readingHistory.response';
+import { RateLimits } from '@/constants/rateLimits';
+import type {} from '@fastify/rate-limit';
 
 const ReadingHistoryRoutes = {
   RecordHeartBeat: '/record-heartbeat',
@@ -27,6 +29,7 @@ export async function readingHistoryRoutes(fastify: FastifyInstance) {
   fastify.post(
     ReadingHistoryRoutes.RecordHeartBeat,
     {
+      config: { rateLimit: RateLimits.FAST_WRITE },
       schema: {
         description: 'Record heartbeat',
         tags: ['Reading History'],
@@ -42,6 +45,7 @@ export async function readingHistoryRoutes(fastify: FastifyInstance) {
   fastify.post(
     ReadingHistoryRoutes.StartSession,
     {
+      config: { rateLimit: RateLimits.WRITE },
       schema: {
         description: 'Start a new reading session',
         tags: ['Reading History'],
@@ -57,6 +61,7 @@ export async function readingHistoryRoutes(fastify: FastifyInstance) {
   fastify.post(
     ReadingHistoryRoutes.RecordSession,
     {
+      config: { rateLimit: RateLimits.FAST_WRITE },
       schema: {
         description: 'Record a reading session (heartbeat)',
         tags: ['Reading History'],

@@ -343,14 +343,44 @@ class StoryPipelineBuilder extends BasePipelineBuilder<StoryPipelineBuilder> {
             },
           },
           {
+            $lookup: {
+              from: 'users',
+              let: { authorId: '$authorId' },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ['$clerkId', '$$authorId'],
+                    },
+                  },
+                },
+                {
+                  $project: {
+                    _id: 0,
+                    clerkId: 1,
+                    username: 1,
+                    email: 1,
+                    avatarUrl: 1,
+                  },
+                },
+              ],
+              as: 'author',
+            },
+          },
+          {
+            $addFields: {
+              author: { $first: '$author' },
+            },
+          },
+          {
             $project: {
               storySlug: 1,
               slug: 1,
-              ancestorDetails: 1,
-              ancestorSlugs: 1,
               displayNumber: 1,
               stats: 1,
               vote: 1,
+              author: 1,
+              title: 1,
             },
           },
         ],

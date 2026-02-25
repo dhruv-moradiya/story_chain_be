@@ -12,6 +12,8 @@ import { container } from 'tsyringe';
 import { TOKENS } from '@/container';
 import { type UserController } from '../controllers/user.controller';
 import { type UserWebhookController } from '../controllers/user.webhook.controller';
+import { RateLimits } from '@/constants/rateLimits';
+import type {} from '@fastify/rate-limit';
 
 // User API Routes - following chapterAutoSave pattern
 const UserApiRoutes = {
@@ -44,6 +46,7 @@ export async function userRoutes(fastify: FastifyInstance) {
     UserApiRoutes.Webhook,
     {
       preHandler: [validateWebhook],
+      config: { rateLimit: RateLimits.WEBHOOK },
       schema: {
         description: 'Clerk webhook handler for user events',
         tags: ['Users'],
@@ -58,6 +61,7 @@ export async function userRoutes(fastify: FastifyInstance) {
     UserApiRoutes.GetMe,
     {
       preHandler: [validateAuth],
+      config: { rateLimit: RateLimits.AUTHENTICATED },
       schema: {
         description: 'Get current authenticated user details',
         tags: ['Users'],
@@ -73,6 +77,7 @@ export async function userRoutes(fastify: FastifyInstance) {
     UserApiRoutes.GetById,
     {
       preHandler: [validateAuth],
+      config: { rateLimit: RateLimits.PUBLIC_READ },
       schema: {
         description: 'Get user by their ID',
         tags: ['Users'],
@@ -89,6 +94,7 @@ export async function userRoutes(fastify: FastifyInstance) {
     UserApiRoutes.GetByUsername,
     {
       preHandler: [validateAuth],
+      config: { rateLimit: RateLimits.PUBLIC_READ },
       schema: {
         description: 'Get user by their username',
         tags: ['Users'],
@@ -105,6 +111,7 @@ export async function userRoutes(fastify: FastifyInstance) {
     UserApiRoutes.Search,
     {
       preHandler: [validateAuth],
+      config: { rateLimit: RateLimits.AUTHENTICATED },
       schema: {
         description: 'Search users by username',
         tags: ['Users'],

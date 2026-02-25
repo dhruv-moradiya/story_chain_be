@@ -19,18 +19,13 @@ import {
   STORY_COLLABORATOR_ROLES,
   STORY_COLLABORATOR_STATUSES,
 } from '@/features/storyCollaborator/types/storyCollaborator-enum.js';
+import { ImageSchema, UserSummarySchema } from './common.js';
+import { ChapterStatsSchema } from './chapter.response.js';
+import { EmbeddedCollaboratorSchema } from './collaborator.response.js';
 
 // ═══════════════════════════════════════════
 // STORY DATA SCHEMAS
 // ═══════════════════════════════════════════
-
-export const ImageSchema = {
-  type: 'object',
-  properties: {
-    url: { type: 'string' },
-    publicId: { type: 'string' },
-  },
-};
 
 export const StorySettingsSchema = {
   type: 'object',
@@ -93,22 +88,31 @@ export const StorySchema = {
   },
 };
 
+/**
+ * Minimal chapter summary embedded inside the story overview.
+ * Author uses the shared UserSummarySchema; stats use ChapterStatsSchema.
+ */
+export const LatestChapterSchema = {
+  type: 'object',
+  properties: {
+    _id: { type: 'string' },
+    storySlug: { type: 'string' },
+    slug: { type: 'string' },
+    title: { type: 'string' },
+    displayNumber: { type: 'string' },
+    stats: ChapterStatsSchema,
+    author: UserSummarySchema,
+  },
+};
+
 export const StoryOverviewSchema = {
   type: 'object',
   properties: {
+    _id: { type: 'string' },
     title: { type: 'string' },
     slug: { type: 'string' },
     description: { type: 'string' },
-    coverImage: ImageSchema,
-    creator: {
-      type: 'object',
-      properties: {
-        clerkId: { type: 'string' },
-        email: { type: 'string' },
-        username: { type: 'string' },
-        avatarUrl: { type: 'string' },
-      },
-    },
+    settings: StorySettingsSchema,
     genres: {
       type: 'array',
       items: {
@@ -116,24 +120,21 @@ export const StoryOverviewSchema = {
         enum: Object.values(STORY_GENRES),
       },
     },
-    collaborators: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          clerkId: { type: 'string' },
-          role: { type: 'string' },
-          username: { type: 'string' },
-          avatarUrl: { type: 'string' },
-        },
-      },
-    },
     contentRating: { type: 'string', enum: Object.values(STORY_CONTENT_RATINGS) },
     tags: { type: 'array', items: { type: 'string' } },
     stats: StoryStatsSchema,
     status: { type: 'string', enum: STORY_STATUSES },
+    trendingScore: { type: 'number' },
     publishedAt: { type: 'string', format: 'date-time' },
     lastActivityAt: { type: 'string', format: 'date-time' },
+    collaborators: {
+      type: 'array',
+      items: EmbeddedCollaboratorSchema,
+    },
+    latestChapters: {
+      type: 'array',
+      items: LatestChapterSchema,
+    },
   },
 };
 

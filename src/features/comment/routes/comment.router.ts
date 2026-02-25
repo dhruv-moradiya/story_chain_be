@@ -11,7 +11,8 @@ import {
   CommentIdSchema,
   CommentUpdateSchema,
 } from '@/schema/request/comment.schema';
-import { rateLimiter } from '@/middlewares/rateLimiter.middleware';
+import { RateLimits } from '@/constants/rateLimits';
+import type {} from '@fastify/rate-limit';
 
 const CommentApiRoutes = {
   Create: '/',
@@ -27,7 +28,8 @@ export async function commentRoutes(fastify: FastifyInstance) {
   fastify.post(
     CommentApiRoutes.Create,
     {
-      preHandler: [validateAuth, rateLimiter],
+      preHandler: [validateAuth],
+      config: { rateLimit: RateLimits.WRITE },
       schema: {
         description: 'Add a new comment',
         tags: ['Comments'],
@@ -42,7 +44,8 @@ export async function commentRoutes(fastify: FastifyInstance) {
   fastify.patch(
     CommentApiRoutes.Update,
     {
-      preHandler: [validateAuth, rateLimiter],
+      preHandler: [validateAuth],
+      config: { rateLimit: RateLimits.WRITE },
       schema: {
         description: 'Update a comment',
         tags: ['Comments'],
@@ -58,7 +61,8 @@ export async function commentRoutes(fastify: FastifyInstance) {
   fastify.delete(
     CommentApiRoutes.Delete,
     {
-      preHandler: [validateAuth, rateLimiter],
+      preHandler: [validateAuth],
+      config: { rateLimit: RateLimits.WRITE },
       schema: {
         description: 'Delete a comment',
         tags: ['Comments'],
@@ -73,6 +77,7 @@ export async function commentRoutes(fastify: FastifyInstance) {
   fastify.get(
     CommentApiRoutes.Get,
     {
+      config: { rateLimit: RateLimits.PUBLIC_READ },
       schema: {
         description: 'Get a comment by ID',
         tags: ['Comments'],
@@ -86,6 +91,7 @@ export async function commentRoutes(fastify: FastifyInstance) {
   fastify.get(
     CommentApiRoutes.GetByChapter,
     {
+      config: { rateLimit: RateLimits.PUBLIC_READ },
       schema: {
         description: 'Get comments for a chapter',
         tags: ['Comments'],
