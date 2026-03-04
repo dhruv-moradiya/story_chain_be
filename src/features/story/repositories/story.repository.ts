@@ -1,4 +1,4 @@
-import { PipelineStage } from 'mongoose';
+import { FilterQuery, PipelineStage } from 'mongoose';
 import { singleton } from 'tsyringe';
 import { Story } from '@models/story.model';
 import { ID, IOperationOptions } from '@/types';
@@ -10,6 +10,12 @@ import { StoryStatus } from '../types/story-enum';
 export class StoryRepository extends BaseRepository<IStory, IStoryDoc> {
   constructor() {
     super(Story);
+  }
+
+  /** Bulk insert stories */
+  async createMany(data: Partial<IStory>[], options: IOperationOptions = {}): Promise<IStory[]> {
+    const docs = await this.model.insertMany(data, { session: options.session, lean: true });
+    return docs as IStory[];
   }
 
   /**
@@ -67,6 +73,20 @@ export class StoryRepository extends BaseRepository<IStory, IStoryDoc> {
       .exec();
   }
 
+  /** Find all stories created by a user with field selection */
+  async findByCreatorIdWithFields(
+    creatorId: string,
+    fields?: string[],
+    options: IOperationOptions = {}
+  ): Promise<IStory[]> {
+    return this.model
+      .find({ creatorId, status: StoryStatus.PUBLISHED })
+      .select(fields?.join(' ') || '')
+      .session(options.session ?? null)
+      .lean()
+      .exec();
+  }
+
   /** Find all stories created by a user */
   async findByCreatorId(creatorId: string, options: IOperationOptions = {}): Promise<IStory[]> {
     return this.model
@@ -77,10 +97,15 @@ export class StoryRepository extends BaseRepository<IStory, IStoryDoc> {
   }
 
   /** Find a single story by slug */
-  async findBySlug(slug: string, options: IOperationOptions = {}): Promise<IStory | null> {
+  async findBySlug(
+    slug: string,
+    options: { fields?: string[] } & IOperationOptions = {}
+  ): Promise<IStory | null> {
+    const { fields, ...rest } = options;
     return this.model
       .findOne({ slug })
-      .session(options.session ?? null)
+      .select(fields?.join(' ') || '')
+      .session(rest.session ?? null)
       .lean()
       .exec();
   }
@@ -117,6 +142,28 @@ export class StoryRepository extends BaseRepository<IStory, IStoryDoc> {
   ): Promise<IStory | null> {
     return this.model
       .findOneAndUpdate({ slug }, { $set: { settings: update } }, { new: true })
+      .lean()
+      .exec();
+  }
+
+  /** Search stories with filters and field selection */
+  async search(
+    filters: { query?: string; creatorId?: string },
+    fields?: string[],
+    limit: number = 10,
+    options: IOperationOptions = {}
+  ): Promise<IStory[]> {
+    const query: FilterQuery<IStoryDoc> = {
+      status: StoryStatus.PUBLISHED,
+      ...(filters.query && { title: { $regex: filters.query, $options: 'i' } }),
+      ...(filters.creatorId && { creatorId: filters.creatorId }),
+    };
+
+    return this.model
+      .find(query)
+      .select(fields?.join(' ') || '')
+      .limit(limit)
+      .session(options.session ?? null)
       .lean()
       .exec();
   }

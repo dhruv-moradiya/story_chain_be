@@ -72,6 +72,31 @@ class StoryCrudService extends BaseModule implements IStoryCrudService {
     });
   }
 
+  async createBulk(input: IStoryCreateDTO[]): Promise<IStory[]> {
+    return await withTransaction('Bulk creating stories', async (session) => {
+      const options = { session };
+
+      // 1. Bulk insert stories
+      const createdStories = await this.storyRepo.createMany(input, options);
+
+      // 2. Prepare and bulk insert collaborators
+      const collaboratorInputs = createdStories.map((story) => ({
+        userId: story.creatorId,
+        slug: story.slug,
+        role: StoryCollaboratorRole.OWNER,
+        status: StoryCollaboratorStatus.ACCEPTED,
+      }));
+
+      await this.collaboratorLifecycleService.createBulkCollaborators(collaboratorInputs, options);
+
+      // 3. Invalidate caches in bulk
+      const slugs = createdStories.map((s) => s.slug);
+      await this.cacheService.invalidateStories(slugs);
+
+      return createdStories;
+    });
+  }
+
   async updateStatus(input: IUpdateStoryStatusDTO): Promise<IStory> {
     const { slug, userId, status } = input;
     const story = await this.storyRepo.findBySlug(slug);

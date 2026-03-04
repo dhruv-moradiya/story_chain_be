@@ -16,6 +16,15 @@ export class StoryCollaboratorRepository extends BaseRepository<
     super(StoryCollaborator);
   }
 
+  /** Bulk insert collaborators */
+  async createMany(
+    data: Partial<IStoryCollaborator>[],
+    options: IOperationOptions = {}
+  ): Promise<IStoryCollaborator[]> {
+    const docs = await this.model.insertMany(data, { session: options.session, lean: true });
+    return docs as IStoryCollaborator[];
+  }
+
   async aggregateStories<T = IStoryCollaborator>(
     pipeline: PipelineStage[],
     options: IOperationOptions = {}

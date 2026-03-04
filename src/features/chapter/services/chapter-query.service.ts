@@ -19,8 +19,11 @@ export class ChapterQueryService extends BaseModule implements IChapterQueryServ
     super();
   }
 
-  async getBySlug(chapterSlug: string): Promise<IChapter | null> {
-    return this.chapterRepo.findBySlug(chapterSlug);
+  async getBySlug(
+    chapterSlug: string,
+    options: { fields?: string[] } & IOperationOptions = {}
+  ): Promise<IChapter | null> {
+    return this.chapterRepo.findBySlug(chapterSlug, options);
   }
 
   async getById(chapterId: ID, options: IOperationOptions = {}): Promise<IChapter | null> {

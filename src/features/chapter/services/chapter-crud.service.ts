@@ -132,11 +132,9 @@ export class ChapterCrudService extends BaseModule implements IChapterCrudServic
     storySlug: string,
     options: IOperationOptions
   ): Promise<IChapter> {
-    const parentChapter = await this.chapterRepo.findBySlug(
-      parentChapterSlug,
-      {},
-      { session: options.session }
-    );
+    const parentChapter = await this.chapterRepo.findBySlug(parentChapterSlug, {
+      session: options.session,
+    });
 
     if (!parentChapter) {
       this.throwNotFoundError('Parent chapter not found.');

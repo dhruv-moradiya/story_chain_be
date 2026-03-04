@@ -7,6 +7,41 @@ import {
   STORY_STATUSES,
 } from '@/features/story/types/story-enum';
 import { STORY_COLLABORATOR_ROLES } from '@/features/storyCollaborator/types/storyCollaborator-enum';
+import { IStory } from '@/features/story/types/story.types';
+
+type TStoryFields = keyof IStory;
+
+const STORY_FIELDS = [
+  'title',
+  'slug',
+  'description',
+  'coverImage',
+  'cardImage',
+  'settings',
+  'tags',
+  'status',
+  'trendingScore',
+  'lastActivityAt',
+  'publishedAt',
+] as const satisfies TStoryFields[];
+
+const StoryFieldsQuerySchema = z.object({
+  fields: z
+    .string()
+    .optional()
+    .transform((val) => {
+      if (!val) return undefined;
+
+      // Split by comma and trim each field to handle optional spaces
+      const requested = val.split(',').map((f) => f.trim());
+
+      const allowed = STORY_FIELDS as readonly string[];
+
+      const validFields = requested.filter((f) => allowed.includes(f));
+
+      return validFields.length > 0 ? validFields : undefined;
+    }),
+});
 
 // Define enums first so they can be used in schemas below
 const GenreEnum = z.enum(STORY_GENRES, {
@@ -30,8 +65,9 @@ const StorySlugSchema = z.object({
   slug: z.string(),
 });
 
-const StorySearchSchema = z.object({
-  q: z.string().min(1, 'Search query is required').max(100, 'Search query too long'),
+const StorySearchSchema = StoryFieldsQuerySchema.extend({
+  q: z.string().max(100, 'Search query too long').optional(),
+  creator: z.string().optional(),
   limit: z.coerce.number().min(1).max(50).default(10).optional(),
 });
 
@@ -296,6 +332,7 @@ type TStoryCreateInviteLinkSchema = z.infer<typeof StoryCreateInviteLinkSchema>;
 type TStoryUpdateSettingSchema = z.infer<typeof StoryUpdateSettingSchema>;
 type TStoryUpdateCoverImageSchema = z.infer<typeof StoryUpdateCoverImageSchema>;
 type TStoryUpdateCardImageSchema = z.infer<typeof StoryUpdateCardImageSchema>;
+type TStoryFieldsQuerySchema = z.infer<typeof StoryFieldsQuerySchema>;
 
 export {
   StoryIdSchema,
@@ -311,6 +348,7 @@ export {
   StoryUpdateSettingSchema,
   StoryUpdateCoverImageSchema,
   StoryUpdateCardImageSchema,
+  StoryFieldsQuerySchema,
 };
 
 export type {
@@ -327,4 +365,5 @@ export type {
   TStoryUpdateSettingSchema,
   TStoryUpdateCoverImageSchema,
   TStoryUpdateCardImageSchema,
+  TStoryFieldsQuerySchema,
 };

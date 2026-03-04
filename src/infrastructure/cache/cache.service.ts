@@ -163,6 +163,18 @@ class CacheService extends BaseModule {
   // ═══════════════════════════════════════════
 
   /**
+   * Invalidate multiple stories
+   */
+  async invalidateStories(slugs: string[]): Promise<void> {
+    const allKeys: string[] = [];
+    for (const slug of slugs) {
+      allKeys.push(...CacheKeyBuilder.invalidateStory(slug));
+    }
+    await this.delMany(allKeys);
+    await this.delPattern(CacheKeyBuilder.invalidateAllStoryLists());
+  }
+
+  /**
    * Invalidate story-related caches
    */
   async invalidateStory(slug: string): Promise<void> {

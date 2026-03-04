@@ -2,8 +2,11 @@ import { HTTP_STATUS } from '@constants/httpStatus';
 import { TOKENS } from '@container/tokens';
 import { IStoryUpdateCardImageBySlugDTO, IStoryUpdateSettingDTO } from '@dto/story.dto';
 import {
+  StoryFieldsQuerySchema,
   TStoryAddChapterSchema,
   TStoryCreateSchema,
+  TStoryFieldsQuerySchema,
+  StorySearchSchema,
   TStorySearchSchema,
   TStorySlugSchema,
   TStoryUpdateCoverImageSchema,
@@ -40,6 +43,28 @@ export class StoryController extends BaseModule {
   ) {
     super();
   }
+
+  createBulkStories = catchAsync(
+    async (request: FastifyRequest<{ Body: TStoryCreateSchema[] }>, reply: FastifyReply) => {
+      const { body, user } = request;
+      const userId = user.clerkId;
+
+      const input = body.map((story) => ({
+        ...story,
+        creatorId: userId,
+      }));
+
+      const newStories = await this.storyCrudService.createBulk(input);
+
+      this.logInfo(`Bulk stories created: ${newStories.length} stories by ${userId}`);
+
+      return reply
+        .code(HTTP_STATUS.CREATED.code)
+        .send(
+          ApiResponse.created(newStories, `${newStories.length} stories created successfully.`)
+        );
+    }
+  );
 
   // =====================
   // CRUD OPERATIONS
@@ -98,10 +123,14 @@ export class StoryController extends BaseModule {
   });
 
   getStoryBySlug = catchAsync(
-    async (request: FastifyRequest<{ Params: { slug: string } }>, reply: FastifyReply) => {
+    async (
+      request: FastifyRequest<{ Params: TStorySlugSchema; Querystring: TStoryFieldsQuerySchema }>,
+      reply: FastifyReply
+    ) => {
       const { slug } = request.params;
+      const { fields } = StoryFieldsQuerySchema.parse(request.query);
 
-      const story = await this.storyQueryService.getBySlug(slug);
+      const story = await this.storyQueryService.getBySlug(slug, { fields });
 
       this.logInfo(`Fetched story ${slug}`);
 
@@ -197,11 +226,16 @@ export class StoryController extends BaseModule {
 
   searchStories = catchAsync(
     async (request: FastifyRequest<{ Querystring: TStorySearchSchema }>, reply: FastifyReply) => {
-      const { q, limit } = request.query;
+      const { q, creator, fields, limit } = StorySearchSchema.parse(request.query);
 
-      const stories = await this.storyQueryService.searchStoriesByTitle(q, limit);
+      const stories = await this.storyQueryService.searchStoriesByTitle(
+        q,
+        creator,
+        fields,
+        limit as number
+      );
 
-      this.logInfo(`Searched stories with query: ${q}`);
+      this.logInfo(`Searched stories with query: ${q || ''} and creator: ${creator || ''}`);
 
       return reply
         .code(HTTP_STATUS.OK.code)

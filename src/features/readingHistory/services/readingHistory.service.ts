@@ -26,7 +26,7 @@ class ReadingHistoryService extends BaseModule implements IReadingHistoryService
     const { chapterSlug } = input;
 
     const chapter = await this.chapterRepository.findBySlug(chapterSlug, {
-      isEnding: 1,
+      fields: ['isEnding'],
     });
 
     if (!chapter) {

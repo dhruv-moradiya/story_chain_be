@@ -8,6 +8,11 @@ interface ICollaboratorLifecycleService {
     options?: IOperationOptions
   ): Promise<IStoryCollaborator>;
 
+  createBulkCollaborators(
+    input: IStoryCollaboratorCreateDTO[],
+    options?: IOperationOptions
+  ): Promise<IStoryCollaborator[]>;
+
   removeCollaborator(storySlug: string, userId: string): Promise<void>;
 }
 

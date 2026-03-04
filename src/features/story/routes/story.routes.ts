@@ -33,6 +33,7 @@ const StoryApiRoutes = {
 
   // SUPER_ADMIN only
   GetAllStories: '/all',
+  CreateBulkStories: '/bulk-create',
 
   // By Slug
   GetBySlug: '/slug/:slug',
@@ -77,6 +78,26 @@ export async function storyRoutes(fastify: FastifyInstance) {
       },
     },
     storyController.getAllStories
+  );
+
+  // Bulk create stories - SUPER_ADMIN only
+  fastify.post(
+    StoryApiRoutes.CreateBulkStories,
+    {
+      preHandler: [validateAuth, PlatformRoleGuards.superAdmin],
+      config: { rateLimit: RateLimits.AUTHENTICATED },
+      schema: {
+        description: 'Bulk create stories (SUPER_ADMIN only)',
+        tags: ['Stories'],
+        security: [{ bearerAuth: [] }],
+        body: {
+          type: 'array',
+          items: zodToJsonSchema(StoryCreateSchema),
+        },
+        response: StoryResponses.bulkStoryCreated,
+      },
+    },
+    storyController.createBulkStories
   );
 
   // ===============================
@@ -162,16 +183,16 @@ export async function storyRoutes(fastify: FastifyInstance) {
     storyController.getDraftStories
   );
 
-  // Search stories by title
+  // Search stories
   fastify.get(
     StoryApiRoutes.Search,
     {
       config: { rateLimit: RateLimits.PUBLIC_READ },
       schema: {
-        description: 'Search stories by title',
+        description: 'Search stories by title or user slug',
         tags: ['Stories'],
         querystring: zodToJsonSchema(StorySearchSchema),
-        response: StoryResponses.storySearch,
+        response: StoryResponses.storyList,
       },
     },
     storyController.searchStories

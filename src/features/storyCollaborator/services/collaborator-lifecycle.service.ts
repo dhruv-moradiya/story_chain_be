@@ -48,6 +48,21 @@ class CollaboratorLifecycleService extends BaseModule implements ICollaboratorLi
     return collaborator;
   }
 
+  async createBulkCollaborators(
+    input: IStoryCollaboratorCreateDTO[],
+    options: IOperationOptions = {}
+  ): Promise<IStoryCollaborator[]> {
+    return this.storyCollaboratorRepo.createMany(
+      input.map((c) => ({
+        slug: c.slug,
+        role: c.role,
+        userId: c.userId,
+        status: c.status,
+      })),
+      options
+    );
+  }
+
   async removeCollaborator(_storySlug: string, _userId: string): Promise<void> {
     // TODO: Implement collaborator removal logic
     this.throwInternalError('removeCollaborator not yet implemented');

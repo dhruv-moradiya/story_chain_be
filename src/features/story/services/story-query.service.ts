@@ -17,6 +17,7 @@ import { IStory, IStorySettingsWithImages } from '../types/story.types';
 import { StoryStatus } from '../types/story-enum';
 import { CacheService } from '@/infrastructure/cache/cache.service';
 import { CACHE_TTL, CacheKeyBuilder } from '@/infrastructure';
+import { type IUserService } from '@/features/user/interfaces';
 
 @singleton()
 class StoryQueryService extends BaseModule implements IStoryQueryService {
@@ -26,7 +27,9 @@ class StoryQueryService extends BaseModule implements IStoryQueryService {
     @inject(TOKENS.StoryRepository)
     private readonly storyRepo: StoryRepository,
     @inject(TOKENS.ChapterRepository)
-    private readonly chapterRepo: ChapterRepository
+    private readonly chapterRepo: ChapterRepository,
+    @inject(TOKENS.UserService)
+    private readonly userService: IUserService
   ) {
     super();
   }
@@ -38,7 +41,10 @@ class StoryQueryService extends BaseModule implements IStoryQueryService {
   /**
    * Get story by slug (throws if not found)
    */
-  async getBySlug(slug: string, options: IOperationOptions = {}): Promise<IStory> {
+  async getBySlug(
+    slug: string,
+    options: { fields?: string[] } & IOperationOptions = {}
+  ): Promise<IStory> {
     const story = await this.storyRepo.findBySlug(slug, options);
 
     if (!story) {
@@ -170,11 +176,38 @@ class StoryQueryService extends BaseModule implements IStoryQueryService {
   /**
    * Search stories by title
    */
+  /**
+   * Search stories with optional filters
+   */
   async searchStoriesByTitle(
-    query: string,
-    limit: number = 10
-  ): Promise<Pick<IStory, '_id' | 'title'>[]> {
-    return this.storyRepo.searchByTitle(query, limit);
+    query?: string,
+    creator?: string,
+    fields?: string[],
+    limit: number = 10,
+    options: IOperationOptions = {}
+  ): Promise<IStory[]> {
+    let creatorId: string | undefined;
+
+    if (creator) {
+      const user = await this.userService.getUserByUsername(creator);
+      if (!user) {
+        this.throwNotFoundError(`User with username '${creator}' not found`);
+      }
+      creatorId = user.clerkId;
+    }
+
+    return this.storyRepo.search({ query, creatorId }, fields, limit, options);
+  }
+
+  /**
+   * Search stories by user slug (username)
+   */
+  async searchStoriesByUserSlug(
+    creator: string,
+    fields?: string[],
+    options: IOperationOptions = {}
+  ): Promise<IStory[]> {
+    return this.searchStoriesByTitle(undefined, creator, fields, 50, options);
   }
 }
 

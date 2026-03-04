@@ -10,7 +10,7 @@ interface IStoryTreeResult {
 
 interface IStoryQueryService {
   // Basic getters (throws if not found)
-  getBySlug(slug: string, options?: IOperationOptions): Promise<IStory>;
+  getBySlug(slug: string, options?: { fields?: string[] } & IOperationOptions): Promise<IStory>;
 
   // User-specific queries
   getAllByUserId(userId: string, options?: IOperationOptions): Promise<IStory[]>;
@@ -29,7 +29,18 @@ interface IStoryQueryService {
   getStorySettingsBySlug(slug: string): Promise<IStorySettingsWithImages>;
 
   // Search
-  searchStoriesByTitle(query: string, limit?: number): Promise<Pick<IStory, '_id' | 'title'>[]>;
+  searchStoriesByTitle(
+    query?: string,
+    creator?: string,
+    fields?: string[],
+    limit?: number,
+    options?: IOperationOptions
+  ): Promise<IStory[]>;
+  searchStoriesByUserSlug(
+    creator: string,
+    fields?: string[],
+    options?: IOperationOptions
+  ): Promise<IStory[]>;
 }
 
 export type { IStoryQueryService, IStoryTreeResult };

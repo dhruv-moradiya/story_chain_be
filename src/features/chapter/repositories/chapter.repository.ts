@@ -1,12 +1,5 @@
 import { singleton } from 'tsyringe';
-import {
-  ClientSession,
-  PipelineStage,
-  ProjectionType,
-  QueryOptions,
-  Types,
-  UpdateQuery,
-} from 'mongoose';
+import { ClientSession, PipelineStage, QueryOptions, Types, UpdateQuery } from 'mongoose';
 
 import { Chapter } from '@models/chapter.model';
 import { IChapter, IChapterDoc } from '../types/chapter.types';
@@ -83,10 +76,15 @@ export class ChapterRepository extends BaseRepository<IChapter, IChapterDoc> {
 
   async findBySlug(
     slug: string,
-    projection: ProjectionType<IChapter> | null = {},
-    options: QueryOptions = {}
+    options: { fields?: string[] } & IOperationOptions = {}
   ): Promise<IChapter | null> {
-    return this.model.findOne({ slug }, projection, options).lean<IChapter>().exec();
+    const { fields, ...rest } = options;
+    return this.model
+      .findOne({ slug })
+      .select(fields?.join(' ') || '')
+      .session(rest.session ?? null)
+      .lean()
+      .exec();
   }
 
   /**

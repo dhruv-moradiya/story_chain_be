@@ -219,6 +219,13 @@ export const StoryResponses = {
     422: validationErrorResponse('Validation failed'),
     500: internalErrorResponse(),
   },
+  bulkStoryCreated: {
+    201: apiArrayResponse(StoryCreateResponseSchema, 'Stories created successfully'),
+    400: badRequestResponse('Invalid story data'),
+    401: unauthorizedResponse(),
+    422: validationErrorResponse('Validation failed'),
+    500: internalErrorResponse(),
+  },
   storyDetails: {
     200: apiResponse(StorySchema, 'Story details retrieved successfully'),
     401: unauthorizedResponse(),
