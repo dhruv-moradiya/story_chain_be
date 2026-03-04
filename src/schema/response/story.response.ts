@@ -188,6 +188,7 @@ export const StorySearchResultSchema = {
   properties: {
     _id: { type: 'string' },
     title: { type: 'string' },
+    slug: { type: 'string' },
   },
 };
 

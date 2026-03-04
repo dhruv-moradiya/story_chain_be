@@ -74,4 +74,13 @@ export class ChapterQueryService extends BaseModule implements IChapterQueryServ
 
   //   return chapter;
   // }
+
+  async searchChapters(
+    filters: { q?: string; slug?: string; storySlug?: string; userId?: string },
+    fields?: string[],
+    limit: number = 10,
+    options: IOperationOptions = {}
+  ): Promise<IChapter[]> {
+    return this.chapterRepo.search(filters, fields, limit, options);
+  }
 }

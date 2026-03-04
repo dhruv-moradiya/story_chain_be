@@ -11,6 +11,13 @@ interface IChapterQueryService {
   getByStory(storySlug: string): Promise<IChapter[]>;
   getByAuthor(userId: string): Promise<IChapterWithStoryResponse[]>;
   // getDetails(chapterId: string): Promise<IChapterDetails | null>;
+
+  searchChapters(
+    filters: { q?: string; slug?: string; storySlug?: string; userId?: string },
+    fields?: string[],
+    limit?: number,
+    options?: IOperationOptions
+  ): Promise<IChapter[]>;
 }
 
 export type { IChapterQueryService };

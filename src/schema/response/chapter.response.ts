@@ -120,6 +120,15 @@ export const ChapterDetailsSchema = {
   },
 };
 
+export const ChapterSearchResultSchema = {
+  type: 'object',
+  properties: {
+    _id: { type: 'string' },
+    title: { type: 'string' },
+    slug: { type: 'string' },
+  },
+};
+
 // ═══════════════════════════════════════════
 // CHAPTER RESPONSE OBJECTS
 // ═══════════════════════════════════════════
@@ -132,5 +141,8 @@ export const ChapterResponses = {
   },
   myChapters: {
     200: apiArrayResponse(ChapterWithStorySchema, 'User chapters retrieved successfully'),
+  },
+  chapterSearch: {
+    200: apiArrayResponse(ChapterSearchResultSchema, 'Search results retrieved successfully'),
   },
 };

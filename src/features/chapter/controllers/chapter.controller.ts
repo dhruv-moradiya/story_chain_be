@@ -7,7 +7,11 @@ import { BaseModule } from '@utils/baseClass';
 import { catchAsync } from '@utils/catchAsync';
 import { ChapterQueryService } from '../services/chapter-query.service';
 import { ChapterCrudService } from '../services/chapter-crud.service';
-import { TCreateChapterSchema } from '@/schema/request/chapter.schema';
+import {
+  ChapterSearchSchema,
+  TChapterSearchSchema,
+  TCreateChapterSchema,
+} from '@/schema/request/chapter.schema';
 
 @singleton()
 export class ChapterController extends BaseModule {
@@ -80,6 +84,26 @@ export class ChapterController extends BaseModule {
       return reply
         .code(HTTP_STATUS.OK.code)
         .send(ApiResponse.created(chapter, 'Chapter created successfully.'));
+    }
+  );
+
+  searchChapters = catchAsync(
+    async (request: FastifyRequest<{ Querystring: TChapterSearchSchema }>, reply: FastifyReply) => {
+      const { q, slug, storySlug, userId, fields, limit } = ChapterSearchSchema.parse(
+        request.query
+      );
+
+      const chapters = await this.chapterQueryService.searchChapters(
+        { q, slug, storySlug, userId },
+        fields,
+        limit as number
+      );
+
+      this.logInfo(`Searched chapters with query params`);
+
+      return reply
+        .code(HTTP_STATUS.OK.code)
+        .send(ApiResponse.fetched(chapters, `Found ${chapters.length} chapters`));
     }
   );
 }

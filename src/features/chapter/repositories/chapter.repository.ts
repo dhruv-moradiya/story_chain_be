@@ -1,5 +1,12 @@
 import { singleton } from 'tsyringe';
-import { ClientSession, PipelineStage, QueryOptions, Types, UpdateQuery } from 'mongoose';
+import {
+  ClientSession,
+  FilterQuery,
+  PipelineStage,
+  QueryOptions,
+  Types,
+  UpdateQuery,
+} from 'mongoose';
 
 import { Chapter } from '@models/chapter.model';
 import { IChapter, IChapterDoc } from '../types/chapter.types';
@@ -83,6 +90,30 @@ export class ChapterRepository extends BaseRepository<IChapter, IChapterDoc> {
       .findOne({ slug })
       .select(fields?.join(' ') || '')
       .session(rest.session ?? null)
+      .lean()
+      .exec();
+  }
+
+  /** Search chapters with filters and field selection */
+  async search(
+    filters: { q?: string; slug?: string; storySlug?: string; userId?: string },
+    fields?: string[],
+    limit: number = 10,
+    options: IOperationOptions = {}
+  ): Promise<IChapter[]> {
+    const query: FilterQuery<IChapterDoc> = {
+      status: ChapterStatus.PUBLISHED,
+      ...(filters.q && { title: { $regex: filters.q, $options: 'i' } }),
+      ...(filters.slug && { slug: filters.slug }),
+      ...(filters.storySlug && { storySlug: filters.storySlug }),
+      ...(filters.userId && { authorId: filters.userId }),
+    };
+
+    return this.model
+      .find(query)
+      .select(fields?.join(' ') || '')
+      .limit(limit)
+      .session(options.session ?? null)
       .lean()
       .exec();
   }

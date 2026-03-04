@@ -1,6 +1,34 @@
 import { z } from 'zod';
 import { ObjectIdSchema } from '@utils/index';
 import { CHAPTER_STATUSES } from '@/features/chapter/types/chapter-enum';
+import { IChapter } from '@/features/chapter/types/chapter.types';
+
+type TChapterFields = keyof IChapter;
+
+const CHAPTER_FIELDS = [
+  '_id',
+  'title',
+  'content',
+  'slug',
+  'storySlug',
+  'authorId',
+  'status',
+  'parentChapterSlug',
+  'ancestorSlugs',
+  'depth',
+  'chapterNumber',
+  'branchIndex',
+  'displayNumber',
+  'isEnding',
+  'version',
+  'previousVersionId',
+  'stats',
+  'votes',
+  'reportCount',
+  'isFlagged',
+  'createdAt',
+  'updatedAt',
+] as const satisfies TChapterFields[];
 
 const ChapterIdSchema = z.object({
   chapterId: ObjectIdSchema(),
@@ -44,10 +72,45 @@ const CreateChapterSchema = z.object({
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Parent chapter slug must be URL-friendly'),
 });
 
+const ChapterFieldsQuerySchema = z.object({
+  fields: z
+    .string()
+    .optional()
+    .transform((val) => {
+      if (!val) return undefined;
+      const requested = val.split(',').map((f) => f.trim());
+      const allowed = CHAPTER_FIELDS as readonly string[];
+      const validFields = requested.filter((f) => allowed.includes(f));
+      return validFields.length > 0 ? validFields : undefined;
+    }),
+});
+
+const ChapterSearchSchema = ChapterFieldsQuerySchema.extend({
+  q: z.string().max(100, 'Search query too long').optional(),
+  slug: z.string().optional(),
+  storySlug: z.string().optional(),
+  userId: z.string().optional(),
+  limit: z.coerce.number().min(1).max(50).default(10).optional(),
+});
+
 type TChapterIdSchema = z.infer<typeof ChapterIdSchema>;
 type TChapterSlugSchema = z.infer<typeof ChapterSlugSchema>;
 type TCreateChapterSchema = z.infer<typeof CreateChapterSchema>;
+type TChapterFieldsQuerySchema = z.infer<typeof ChapterFieldsQuerySchema>;
+type TChapterSearchSchema = z.infer<typeof ChapterSearchSchema>;
 
-export { ChapterIdSchema, ChapterSlugSchema, CreateChapterSchema };
+export {
+  ChapterIdSchema,
+  ChapterSlugSchema,
+  CreateChapterSchema,
+  ChapterFieldsQuerySchema,
+  ChapterSearchSchema,
+};
 
-export type { TChapterIdSchema, TChapterSlugSchema, TCreateChapterSchema };
+export type {
+  TChapterIdSchema,
+  TChapterSlugSchema,
+  TCreateChapterSchema,
+  TChapterFieldsQuerySchema,
+  TChapterSearchSchema,
+};

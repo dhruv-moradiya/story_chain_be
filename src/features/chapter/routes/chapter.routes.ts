@@ -1,8 +1,10 @@
 import { FastifyInstance } from 'fastify';
 import { container } from 'tsyringe';
+import zodToJsonSchema from 'zod-to-json-schema';
 import { TOKENS } from '@/container';
 import { validateAuth } from '@middleware/authHandler';
 import { ChapterResponses } from '@schema/response.schema';
+import { ChapterSearchSchema } from '@schema/request/chapter.schema';
 import { type ChapterController } from '../controllers/chapter.controller';
 import { RateLimits } from '@/constants/rateLimits';
 import type {} from '@fastify/rate-limit';
@@ -10,6 +12,7 @@ import type {} from '@fastify/rate-limit';
 // Chapter API Routes
 const ChapterApiRoutes = {
   GetMyChapters: '/my',
+  Search: '/search',
 
   // ID
   GetChapterById: '/:chapterId',
@@ -24,6 +27,20 @@ export { ChapterApiRoutes };
 
 export async function chapterRoutes(fastify: FastifyInstance) {
   const chapterController = container.resolve<ChapterController>(TOKENS.ChapterController);
+
+  fastify.get(
+    ChapterApiRoutes.Search,
+    {
+      config: { rateLimit: RateLimits.PUBLIC_READ },
+      schema: {
+        description: 'Search chapters by title, slug, story slug or author',
+        tags: ['Chapters'],
+        querystring: zodToJsonSchema(ChapterSearchSchema),
+        response: ChapterResponses.chapterSearch,
+      },
+    },
+    chapterController.searchChapters
+  );
 
   /**
    * Get all chapters created by the current user
