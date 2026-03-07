@@ -1,4 +1,4 @@
-import { apiResponse } from './helpers';
+import { apiResponse, apiArrayResponse } from './helpers';
 
 // ===============================
 // AUTO-SAVE DATA SCHEMAS
@@ -54,6 +54,19 @@ export const EnableAutoSaveSchema = {
   },
 };
 
+export const AutoSaveSearchResultSchema = {
+  type: 'object',
+  properties: {
+    _id: { type: 'string' },
+    title: { type: 'string' },
+    chapterSlug: { type: ['string', 'null'] },
+    storySlug: { type: 'string' },
+    autoSaveType: { type: 'string' },
+    wordCount: { type: 'number' },
+    lastSavedAt: { type: 'string', format: 'date-time' },
+  },
+};
+
 // ===============================
 // AUTO-SAVE RESPONSE OBJECTS
 // ===============================
@@ -67,5 +80,8 @@ export const AutoSaveResponses = {
   draft: { 200: apiResponse(AutoSaveDraftSchema, 'Auto-save draft retrieved') },
   published: {
     201: apiResponse({ type: 'object' }, 'Auto-save draft published successfully'),
+  },
+  search: {
+    200: apiArrayResponse(AutoSaveSearchResultSchema, 'Search results retrieved successfully'),
   },
 };

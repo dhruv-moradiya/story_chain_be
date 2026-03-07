@@ -4,12 +4,15 @@ import { TOKENS } from '@container/tokens';
 import { HTTP_STATUS } from '@constants/httpStatus';
 import { TDisableAutoSaveSchema } from '@schema/request/chapterAutoSave.schema';
 import {
+  ChapterAutoSaveSearchSchema,
   TAutoSaveContentSchemaVer2,
+  TChapterAutoSaveSearchSchema,
   TConvertAutoSaveQuerySchema,
   TConvertAutoSaveSchema,
   TEnableAutoSaveSchemaVer2Type,
   TGetAutoSaveDraftQuerySchema,
 } from '@schema/request/chapterAutoSaveVer2.Schema';
+
 import { ApiResponse } from '@utils/apiResponse';
 import { BaseModule } from '@utils/baseClass';
 import { catchAsync } from '@utils/catchAsync';
@@ -143,14 +146,33 @@ export class ChapterAutoSaveController extends BaseModule {
       const autoSave = await this.queryService.getById(autoSaveId);
 
       if (!autoSave) {
-        return reply
-          .code(HTTP_STATUS.NOT_FOUND.code)
-          .send(new ApiResponse(false, 'Auto-save not found.', null));
+        this.throwNotFoundError('AUTOSAVE_NOT_FOUND', 'Auto-save not found.');
       }
 
       return reply
         .code(HTTP_STATUS.OK.code)
         .send(ApiResponse.fetched(autoSave, 'Auto-save retrieved successfully.'));
+    }
+  );
+
+  searchAutoSaves = catchAsync(
+    async (
+      request: FastifyRequest<{ Querystring: TChapterAutoSaveSearchSchema }>,
+      reply: FastifyReply
+    ) => {
+      const userId = request.user.clerkId;
+      const { q, storySlug, chapterSlug, autoSaveType, fields, limit } =
+        ChapterAutoSaveSearchSchema.parse(request.query);
+
+      const results = await this.queryService.search(
+        { q, storySlug, chapterSlug, autoSaveType, userId },
+        fields,
+        limit
+      );
+
+      return reply
+        .code(HTTP_STATUS.OK.code)
+        .send(ApiResponse.fetched(results, `Found ${results.length} auto-save(s).`));
     }
   );
 }

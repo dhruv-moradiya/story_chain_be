@@ -109,6 +109,44 @@ const AutoSaveContentSchemaVer2 = z.union([
   AutoSaveContentSchemaVer2UpdateChapter,
 ]);
 
+const AUTOSAVE_FIELDS = [
+  '_id',
+  'title',
+  'content',
+  'chapterSlug',
+  'userId',
+  'lastSavedAt',
+  'isEnabled',
+  'saveCount',
+  'autoSaveType',
+  'storySlug',
+  'parentChapterSlug',
+  'createdAt',
+  'updatedAt',
+  'wordCount',
+] as const;
+
+const AutoSaveFieldsQuerySchema = z.object({
+  fields: z
+    .string()
+    .optional()
+    .transform((val) => {
+      if (!val) return undefined;
+      const requested = val.split(',').map((f) => f.trim());
+      const allowed = AUTOSAVE_FIELDS as readonly string[];
+      const validFields = requested.filter((f) => allowed.includes(f));
+      return validFields.length > 0 ? validFields : undefined;
+    }),
+});
+
+const ChapterAutoSaveSearchSchema = AutoSaveFieldsQuerySchema.extend({
+  q: z.string().max(100, 'Search query too long').optional(),
+  storySlug: z.string().optional(),
+  chapterSlug: z.string().optional(),
+  autoSaveType: z.enum(['root_chapter', 'new_chapter', 'update_chapter']).optional(),
+  limit: z.coerce.number().min(1).max(50).default(10).optional(),
+});
+
 type TAutoSaveIdSchema = z.infer<typeof AutoSaveIdSchema>;
 
 type TGetAutoSaveDraftQuerySchema = z.infer<typeof GetAutoSaveDraftQuerySchema>;
@@ -136,6 +174,9 @@ type TAutoSaveContentSchemaVer2DisableAutoSave = z.infer<
 type TConvertAutoSaveQuerySchema = z.infer<typeof ConvertAutoSaveQuerySchema>;
 type TConvertAutoSaveSchema = z.infer<typeof ConvertAutoSaveSchema>;
 
+// SEARCH
+type TChapterAutoSaveSearchSchema = z.infer<typeof ChapterAutoSaveSearchSchema>;
+
 export {
   AutoSaveIdSchema,
   GetAutoSaveDraftQuerySchema,
@@ -151,6 +192,7 @@ export {
   AutoSaveContentSchemaVer2DisableAutoSave,
   ConvertAutoSaveQuerySchema,
   ConvertAutoSaveSchema,
+  ChapterAutoSaveSearchSchema,
 };
 
 export type {
@@ -167,4 +209,5 @@ export type {
   TAutoSaveContentSchemaVer2DisableAutoSave,
   TConvertAutoSaveQuerySchema,
   TConvertAutoSaveSchema,
+  TChapterAutoSaveSearchSchema,
 };

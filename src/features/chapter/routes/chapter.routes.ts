@@ -99,7 +99,7 @@ export async function chapterRoutes(fastify: FastifyInstance) {
         tags: ['Chapters'],
         security: [{ bearerAuth: [] }],
         // body: ChapterSchemas.createChild,
-        response: chapterController.createChild,
+        response: ChapterResponses.chapterCreated,
       },
     },
     chapterController.createChild

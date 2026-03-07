@@ -57,4 +57,45 @@ export class AutoSaveQueryService extends BaseModule implements IAutoSaveQuerySe
   async getByChapterAndUser(chapterSlug: string, userId: string): Promise<IChapterAutoSave | null> {
     return this.chapterAutoSaveRepo.findByChapterSlugAndUser(chapterSlug, userId);
   }
+
+  async search(
+    filters: {
+      q?: string;
+      storySlug?: string;
+      chapterSlug?: string;
+      autoSaveType?: string;
+      userId: string;
+    },
+    fields?: string[],
+    limit?: number
+  ): Promise<IChapterAutoSave[]> {
+    const requestedFields = [...(fields || [])];
+    let wordCountRequested = requestedFields.includes('wordCount');
+
+    // Remove wordCount from DB fields if it's there (since it's a virtual/calculated)
+    const dbFields = requestedFields.filter((f) => f !== 'wordCount');
+
+    // If no fields specified, we fetch all (including content).
+    // If fields specified AND wordCount requested, ensure content is fetched.
+    if (fields && wordCountRequested && !dbFields.includes('content')) {
+      dbFields.push('content');
+    }
+
+    const results = await this.chapterAutoSaveRepo.search(filters, dbFields, limit);
+
+    return results.map((doc) => {
+      const mapped = { ...doc };
+      if (!fields || wordCountRequested) {
+        mapped.wordCount = doc.content ? doc.content.trim().split(/\s+/).length : 0;
+      }
+
+      // If wordCount was requested but content was NOT originally requested,
+      // and we had to add content to dbFields, we should probably remove it from final output
+      if (fields && wordCountRequested && !fields.includes('content')) {
+        delete (mapped as any).content;
+      }
+
+      return mapped as IChapterAutoSave;
+    });
+  }
 }

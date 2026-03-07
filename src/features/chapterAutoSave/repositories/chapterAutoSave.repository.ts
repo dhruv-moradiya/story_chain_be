@@ -1,3 +1,4 @@
+import { FilterQuery } from 'mongoose';
 import { ChapterAutoSave } from '@models/chapterAutoSave.modal';
 import { ID, IOperationOptions } from '@/types';
 import {
@@ -193,5 +194,38 @@ export class ChapterAutoSaveRepository extends BaseRepository<
       default:
         throw new Error(`Unsupported autoSaveType: ${autoSaveType}`);
     }
+  }
+
+  // ───────────────────────────────────────────────
+
+  // Search
+  // ───────────────────────────────────────────────
+  async search(
+    filters: {
+      q?: string;
+      storySlug?: string;
+      chapterSlug?: string;
+      autoSaveType?: string;
+      userId: string;
+    },
+    fields?: string[],
+    limit: number = 10,
+    options: IOperationOptions = {}
+  ): Promise<IChapterAutoSave[]> {
+    const query: FilterQuery<IChapterAutoSaveDoc> = {
+      userId: filters.userId,
+      ...(filters.q && { title: { $regex: filters.q, $options: 'i' } }),
+      ...(filters.storySlug && { storySlug: filters.storySlug }),
+      ...(filters.chapterSlug && { chapterSlug: filters.chapterSlug }),
+      ...(filters.autoSaveType && { autoSaveType: filters.autoSaveType }),
+    };
+
+    return this.model
+      .find(query)
+      .select(fields?.join(' ') || '')
+      .limit(limit)
+      .session(options.session ?? null)
+      .lean()
+      .exec();
   }
 }

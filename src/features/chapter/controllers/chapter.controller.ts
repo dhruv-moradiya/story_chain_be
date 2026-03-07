@@ -60,9 +60,7 @@ export class ChapterController extends BaseModule {
       const chapter = await this.chapterQueryService.getBySlug(chapterSlug);
 
       if (!chapter) {
-        return reply
-          .code(HTTP_STATUS.NOT_FOUND.code)
-          .send(new ApiResponse(false, 'Chapter not found.', null));
+        this.throwNotFoundError('CHAPTER_NOT_FOUND', 'Chapter not found.');
       }
 
       return reply

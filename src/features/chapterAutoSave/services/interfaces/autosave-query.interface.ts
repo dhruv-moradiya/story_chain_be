@@ -21,4 +21,19 @@ export interface IAutoSaveQueryService {
    * Get autosave for a specific chapter and user
    */
   getByChapterAndUser(chapterId: string, userId: string): Promise<IChapterAutoSave | null>;
+
+  /**
+   * Search autosaves for a user
+   */
+  search(
+    filters: {
+      q?: string;
+      storySlug?: string;
+      chapterSlug?: string;
+      autoSaveType?: string;
+      userId: string;
+    },
+    fields?: string[],
+    limit?: number
+  ): Promise<IChapterAutoSave[]>;
 }

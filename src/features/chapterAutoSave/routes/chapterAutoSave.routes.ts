@@ -5,6 +5,7 @@ import { TOKENS } from '@/container';
 import { validateAuth } from '@middleware/authHandler';
 import {
   AutoSaveContentSchemaVer2,
+  ChapterAutoSaveSearchSchema,
   ConvertAutoSaveQuerySchema,
   ConvertAutoSaveSchema,
   EnableAutoSaveSchemaVer2,
@@ -21,10 +22,27 @@ enum ChapterAutoSaveApiRoutes {
   // DisableAutoSave = '/disable',
   GetAutoSaveDraft = '/draft',
   Convert = '/convert',
+  Search = '/search',
 }
 
 export async function chapterAutoSaveRoutes(fastify: FastifyInstance) {
   const controller = container.resolve<ChapterAutoSaveController>(TOKENS.ChapterAutoSaveController);
+
+  fastify.get(
+    ChapterAutoSaveApiRoutes.Search,
+    {
+      preHandler: [validateAuth],
+      config: { rateLimit: RateLimits.AUTHENTICATED },
+      schema: {
+        description: 'Search auto-saves by title, story slug or chapter slug',
+        tags: ['Chapter Auto-Save'],
+        security: [{ bearerAuth: [] }],
+        querystring: zodToJsonSchema(ChapterAutoSaveSearchSchema),
+        response: AutoSaveResponses.search,
+      },
+    },
+    controller.searchAutoSaves
+  );
 
   fastify.post(
     ChapterAutoSaveApiRoutes.EnableAutoSave,
