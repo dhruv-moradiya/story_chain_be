@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { PR_LABELS } from '@/features/pullRequest/types/pullRequest-enum';
+import { ObjectIdSchema } from '@utils/index';
 
 const BasePullRequestSchema = z.object({
   title: z
@@ -76,16 +78,28 @@ const CreatePullRequestSchema = z.discriminatedUnion('prType', [
   CreateDeleteChapterPRSchema,
 ]);
 
+const UpdatePRLabelsSchema = z.object({
+  labels: z.array(z.enum(PR_LABELS)),
+});
+
+const UpdatePRParamsSchema = z.object({
+  id: ObjectIdSchema(),
+});
+
 type TCreateNewChapterPRSchema = z.infer<typeof CreateNewChapterPRSchema>;
 type TCreateEditChapterPRSchema = z.infer<typeof CreateEditChapterPRSchema>;
 type TCreateDeleteChapterPRSchema = z.infer<typeof CreateDeleteChapterPRSchema>;
 type TCreatePullRequestSchema = z.infer<typeof CreatePullRequestSchema>;
+type TUpdatePRLabelsSchema = z.infer<typeof UpdatePRLabelsSchema>;
+type TUpdatePRParamsSchema = z.infer<typeof UpdatePRParamsSchema>;
 
 export {
   CreatePullRequestSchema,
   CreateNewChapterPRSchema,
   CreateEditChapterPRSchema,
   CreateDeleteChapterPRSchema,
+  UpdatePRLabelsSchema,
+  UpdatePRParamsSchema,
 };
 
 export type {
@@ -93,4 +107,6 @@ export type {
   TCreateNewChapterPRSchema,
   TCreateEditChapterPRSchema,
   TCreateDeleteChapterPRSchema,
+  TUpdatePRLabelsSchema,
+  TUpdatePRParamsSchema,
 };

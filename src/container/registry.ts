@@ -55,9 +55,10 @@ import { ChapterQueryService } from '@features/chapter/services/chapter-query.se
 
 import { ReadingHistoryService } from '@/features/readingHistory/services/readingHistory.service';
 import { BookmarkService } from '@/features/bookmark/services/bookmark.service';
-import { PullRequestService } from '@/features/pullRequest/services/pullRequest.service';
+import { PullRequestService } from '@/features/pullRequest/services/pull-request.service';
 import { PullRequestValidator } from '@features/pullRequest/validators/pullRequest.validator';
-import { PullRequestDiffService } from '@features/pullRequest/services/pullRequestDiff.service';
+import { PullRequestDiffService } from '@/features/pullRequest/services/pull-request-diff.service';
+import { PullRequestQueryService } from '@/features/pullRequest/services/pull-request-query.service';
 
 // ═══════════════════════════════════════════
 // CONTROLLERS
@@ -167,6 +168,7 @@ export function registerServices(): void {
   container.register(TOKENS.CommentService, { useClass: CommentService });
   container.register(TOKENS.PullRequestValidator, { useClass: PullRequestValidator });
   container.register(TOKENS.PullRequestDiffService, { useClass: PullRequestDiffService });
+  container.register(TOKENS.PullRequestQueryService, { useClass: PullRequestQueryService });
   container.register(TOKENS.PullRequestService, { useClass: PullRequestService });
 
   // ═══════════════════════════════════════════

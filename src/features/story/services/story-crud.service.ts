@@ -51,7 +51,10 @@ class StoryCrudService extends BaseModule implements IStoryCrudService {
       );
 
       if (!StoryRules.canCreateStory(todayCount)) {
-        this.throwTooManyRequestsError('Daily story creation limit reached. Try again tomorrow.');
+        this.throwTooManyRequestsError(
+          'DAILY_STORY_LIMIT_EXCEEDED',
+          'Daily story creation limit reached. Try again tomorrow.'
+        );
       }
 
       const story = await this.storyRepo.create({ ...input }, options);
@@ -101,14 +104,20 @@ class StoryCrudService extends BaseModule implements IStoryCrudService {
     const { slug, userId, status } = input;
     const story = await this.storyRepo.findBySlug(slug);
 
-    if (!story) this.throwNotFoundError('Story not found');
+    if (!story) this.throwNotFoundError('STORY_NOT_FOUND', 'Story not found.');
 
     if (!StoryRules.canEditStory(story, userId)) {
-      this.throwForbiddenError('You do not have permission to update this story.');
+      this.throwForbiddenError(
+        'FORBIDDEN',
+        'You do not have permission to update this story status.'
+      );
     }
 
     if (!StoryRules.isValidStatusTransition(story.status, status)) {
-      this.throwBadRequest(`Invalid status transition from ${story.status} to ${status}.`);
+      this.throwBadRequest(
+        'INVALID_STATUS_TRANSITION',
+        `Invalid status transition from '${story.status}' to '${status}'.`
+      );
     }
 
     const updated = await this.storyRepo.findOneAndUpdate({ slug }, { status }, { new: true });
@@ -126,7 +135,10 @@ class StoryCrudService extends BaseModule implements IStoryCrudService {
     const story = await this.storyRepo.updateStorySettingBySlug(slug, update);
 
     if (!story) {
-      this.throwNotFoundError('Unable to update settings: the story does not exist.');
+      this.throwNotFoundError(
+        'STORY_NOT_FOUND',
+        'Unable to update settings: the story does not exist.'
+      );
     }
 
     return story;
