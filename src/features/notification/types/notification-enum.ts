@@ -1,0 +1,41 @@
+enum NotificationType {
+  NEW_BRANCH = 'new_branch',
+  CHAPTER_UPVOTE = 'chapter_upvote',
+  STORY_MILESTONE = 'story_milestone',
+  STORY_CONTINUED = 'story_continued',
+  PR_OPENED = 'pr_opened',
+  PR_APPROVED = 'pr_approved',
+  PR_REJECTED = 'pr_rejected',
+  PR_MERGED = 'pr_merged',
+  PR_COMMENTED = 'pr_commented',
+  COMMENT_REPLY = 'comment_reply',
+  COMMENT_MENTION = 'comment_mention',
+  MENTION = 'mention',
+  NEW_FOLLOWER = 'new_follower',
+  BADGE_EARNED = 'badge_earned',
+  COLLAB_INVITATION = 'collab_invitation',
+  COLLAB_INVITATION_APPROVED = 'collab_invitation_approved',
+  COLLAB_INVITATION_REJECTED = 'collab_invitation_rejected',
+}
+
+const NOTIFICATION_TYPES = [
+  'new_branch',
+  'chapter_upvote',
+  'story_milestone',
+  'story_continued',
+  'pr_opened',
+  'pr_approved',
+  'pr_rejected',
+  'pr_merged',
+  'pr_commented',
+  'comment_reply',
+  'comment_mention',
+  'mention',
+  'new_follower',
+  'badge_earned',
+  'collab_invitation',
+  'collab_invitation_approved',
+  'collab_invitation_rejected',
+] as const;
+
+export { NotificationType, NOTIFICATION_TYPES };

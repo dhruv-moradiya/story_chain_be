@@ -1,6 +1,5 @@
 import { FastifyInstance } from 'fastify';
 import { validateWebhook } from '@middleware/validateRequest';
-import { validateAuth } from '@middleware/authHandler';
 import zodToJsonSchema from 'zod-to-json-schema';
 import {
   SearchUserByUsernameSchema,
@@ -12,6 +11,7 @@ import { container } from 'tsyringe';
 import { TOKENS } from '@/container';
 import { type UserController } from '../controllers/user.controller';
 import { type UserWebhookController } from '../controllers/user.webhook.controller';
+import { type AuthMiddlewareFactory } from '@/middlewares/factories';
 import { RateLimits } from '@/constants/rateLimits';
 import type {} from '@fastify/rate-limit';
 
@@ -40,6 +40,11 @@ export async function userRoutes(fastify: FastifyInstance) {
   const userWebhookController = container.resolve<UserWebhookController>(
     TOKENS.UserWebhookController
   );
+
+  const authMiddlewareFactory = container.resolve<AuthMiddlewareFactory>(
+    TOKENS.AuthMiddlewareFactory
+  );
+  const validateAuth = authMiddlewareFactory.createAuthMiddleware();
 
   // Clerk Webhook
   fastify.post(

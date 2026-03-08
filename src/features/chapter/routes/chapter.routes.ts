@@ -2,7 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { container } from 'tsyringe';
 import zodToJsonSchema from 'zod-to-json-schema';
 import { TOKENS } from '@/container';
-import { validateAuth } from '@middleware/authHandler';
+import { type AuthMiddlewareFactory } from '@/middlewares/factories';
 import { ChapterResponses } from '@schema/response.schema';
 import { ChapterSearchSchema } from '@schema/request/chapter.schema';
 import { type ChapterController } from '../controllers/chapter.controller';
@@ -27,6 +27,9 @@ export { ChapterApiRoutes };
 
 export async function chapterRoutes(fastify: FastifyInstance) {
   const chapterController = container.resolve<ChapterController>(TOKENS.ChapterController);
+
+  const authFactory = container.resolve<AuthMiddlewareFactory>(TOKENS.AuthMiddlewareFactory);
+  const validateAuth = authFactory.createAuthMiddleware();
 
   fastify.get(
     ChapterApiRoutes.Search,

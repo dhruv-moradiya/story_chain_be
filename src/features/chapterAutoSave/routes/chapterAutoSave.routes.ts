@@ -2,7 +2,7 @@ import { FastifyInstance } from 'fastify';
 import zodToJsonSchema from 'zod-to-json-schema';
 import { container } from 'tsyringe';
 import { TOKENS } from '@/container';
-import { validateAuth } from '@middleware/authHandler';
+import { type AuthMiddlewareFactory } from '@/middlewares/factories';
 import {
   AutoSaveContentSchemaVer2,
   ChapterAutoSaveSearchSchema,
@@ -27,6 +27,9 @@ enum ChapterAutoSaveApiRoutes {
 
 export async function chapterAutoSaveRoutes(fastify: FastifyInstance) {
   const controller = container.resolve<ChapterAutoSaveController>(TOKENS.ChapterAutoSaveController);
+
+  const authFactory = container.resolve<AuthMiddlewareFactory>(TOKENS.AuthMiddlewareFactory);
+  const validateAuth = authFactory.createAuthMiddleware();
 
   fastify.get(
     ChapterAutoSaveApiRoutes.Search,

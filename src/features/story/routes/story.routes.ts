@@ -3,9 +3,12 @@ import type {} from '@fastify/rate-limit';
 import zodToJsonSchema from 'zod-to-json-schema';
 import { container } from 'tsyringe';
 import { TOKENS } from '@/container';
-import { validateAuth } from '@middleware/authHandler';
-import { loadStoryContext, StoryRoleGuards } from '@middleware/rbac/storyRole.middleware';
-import { PlatformRoleGuards } from '@middleware/rbac/platformRole.middleware';
+import { StoryRoleGuards } from '@middleware/rbac/storyRole.middleware';
+import {
+  type AuthMiddlewareFactory,
+  type PlatformRoleMiddlewareFactory,
+  type StoryRoleMiddlewareFactory,
+} from '@/middlewares/factories';
 import { ChapterResponses, CollaboratorResponses, StoryResponses } from '@schema/response.schema';
 import {
   StoryAddChapterBySlugSchema,
@@ -59,6 +62,18 @@ export async function storyRoutes(fastify: FastifyInstance) {
   const storyCollaboratorController = container.resolve<StoryCollaboratorController>(
     TOKENS.StoryCollaboratorController
   );
+
+  const authFactory = container.resolve<AuthMiddlewareFactory>(TOKENS.AuthMiddlewareFactory);
+  const platformRoleFactory = container.resolve<PlatformRoleMiddlewareFactory>(
+    TOKENS.PlatformRoleMiddlewareFactory
+  );
+  const storyRoleFactory = container.resolve<StoryRoleMiddlewareFactory>(
+    TOKENS.StoryRoleMiddlewareFactory
+  );
+
+  const validateAuth = authFactory.createAuthMiddleware();
+  const PlatformRoleGuards = platformRoleFactory.createGuards();
+  const loadStoryContext = storyRoleFactory.createLoadContextBySlug();
 
   // ===============================
   // SUPER_ADMIN ROUTES

@@ -4,6 +4,7 @@ import {
   PR_LABELS,
   PR_STATUSES,
   PR_TYPES,
+  PR_TIMELINE_ACTIONS,
   PRStatus,
   PRType,
 } from '@features/pullRequest/types/pullRequest-enum';
@@ -432,6 +433,7 @@ const pullRequestSchema = new Schema<IPullRequestDoc>(
          */
         action: {
           type: String,
+          enum: PR_TIMELINE_ACTIONS,
           required: true,
         },
 

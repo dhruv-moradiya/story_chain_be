@@ -32,4 +32,43 @@ const PR_LABELS = [
   'good_first_pr',
 ] as const;
 
-export { PRType, PR_TYPES, PRStatus, PR_STATUSES, PRLabel, PR_LABELS };
+enum PRTimelineAction {
+  CREATED = 'created',
+  REVIEW_REQUESTED = 'review_requested',
+  REVIEW_SUBMITTED = 'review_submitted',
+  APPROVED = 'approved',
+  CHANGES_REQUESTED = 'changes_requested',
+  VOTED = 'voted',
+  AUTO_APPROVED = 'auto_approved',
+  MERGED = 'merged',
+  CLOSED = 'closed',
+  REOPENED = 'reopened',
+  MARKED_DRAFT = 'marked_draft',
+  READY_FOR_REVIEW = 'ready_for_review',
+}
+
+const PR_TIMELINE_ACTIONS = [
+  'created',
+  'review_requested',
+  'review_submitted',
+  'approved',
+  'changes_requested',
+  'voted',
+  'auto_approved',
+  'merged',
+  'closed',
+  'reopened',
+  'marked_draft',
+  'ready_for_review',
+] as const;
+
+export {
+  PRType,
+  PR_TYPES,
+  PRStatus,
+  PR_STATUSES,
+  PRLabel,
+  PR_LABELS,
+  PRTimelineAction,
+  PR_TIMELINE_ACTIONS,
+};

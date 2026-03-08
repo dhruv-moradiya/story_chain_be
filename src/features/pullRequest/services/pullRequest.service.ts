@@ -7,7 +7,7 @@ import { ICreatePullRequestService } from '@features/pullRequest/services/interf
 import { PullRequestRepository } from '@features/pullRequest/repositories/pullRequest.repository';
 import { PullRequestValidator } from '@features/pullRequest/validators/pullRequest.validator';
 import { PullRequestDiffService } from '@features/pullRequest/services/pullRequestDiff.service';
-import { PRStatus } from '@features/pullRequest/types/pullRequest-enum';
+import { PRStatus, PRTimelineAction } from '@features/pullRequest/types/pullRequest-enum';
 
 /**
  * Service for managing Pull Requests.
@@ -73,7 +73,7 @@ export class PullRequestService extends BaseModule implements ICreatePullRequest
       isDraft: isDraft ?? false,
       timeline: [
         {
-          action: 'CREATED',
+          action: PRTimelineAction.CREATED,
           performedBy: userId,
           performedAt: new Date(),
         },

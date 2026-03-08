@@ -2,7 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { container } from 'tsyringe';
 import zodToJsonSchema from 'zod-to-json-schema';
 import { TOKENS } from '@container/tokens';
-import { validateAuth } from '@middleware/authHandler';
+import { type AuthMiddlewareFactory } from '@/middlewares/factories';
 import { CreatePullRequestSchema } from '@schema/request/pullRequest.schema';
 import { PullRequestController } from '../controllers/pullRequest.controller';
 import { RateLimits } from '@/constants/rateLimits';
@@ -16,6 +16,9 @@ export async function pullRequestRoutes(fastify: FastifyInstance) {
   const pullRequestController = container.resolve<PullRequestController>(
     TOKENS.PullRequestController
   );
+
+  const authFactory = container.resolve<AuthMiddlewareFactory>(TOKENS.AuthMiddlewareFactory);
+  const validateAuth = authFactory.createAuthMiddleware();
 
   fastify.post(
     PullRequestApiRoutes.Create,

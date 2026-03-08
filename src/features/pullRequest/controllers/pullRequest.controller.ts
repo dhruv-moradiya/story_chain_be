@@ -26,7 +26,9 @@ export class PullRequestController extends BaseModule {
 
       return reply
         .code(HTTP_STATUS.CREATED.code)
-        .send(ApiResponse.success(pr, 'CREATED', HTTP_STATUS.CREATED.message, 'CREATED'));
+        .send(
+          ApiResponse.success({ _id: pr._id }, 'CREATED', HTTP_STATUS.CREATED.message, 'CREATED')
+        );
     }
   );
 }

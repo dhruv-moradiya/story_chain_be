@@ -1,11 +1,12 @@
 import { Document, Types } from 'mongoose';
 import { ID } from '@/types';
 
-import { PR_TYPES, PR_STATUSES, PR_LABELS } from './pullRequest-enum';
+import { PR_TYPES, PR_STATUSES, PR_LABELS, PR_TIMELINE_ACTIONS } from './pullRequest-enum';
 
 export type TPRType = (typeof PR_TYPES)[number];
 export type TPRStatus = (typeof PR_STATUSES)[number];
 export type TPRLabel = (typeof PR_LABELS)[number];
+export type TPRTimelineAction = (typeof PR_TIMELINE_ACTIONS)[number];
 
 // ===========================
 // INTERFACES
@@ -116,7 +117,7 @@ export interface IPullRequest {
 
   // Timeline (high-level tracking)
   timeline: Array<{
-    action: string;
+    action: TPRTimelineAction;
     performedBy?: string;
     performedAt: Date;
     // eslint-disable-next-line
