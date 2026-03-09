@@ -1,4 +1,4 @@
-import { IPullRequest, IPullRequestDoc } from '../types/pullRequest.types';
+import { IPullRequest, IPullRequestDoc, TPRLabel } from '../types/pullRequest.types';
 import { PullRequest } from '@models/pullRequest.model';
 import { BaseRepository } from '@utils/baseClass';
 import { PRStatus } from '../types/pullRequest-enum';
@@ -6,6 +6,10 @@ import { PRStatus } from '../types/pullRequest-enum';
 export class PullRequestRepository extends BaseRepository<IPullRequest, IPullRequestDoc> {
   constructor() {
     super(PullRequest);
+  }
+
+  async findUserPRs(userId: string): Promise<IPullRequest[]> {
+    return this.find({ authorId: userId });
   }
 
   /**
@@ -24,5 +28,9 @@ export class PullRequestRepository extends BaseRepository<IPullRequest, IPullReq
     chapterSlug: string
   ): Promise<IPullRequest | null> {
     return this.findOne({ authorId, chapterSlug, status: PRStatus.OPEN });
+  }
+
+  async updatePRLable(prId: string, labels: TPRLabel[]) {
+    return this.findOneAndUpdate({ _id: prId }, { labels });
   }
 }

@@ -48,7 +48,7 @@ class StoryQueryService extends BaseModule implements IStoryQueryService {
     const story = await this.storyRepo.findBySlug(slug, options);
 
     if (!story) {
-      this.throwNotFoundError('Story not found');
+      this.throwNotFoundError('STORY_NOT_FOUND', 'Requested story not found.');
     }
 
     return story;
@@ -113,7 +113,10 @@ class StoryQueryService extends BaseModule implements IStoryQueryService {
     const story = await this.storyRepo.findBySlug(slug);
 
     if (!story) {
-      this.throwNotFoundError('Story not found. Unable to generate chapter tree.');
+      this.throwNotFoundError(
+        'STORY_NOT_FOUND',
+        'Story not found. Unable to generate chapter tree.'
+      );
     }
 
     const pipeline = new ChapterPipelineBuilder().buildStoryChapterTreePreset(story.slug).build();
@@ -150,7 +153,7 @@ class StoryQueryService extends BaseModule implements IStoryQueryService {
     const stories = await this.storyRepo.aggregateStories<IStoryWithCreator>(storyPipeline);
 
     if (!stories.length) {
-      this.throwNotFoundError('Story not found');
+      this.throwNotFoundError('STORY_NOT_FOUND', 'Requested story overview not found.');
     }
 
     return stories[0];
@@ -163,7 +166,7 @@ class StoryQueryService extends BaseModule implements IStoryQueryService {
     const story = await this.storyRepo.findBySlug(slug);
 
     if (!story) {
-      this.throwNotFoundError('Story not found');
+      this.throwNotFoundError('STORY_NOT_FOUND', 'Story settings not found.');
     }
 
     return {
@@ -191,7 +194,7 @@ class StoryQueryService extends BaseModule implements IStoryQueryService {
     if (creator) {
       const user = await this.userService.getUserByUsername(creator);
       if (!user) {
-        this.throwNotFoundError(`User with username '${creator}' not found`);
+        this.throwNotFoundError('USER_NOT_FOUND', `User with username '${creator}' not found.`);
       }
       creatorId = user.clerkId;
     }

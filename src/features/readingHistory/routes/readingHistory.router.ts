@@ -2,7 +2,7 @@ import { container } from 'tsyringe';
 import { ReadingHistoryController } from '../controllers/readingHistory.controller';
 import { FastifyInstance } from 'fastify';
 import { TOKENS } from '@/container';
-import { validateAuth } from '@/middlewares/authHandler';
+import { type AuthMiddlewareFactory } from '@/middlewares/factories';
 import zodToJsonSchema from 'zod-to-json-schema';
 import {
   RecordHeartBeatSchema,
@@ -25,6 +25,9 @@ export async function readingHistoryRoutes(fastify: FastifyInstance) {
   const readingHistoryController = container.resolve<ReadingHistoryController>(
     TOKENS.ReadingHistoryController
   );
+
+  const authFactory = container.resolve<AuthMiddlewareFactory>(TOKENS.AuthMiddlewareFactory);
+  const validateAuth = authFactory.createAuthMiddleware();
 
   fastify.post(
     ReadingHistoryRoutes.RecordHeartBeat,

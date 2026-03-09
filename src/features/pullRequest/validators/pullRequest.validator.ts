@@ -45,7 +45,7 @@ export class PullRequestValidator extends BaseModule {
     // ── 1. Verify Story Exists ──────────────────────────────────────────────
     const story = await this.storyRepository.findBySlug(storySlug);
     if (!story) {
-      this.throwNotFoundError('Story not found', 'STORY_NOT_FOUND');
+      this.throwNotFoundError('STORY_NOT_FOUND', 'Story not found.');
     }
 
     // ── 2. Verify Collaborator Status ──────────────────────────────────────
@@ -74,7 +74,7 @@ export class PullRequestValidator extends BaseModule {
       // Must have a valid parent chapter that belongs to this story
       const parentChapter = await this.chapterRepository.findBySlug(parentChapterSlug);
       if (!parentChapter) {
-        this.throwNotFoundError('Parent chapter not found', 'PARENT_CHAPTER_NOT_FOUND');
+        this.throwNotFoundError('PARENT_CHAPTER_NOT_FOUND', 'Parent chapter not found.');
       }
       if (parentChapter.storySlug !== storySlug) {
         this.throwBadRequest(
@@ -86,7 +86,7 @@ export class PullRequestValidator extends BaseModule {
       // EDIT/DELETE: The chapter itself must exist
       const chapter = await this.chapterRepository.findBySlug(chapterSlug);
       if (!chapter) {
-        this.throwNotFoundError('Chapter not found', 'CHAPTER_NOT_FOUND');
+        this.throwNotFoundError('CHAPTER_NOT_FOUND', 'Chapter not found.');
       }
       if (chapter.storySlug !== storySlug) {
         this.throwBadRequest('INVALID_CHAPTER', 'Target chapter does not belong to this story.');

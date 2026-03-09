@@ -2,7 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { container } from 'tsyringe';
 import zodToJsonSchema from 'zod-to-json-schema';
 import { TOKENS } from '@container/tokens';
-import { validateAuth } from '@middleware/authHandler';
+import { type AuthMiddlewareFactory } from '@/middlewares/factories';
 import { createBookmarkSchema } from '../schema/bookmark.schema';
 import { BookmarkController } from '../controllers/bookmark.controller';
 import { BookmarkResponses } from '../schema/response/bookmark.response.schema';
@@ -15,6 +15,9 @@ const BookmarkApiRoutes = {
 
 export async function bookmarkRoutes(fastify: FastifyInstance) {
   const bookmarkController = container.resolve<BookmarkController>(TOKENS.BookmarkController);
+
+  const authFactory = container.resolve<AuthMiddlewareFactory>(TOKENS.AuthMiddlewareFactory);
+  const validateAuth = authFactory.createAuthMiddleware();
 
   fastify.post(
     BookmarkApiRoutes.Toggle,

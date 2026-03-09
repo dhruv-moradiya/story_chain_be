@@ -28,7 +28,7 @@ class StoryMediaService extends BaseModule implements IStoryMediaService {
     const story = await this.storyRepo.findOneAndUpdate({ slug }, { cardImage }, { new: true });
 
     if (!story) {
-      this.throwNotFoundError('Story not found. Unable to update card image.');
+      this.throwNotFoundError('STORY_NOT_FOUND', 'Story not found. Unable to update card image.');
     }
 
     return story.cardImage;
@@ -45,7 +45,7 @@ class StoryMediaService extends BaseModule implements IStoryMediaService {
     const story = await this.storyRepo.findOneAndUpdate({ slug }, { coverImage }, { new: true });
 
     if (!story) {
-      this.throwNotFoundError('Story not found. Unable to update cover image.');
+      this.throwNotFoundError('STORY_NOT_FOUND', 'Story not found. Unable to update cover image.');
     }
 
     return story.coverImage;
@@ -58,11 +58,14 @@ class StoryMediaService extends BaseModule implements IStoryMediaService {
     const story = await this.storyRepo.findBySlug(slug);
 
     if (!story) {
-      this.throwNotFoundError('Story not found');
+      this.throwNotFoundError('STORY_NOT_FOUND', 'The requested story was not found.');
     }
 
     if (!StoryRules.canEditStory(story, userId)) {
-      this.throwForbiddenError('You do not have permission to update this story.');
+      this.throwForbiddenError(
+        'FORBIDDEN',
+        'You do not have permission to update this story media.'
+      );
     }
 
     const { getSignatureURL } = await import('@/utils/cloudinary.js');

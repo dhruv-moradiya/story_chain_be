@@ -1,4 +1,7 @@
-import { TNotificationType } from '@features/notification/types/notification.types.js';
+import {
+  TNotificationType,
+  NotificationType,
+} from '@features/notification/types/notification.types.js';
 import { ID } from '@/types/index.js';
 import { AppError } from '@infrastructure/errors/app-error.js';
 import { ErrorCode } from '@infrastructure/errors/error-codes.js';
@@ -147,7 +150,7 @@ const URL_RESOLVERS: Record<ActionType, (ctx: NotificationContext) => string | n
 // ═══════════════════════════════════════════
 
 const NOTIFICATION_CONFIGS: Record<TNotificationType, NotificationTypeConfig> = {
-  NEW_BRANCH: {
+  [NotificationType.NEW_BRANCH]: {
     required: ['actor', 'storyName'],
     action: 'story',
     template: ({ actor, storyName }) => ({
@@ -156,7 +159,7 @@ const NOTIFICATION_CONFIGS: Record<TNotificationType, NotificationTypeConfig> = 
     }),
   },
 
-  CHAPTER_UPVOTE: {
+  [NotificationType.CHAPTER_UPVOTE]: {
     required: ['actor', 'chapterName'],
     action: 'chapter',
     template: ({ actor, chapterName }) => ({
@@ -165,7 +168,7 @@ const NOTIFICATION_CONFIGS: Record<TNotificationType, NotificationTypeConfig> = 
     }),
   },
 
-  STORY_MILESTONE: {
+  [NotificationType.STORY_MILESTONE]: {
     required: ['storyName'],
     action: 'story',
     template: ({ storyName }) => ({
@@ -174,7 +177,7 @@ const NOTIFICATION_CONFIGS: Record<TNotificationType, NotificationTypeConfig> = 
     }),
   },
 
-  STORY_CONTINUED: {
+  [NotificationType.STORY_CONTINUED]: {
     required: ['actor', 'storyName'],
     action: 'chapter',
     template: ({ actor, storyName }) => ({
@@ -183,7 +186,7 @@ const NOTIFICATION_CONFIGS: Record<TNotificationType, NotificationTypeConfig> = 
     }),
   },
 
-  PR_OPENED: {
+  [NotificationType.PR_OPENED]: {
     required: ['actor', 'storyName', 'pr'],
     action: 'pr',
     template: ({ actor, pr, storyName }) => ({
@@ -192,7 +195,7 @@ const NOTIFICATION_CONFIGS: Record<TNotificationType, NotificationTypeConfig> = 
     }),
   },
 
-  PR_APPROVED: {
+  [NotificationType.PR_APPROVED]: {
     required: ['actor', 'storyName', 'pr'],
     action: 'pr',
     template: ({ actor, pr, storyName }) => ({
@@ -201,7 +204,7 @@ const NOTIFICATION_CONFIGS: Record<TNotificationType, NotificationTypeConfig> = 
     }),
   },
 
-  PR_REJECTED: {
+  [NotificationType.PR_REJECTED]: {
     required: ['actor', 'pr'],
     action: 'pr',
     template: ({ actor, pr }) => ({
@@ -210,7 +213,7 @@ const NOTIFICATION_CONFIGS: Record<TNotificationType, NotificationTypeConfig> = 
     }),
   },
 
-  PR_MERGED: {
+  [NotificationType.PR_MERGED]: {
     required: ['actor', 'storyName', 'pr'],
     action: 'pr',
     template: ({ actor, pr, storyName }) => ({
@@ -219,7 +222,7 @@ const NOTIFICATION_CONFIGS: Record<TNotificationType, NotificationTypeConfig> = 
     }),
   },
 
-  PR_COMMENTED: {
+  [NotificationType.PR_COMMENTED]: {
     required: ['actor', 'pr'],
     action: 'pr',
     template: ({ actor, pr }) => ({
@@ -228,7 +231,7 @@ const NOTIFICATION_CONFIGS: Record<TNotificationType, NotificationTypeConfig> = 
     }),
   },
 
-  COMMENT_REPLY: {
+  [NotificationType.COMMENT_REPLY]: {
     required: ['actor', 'comment'],
     action: 'comment',
     template: ({ actor, comment }) => ({
@@ -237,7 +240,7 @@ const NOTIFICATION_CONFIGS: Record<TNotificationType, NotificationTypeConfig> = 
     }),
   },
 
-  COMMENT_MENTION: {
+  [NotificationType.COMMENT_MENTION]: {
     required: ['actor', 'storyName'],
     action: 'comment',
     template: ({ actor, storyName }) => ({
@@ -246,7 +249,7 @@ const NOTIFICATION_CONFIGS: Record<TNotificationType, NotificationTypeConfig> = 
     }),
   },
 
-  MENTION: {
+  [NotificationType.MENTION]: {
     required: ['actor', 'storyName'],
     action: 'story',
     template: ({ actor }) => ({
@@ -255,7 +258,7 @@ const NOTIFICATION_CONFIGS: Record<TNotificationType, NotificationTypeConfig> = 
     }),
   },
 
-  NEW_FOLLOWER: {
+  [NotificationType.NEW_FOLLOWER]: {
     required: ['actor', 'actorId'],
     action: 'user',
     template: ({ actor }) => ({
@@ -264,7 +267,7 @@ const NOTIFICATION_CONFIGS: Record<TNotificationType, NotificationTypeConfig> = 
     }),
   },
 
-  BADGE_EARNED: {
+  [NotificationType.BADGE_EARNED]: {
     required: ['badge'],
     action: 'badges',
     template: ({ badge }) => ({
@@ -273,7 +276,7 @@ const NOTIFICATION_CONFIGS: Record<TNotificationType, NotificationTypeConfig> = 
     }),
   },
 
-  COLLAB_INVITATION: {
+  [NotificationType.COLLAB_INVITATION]: {
     required: ['actor', 'storyName', 'role'],
     action: 'collaborators',
     template: ({ actor, storyName, role }) => ({
@@ -282,7 +285,7 @@ const NOTIFICATION_CONFIGS: Record<TNotificationType, NotificationTypeConfig> = 
     }),
   },
 
-  COLLAB_INVITATION_APPROVED: {
+  [NotificationType.COLLAB_INVITATION_APPROVED]: {
     required: ['actor', 'storyName'],
     action: 'collaborators',
     template: ({ actor, storyName }) => ({
@@ -291,7 +294,7 @@ const NOTIFICATION_CONFIGS: Record<TNotificationType, NotificationTypeConfig> = 
     }),
   },
 
-  COLLAB_INVITATION_REJECTED: {
+  [NotificationType.COLLAB_INVITATION_REJECTED]: {
     required: ['actor', 'storyName'],
     action: 'collaborators',
     template: ({ actor, storyName }) => ({
@@ -503,7 +506,7 @@ export const NotificationBuilders = {
     storySlug: string;
     role: string;
   }): NotificationBuildResult {
-    return NotificationFactory.build('COLLAB_INVITATION', {
+    return NotificationFactory.build(NotificationType.COLLAB_INVITATION, {
       actor: params.actorName,
       storyName: params.storyName,
       storySlug: params.storySlug,
@@ -515,7 +518,7 @@ export const NotificationBuilders = {
    * Build new follower notification
    */
   newFollower(params: { followerName: string; followerId: string }): NotificationBuildResult {
-    return NotificationFactory.build('NEW_FOLLOWER', {
+    return NotificationFactory.build(NotificationType.NEW_FOLLOWER, {
       actor: params.followerName,
       actorId: params.followerId,
     });
@@ -529,7 +532,7 @@ export const NotificationBuilders = {
     storyName: string;
     storySlug: string;
   }): NotificationBuildResult {
-    return NotificationFactory.build('NEW_BRANCH', {
+    return NotificationFactory.build(NotificationType.NEW_BRANCH, {
       actor: params.authorName,
       storyName: params.storyName,
       storySlug: params.storySlug,
@@ -545,7 +548,7 @@ export const NotificationBuilders = {
     storySlug: string;
     chapterSlug: string;
   }): NotificationBuildResult {
-    return NotificationFactory.build('CHAPTER_UPVOTE', {
+    return NotificationFactory.build(NotificationType.CHAPTER_UPVOTE, {
       actor: params.voterName,
       chapterName: params.chapterName,
       storySlug: params.storySlug,
@@ -557,7 +560,7 @@ export const NotificationBuilders = {
    * Build badge earned notification
    */
   badgeEarned(params: { badgeName: string }): NotificationBuildResult {
-    return NotificationFactory.build('BADGE_EARNED', {
+    return NotificationFactory.build(NotificationType.BADGE_EARNED, {
       badge: params.badgeName,
     });
   },

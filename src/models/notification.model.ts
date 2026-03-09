@@ -1,5 +1,6 @@
 import mongoose, { Schema } from 'mongoose';
 import { INotificationDoc } from '@features/notification/types/notification.types';
+import { NOTIFICATION_TYPES } from '@features/notification/types/notification-enum';
 
 // One notification collection handles EVERYTHING
 const notificationSchema = new Schema<INotificationDoc>({
@@ -8,33 +9,7 @@ const notificationSchema = new Schema<INotificationDoc>({
   // Type determines what kind of notification it is
   type: {
     type: String,
-    enum: [
-      // Chapter/Story notifications
-      'NEW_BRANCH',
-      'CHAPTER_UPVOTE',
-      'STORY_MILESTONE',
-      'STORY_CONTINUED',
-
-      // PR notifications
-      'PR_OPENED',
-      'PR_APPROVED',
-      'PR_REJECTED',
-      'PR_MERGED',
-      'PR_COMMENTED',
-
-      // Comment notifications
-      'COMMENT_REPLY',
-      'COMMENT_MENTION',
-
-      // User notifications
-      'MENTION',
-      'NEW_FOLLOWER',
-      'BADGE_EARNED',
-
-      'COLLAB_INVITATION',
-      'COLLAB_INVITATION_APPROVED',
-      'COLLAB_INVITATION_REJECTED',
-    ],
+    enum: NOTIFICATION_TYPES,
     required: true,
     index: true,
   },

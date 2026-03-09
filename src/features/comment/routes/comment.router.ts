@@ -2,7 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { container } from 'tsyringe';
 import zodToJsonSchema from 'zod-to-json-schema';
 import { TOKENS } from '@/container';
-import { validateAuth } from '@middleware/authHandler';
+import { type AuthMiddlewareFactory } from '@/middlewares/factories';
 import { CommentController } from '../controllers/comment.controller';
 import { CommentResponses } from '../schema/response/comment.response.schema';
 import {
@@ -24,6 +24,9 @@ const CommentApiRoutes = {
 
 export async function commentRoutes(fastify: FastifyInstance) {
   const commentController = container.resolve<CommentController>(TOKENS.CommentController);
+
+  const authFactory = container.resolve<AuthMiddlewareFactory>(TOKENS.AuthMiddlewareFactory);
+  const validateAuth = authFactory.createAuthMiddleware();
 
   fastify.post(
     CommentApiRoutes.Create,

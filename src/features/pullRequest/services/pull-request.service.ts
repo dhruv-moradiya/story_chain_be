@@ -1,13 +1,13 @@
 import { inject, singleton } from 'tsyringe';
 import { BaseModule } from '@utils/baseClass';
 import { TOKENS } from '@container/tokens';
-import { IPullRequestDto } from '@dto/pullRequest.dto';
+import { IPullRequestDto, IUpdatePRLableDTO } from '@dto/pullRequest.dto';
 import { IPullRequest } from '@features/pullRequest/types/pullRequest.types';
 import { ICreatePullRequestService } from '@features/pullRequest/services/interfaces/create-pull-request.service';
 import { PullRequestRepository } from '@features/pullRequest/repositories/pullRequest.repository';
 import { PullRequestValidator } from '@features/pullRequest/validators/pullRequest.validator';
-import { PullRequestDiffService } from '@features/pullRequest/services/pullRequestDiff.service';
-import { PRStatus } from '@features/pullRequest/types/pullRequest-enum';
+import { PullRequestDiffService } from '@/features/pullRequest/services/pull-request-diff.service';
+import { PRStatus, PRTimelineAction } from '@features/pullRequest/types/pullRequest-enum';
 
 /**
  * Service for managing Pull Requests.
@@ -73,7 +73,7 @@ export class PullRequestService extends BaseModule implements ICreatePullRequest
       isDraft: isDraft ?? false,
       timeline: [
         {
-          action: 'CREATED',
+          action: PRTimelineAction.CREATED,
           performedBy: userId,
           performedAt: new Date(),
         },
@@ -81,6 +81,21 @@ export class PullRequestService extends BaseModule implements ICreatePullRequest
     });
 
     this.logInfo(`PR created: "${pr.title}" [${prType}] by ${userId} for story ${storySlug}`);
+
+    return pr;
+  }
+
+  async updatePRLable(input: IUpdatePRLableDTO) {
+    const { prId, labels } = input;
+
+    const pr = await this.pullRequestRepository.updatePRLable(prId, labels);
+
+    if (!pr) {
+      this.throwNotFoundError(
+        'PULL_REQUEST_NOT_FOUND',
+        'The requested pull request was not found. Please check the ID and try again.'
+      );
+    }
 
     return pr;
   }

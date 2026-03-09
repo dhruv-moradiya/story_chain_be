@@ -61,6 +61,7 @@ export const TOKENS = {
   FollowService: Symbol.for('FollowService'),
   NotificationService: Symbol.for('NotificationService'),
   PullRequestService: Symbol.for('PullRequestService'),
+  PullRequestQueryService: Symbol.for('PullRequestQueryService'),
   PullRequestDiffService: Symbol.for('PullRequestDiffService'),
   PullRequestValidator: Symbol.for('PullRequestValidator'),
   PrCommentService: Symbol.for('PrCommentService'),
