@@ -2,6 +2,10 @@ import { z } from 'zod';
 import { PR_LABELS } from '@/features/pullRequest/types/pullRequest-enum';
 import { ObjectIdSchema } from '@utils/index';
 
+const PullRequestIdSchema = z.object({
+  pullRequestId: ObjectIdSchema(),
+});
+
 const BasePullRequestSchema = z.object({
   title: z
     .string()
@@ -86,6 +90,7 @@ const UpdatePRParamsSchema = z.object({
   id: ObjectIdSchema(),
 });
 
+type TPullRequestIdSchema = z.infer<typeof PullRequestIdSchema>;
 type TCreateNewChapterPRSchema = z.infer<typeof CreateNewChapterPRSchema>;
 type TCreateEditChapterPRSchema = z.infer<typeof CreateEditChapterPRSchema>;
 type TCreateDeleteChapterPRSchema = z.infer<typeof CreateDeleteChapterPRSchema>;
@@ -94,6 +99,7 @@ type TUpdatePRLabelsSchema = z.infer<typeof UpdatePRLabelsSchema>;
 type TUpdatePRParamsSchema = z.infer<typeof UpdatePRParamsSchema>;
 
 export {
+  PullRequestIdSchema,
   CreatePullRequestSchema,
   CreateNewChapterPRSchema,
   CreateEditChapterPRSchema,
@@ -103,6 +109,7 @@ export {
 };
 
 export type {
+  TPullRequestIdSchema,
   TCreatePullRequestSchema,
   TCreateNewChapterPRSchema,
   TCreateEditChapterPRSchema,

@@ -2,10 +2,15 @@ import { IPullRequest, IPullRequestDoc, TPRLabel } from '../types/pullRequest.ty
 import { PullRequest } from '@models/pullRequest.model';
 import { BaseRepository } from '@utils/baseClass';
 import { PRStatus } from '../types/pullRequest-enum';
+import { ID } from '@/types';
 
 export class PullRequestRepository extends BaseRepository<IPullRequest, IPullRequestDoc> {
   constructor() {
     super(PullRequest);
+  }
+
+  async existsPRById(_id: ID) {
+    return this.existsById(_id);
   }
 
   async findUserPRs(userId: string): Promise<IPullRequest[]> {

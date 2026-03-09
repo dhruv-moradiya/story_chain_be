@@ -73,10 +73,15 @@ class StoryQueryService extends BaseModule implements IStoryQueryService {
    * Get all draft stories for a user
    */
   async getDraftsByUserId(userId: string, options: IOperationOptions = {}): Promise<IStory[]> {
-    return this.storyRepo.findMany(
-      { creatorId: userId, status: StoryStatus.DRAFT },
-      {},
-      { ...options, limit: 100 }
+    return this.cacheService.getOrSet(
+      CacheKeyBuilder.userDrafts(userId),
+      () =>
+        this.storyRepo.findMany(
+          { creatorId: userId, status: StoryStatus.DRAFT },
+          {},
+          { ...options, limit: 100 }
+        ),
+      { ttlKey: 'USER_DRAFTS' }
     );
   }
 
@@ -84,10 +89,11 @@ class StoryQueryService extends BaseModule implements IStoryQueryService {
    * Get all published stories
    */
   async getPublishedStories(options: IOperationOptions = {}): Promise<IStory[]> {
-    return this.storyRepo.findMany(
-      { status: StoryStatus.PUBLISHED },
-      {},
-      { ...options, limit: 50 }
+    return this.cacheService.getOrSet(
+      CacheKeyBuilder.storyList('published'),
+      () =>
+        this.storyRepo.findMany({ status: StoryStatus.PUBLISHED }, {}, { ...options, limit: 50 }),
+      { ttlKey: 'STORY_LIST_PUBLISHED' }
     );
   }
 
@@ -96,7 +102,11 @@ class StoryQueryService extends BaseModule implements IStoryQueryService {
    */
   async getNewStories(options: IOperationOptions = {}): Promise<IStory[]> {
     const pipeline = new StoryPipelineBuilder().createdWithinLastDays(7).filterPublished().build();
-    return this.storyRepo.aggregateStories(pipeline, options);
+    return this.cacheService.getOrSet(
+      CacheKeyBuilder.storyList('new'),
+      () => this.storyRepo.aggregateStories(pipeline, options),
+      { ttlKey: 'STORY_LIST_NEW' }
+    );
   }
 
   /**
@@ -110,75 +120,83 @@ class StoryQueryService extends BaseModule implements IStoryQueryService {
    * Get story tree by slug (throws if story not found)
    */
   async getStoryTreeBySlug(slug: string): Promise<IStoryTreeResult> {
-    const story = await this.storyRepo.findBySlug(slug);
+    return this.cacheService.getOrSet(
+      CacheKeyBuilder.storyTree(slug),
+      async () => {
+        const story = await this.storyRepo.findBySlug(slug);
 
-    if (!story) {
-      this.throwNotFoundError(
-        'STORY_NOT_FOUND',
-        'Story not found. Unable to generate chapter tree.'
-      );
-    }
+        if (!story) {
+          this.throwNotFoundError('Story not found. Unable to generate chapter tree.');
+        }
 
-    const pipeline = new ChapterPipelineBuilder().buildStoryChapterTreePreset(story.slug).build();
+        const pipeline = new ChapterPipelineBuilder()
+          .buildStoryChapterTreePreset(story.slug)
+          .build();
 
-    const chapters = await this.chapterRepo.aggregateChapters(pipeline);
+        const chapters = await this.chapterRepo.aggregateChapters(pipeline);
 
-    if (!chapters || chapters.length === 0) {
-      return {
-        slug: story.slug,
-        chapters: [],
-      };
-    }
+        if (!chapters || chapters.length === 0) {
+          return {
+            slug: story.slug,
+            chapters: [],
+          };
+        }
 
-    const tree = buildChapterTree(chapters);
+        const tree = buildChapterTree(chapters);
 
-    return {
-      slug: story.slug,
-      chapters: tree,
-    };
+        return {
+          slug: story.slug,
+          chapters: tree,
+        };
+      },
+      { ttlKey: 'STORY_TREE' }
+    );
   }
 
   /**
    * Get story overview with collaborators (throws if not found)
    */
   async getStoryOverviewBySlug(slug: string): Promise<IStoryWithCreator> {
-    // const chapterPipeline = new ChapterPipelineBuilder()
-    //   .getByStorySlug(slug)
-    //   .sortByCreatedAt()
-    //   .limit(4)
-    //   .build();
+    return this.cacheService.getOrSet(
+      CacheKeyBuilder.storyOverview(slug),
+      async () => {
+        const storyPipeline = new StoryPipelineBuilder().getStoryOverviewPreset(slug).build();
 
-    const storyPipeline = new StoryPipelineBuilder().getStoryOverviewPreset(slug).build();
+        const stories = await this.storyRepo.aggregateStories<IStoryWithCreator>(storyPipeline);
 
-    const stories = await this.storyRepo.aggregateStories<IStoryWithCreator>(storyPipeline);
+        if (!stories.length) {
+          this.throwNotFoundError('Story not found');
+        }
 
-    if (!stories.length) {
-      this.throwNotFoundError('STORY_NOT_FOUND', 'Requested story overview not found.');
-    }
-
-    return stories[0];
+        return stories[0];
+      },
+      { ttlKey: 'STORY_OVERVIEW' }
+    );
   }
 
   /**
    * Get story settings with images by slug (throws if not found)
    */
   async getStorySettingsBySlug(slug: string): Promise<IStorySettingsWithImages> {
-    const story = await this.storyRepo.findBySlug(slug);
+    return this.cacheService.getOrSet(
+      CacheKeyBuilder.storySettings(slug),
+      async () => {
+        const story = await this.storyRepo.findBySlug(slug);
 
-    if (!story) {
-      this.throwNotFoundError('STORY_NOT_FOUND', 'Story settings not found.');
-    }
+        if (!story) {
+          this.throwNotFoundError('Story not found');
+        }
 
-    return {
-      settings: story.settings,
-      coverImage: story.coverImage,
-      cardImage: story.cardImage,
-    };
+        return {
+          settings: story.settings,
+          coverImage: story.coverImage,
+          cardImage: story.cardImage,
+        };
+      },
+      { ttlKey: 'STORY_SETTINGS' }
+    );
   }
 
-  /**
-   * Search stories by title
-   */
   /**
    * Search stories with optional filters
    */

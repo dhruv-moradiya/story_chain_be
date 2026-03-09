@@ -377,10 +377,7 @@ import { IUserRepository } from '../interfaces/user-repository.interface';
 
 @singleton()
 @registry([{ token: TOKENS.UserRepository, useClass: UserRepository }])
-export class UserRepository
-  extends BaseRepository<IUser, IUser>
-  implements IUserRepository
-{
+export class UserRepository extends BaseRepository<IUser, IUser> implements IUserRepository {
   constructor() {
     super(User);
   }
@@ -700,14 +697,14 @@ server.ts
 
 ## Quick Reference
 
-| Layer | Location | Naming | DI Decorators |
-|-------|----------|--------|---------------|
-| Tokens | `container/tokens.ts` | `TOKENS.XxxService` | N/A |
-| Repository | `features/xxx/repositories/` | `xxx.repository.ts` | `@singleton`, `@registry` |
-| Service | `features/xxx/services/` | `xxx.service.ts` | `@singleton`, `@registry`, `@inject` |
-| Controller | `features/xxx/controllers/` | `xxx.controller.ts` | `@singleton`, `@registry`, `@inject` |
-| Routes | `features/xxx/routes/` | `xxx.routes.ts` | Uses `container.resolve()` |
-| Interface | `features/xxx/interfaces/` | `xxx.interface.ts` | N/A |
+| Layer      | Location                     | Naming              | DI Decorators                        |
+| ---------- | ---------------------------- | ------------------- | ------------------------------------ |
+| Tokens     | `container/tokens.ts`        | `TOKENS.XxxService` | N/A                                  |
+| Repository | `features/xxx/repositories/` | `xxx.repository.ts` | `@singleton`, `@registry`            |
+| Service    | `features/xxx/services/`     | `xxx.service.ts`    | `@singleton`, `@registry`, `@inject` |
+| Controller | `features/xxx/controllers/`  | `xxx.controller.ts` | `@singleton`, `@registry`, `@inject` |
+| Routes     | `features/xxx/routes/`       | `xxx.routes.ts`     | Uses `container.resolve()`           |
+| Interface  | `features/xxx/interfaces/`   | `xxx.interface.ts`  | N/A                                  |
 
 ---
 

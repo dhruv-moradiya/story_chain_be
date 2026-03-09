@@ -26,6 +26,7 @@ export type CacheOperation =
   | 'overview'
   | 'settings'
   | 'drafts'
+  | 'role'
   | 'unread';
 
 /**
@@ -431,7 +432,15 @@ export class CacheKeyBuilder {
    * Pattern to invalidate all search results
    * @returns Wildcard pattern for search results
    */
-  static invalidateAllSearchResults(): string {
-    return this.pattern({ entity: 'search' });
+  /**
+   * Cache key for user role in a story
+   * @example "sc:collaborator:role:storySlug=my-adventure:userId=user_123"
+   */
+  static collaboratorRole(userId: string, storySlug: string): string {
+    return this.build({
+      entity: 'collaborator',
+      operation: 'role',
+      identifiers: { userId, storySlug },
+    });
   }
 }
