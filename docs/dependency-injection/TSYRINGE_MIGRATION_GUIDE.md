@@ -26,6 +26,7 @@ A comprehensive guide for converting your entire application to use TSyringe dep
 Dependency Injection (DI) is a design pattern where dependencies are "injected" into a class rather than created inside it.
 
 **Without DI:**
+
 ```typescript
 class UserService {
   private readonly userRepo = new UserRepository(); // Hard-coded dependency
@@ -33,23 +34,22 @@ class UserService {
 ```
 
 **With DI:**
+
 ```typescript
 class UserService {
-  constructor(
-    @inject(TOKENS.UserRepository) private readonly userRepo: UserRepository
-  ) {}
+  constructor(@inject(TOKENS.UserRepository) private readonly userRepo: UserRepository) {}
 }
 ```
 
 ### Why Use TSyringe?
 
-| Benefit | Description |
-|---------|-------------|
-| **Testability** | Easily mock dependencies in unit tests |
-| **Loose Coupling** | Classes don't know how to create their dependencies |
-| **Single Responsibility** | Each class focuses on its own logic |
-| **Configurability** | Swap implementations without changing code |
-| **Lifecycle Management** | Control singleton vs transient instances |
+| Benefit                   | Description                                         |
+| ------------------------- | --------------------------------------------------- |
+| **Testability**           | Easily mock dependencies in unit tests              |
+| **Loose Coupling**        | Classes don't know how to create their dependencies |
+| **Single Responsibility** | Each class focuses on its own logic                 |
+| **Configurability**       | Swap implementations without changing code          |
+| **Lifecycle Management**  | Control singleton vs transient instances            |
 
 ---
 
@@ -71,13 +71,13 @@ export const userService = new UserService(); // Exported singleton
 
 ### Current Statistics
 
-| Component | Count | Status |
-|-----------|-------|--------|
-| Services | 27 | Need migration |
-| Controllers | 19 | Need migration |
-| Repositories | 9 | Need migration |
-| Routes | 18 | Minor updates |
-| Config Services | 3 | ✅ Already using TSyringe |
+| Component       | Count | Status                    |
+| --------------- | ----- | ------------------------- |
+| Services        | 27    | Need migration            |
+| Controllers     | 19    | Need migration            |
+| Repositories    | 9     | Need migration            |
+| Routes          | 18    | Minor updates             |
+| Config Services | 3     | ✅ Already using TSyringe |
 
 ### Problems with Current Approach
 
@@ -555,7 +555,7 @@ export interface IStoryService {
 
 // Register factory that returns the implementation
 container.register<IStoryService>(TOKENS.StoryService, {
-  useFactory: (c) => c.resolve(StoryServiceImpl)
+  useFactory: (c) => c.resolve(StoryServiceImpl),
 });
 ```
 
@@ -681,7 +681,7 @@ private readonly userService: UserService
 // ✅ Consistent order
 @singleton()
 @registry([{ token: TOKENS.UserService, useClass: UserService }])
-export class UserService { }
+export class UserService {}
 ```
 
 ### 4. Use Interfaces for External Dependencies
@@ -755,16 +755,20 @@ import './features/user/user.controller';
 Recommended order to minimize breaking changes:
 
 ### Phase 1: Foundation (Do First)
+
 1. ✅ Expand `tokens.ts` with all symbols
 2. ✅ Update `container.ts` structure
 
 ### Phase 2: Repositories (No Dependencies)
+
 3. Migrate all repository files (they have no service dependencies)
 
 ### Phase 3: Utility Services
+
 4. Migrate utility services (`cache.service`, `email.service`, etc.)
 
 ### Phase 4: Feature Services (Bottom-Up)
+
 5. Start with services that have **fewest dependencies**:
    - `PlatformRoleService`
    - `BookmarkService`
@@ -782,12 +786,15 @@ Recommended order to minimize breaking changes:
    - `PullRequestService`
 
 ### Phase 5: Controllers
+
 8. Migrate all controllers (after their services are migrated)
 
 ### Phase 6: Routes
+
 9. Update route files to resolve from container
 
 ### Phase 7: Cleanup
+
 10. Remove all `export const xxxService = new XxxService()` exports
 11. Run tests and fix any issues
 12. Update documentation
@@ -865,12 +872,12 @@ const userService = container.resolve<UserService>(TOKENS.UserService);
 
 ## Summary
 
-| What | How |
-|------|-----|
-| Register a class | `@singleton()` + `@registry([{ token, useClass }])` |
-| Inject a dependency | `@inject(TOKENS.Xxx)` in constructor |
-| Handle circular deps | Use `delay()` or method injection |
-| Resolve manually | `container.resolve<Type>(TOKENS.Xxx)` |
-| Test with mocks | `container.registerInstance(TOKEN, mock)` |
+| What                 | How                                                 |
+| -------------------- | --------------------------------------------------- |
+| Register a class     | `@singleton()` + `@registry([{ token, useClass }])` |
+| Inject a dependency  | `@inject(TOKENS.Xxx)` in constructor                |
+| Handle circular deps | Use `delay()` or method injection                   |
+| Resolve manually     | `container.resolve<Type>(TOKENS.Xxx)`               |
+| Test with mocks      | `container.registerInstance(TOKEN, mock)`           |
 
 This migration will make your codebase more maintainable, testable, and flexible!

@@ -17,6 +17,7 @@ export const CACHE_TTL = {
   STORY_OVERVIEW: 60 * 30, // 30 minutes
   STORY_TREE: 60 * 15, // 15 minutes
   COLLABORATOR_LIST: 60 * 15, // 15 minutes
+  COLLABORATOR_ROLE: 60 * 5, // 5 minutes
 
   // ═══════════════════════════════════════════
   // DYNAMIC LISTS - Updated frequently

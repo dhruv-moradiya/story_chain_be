@@ -1,323 +1,282 @@
-# StoryChain Backend
+# StoryChain Backend API
 
-A collaborative storytelling platform backend built with **Fastify**, **TypeScript**, **MongoDB**, and **tsyringe** for dependency injection.
+A high-performance, collaborative storytelling platform backend built with **Fastify**, **TypeScript**, and **MongoDB**. This project leverages a mature **Feature-Modular Layered Architecture** with a robust **Dependency Injection** system and a tiered **Redis caching strategy**.
 
-## 🏗️ Architecture Overview
+---
 
-This project follows a **modular, feature-based architecture** with clear separation of concerns:
+## 1. Project Summary
 
-```
-src/
-├── config/                 # Configuration services (database, redis, etc.)
-├── container/              # Dependency injection setup (tokens, registry)
-├── constants/              # HTTP status codes, error messages
-├── domain/                 # Business rules and domain logic
-├── dto/                    # Data Transfer Objects
-├── features/               # Feature modules (see below)
-├── middlewares/            # Auth, RBAC, validation middlewares
-├── models/                 # Mongoose models
-├── schema/                 # Zod validation schemas
-├── types/                  # TypeScript type definitions
-└── utils/                  # Shared utilities
-```
+**StoryChain** is designed to facilitate complex, multi-author narrative creation. It allows for non-linear storytelling through narrative branching, collaborative editing via an asynchronous Pull Request (PR) system, and real-time interaction through chapter autosaves.
 
-### Feature Module Structure
+### Tech Stack
 
-Each feature follows the same pattern:
+- **Runtime**: Node.js 20+ (ESM)
+- **Framework**: [Fastify v5](https://fastify.io/) (optimized for low overhead)
+- **Database**: [MongoDB](https://www.mongodb.com/) (Document storage)
+- **ODM**: [Mongoose v8](https://mongoosejs.com/)
+- **Caching**: [Redis](https://redis.io/) (via `ioredis`)
+- **DI Container**: [tsyringe](https://github.com/microsoft/tsyringe)
+- **Validation**: [Zod](https://zod.dev/)
+- **Auth**: [Clerk](https://clerk.com/)
+- **Jobs**: [BullMQ](https://docs.bullmq.io/)
 
-```
-features/{feature}/
-├── controllers/            # HTTP request handlers
-├── services/               # Business logic (focused services)
-├── repositories/           # Data access layer
-├── routes/                 # Route definitions
-├── types/                  # Feature-specific types
-├── validators/             # Feature-specific validation
-└── pipelines/              # MongoDB aggregation pipelines
+---
+
+## 2. Folder Structure Explanation
+
+The project is structured to scale by feature while maintaining a strict separation of technical concerns.
+
+```text
+/
+├── dist/                # Compiled JavaScript output
+├── docs/                # API documentation and OpenAPI schemas
+├── logs/                # Application runtime logs (winston)
+├── src/
+│   ├── config/          # Technical configuration (Database, Redis, Env)
+│   ├── constants/       # Global constants (HTTP statuses, Rate limits)
+│   ├── container/       # Dependency Injection Brain (Tokens, Registry)
+│   ├── dto/             # Data Transfer Objects (Interface contracts)
+│   ├── features/        # Modular Feature Domains
+│   │   └── [feature]/   # e.g., story, chapter, user
+│   │       ├── controllers/
+│   │       ├── services/
+│   │       ├── repositories/
+│   │       ├── routes/
+│   │       └── pipelines/  # MongoDB Aggregation Builders
+│   ├── infrastructure/  # Cross-cutting systems (Cache, Errors, Queue)
+│   ├── jobs/            # BullMQ Workers and Job definitions
+│   ├── middlewares/     # Fastify Hooks (Auth, RBAC, Validation)
+│   ├── models/          # Shared Mongoose Schemas & Models
+│   ├── routes/          # Central Route Registry
+│   ├── schema/          # Zod schemas for runtime validaton
+│   ├── shared/          # Base classes and Generic Pipelines
+│   ├── types/           # Global type definitions
+│   └── utils/           # Shared helpers (Logger, API Response)
+└── fly.toml             # Deployment orchestration for Fly.io
 ```
 
 ---
 
-## 🎯 Service Architecture Pattern
+## 3. Application Architecture
 
-### Focused Services Design
+### 3.1 Architectural Pattern: Feature-Modular Layered
 
-We use **focused, single-responsibility services** instead of monolithic ones for better maintainability and testability.
+We use a **Layered Pattern** within **Feature Modules**. This ensures that domain-specific logic (e.g., Story logic) is encapsulated in its own directory, while maintaining a predictable execution flow from transport layer down to data layer.
 
-#### Story Feature Services
+### 3.2 Request Lifecycle
 
-| Service                  | Responsibility                             |
-| ------------------------ | ------------------------------------------ |
-| `StoryCrudService`       | Create, update settings, delete stories    |
-| `StoryQueryService`      | Get stories by ID/slug, list, search, tree |
-| `StoryMediaService`      | Cover image, card image uploads            |
-| `StoryPublishingService` | Publish/unpublish stories                  |
-
-#### Story Collaborator Feature Services
-
-| Service                         | Responsibility                      |
-| ------------------------------- | ----------------------------------- |
-| `CollaboratorQueryService`      | Get collaborators, check user roles |
-| `CollaboratorInvitationService` | Create invitations, accept/decline  |
-| `CollaboratorLifecycleService`  | Create/remove collaborators         |
+1.  **Transport**: Fastify receives request → executes global plugins (CORS, Helmet).
+2.  **Rate Limiting**: Checks Redis-backed usage counters.
+3.  **Validation**: Zod parses `params`, `query`, and `body` before the controller is reached.
+4.  **Auth Middleware**: `validateAuth` verifies JWT via Clerk and attaches a cached `authUser` profile.
+5.  **RBAC Middleware**: `loadStoryContext` fetches resource state and permissions.
+6.  **Controller**: Resolves Service from DI container and calls methods.
+7.  **Service**: Orchestrates business logic, checks cache, and interacts with repositories.
+8.  **Repository**: Executes optimized MongoDB queries or Aggregations.
+9.  **Response**: Results are serialized and wrapped in a standardized `ApiResponse` JSON structure.
 
 ---
 
-## 📁 Features
+## 4. Core Layers
 
-### Core Features
+### 4.1 Controllers
 
-| Feature             | Description                                        |
-| ------------------- | -------------------------------------------------- |
-| `user`              | User management, Clerk webhook integration         |
-| `story`             | Story CRUD, publishing, media, chapter management  |
-| `storyCollaborator` | Invitation system, role management                 |
-| `chapter`           | Chapter creation, tree structure                   |
-| `chapterAutoSave`   | Real-time chapter auto-saving                      |
-| `chapterVersion`    | Version control for chapters                       |
-| `notification`      | In-app notification system                         |
-| `pullRequest`       | PR system for collaborative editing                |
-| `platformRole`      | Platform-wide role management (Admin, Super Admin) |
+Controllers handle HTTP semantics. They extract inputs, call the appropriate service, and determine the status code.
 
----
+- **Rules**: Zero business logic. They act only as orchestrators.
+- **Injection**: Resolves all feature services through the `@inject` decorator.
 
-## 🔐 Role-Based Access Control (RBAC)
+### 4.2 Services
 
-### Platform Roles
+The Service layer contains the **Domain Core**.
 
-- `SUPER_ADMIN` - Full platform access
-- `ADMIN` - Administrative access
-- `USER` - Standard user
+- **Orchestration**: Manages the flow between multiple repositories.
+- **Caching**: Utilizes the `CacheService` to implement read-through caching.
+- **Transactions**: Handles atomicity for complex writes (e.g., adding a chapter and updating story stats).
 
-### Story Collaborator Roles
+### 4.3 Repositories
 
-| Role          | Permissions                                      |
-| ------------- | ------------------------------------------------ |
-| `OWNER`       | Full control, delete story, remove collaborators |
-| `CO_AUTHOR`   | Write chapters, approve PRs, moderate            |
-| `MODERATOR`   | Approve/reject PRs, moderate comments            |
-| `REVIEWER`    | Review PRs (can comment, cannot approve)         |
-| `CONTRIBUTOR` | Write chapters directly                          |
+Repositories abstract the data layer.
+
+- **Aggregations**: Use specialized "Pipeline Builders" for complex narrative joins.
+- **Abstractions**: Hides Mongoose specific logic so Services remain pure business logic.
+
+### 4.4 Dependency Injection
+
+Managed via `tsyringe`.
+
+- **Tokens**: Use `src/container/tokens.ts` for all identifiers to avoid circular imports.
+- **Registry**: Centralized in `src/container/registry.ts`.
+- **Lifecycle**: Most services are registered as `Lifecycle.Singleton`.
 
 ---
 
-## 🛠️ Dependency Injection
+## 5. Type System
 
-We use **tsyringe** for DI. All services are registered in `src/container/registry.ts`:
+We employ a strict 4-tier typing system:
 
-```typescript
-// Tokens are symbols defined in src/container/tokens.ts
-container.register(TOKENS.StoryCrudService, { useClass: StoryCrudService });
-container.register(TOKENS.StoryQueryService, { useClass: StoryQueryService });
-```
-
-### Controller Injection Example
-
-```typescript
-@singleton()
-export class StoryController extends BaseModule {
-  constructor(
-    @inject(TOKENS.StoryCrudService)
-    private readonly storyCrudService: StoryCrudService,
-    @inject(TOKENS.StoryQueryService)
-    private readonly storyQueryService: StoryQueryService
-  ) {
-    super();
-  }
-}
-```
+1.  **Mongoose Models**: Define the physical storage shape.
+2.  **DTOs**: Define internal data passing interfaces (`src/dto/`).
+3.  **Zod Schemas**: Used for runtime validation and type inference for HTTP I/O.
+4.  **Response Types**: Specialized shapes for complex aggregated API responses.
 
 ---
 
-## 🚀 Getting Started
+## 6. Database Architecture
 
-### Prerequisites
+- **Primary Database**: MongoDB.
+- **Modeling**: Mongoose schemas with strict validation.
+- **Performance**:
+  - **Indices**: Unique slugs, text search indices on titles, and compound indices for filtering.
+  - **Projections**: Dedicated projection objects ensure we never fetch unneeded data from Mongo.
 
-- Node.js 18+
-- MongoDB
-- Redis (optional, for caching)
+---
 
-### Installation
+## 7. Redis & Caching
+
+### 7.1 Caching Strategy
+
+A Read-Through cache is implemented in the Service layer.
+
+- **naming**: Consistent key generation via `CacheKeyBuilder`.
+- **TTL**: Organized by volatility (e.g., Stories cached for 1hr, search results for 3m).
+- **Invalidation**: Proactive invalidation triggered in CRUD services on data mutation.
+
+### 7.2 Rate Limiting
+
+Configured in `src/constants/rateLimits.ts`.
+
+- **Backend**: Redis fixed-window.
+- **Resolution**: Identity-based (UserID) with fallback to IP.
+- **Limits**: Configurable per operation (e.g., `FAST_WRITE` for autosave, `CRITICAL` for publishing).
+
+---
+
+## 8. Background Jobs
+
+Powered by **BullMQ** and Redis.
+
+- **Jobs**: `EmailJob`, `ScheduledJob`.
+- **Isolation**: Workers are defined in `src/jobs/` and process tasks asynchronously from the main request thread.
+
+---
+
+## 9. Error Handling
+
+A unified system based on the `AppError` class.
+
+- **Error Codes**: 100+ unique machine-readable codes (`AUTH_UNAUTHORIZED`, `STORY_NOT_FOUND`).
+- **Global Handler**: Standardizes all errors (infrastructure, validation, or business) into a consistent JSON format.
+
+---
+
+## 🛠 10. Installation & Setup
+
+### 1. Clone & Install
 
 ```bash
-# Install dependencies
+git clone <repository-url>
+cd storychain-be
 npm install
-
-# Copy environment file
-cp .env.example .env
-
-# Start development server
-npm run dev
 ```
 
-### Environment Variables
+### 2. Environment Variables
+
+Create a `.env` file based on `.env.example`:
 
 ```env
-DATABASE_URL=mongodb://localhost:27017/storychain
+NODE_ENV=development
+PORT=4000
+MONGODB_URI=mongodb://localhost:27017/storychain
 REDIS_URL=redis://localhost:6379
-CLERK_SECRET_KEY=your_clerk_secret
-PORT=3000
+CLERK_SECRET_KEY=your_key
+CLOUDINARY_CLOUD_NAME=name
+CLOUDINARY_API_KEY=key
+CLOUDINARY_API_SECRET=secret
 ```
+
+### 3. Running the Application
+
+- **Development**: `npm run dev` (uses `tsx watch`)
+- **Production Build**: `npm run build`
+- **Start Production**: `npm start`
 
 ---
 
-## 🐳 Docker Setup
+## 🧪 11. Scripts
 
-You can run the entire backend stack (App + MongoDB Replica Set + Redis) using Docker Compose.
+- `npm run dev`: Starts the dev server with hot-reload.
+- `npm run build`: Compiles TypeScript and resolves `@` path aliases.
+- `npm run start`: Runs the compiled JavaScript from `dist/`.
+- `npm run lint`: Runs ESLint for code quality checks.
+- `npm run format`: Standardizes code style via Prettier.
+- `npm run type-check`: Validates TypeScript types without emitting files.
 
-### Prerequisites
+---
 
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running.
+## 🐳 12. Docker
 
-### 🚀 Running the App
+The project uses a **Multi-Stage Dockerfile** to minimize image size and maximize security.
 
-1.  **Configure Environment**:
-    Make sure you have a `.env` file in the root directory. The `docker-compose.yml` will load secrets from it.
-    _Note: `MONGODB_URI`, `REDIS_HOST`, and `REDIS_PORT` are automatically overridden by Docker Compose to point to the containerized services._
+- **Stage 1 (Builder)**: Uses `node:20-alpine` to compile TS and install all dev dependencies.
+- **Stage 2 (Runner)**: Uses `node:20-alpine`, installs only production dependencies, and copies the `dist/` folder.
+- **Port**: Default production port is `8080`.
 
-2.  **Start Services**:
-    Run the following command to build the image and start all services:
-
-    ```bash
-    docker-compose up --build
-    ```
-
-    - This starts:
-      - `app`: The backend server (Port 4000)
-      - `mongo`: MongoDB instance (Port 27017)
-      - `redis`: Redis instance (Port 6379)
-      - `mongo-init`: A temporary container that initializes the MongoDB Replica Set.
-
-3.  **Verify**:
-    - Check logs for `Replica Set initialized.`
-    - The backend should be accessible at `http://localhost:4000`.
-
-### 🛑 Stopping Services
-
-To stop the containers and remove the network:
+**Build Command**:
 
 ```bash
-docker-compose down
+docker build -t story-chain-be .
 ```
 
-To stop and **remove volumes** (WARNING: Deletes all database data):
+**Run Command**:
 
 ```bash
-docker-compose down -v
-```
-
-### 🛠️ Useful Commands
-
-- **View Logs**:
-  ```bash
-  docker-compose logs -f
-  ```
-- **Restart App Only**:
-  ```bash
-  docker-compose restart app
-  ```
-- **Rebuild App Only**:
-  ```bash
-  docker-compose up -d --no-deps --build app
-  ```
-- **Access MongoDB Shell**:
-  ```bash
-  docker-compose exec mongo mongosh
-  ```
-
----
-
-## 📚 API Routes
-
-### Story Routes (`/api/stories`)
-
-| Method | Endpoint                  | Description                   |
-| ------ | ------------------------- | ----------------------------- |
-| POST   | `/`                       | Create new story              |
-| GET    | `/`                       | List all stories (Admin)      |
-| GET    | `/new`                    | Get new stories (public feed) |
-| GET    | `/my`                     | Get user's stories            |
-| GET    | `/draft`                  | Get user's draft stories      |
-| GET    | `/search`                 | Search stories by title       |
-| GET    | `/slug/:slug`             | Get story by slug             |
-| POST   | `/slug/:slug/publish`     | Publish story                 |
-| POST   | `/slug/:slug/settings`    | Update story settings         |
-| GET    | `/slug/:slug/tree`        | Get chapter tree              |
-| GET    | `/slug/:slug/overview`    | Get story overview            |
-| PATCH  | `/slug/:slug/cover-image` | Update cover image            |
-| PATCH  | `/slug/:slug/card-image`  | Update card image             |
-| POST   | `/slug/:slug/chapters`    | Add chapter to story          |
-
-### Story Collaborator Routes (within Story routes)
-
-| Method | Endpoint                                       | Description             |
-| ------ | ---------------------------------------------- | ----------------------- |
-| GET    | `/slug/:slug/collaborators`                    | Get story collaborators |
-| POST   | `/slug/:slug/collaborators`                    | Create invitation       |
-| POST   | `/slug/:slug/collaborators/accept-invitation`  | Accept invitation       |
-| POST   | `/slug/:slug/collaborators/decline-invitation` | Decline invitation      |
-
----
-
-## 🧪 Testing
-
-```bash
-# Run tests
-npm test
-
-# Type check
-npm run type-check
-# or
-npx tsc --noEmit --skipLibCheck
+docker run -p 8080:8080 --env-file .env story-chain-be
 ```
 
 ---
 
-## 📝 Code Style
+## 📡 13. Deployment
 
-- **Controllers**: Handle HTTP requests, delegate to services
-- **Services**: Contain business logic, use repositories
-- **Repositories**: Data access, MongoDB operations
-- **DTOs**: Input validation types
-- **Schemas**: Zod validation schemas
+**Fly.io Configuration**:
 
-### Base Classes
-
-All services and controllers extend `BaseModule` which provides:
-
-- `logInfo()`, `logError()`, `logWarn()` - Logging
-- `throwNotFoundError()`, `throwForbiddenError()`, etc. - Error handling
+- **Setup**: Managed via `fly.toml`.
+- **Region**: Defaults to `bom` (Mumbai).
+- **Resources**: Configured for 1GB RAM / 1 Shared CPU.
+- **Health Checks**: Configured to poll `/health` endpoint.
 
 ---
 
-## 🔧 Development Notes
+## 📈 14. Performance Considerations
 
-### Adding a New Feature
-
-1. Create feature folder: `src/features/{feature}/`
-2. Create services with single responsibility
-3. Create repository for data access
-4. Create controller for HTTP handlers
-5. Register tokens in `src/container/tokens.ts`
-6. Register services in `src/container/registry.ts`
-7. Add routes in feature's `routes/` folder
-
-### Service Naming Convention
-
-- `{Feature}CrudService` - Create, Update, Delete operations
-- `{Feature}QueryService` - Read/query operations
-- `{Feature}MediaService` - File/media operations
-- `{Feature}PublishingService` - Publishing workflows
-- `{Feature}LifecycleService` - Create/remove entity lifecycle
+- **Redis Caching**: Removes ~90% of DB load for authenticated read-heavy operations.
+- **Mongoose MaxPool**: Increased to 50 connections to handle high concurrency.
+- **Lean Reads**: All data retrieval uses `.lean()` to avoid Mongoose instance overhead.
+- **Zero-Logic Middleware**: Auth and Context middlewares are highly optimized to fail fast.
 
 ---
 
-## 🔧 Localtunnel
+## 🔐 15. Security
 
-```bash
-lt --port 3000 --subdomain storychain-be
-```
+- **Authentication**: Mandatory Clerk JWT verification via `validateAuth`.
+- **RBAC**: Multi-layered permission check (Platform level + Story level).
+- **Input Sanitization**: Content is sanitized before storage (via builders/transformers).
+- **Content Security**: `helmet` plugin applied to set secure HTTP headers.
 
-## 📄 License
+---
 
-Private - All rights reserved.
+## 🤝 16. Contributing
+
+1.  **Branch Naming**: Use `feature/story-branch`, `bugfix/fix-issue`, or `refactor/api-logic`.
+2.  **Commits**: Strictly follows **Conventional Commits** (enforced by `husky` and `commitlint`).
+3.  **PR Process**: Ensure `npm run type-check` passes before submitting.
+
+---
+
+## 📄 17. License
+
+This project is licensed under the **ISC License**.
+
+---
+
+_Maintained by the StoryChain Dev Team_

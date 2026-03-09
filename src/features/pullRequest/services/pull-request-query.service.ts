@@ -3,6 +3,7 @@ import { BaseModule } from '@/utils/baseClass';
 import { inject, singleton } from 'tsyringe';
 import { PullRequestRepository } from '../repositories/pullRequest.repository';
 import { TOKENS } from '@/container';
+import { ID } from '@/types';
 
 @singleton()
 class PullRequestQueryService extends BaseModule {
@@ -11,6 +12,10 @@ class PullRequestQueryService extends BaseModule {
     private readonly pullRequestRepository: PullRequestRepository
   ) {
     super();
+  }
+
+  async existsPRById(_id: ID) {
+    return await this.pullRequestRepository.existsById(_id);
   }
 
   getPullRequestById() {}

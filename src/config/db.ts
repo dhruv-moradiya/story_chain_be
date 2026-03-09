@@ -7,7 +7,8 @@ export const connectDB = async () => {
     mongoose.set('strictQuery', true);
 
     const connectionInstanse = await mongoose.connect(env.MONGODB_URI, {
-      maxPoolSize: 10,
+      maxPoolSize: 50,
+      minPoolSize: 10,
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
     });

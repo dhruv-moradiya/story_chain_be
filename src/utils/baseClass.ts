@@ -368,4 +368,8 @@ export abstract class BaseRepository<TEntity, TDocument extends Document> {
 
     return result.modifiedCount > 0;
   }
+
+  async existsById(_id: ID) {
+    return this.model.exists({ _id });
+  }
 }
