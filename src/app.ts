@@ -14,6 +14,7 @@ import { RedisService } from './config/services';
 import { TOKENS } from './container';
 import { FastifyRequest } from 'fastify';
 import { ApiError } from './utils/apiResponse';
+import fastifyMetrics from 'fastify-metrics';
 
 export const createApp = async () => {
   const redisService = container.resolve<RedisService>(TOKENS.RedisService);
@@ -30,6 +31,7 @@ export const createApp = async () => {
   });
   await app.register(helmet);
   await app.register(clerkPlugin);
+  await app.register(fastifyMetrics);
 
   await app.register(rateLimit, {
     global: true,
