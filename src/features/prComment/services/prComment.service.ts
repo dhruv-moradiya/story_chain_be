@@ -18,14 +18,15 @@ class PrCommentService extends BaseModule {
   }
 
   private async _checkPRExists(_id: ID) {
-    console.log('_id', _id);
     return await this.pullRequestService.existsPRById(_id);
   }
 
+  private async _checkPRCommentExists(_id: ID) {
+    return await this.prCommentRepository.existsCommentById(_id);
+  }
+
   async addPrComment(input: ICreatePrCommentDTO) {
-    console.log('input.pullRequestId', input.pullRequestId);
     const prExists = await this._checkPRExists(input.pullRequestId);
-    console.log('prExists', prExists);
 
     if (!prExists) {
       this.throwNotFoundError(
@@ -34,7 +35,17 @@ class PrCommentService extends BaseModule {
       );
     }
 
-    const prComment = await this.prCommentRepository.create(input);
+    if (input.parentCommentId) {
+      const prCommentExists = await this._checkPRCommentExists(input.parentCommentId);
+      if (!prCommentExists) {
+        this.throwNotFoundError(
+          'PR_COMMENT_NOT_FOUND',
+          `The PR comment with id ${input.parentCommentId} does not exist or may have been removed.`
+        );
+      }
+    }
+
+    const prComment = await this.prCommentRepository.create({ data: input });
 
     if (!prComment) {
       this.throwBadRequest(

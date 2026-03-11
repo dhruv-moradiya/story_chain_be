@@ -63,9 +63,11 @@ class CollaboratorQueryService extends BaseModule implements ICollaboratorQueryS
 
     // Check if user is a collaborator
     const collaborator = await this.storyCollaboratorRepo.findOne({
-      slug: storySlug,
-      userId,
-      status: StoryCollaboratorStatus.ACCEPTED,
+      filter: {
+        slug: storySlug,
+        userId,
+        status: StoryCollaboratorStatus.ACCEPTED,
+      },
     });
 
     if (collaborator) {

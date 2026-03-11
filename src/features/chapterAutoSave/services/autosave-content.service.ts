@@ -166,7 +166,7 @@ export class AutoSaveContentService extends BaseModule implements IAutoSaveConte
   }
 
   private async getAutoSaveOrFail(autoSaveId: string): Promise<IChapterAutoSave> {
-    const autoSave = await this.chapterAutoSaveRepo.findById(autoSaveId);
+    const autoSave = await this.chapterAutoSaveRepo.findById({ id: autoSaveId });
 
     if (!autoSave) {
       this.throwNotFoundError('Auto-save record not found');

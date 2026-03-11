@@ -57,15 +57,14 @@ class CollaboratorInvitationService extends BaseModule implements ICollaboratorI
           this.throwNotFoundError(`Story not found for slug: ${input.slug}`);
         }
 
-        const inviter = await this.collabRepo.findOne(
-          {
+        const inviter = await this.collabRepo.findOne({
+          filter: {
             slug: input.slug,
             userId: input.inviterUser.id,
             status: StoryCollaboratorStatus.ACCEPTED,
           },
-          {},
-          { session }
-        );
+          options: { session },
+        });
 
         if (
           !inviter ||
@@ -150,11 +149,11 @@ class CollaboratorInvitationService extends BaseModule implements ICollaboratorI
       ...(status === StoryCollaboratorStatus.ACCEPTED ? { acceptedAt: Date.now() } : {}),
     };
 
-    const collaborator = await this.collabRepo.findOneAndUpdate(
-      { userId, slug },
-      updatePayload,
-      options
-    );
+    const collaborator = await this.collabRepo.findOneAndUpdate({
+      filter: { userId, slug },
+      update: updatePayload,
+      options,
+    });
 
     if (!collaborator) {
       this.throwNotFoundError('Collaborator not found or no update was applied.');

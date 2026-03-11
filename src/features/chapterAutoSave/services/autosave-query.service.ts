@@ -18,7 +18,7 @@ export class AutoSaveQueryService extends BaseModule implements IAutoSaveQuerySe
   }
 
   async getById(autoSaveId: ID): Promise<IChapterAutoSave | null> {
-    return this.chapterAutoSaveRepo.findById(autoSaveId);
+    return this.chapterAutoSaveRepo.findById({ id: autoSaveId });
   }
 
   async getByUser(input: IGetAutoSaveDraftDTO): Promise<IChapterAutoSavePaginatedResponse> {

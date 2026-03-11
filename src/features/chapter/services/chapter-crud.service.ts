@@ -22,11 +22,11 @@ export class ChapterCrudService extends BaseModule implements IChapterCrudServic
     const { storySlug, userId, title, content } = input;
 
     // Check if alredy root chapter exist
-    const rootChapter = await this.chapterRepo.findOne(
-      { storySlug, parentChapterSlug: null },
-      { _id: 1 },
-      { session: options.session }
-    );
+    const rootChapter = await this.chapterRepo.findOne({
+      filter: { storySlug, parentChapterSlug: null },
+      projection: { _id: 1 },
+      options: { session: options.session },
+    });
 
     if (rootChapter) {
       this.throwBadRequest('Root chapter already exists.');
@@ -39,8 +39,8 @@ export class ChapterCrudService extends BaseModule implements IChapterCrudServic
     const slug = this._generateSlug(title);
 
     // 3. Create root chapter
-    const chapter = await this.chapterRepo.create(
-      {
+    const chapter = await this.chapterRepo.create({
+      data: {
         storySlug,
         parentChapterSlug: null,
         ancestorSlugs: [],
@@ -52,8 +52,8 @@ export class ChapterCrudService extends BaseModule implements IChapterCrudServic
         slug,
         branchIndex,
       },
-      { session: options.session }
-    );
+      options: { session: options.session },
+    });
 
     return chapter;
   }
@@ -86,8 +86,8 @@ export class ChapterCrudService extends BaseModule implements IChapterCrudServic
     const slug = this._generateSlug(title);
 
     // 4. Create chapter
-    const chapter = await this.chapterRepo.create(
-      {
+    const chapter = await this.chapterRepo.create({
+      data: {
         storySlug,
         parentChapterSlug,
         ancestorSlugs: newAncestorSlugs,
@@ -99,8 +99,8 @@ export class ChapterCrudService extends BaseModule implements IChapterCrudServic
         slug,
         branchIndex,
       },
-      { session: options.session }
-    );
+      options: { session: options.session },
+    });
 
     // 5. Update parent stats
     await this.chapterRepo.incrementBranches(parentChapter._id.toString(), options.session);
@@ -120,7 +120,10 @@ export class ChapterCrudService extends BaseModule implements IChapterCrudServic
   }
 
   async delete(chapterId: string, options: IOperationOptions = {}): Promise<void> {
-    await this.chapterRepo.softDelete({ _id: chapterId }, { session: options.session });
+    await this.chapterRepo.softDelete({
+      filter: { _id: chapterId },
+      options: { session: options.session },
+    });
   }
 
   // ═══════════════════════════════════════════

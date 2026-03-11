@@ -21,9 +21,9 @@ export class PrCommentController extends BaseModule {
       request: FastifyRequest<{ Body: TAddPRCommentSchema; Params: TPullRequestIdSchema }>,
       reply: FastifyReply
     ) => {
+      const body = request.body;
       const userId = request.user.clerkId;
       const pullRequestId = request.params.pullRequestId;
-      const body = request.body;
 
       const input = { ...body, userId, pullRequestId };
 

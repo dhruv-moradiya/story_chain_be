@@ -76,11 +76,10 @@ class StoryQueryService extends BaseModule implements IStoryQueryService {
     return this.cacheService.getOrSet(
       CacheKeyBuilder.userDrafts(userId),
       () =>
-        this.storyRepo.findMany(
-          { creatorId: userId, status: StoryStatus.DRAFT },
-          {},
-          { ...options, limit: 100 }
-        ),
+        this.storyRepo.findMany({
+          filter: { creatorId: userId, status: StoryStatus.DRAFT },
+          options: { ...options, limit: 100 },
+        }),
       { ttlKey: 'USER_DRAFTS' }
     );
   }
@@ -92,7 +91,10 @@ class StoryQueryService extends BaseModule implements IStoryQueryService {
     return this.cacheService.getOrSet(
       CacheKeyBuilder.storyList('published'),
       () =>
-        this.storyRepo.findMany({ status: StoryStatus.PUBLISHED }, {}, { ...options, limit: 50 }),
+        this.storyRepo.findMany({
+          filter: { status: StoryStatus.PUBLISHED },
+          options: { ...options, limit: 50 },
+        }),
       { ttlKey: 'STORY_LIST_PUBLISHED' }
     );
   }

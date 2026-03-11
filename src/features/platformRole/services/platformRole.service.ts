@@ -17,13 +17,13 @@ export class PlatformRoleService {
     input: { userId: string; role: PlatformRole },
     options?: { session?: ClientSession }
   ): Promise<IPlatformRole> {
-    return await this.repo.create(
-      {
+    return await this.repo.create({
+      data: {
         userId: input.userId,
         role: input.role,
       },
-      { session: options?.session }
-    );
+      options: { session: options?.session },
+    });
   }
 
   async assignPlatformRole(userId: string, role: PlatformRole, assignedBy: string) {

@@ -73,8 +73,11 @@ class UserService extends BaseModule implements IUserService {
     try {
       return await withTransaction('Creating new user', async (session) => {
         // Check if user already exists (handle race between webhook and JIT)
-        const existingUser = await this.userRepo.findOne({ clerkId: input.clerkId }, null, {
-          session,
+        const existingUser = await this.userRepo.findOne({
+          filter: { clerkId: input.clerkId },
+          options: {
+            session,
+          },
         });
 
         if (existingUser) {
@@ -82,9 +85,15 @@ class UserService extends BaseModule implements IUserService {
           return existingUser;
         }
 
-        const newUser = await this.userRepo.create(input, { session });
+        const newUser = await this.userRepo.create({
+          data: input,
+          options: { session },
+        });
 
-        const totalUsers = await this.userRepo.count({}, { session });
+        const totalUsers = await this.userRepo.count({
+          filter: {},
+          options: { session },
+        });
 
         const role = UserRules.determineInitialRole(totalUsers);
 

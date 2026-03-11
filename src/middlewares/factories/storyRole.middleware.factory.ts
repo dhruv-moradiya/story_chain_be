@@ -1,3 +1,5 @@
+import { ApiError } from '@/utils/apiResponse';
+import { logger } from '@/utils/logger';
 import { HTTP_STATUS } from '@constants/httpStatus';
 import { TOKENS } from '@container/tokens';
 import { StoryQueryService } from '@features/story/services/story-query.service';
@@ -79,11 +81,9 @@ export class StoryRoleMiddlewareFactory {
       const slug = extractSlugFromRequest(request);
 
       if (!slug) {
-        return reply.code(HTTP_STATUS.BAD_REQUEST.code).send({
-          success: false,
-          error: 'Bad Request',
-          message: 'Story slug is required in the request.',
-        });
+        return reply
+          .code(HTTP_STATUS.BAD_REQUEST.code)
+          .send(ApiError.badRequest('Story slug is required in params.'));
       }
 
       try {
@@ -98,23 +98,20 @@ export class StoryRoleMiddlewareFactory {
         if (request.user) {
           request.userStoryRole = await this.collaboratorQueryService.getCollaboratorRole(
             request.user.clerkId,
-            story._id.toString()
+            story.slug
           );
         } else {
           request.userStoryRole = null;
         }
       } catch (error: unknown) {
+        logger.error(`Error loading story context for slug: ${slug}`, { error });
         if (
           error &&
           typeof error === 'object' &&
           'statusCode' in error &&
           error.statusCode === 404
         ) {
-          return reply.code(HTTP_STATUS.NOT_FOUND.code).send({
-            success: false,
-            error: 'Not Found',
-            message: 'Story not found.',
-          });
+          return reply.code(HTTP_STATUS.NOT_FOUND.code).send(ApiError.notFound('Story not found.'));
         }
         throw error;
       }

@@ -106,7 +106,7 @@ export class StoryController extends BaseModule {
 
       return reply
         .code(HTTP_STATUS.OK.code)
-        .send(ApiResponse.updated(story, 'Story setting updated successfully'));
+        .send(ApiResponse.updated(null, `Story [${story.title}] settings updated successfully`));
     }
   );
 

@@ -41,11 +41,19 @@ export class ChapterAutoSaveRepository extends BaseRepository<
   }
 
   disableAutoSaveForExistingChapter(chapterSlug: string) {
-    return this.findOneAndUpdate({ chapterSlug: chapterSlug }, { isEnabled: false }, { new: true });
+    return this.findOneAndUpdate({
+      filter: { chapterSlug: chapterSlug },
+      update: { isEnabled: false },
+      options: { new: true },
+    });
   }
 
   disableAutoSaveForSraftAutoSave(id: ID) {
-    return this.findOneAndUpdate({ _id: id }, { isEnabled: false }, { new: true });
+    return this.findOneAndUpdate({
+      filter: { _id: id },
+      update: { isEnabled: false },
+      options: { new: true },
+    });
   }
 
   // ───────────────────────────────────────────────

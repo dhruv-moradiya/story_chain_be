@@ -15,7 +15,7 @@ class PullRequestQueryService extends BaseModule {
   }
 
   async existsPRById(_id: ID) {
-    return await this.pullRequestRepository.existsById(_id);
+    return await this.pullRequestRepository.existsById({ filter: { _id } });
   }
 
   getPullRequestById() {}

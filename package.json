@@ -4,7 +4,7 @@
   "description": "",
   "main": "dist/server.js",
   "scripts": {
-    "dev": "cross-env NODE_ENV=development tsx watch --tsconfig tsconfig.json src/server.ts",
+    "dev": "cross-env NODE_ENV=development nodemon --watch src --ext ts --exec tsx src/server.ts",
     "class": "tsx watch src/class.ts",
     "build": "tsc && tsc-alias",
     "start": "cross-env NODE_ENV=production node dist/server.js",
@@ -74,6 +74,7 @@
     "globals": "^17.0.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
+    "nodemon": "^3.1.14",
     "prettier": "^3.6.2",
     "tsc-alias": "^1.8.10",
     "tsx": "^4.20.6",

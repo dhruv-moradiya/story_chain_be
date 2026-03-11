@@ -17,27 +17,30 @@ class CommentRepository extends BaseRepository<IComment, ICommentDoc> {
   }
 
   async addComment(comment: IAddCommentDTO): Promise<IComment> {
-    return this.create(comment);
+    return this.create({ data: comment });
   }
 
   async updateComment(comment: IUpdateCommentDTO): Promise<IComment | null> {
-    return this.findOneAndUpdate(
-      { _id: comment.commentId, isDeleted: false },
-      { content: comment.content, isEdited: true, editedAt: new Date() }
-    );
+    return this.findOneAndUpdate({
+      filter: { _id: comment.commentId, isDeleted: false },
+      update: { content: comment.content, isEdited: true, editedAt: new Date() },
+    });
   }
 
   async deleteComment(commentId: string): Promise<IComment | null> {
     // Soft delete
-    return this.findOneAndUpdate({ _id: commentId }, { isDeleted: true, deletedAt: new Date() });
+    return this.findOneAndUpdate({
+      filter: { _id: commentId },
+      update: { isDeleted: true, deletedAt: new Date() },
+    });
   }
 
   async getComment(comment: IGetCommentDTO): Promise<IComment | null> {
-    return this.findOne({ _id: comment.commentId });
+    return this.findOne({ filter: { _id: comment.commentId } });
   }
 
   async getCommentById(commentId: string): Promise<IComment | null> {
-    return this.findOne({ _id: commentId });
+    return this.findOne({ filter: { _id: commentId } });
   }
 
   async getComments(comment: IGetCommentsDTO): Promise<IComment[]> {

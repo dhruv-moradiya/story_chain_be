@@ -25,7 +25,11 @@ class StoryMediaService extends BaseModule implements IStoryMediaService {
   async addOrUpdateCardImage(input: IStoryUpdateCardImageBySlugDTO): Promise<IStory['cardImage']> {
     const { slug, cardImage } = input;
 
-    const story = await this.storyRepo.findOneAndUpdate({ slug }, { cardImage }, { new: true });
+    const story = await this.storyRepo.findOneAndUpdate({
+      filter: { slug },
+      update: { cardImage },
+      options: { new: true },
+    });
 
     if (!story) {
       this.throwNotFoundError('STORY_NOT_FOUND', 'Story not found. Unable to update card image.');
@@ -42,7 +46,11 @@ class StoryMediaService extends BaseModule implements IStoryMediaService {
   ): Promise<IStory['coverImage']> {
     const { slug, coverImage } = input;
 
-    const story = await this.storyRepo.findOneAndUpdate({ slug }, { coverImage }, { new: true });
+    const story = await this.storyRepo.findOneAndUpdate({
+      filter: { slug },
+      update: { coverImage },
+      options: { new: true },
+    });
 
     if (!story) {
       this.throwNotFoundError('STORY_NOT_FOUND', 'Story not found. Unable to update cover image.');

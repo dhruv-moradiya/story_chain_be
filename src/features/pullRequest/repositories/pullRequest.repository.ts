@@ -10,11 +10,11 @@ export class PullRequestRepository extends BaseRepository<IPullRequest, IPullReq
   }
 
   async existsPRById(_id: ID) {
-    return this.existsById(_id);
+    return this.existsById({ filter: { _id } });
   }
 
   async findUserPRs(userId: string): Promise<IPullRequest[]> {
-    return this.find({ authorId: userId });
+    return this.find({ filter: { authorId: userId } });
   }
 
   /**
@@ -22,7 +22,7 @@ export class PullRequestRepository extends BaseRepository<IPullRequest, IPullReq
    * Used to detect duplicate open PRs targeting the same chapter.
    */
   async findOpenPRsByAuthorForStory(authorId: string, storySlug: string): Promise<IPullRequest[]> {
-    return this.find({ authorId, storySlug, status: PRStatus.OPEN });
+    return this.find({ filter: { authorId, storySlug, status: PRStatus.OPEN } });
   }
 
   /**
@@ -32,10 +32,10 @@ export class PullRequestRepository extends BaseRepository<IPullRequest, IPullReq
     authorId: string,
     chapterSlug: string
   ): Promise<IPullRequest | null> {
-    return this.findOne({ authorId, chapterSlug, status: PRStatus.OPEN });
+    return this.findOne({ filter: { authorId, chapterSlug, status: PRStatus.OPEN } });
   }
 
   async updatePRLable(prId: string, labels: TPRLabel[]) {
-    return this.findOneAndUpdate({ _id: prId }, { labels });
+    return this.findOneAndUpdate({ filter: { _id: prId }, update: { labels } });
   }
 }

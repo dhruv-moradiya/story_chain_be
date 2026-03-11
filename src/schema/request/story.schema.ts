@@ -7,9 +7,8 @@ import {
   STORY_STATUSES,
 } from '@/features/story/types/story-enum';
 import { STORY_COLLABORATOR_ROLES } from '@/features/storyCollaborator/types/storyCollaborator-enum';
-import { IStory } from '@/features/story/types/story.types';
 
-type TStoryFields = keyof IStory;
+// type TStoryFields = keyof IStory;
 
 const STORY_FIELDS = [
   'title',
@@ -23,7 +22,7 @@ const STORY_FIELDS = [
   'trendingScore',
   'lastActivityAt',
   'publishedAt',
-] as const satisfies TStoryFields[];
+] as const;
 
 const StoryFieldsQuerySchema = z.object({
   fields: z

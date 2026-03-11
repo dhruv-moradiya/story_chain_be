@@ -269,7 +269,7 @@ export async function storyRoutes(fastify: FastifyInstance) {
   );
 
   // Update story settings by slug
-  fastify.post(
+  fastify.patch(
     StoryApiRoutes.UpdateSettingsBySlug,
     {
       preHandler: [validateAuth, loadStoryContext, StoryRoleGuards.canEditStorySettings],
