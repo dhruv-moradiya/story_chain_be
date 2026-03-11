@@ -5,7 +5,7 @@ import { PrCommentService } from '../services/prComment.service';
 import { catchAsync } from '@/utils/catchAsync';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { ApiResponse } from '@/utils/apiResponse';
-import { TAddPRCommentSchema } from '@/schema/request/pr-comment.schema';
+import { TAddPRCommentSchema, TEditPRCommentSchema } from '@/schema/request/pr-comment.schema';
 import { TPullRequestIdSchema } from '@/schema/request/pullRequest.schema';
 
 @singleton()
@@ -30,6 +30,52 @@ export class PrCommentController extends BaseModule {
       await this.prCommentService.addPrComment(input);
 
       return reply.code(201).send(ApiResponse.created({}, ''));
+    }
+  );
+
+  editComment = catchAsync(
+    async (
+      request: FastifyRequest<{ Body: TEditPRCommentSchema; Params: { commentId: string } }>,
+      reply: FastifyReply
+    ) => {
+      const body = request.body;
+      const userId = request.user.clerkId;
+      const commentId = request.params.commentId;
+
+      const input = { ...body, userId, commentId };
+
+      await this.prCommentService.editPrComment(input);
+
+      return reply.code(200).send(ApiResponse.updated(null, 'Comment edited successfully'));
+    }
+  );
+
+  resolveComment = catchAsync(
+    async (
+      request: FastifyRequest<{ Body: TEditPRCommentSchema; Params: { commentId: string } }>,
+      reply: FastifyReply
+    ) => {
+      const body = request.body;
+      const userId = request.user.clerkId;
+      const commentId = request.params.commentId;
+
+      const input = { ...body, userId, commentId };
+
+      await this.prCommentService.resolvePrComment(input);
+
+      return reply.code(200).send(ApiResponse.updated(null, 'Comment resolved successfully'));
+    }
+  );
+
+  getPrComments = catchAsync(
+    async (request: FastifyRequest<{ Params: TPullRequestIdSchema }>, reply: FastifyReply) => {
+      const pullRequestId = request.params.pullRequestId;
+
+      const prComments = await this.prCommentService.getPrComments(pullRequestId);
+
+      return reply
+        .code(200)
+        .send(ApiResponse.success(prComments, 'OK', 'PR comments fetched successfully'));
     }
   );
 }

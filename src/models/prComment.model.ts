@@ -115,7 +115,7 @@ const prCommentSchema = new Schema<IPRCommentDoc>(
      * MARKING_AS_RESOLVED: PR author marks when they've addressed it
      * VISUAL: Resolved comments can be collapsed/hidden
      */
-    isResolved: { type: Boolean, default: false },
+    isResolved: { type: Boolean },
 
     /**
      * RESOLVED_BY: Who marked this as resolved?

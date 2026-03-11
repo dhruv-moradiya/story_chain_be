@@ -1,10 +1,11 @@
 import { TOKENS } from '@/container';
-import { ICreatePrCommentDTO } from '@/dto/pr-comment.dto';
+import { ICreatePrCommentDTO, IEditPrCommentDTO, IResolvePrCommentDTO } from '@/dto/pr-comment.dto';
 import { PullRequestQueryService } from '@/features/pullRequest/services/pull-request-query.service';
 import { ID } from '@/types';
 import { BaseModule } from '@/utils/baseClass';
 import { inject, singleton } from 'tsyringe';
 import { PrCommentRepository } from '../repositories/pr-comment-repository';
+import { PRCommentType } from '../types/prComment-enum';
 
 @singleton()
 class PrCommentService extends BaseModule {
@@ -45,7 +46,17 @@ class PrCommentService extends BaseModule {
       }
     }
 
-    const prComment = await this.prCommentRepository.create({ data: input });
+    const shouldSetResolved =
+      input.commentType === PRCommentType.SUGGESTION ||
+      input.commentType === PRCommentType.REQUEST_CHANGES ||
+      input.commentType === PRCommentType.QUESTION;
+
+    const commentInput = {
+      ...input,
+      ...(shouldSetResolved && { isResolved: false }),
+    };
+
+    const prComment = await this.prCommentRepository.create({ data: commentInput });
 
     if (!prComment) {
       this.throwBadRequest(
@@ -55,6 +66,36 @@ class PrCommentService extends BaseModule {
     }
 
     return prComment;
+  }
+
+  async editPrComment(input: IEditPrCommentDTO) {
+    const prComment = await this.prCommentRepository.editComment(input);
+
+    if (!prComment) {
+      this.throwBadRequest(
+        'INTERNAL_SERVER_ERROR',
+        'Failed to update PR comment. Please try again later.'
+      );
+    }
+
+    return prComment;
+  }
+
+  async resolvePrComment(input: IResolvePrCommentDTO) {
+    const prComment = await this.prCommentRepository.resolveComment(input);
+
+    if (!prComment) {
+      this.throwBadRequest(
+        'INTERNAL_SERVER_ERROR',
+        'Failed to resolve PR comment. Please try again later.'
+      );
+    }
+
+    return prComment;
+  }
+
+  async getPrComments(pullRequestId: string) {
+    return await this.prCommentRepository.find({ filter: { pullRequestId } });
   }
 }
 
