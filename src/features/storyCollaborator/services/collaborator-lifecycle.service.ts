@@ -31,15 +31,15 @@ class CollaboratorLifecycleService extends BaseModule implements ICollaboratorLi
       this.throwNotFoundError(`Story not found for slug: ${slug}`);
     }
 
-    const collaborator = await this.storyCollaboratorRepo.create(
-      {
+    const collaborator = await this.storyCollaboratorRepo.create({
+      data: {
         slug,
         role,
         userId,
         ...(status ? { status } : {}),
       },
-      options
-    );
+      options,
+    });
 
     if (!collaborator) {
       this.throwInternalError('Collaborator could not be created due to an unexpected error.');

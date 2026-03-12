@@ -57,7 +57,7 @@ class StoryCrudService extends BaseModule implements IStoryCrudService {
         );
       }
 
-      const story = await this.storyRepo.create({ ...input }, options);
+      const story = await this.storyRepo.create({ data: { ...input }, options });
 
       await this.collaboratorLifecycleService.createCollaborator(
         {
@@ -120,7 +120,11 @@ class StoryCrudService extends BaseModule implements IStoryCrudService {
       );
     }
 
-    const updated = await this.storyRepo.findOneAndUpdate({ slug }, { status }, { new: true });
+    const updated = await this.storyRepo.findOneAndUpdate({
+      filter: { slug },
+      update: { status },
+      options: { new: true },
+    });
 
     if (!updated) {
       this.throwInternalError('Unable to update story status. Please try again.');

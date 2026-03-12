@@ -31,8 +31,31 @@ const AddPrCommentSchema = z.object({
   parentCommentId: z.string().trim().min(1, 'parentCommentId cannot be empty').optional(),
 });
 
+const EditPrCommentSchema = z.object({
+  content: z
+    .string()
+    .trim()
+    .min(1, 'Content is required')
+    .max(5000, 'Content must be less than 5000 characters'),
+
+  suggestion: z
+    .object({
+      line: z
+        .number()
+        .int('Line must be an integer')
+        .positive('Line must be greater than 0')
+        .optional(),
+
+      originalText: z.string().trim().min(1, 'Original text is required'),
+
+      suggestedText: z.string().trim().min(1, 'Suggested text is required'),
+    })
+    .optional(),
+});
+
 type TAddPRCommentSchema = z.infer<typeof AddPrCommentSchema>;
+type TEditPRCommentSchema = z.infer<typeof EditPrCommentSchema>;
 
-export { AddPrCommentSchema };
+export { AddPrCommentSchema, EditPrCommentSchema };
 
-export type { TAddPRCommentSchema };
+export type { TAddPRCommentSchema, TEditPRCommentSchema };

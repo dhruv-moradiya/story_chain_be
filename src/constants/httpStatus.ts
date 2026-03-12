@@ -4,6 +4,7 @@ export const HTTP_STATUS = {
   CREATED: { code: 201, message: 'Resource successfully created' },
   ACCEPTED: { code: 202, message: 'Request accepted for processing' },
   NO_CONTENT: { code: 204, message: 'Request succeeded but no content returned' },
+  UPDATED: { code: 200, message: 'Resource successfully updated' },
 
   // 3xx Redirection
   MOVED_PERMANENTLY: { code: 301, message: 'Resource moved permanently' },

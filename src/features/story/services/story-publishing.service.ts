@@ -59,11 +59,11 @@ class StoryPublishingService extends BaseModule implements IStoryPublishingServi
       this.throwForbiddenError('You do not have permission to unpublish this story.');
     }
 
-    const updatedStory = await this.storyRepo.findOneAndUpdate(
-      { slug },
-      { status: 'draft', publishedAt: null },
-      { new: true }
-    );
+    const updatedStory = await this.storyRepo.findOneAndUpdate({
+      filter: { slug },
+      update: { status: 'draft', publishedAt: null },
+      options: { new: true },
+    });
 
     if (!updatedStory) {
       this.throwInternalError('Unable to unpublish the story. Please try again.');

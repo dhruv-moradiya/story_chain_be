@@ -27,7 +27,10 @@ export class ChapterQueryService extends BaseModule implements IChapterQueryServ
   }
 
   async getById(chapterId: ID, options: IOperationOptions = {}): Promise<IChapter | null> {
-    const chapter = this.chapterRepo.findById(chapterId, {}, { session: options.session });
+    const chapter = this.chapterRepo.findById({
+      id: chapterId,
+      options: { session: options.session },
+    });
     return chapter;
   }
 

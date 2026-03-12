@@ -1,10 +1,10 @@
-import { StoryCollaborator } from '@models/storyCollaborator.model';
-import { IStoryCollaborator, IStoryCollaboratorDoc } from '../types/storyCollaborator.types';
-import { ApiError } from '@utils/apiResponse';
-import { ClientSession, PipelineStage } from 'mongoose';
-import { BaseRepository } from '@utils/baseClass';
-import { IStoryCollaboratorInvitationDTO } from '@dto/storyCollaborator.dto';
 import { IOperationOptions } from '@/types';
+import { IStoryCollaboratorInvitationDTO } from '@dto/storyCollaborator.dto';
+import { StoryCollaborator } from '@models/storyCollaborator.model';
+import { ApiError } from '@utils/apiResponse';
+import { BaseRepository } from '@utils/baseClass';
+import { ClientSession, PipelineStage } from 'mongoose';
+import { IStoryCollaborator, IStoryCollaboratorDoc } from '../types/storyCollaborator.types';
 
 import { StoryCollaboratorStatus } from '../types/storyCollaborator-enum';
 
@@ -16,6 +16,18 @@ export class StoryCollaboratorRepository extends BaseRepository<
     super(StoryCollaborator);
   }
 
+  async aggregateStories<T = IStoryCollaborator>(
+    pipeline: PipelineStage[],
+    options: IOperationOptions = {}
+  ): Promise<T[]> {
+    return this.model
+      .aggregate<T>(pipeline)
+      .session(options.session ?? null)
+      .exec();
+  }
+
+  // ==================== CREATE METHODS ====================
+
   /** Bulk insert collaborators */
   async createMany(
     data: Partial<IStoryCollaborator>[],
@@ -25,14 +37,8 @@ export class StoryCollaboratorRepository extends BaseRepository<
     return docs as IStoryCollaborator[];
   }
 
-  async aggregateStories<T = IStoryCollaborator>(
-    pipeline: PipelineStage[],
-    options: IOperationOptions = {}
-  ): Promise<T[]> {
-    return this.model
-      .aggregate<T>(pipeline)
-      .session(options.session ?? null)
-      .exec();
+  async addCollaborator(data: IStoryCollaborator, options?: { session?: ClientSession }) {
+    return this.model.create([data], options);
   }
 
   async createInvitation(
@@ -51,13 +57,7 @@ export class StoryCollaboratorRepository extends BaseRepository<
     return doc.toObject();
   }
 
-  async findByStoryAndUser(slug: string, userId: string) {
-    return StoryCollaborator.findOne({ slug, userId });
-  }
-
-  async addCollaborator(data: IStoryCollaborator, options?: { session?: ClientSession }) {
-    return StoryCollaborator.create([data], options);
-  }
+  // ==================== UPDATE METHODS ====================
 
   async updateCollaborator(
     slug: string,
@@ -65,22 +65,30 @@ export class StoryCollaboratorRepository extends BaseRepository<
     data: Partial<IStoryCollaborator>,
     options?: { session?: ClientSession }
   ) {
-    return StoryCollaborator.findOneAndUpdate({ slug, userId }, data, {
+    return this.model.findOneAndUpdate({ slug, userId }, data, {
       new: true,
       session: options?.session,
     });
   }
 
+  // ==================== DELETE METHODS ====================
+
   async removeCollaborator(slug: string, userId: string, options?: { session?: ClientSession }) {
-    const result = await StoryCollaborator.deleteOne({ slug, userId }, options);
+    const result = await this.model.deleteOne({ slug, userId }, options);
     if (result.deletedCount === 0) throw ApiError.notFound('Collaborator not found');
   }
 
+  // ==================== QUERY METHODS ====================
+
+  async findByStoryAndUser(slug: string, userId: string) {
+    return this.model.findOne({ slug, userId });
+  }
+
   async findStoryCollaborators(slug: string): Promise<IStoryCollaborator[]> {
-    return StoryCollaborator.find({ slug });
+    return this.model.find({ slug });
   }
 
   async findUserStories(userId: string) {
-    return StoryCollaborator.find({ userId, status: StoryCollaboratorStatus.ACCEPTED });
+    return this.model.find({ userId, status: StoryCollaboratorStatus.ACCEPTED });
   }
 }

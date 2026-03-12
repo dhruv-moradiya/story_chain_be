@@ -18,7 +18,7 @@ export interface IPRComment {
   };
   isEdited: boolean;
   editedAt?: Date;
-  isResolved: boolean;
+  isResolved?: boolean;
   resolvedBy?: string;
   resolvedAt?: Date;
   createdAt: Date;

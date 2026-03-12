@@ -61,23 +61,25 @@ export class PullRequestService extends BaseModule implements ICreatePullRequest
 
     // ── 3. Create PR ─────────────────────────────────────────────────────────
     const pr = await this.pullRequestRepository.create({
-      title,
-      description: description ?? '',
-      storySlug,
-      chapterSlug,
-      parentChapterSlug,
-      authorId: userId,
-      prType,
-      changes: resolvedChanges,
-      status: PRStatus.OPEN,
-      isDraft: isDraft ?? false,
-      timeline: [
-        {
-          action: PRTimelineAction.CREATED,
-          performedBy: userId,
-          performedAt: new Date(),
-        },
-      ],
+      data: {
+        title,
+        description: description ?? '',
+        storySlug,
+        chapterSlug,
+        parentChapterSlug,
+        authorId: userId,
+        prType,
+        changes: resolvedChanges,
+        status: PRStatus.OPEN,
+        isDraft: isDraft ?? false,
+        timeline: [
+          {
+            action: PRTimelineAction.CREATED,
+            performedBy: userId,
+            performedAt: new Date(),
+          },
+        ],
+      },
     });
 
     this.logInfo(`PR created: "${pr.title}" [${prType}] by ${userId} for story ${storySlug}`);

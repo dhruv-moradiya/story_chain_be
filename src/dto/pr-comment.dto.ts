@@ -13,4 +13,20 @@ interface ICreatePrCommentDTO {
   parentCommentId?: string;
 }
 
-export type { ICreatePrCommentDTO };
+interface IEditPrCommentDTO {
+  userId: string;
+  commentId: string;
+  content: string;
+  suggestion?: {
+    line?: number;
+    originalText: string;
+    suggestedText: string;
+  };
+}
+
+interface IResolvePrCommentDTO {
+  userId: string;
+  commentId: string;
+}
+
+export type { ICreatePrCommentDTO, IEditPrCommentDTO, IResolvePrCommentDTO };

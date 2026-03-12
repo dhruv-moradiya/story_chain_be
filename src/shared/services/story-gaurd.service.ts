@@ -17,7 +17,10 @@ export class StoryGuardService {
   }
 
   async ensureStoryExistsById(storyId: string, options: IOperationOptions = {}) {
-    const story = await this.storyRepo.findById(storyId, {}, options);
+    const story = await this.storyRepo.findById({
+      id: storyId,
+      options,
+    });
 
     if (!story) {
       throw new Error('Story not found');

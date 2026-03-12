@@ -69,7 +69,7 @@ export class ApiResponse<T = unknown> {
   }
 
   static updated<T>(data: T, customMessage?: string): ApiResponse<T> {
-    return ApiResponse.success<T>(data, 'OK', customMessage || 'Updated successfully', 'UPDATED');
+    return ApiResponse.success<T>(data, 'UPDATED', customMessage || 'Updated successfully');
   }
 
   static deleted(customMessage?: string): ApiResponse<null> {
