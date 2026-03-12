@@ -1,4 +1,5 @@
 import { PR_COMMENT_TYPES } from '@/features/prComment/types/prComment-enum';
+import { ObjectIdSchema } from '@utils/index';
 import { z } from 'zod';
 
 const AddPrCommentSchema = z.object({
@@ -53,9 +54,15 @@ const EditPrCommentSchema = z.object({
     .optional(),
 });
 
+const PRCommentParamsSchema = z.object({
+  pullRequestId: ObjectIdSchema(),
+  commentId: ObjectIdSchema(),
+});
+
 type TAddPRCommentSchema = z.infer<typeof AddPrCommentSchema>;
 type TEditPRCommentSchema = z.infer<typeof EditPrCommentSchema>;
+type TPRCommentParamsSchema = z.infer<typeof PRCommentParamsSchema>;
 
-export { AddPrCommentSchema, EditPrCommentSchema };
+export { AddPrCommentSchema, EditPrCommentSchema, PRCommentParamsSchema };
 
-export type { TAddPRCommentSchema, TEditPRCommentSchema };
+export type { TAddPRCommentSchema, TEditPRCommentSchema, TPRCommentParamsSchema };

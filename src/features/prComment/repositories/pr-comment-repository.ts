@@ -15,32 +15,37 @@ class PrCommentRepository extends BaseRepository<IPRComment, IPRCommentDoc> {
     return await this.existsById({ filter: { _id } });
   }
 
+  async getCommentById(commentId: string) {
+    return this.findOne({ filter: { _id: commentId } });
+  }
+
   async editComment(input: IEditPrCommentDTO) {
     const { commentId, content, suggestion } = input;
-    return await this.model.updateOne(
-      { _id: commentId },
-      {
+    return await this.findOneAndUpdate({
+      filter: { _id: commentId },
+      update: {
         $set: {
           content,
           suggestion,
           isEdited: true,
           editedAt: new Date(),
         },
-      }
-    );
+      },
+    });
   }
 
   async resolveComment(input: IResolvePrCommentDTO) {
-    const { commentId } = input;
-    return await this.model.updateOne(
-      { _id: commentId },
-      {
+    const { commentId, userId } = input;
+    return await this.findOneAndUpdate({
+      filter: { _id: commentId },
+      update: {
         $set: {
           isResolved: true,
+          resolvedBy: userId,
           resolvedAt: new Date(),
         },
-      }
-    );
+      },
+    });
   }
 }
 

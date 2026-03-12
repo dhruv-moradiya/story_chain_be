@@ -1,5 +1,13 @@
-interface IInitializePRReviewsDTO {
+import { TSubmitPRReviewSchema } from '@/schema/request/pr-review.schema';
+
+interface ISubmitPRReviewDTO extends TSubmitPRReviewSchema {
+  userId: string;
   pullRequestId: string;
 }
 
-export type { IInitializePRReviewsDTO };
+interface IGetPRReviewsDTO {
+  userId: string;
+  pullRequestId: string;
+}
+
+export type { IGetPRReviewsDTO, ISubmitPRReviewDTO };

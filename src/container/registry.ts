@@ -32,6 +32,8 @@ import { ChapterAutoSaveRepository } from '@features/chapterAutoSave/repositorie
 import { ChapterRepository } from '@features/chapter/repositories/chapter.repository';
 import { ReadingHistoryRepository } from '@/features/readingHistory/repositories/readingHistory.repository';
 import { PrCommentRepository } from '@/features/prComment/repositories/pr-comment-repository';
+import { PrReviewRepository } from '@/features/prReview/repositories/pr-review.repository';
+import { PrVoteRepository } from '@/features/prVote/repositories/pr-vote-repository';
 
 // ═══════════════════════════════════════════
 // FEATURE SERVICES
@@ -63,6 +65,8 @@ import { PullRequestDiffService } from '@/features/pullRequest/services/pull-req
 import { PullRequestQueryService } from '@/features/pullRequest/services/pull-request-query.service';
 
 import { PrCommentService } from '@/features/prComment/services/prComment.service';
+import { PrReviewService } from '@/features/prReview/services/prReview.service';
+import { PrVoteService } from '@/features/prVote/services/prVote.service';
 
 // ═══════════════════════════════════════════
 // CONTROLLERS
@@ -82,6 +86,8 @@ import { CommentRepository } from '@/features/comment/repositories/comment.repos
 import { PullRequestController } from '@/features/pullRequest/controllers/pullRequest.controller';
 import { PullRequestRepository } from '@/features/pullRequest/repositories/pullRequest.repository';
 import { PrCommentController } from '@/features/prComment/controllers/prComment.controller';
+import { PrReviewController } from '@/features/prReview/controllers/prReview.controller';
+import { PrVoteController } from '@/features/prVote/controllers/prVote.controller';
 
 // ═══════════════════════════════════════════
 // MIDDLEWARE FACTORIES
@@ -144,6 +150,8 @@ export function registerServices(): void {
   container.register(TOKENS.CommentRepository, { useClass: CommentRepository });
   container.register(TOKENS.PullRequestRepository, { useClass: PullRequestRepository });
   container.register(TOKENS.PrCommentRepository, { useClass: PrCommentRepository });
+  container.register(TOKENS.PrReviewRepository, { useClass: PrReviewRepository });
+  container.register(TOKENS.PrVoteRepository, { useClass: PrVoteRepository });
 
   // ═══════════════════════════════════════════
   // FEATURE SERVICES
@@ -177,6 +185,8 @@ export function registerServices(): void {
   container.register(TOKENS.PullRequestQueryService, { useClass: PullRequestQueryService });
   container.register(TOKENS.PullRequestService, { useClass: PullRequestService });
   container.register(TOKENS.PrCommentService, { useClass: PrCommentService });
+  container.register(TOKENS.PrReviewService, { useClass: PrReviewService });
+  container.register(TOKENS.PrVoteService, { useClass: PrVoteService });
 
   // ═══════════════════════════════════════════
   // CONTROLLERS
@@ -195,6 +205,8 @@ export function registerServices(): void {
   container.register(TOKENS.CommentController, { useClass: CommentController });
   container.register(TOKENS.PullRequestController, { useClass: PullRequestController });
   container.register(TOKENS.PrCommentController, { useClass: PrCommentController });
+  container.register(TOKENS.PrReviewController, { useClass: PrReviewController });
+  container.register(TOKENS.PrVoteController, { useClass: PrVoteController });
 
   // ═══════════════════════════════════════════
   // MIDDLEWARE FACTORIES

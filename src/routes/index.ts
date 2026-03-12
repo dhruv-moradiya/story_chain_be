@@ -9,6 +9,8 @@ import { bookmarkRoutes } from '@/features/bookmark/routes/bookmark.routes';
 import { commentRoutes } from '@/features/comment/routes/comment.router';
 import { pullRequestRoutes } from '@/features/pullRequest/routes/pullRequest.routes';
 import { prCommentroutes } from '@/features/prComment/routes/prComment.router';
+import { prReviewRoutes } from '@/features/prReview/routes/prReview.router';
+import { prVoteRoutes } from '@/features/prVote/routes/prVote.router';
 
 enum ApiRoute {
   USERS = '/api/users',
@@ -33,4 +35,6 @@ export async function registerRoutes(fastify: FastifyInstance) {
   fastify.register(commentRoutes, { prefix: ApiRoute.COMMENTS });
   fastify.register(pullRequestRoutes, { prefix: ApiRoute.PULL_REQUESTS });
   fastify.register(prCommentroutes, { prefix: ApiRoute.PULL_REQUESTS });
+  fastify.register(prReviewRoutes, { prefix: ApiRoute.PULL_REQUESTS });
+  fastify.register(prVoteRoutes, { prefix: ApiRoute.PULL_REQUESTS });
 }

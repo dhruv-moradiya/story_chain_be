@@ -6,6 +6,7 @@ import { BaseModule } from '@/utils/baseClass';
 import { inject, singleton } from 'tsyringe';
 import { PrCommentRepository } from '../repositories/pr-comment-repository';
 import { PRCommentType } from '../types/prComment-enum';
+import { IPRComment } from '../types/prComment.types';
 
 @singleton()
 class PrCommentService extends BaseModule {
@@ -24,6 +25,19 @@ class PrCommentService extends BaseModule {
 
   private async _checkPRCommentExists(_id: ID) {
     return await this.prCommentRepository.existsCommentById(_id);
+  }
+
+  async getPrCommentById(commentId: string): Promise<IPRComment> {
+    const prComment = await this.prCommentRepository.getCommentById(commentId);
+
+    if (!prComment) {
+      this.throwNotFoundError(
+        'PR_COMMENT_NOT_FOUND',
+        `The PR comment with id ${commentId} does not exist or may have been removed.`
+      );
+    }
+
+    return prComment;
   }
 
   async addPrComment(input: ICreatePrCommentDTO) {

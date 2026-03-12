@@ -4,7 +4,11 @@ import { FastifyInstance } from 'fastify';
 import { container } from 'tsyringe';
 import { PrCommentController } from '../controllers/prComment.controller';
 import zodToJsonSchema from 'zod-to-json-schema';
-import { AddPrCommentSchema, EditPrCommentSchema } from '@/schema/request/pr-comment.schema';
+import {
+  AddPrCommentSchema,
+  EditPrCommentSchema,
+  PRCommentParamsSchema,
+} from '@/schema/request/pr-comment.schema';
 import { RateLimits } from '@/constants/rateLimits';
 import { PullRequestIdSchema } from '@/schema/request/pullRequest.schema';
 
@@ -45,7 +49,7 @@ export async function prCommentroutes(fastify: FastifyInstance) {
       schema: {
         description: 'Edit a comment on a pull request.',
         tags: ['Pull Request Comments'],
-        params: zodToJsonSchema(PullRequestIdSchema),
+        params: zodToJsonSchema(PRCommentParamsSchema),
         body: zodToJsonSchema(EditPrCommentSchema),
       },
     },
@@ -60,7 +64,7 @@ export async function prCommentroutes(fastify: FastifyInstance) {
       schema: {
         description: 'Resolve a comment on a pull request.',
         tags: ['Pull Request Comments'],
-        params: zodToJsonSchema(PullRequestIdSchema),
+        params: zodToJsonSchema(PRCommentParamsSchema),
       },
     },
     PrCommentController.resolveComment

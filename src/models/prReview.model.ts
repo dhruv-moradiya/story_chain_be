@@ -65,6 +65,7 @@ const prReviewSchema = new Schema<IPRReviewDoc>(
 // Indexes
 prReviewSchema.index({ pullRequestId: 1, createdAt: -1 });
 prReviewSchema.index({ reviewerId: 1 });
+prReviewSchema.index({ pullRequestId: 1, reviewerId: 1 }, { unique: true });
 
 const PRReview = mongoose.model('PRReview', prReviewSchema);
 

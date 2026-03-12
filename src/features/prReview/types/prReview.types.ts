@@ -26,3 +26,18 @@ export interface IPRReview {
 export interface IPRReviewDoc extends Document, IPRReview {
   _id: Types.ObjectId;
 }
+
+export interface IPRReviewWithReviewer extends IPRReview {
+  reviewer?: {
+    clerkId: string;
+    username?: string;
+    email?: string;
+    avatarUrl?: string;
+  } | null;
+}
+
+export interface IPRReviewSummary {
+  reviewsReceived: number;
+  approvers: string[];
+  blockers: string[];
+}
