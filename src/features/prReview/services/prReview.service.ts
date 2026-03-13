@@ -16,7 +16,7 @@ import { sanitizeContent } from '@/utils/sanitizer';
 import { BaseModule } from '@/utils/baseClass';
 import { inject, singleton } from 'tsyringe';
 import { PrReviewRepository } from '../repositories/pr-review.repository';
-import { IPRReviewWithReviewer } from '../types/prReview.types';
+import { IPRReview, IPRReviewWithReviewer } from '../types/prReview.types';
 import { PRReviewStatus } from '../types/prReview-enum';
 
 @singleton()
@@ -36,6 +36,8 @@ class PrReviewService extends BaseModule {
     super();
   }
 
+  // ─── Permission helpers ───────────────────────────────────────────────────
+
   private hasStoryPermission(
     userStoryRole: TStoryCollaboratorRole | null,
     permission: TStoryCollaboratorPermission
@@ -52,10 +54,7 @@ class PrReviewService extends BaseModule {
       pullRequest.storySlug
     );
 
-    return {
-      pullRequest,
-      userStoryRole,
-    };
+    return { pullRequest, userStoryRole };
   }
 
   private ensureReviewAccess(userStoryRole: TStoryCollaboratorRole | null) {
@@ -125,6 +124,52 @@ class PrReviewService extends BaseModule {
     };
   }
 
+  // ─── Upsert logic (moved from repository) ────────────────────────────────
+
+  /**
+   * Creates a new review or updates an existing one.
+   * Returns the review document and metadata about what happened.
+   */
+  private async upsertReview(input: ISubmitPRReviewDTO): Promise<{
+    review: IPRReview;
+    previousStatus: IPRReview['reviewStatus'] | null;
+    isNew: boolean;
+  }> {
+    const reviewData = {
+      pullRequestId: input.pullRequestId,
+      reviewerId: input.userId,
+      reviewStatus: input.reviewStatus,
+      summary: input.summary,
+      feedback: input.feedback,
+      overallRating: input.overallRating,
+    };
+
+    const existingReview = await this.prReviewRepository.findByPullRequestAndReviewer(
+      input.pullRequestId,
+      input.userId
+    );
+
+    if (!existingReview) {
+      const review = await this.prReviewRepository.createReview(reviewData);
+      return { review, previousStatus: null, isNew: true };
+    }
+
+    const updated = await this.prReviewRepository.updateReview(input.pullRequestId, input.userId, {
+      reviewStatus: input.reviewStatus,
+      summary: input.summary,
+      feedback: input.feedback,
+      overallRating: input.overallRating,
+    });
+
+    return {
+      review: (updated ?? existingReview) as IPRReview,
+      previousStatus: existingReview.reviewStatus,
+      isNew: false,
+    };
+  }
+
+  // ─── Public operations ────────────────────────────────────────────────────
+
   async submitReview(input: ISubmitPRReviewDTO): Promise<IPRReviewWithReviewer> {
     const accessContext = await this.getReviewAccessContext(input.userId, input.pullRequestId);
 
@@ -135,7 +180,7 @@ class PrReviewService extends BaseModule {
     );
 
     const sanitizedInput = this.sanitizeReviewInput(input);
-    const submitResult = await this.prReviewRepository.submitReview(sanitizedInput);
+    const submitResult = await this.upsertReview(sanitizedInput);
     const reviewSummary = await this.prReviewRepository.getReviewSummary(input.pullRequestId);
 
     const approvalsReceived = reviewSummary.approvers.length;

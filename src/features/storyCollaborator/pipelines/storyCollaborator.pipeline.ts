@@ -1,11 +1,15 @@
-import { PipelineStage } from 'mongoose';
+import { BasePipelineBuilder } from '@/shared/pipelines/base.pipeline.builder';
 
-class StoryCollaboratorPipelineBuilder {
-  private pipeline: PipelineStage[] = [];
+class StoryCollaboratorPipelineBuilder extends BasePipelineBuilder<StoryCollaboratorPipelineBuilder> {
+  // ─── Private reusable joins ───────────────────────────────────────────────
 
-  // 🔹 reusable user join (without $match)
+  /**
+   * Reusable $lookup that joins user profile fields from the `users` collection.
+   * @param asField  - The output array field name
+   * @param localVar - The local document field holding the clerkId reference
+   */
   private joinUserProfile(asField: string, localVar: string) {
-    this.pipeline.push({
+    return this.addStage({
       $lookup: {
         from: 'users',
         let: { ref: `$${localVar}` },
@@ -27,45 +31,34 @@ class StoryCollaboratorPipelineBuilder {
         as: asField,
       },
     });
-
-    return this;
   }
 
-  // 🔹 match story using slug
+  // ─── Match stages ─────────────────────────────────────────────────────────
+
+  /** Matches collaborator documents by story slug. */
   matchStoryBySlug(slug: string) {
-    this.pipeline.push({ $match: { slug } });
-    return this;
+    return this.matchField('slug', slug);
   }
 
-  // 🔹 populate collaborator user
+  // ─── Populate stages ──────────────────────────────────────────────────────
+
+  /** Joins collaborator user profile and converts the result array to a single object. */
   populatedCollaboratorUser() {
-    return this.joinUserProfile('user', 'userId').$setUserRoot(); // convert to object
+    return this.joinUserProfile('user', 'userId').addStages([
+      { $unset: 'userId' },
+      { $set: { user: { $arrayElemAt: ['$user', 0] } } },
+    ]);
   }
 
-  // 🔹 populate invitedBy user
+  /** Joins invitedBy user profile and converts the result array to a single object (nullable). */
   populatedInvitedByUser() {
-    return this.joinUserProfile('invitedBy', 'invitedBy').$setInvitedByRoot();
-  }
-
-  // 🔻 helpers to convert array → object
-  private $setUserRoot() {
-    this.pipeline.push({ $unset: 'userId' }, { $set: { user: { $arrayElemAt: ['$user', 0] } } });
-    return this;
-  }
-
-  private $setInvitedByRoot() {
-    this.pipeline.push({
+    return this.joinUserProfile('invitedBy', 'invitedBy').addStage({
       $set: {
         invitedBy: {
           $ifNull: [{ $arrayElemAt: ['$invitedBy', 0] }, null],
         },
       },
     });
-    return this;
-  }
-
-  build() {
-    return this.pipeline;
   }
 }
 

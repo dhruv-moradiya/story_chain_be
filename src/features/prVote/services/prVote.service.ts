@@ -4,10 +4,7 @@ import { PullRequestRepository } from '@/features/pullRequest/repositories/pullR
 import { PullRequestQueryService } from '@/features/pullRequest/services/pull-request-query.service';
 import { PRStatus } from '@/features/pullRequest/types/pullRequest-enum';
 import { IPullRequest } from '@/features/pullRequest/types/pullRequest.types';
-import { StoryRepository } from '@/features/story/repositories/story.repository';
-import { IStorySettingsWithImages } from '@/features/story/types/story.types';
 import { CollaboratorQueryService } from '@/features/storyCollaborator/services/collaborator-query.service';
-import { TStoryCollaboratorRole } from '@/features/storyCollaborator/types/storyCollaborator.types';
 import { CacheKeyBuilder } from '@/infrastructure';
 import { CacheService } from '@/infrastructure/cache/cache.service';
 import { BaseModule } from '@/utils/baseClass';
@@ -16,7 +13,6 @@ import { PrVoteRepository } from '../repositories/pr-vote-repository';
 import { ICurrentUserPRVote, IPRVoteSummary, TPRVoteValue } from '../types/prVote.types';
 import {
   ICachedPRVoteMetadata,
-  ICachedPRVoteStats,
   buildPRVoteStatsFromPullRequest,
   cachePRUserVote,
   cachePRVoteMetadata,
@@ -34,97 +30,86 @@ class PrVoteService extends BaseModule {
     private readonly pullRequestQueryService: PullRequestQueryService,
     @inject(TOKENS.PullRequestRepository)
     private readonly pullRequestRepository: PullRequestRepository,
-    @inject(TOKENS.StoryRepository)
-    private readonly storyRepository: StoryRepository,
     @inject(TOKENS.CollaboratorQueryService)
     private readonly collaboratorQueryService: CollaboratorQueryService
   ) {
     super();
   }
 
-  private async hydratePullRequestVoteCache(
-    pullRequestId: string
-  ): Promise<{ metadata: ICachedPRVoteMetadata; voteStats: ICachedPRVoteStats }> {
-    const pullRequest = await this.pullRequestQueryService.getPullRequestById(pullRequestId);
-    const voteStats = buildPRVoteStatsFromPullRequest(pullRequest);
-    const metadata = await cachePRVoteMetadata(this.cacheService, pullRequest);
+  // ─── Private cache helpers ────────────────────────────────────────────────
 
-    await cachePRVoteSummary(this.cacheService, pullRequestId, voteStats);
-
-    return { metadata, voteStats };
-  }
-
+  /**
+   * Fetches lightweight PR metadata (id, storySlug, authorId, status) from cache.
+   * On a miss, fetches the full PR from DB, caches just the metadata fields, and returns them.
+   */
   private async getPullRequestMetadata(pullRequestId: string): Promise<ICachedPRVoteMetadata> {
-    const key = CacheKeyBuilder.pullRequestMetadata(pullRequestId);
-    const cachedMetadata = await this.cacheService.get<ICachedPRVoteMetadata>(key);
-
-    if (cachedMetadata) {
-      return cachedMetadata;
-    }
-
-    const { metadata } = await this.hydratePullRequestVoteCache(pullRequestId);
-    return metadata;
-  }
-
-  private async getStorySettingsBySlug(storySlug: string): Promise<IStorySettingsWithImages> {
-    return this.cacheService.getOrSet(
-      CacheKeyBuilder.storySettings(storySlug),
-      async () => {
-        const story = await this.storyRepository.findBySlug(storySlug);
-
-        if (!story) {
-          this.throwNotFoundError('STORY_NOT_FOUND', `Story not found for slug: ${storySlug}`);
-        }
-
-        return {
-          settings: story.settings,
-          coverImage: story.coverImage,
-          cardImage: story.cardImage,
-        };
-      },
-      { ttlKey: 'STORY_SETTINGS' }
+    const cached = await this.cacheService.get<ICachedPRVoteMetadata>(
+      CacheKeyBuilder.pullRequestMetadata(pullRequestId)
     );
+
+    if (cached) return cached;
+
+    const pullRequest = await this.pullRequestQueryService.getPullRequestById(pullRequestId);
+
+    return cachePRVoteMetadata(this.cacheService, pullRequest);
   }
 
-  private async getCachedCollaboratorRole(
-    userId: string,
-    storySlug: string
-  ): Promise<TStoryCollaboratorRole | null> {
-    const cachedAccess = await this.cacheService.getOrSet<{ role: TStoryCollaboratorRole | null }>(
+  /**
+   * Fetches the collaborator role from cache; falls back to DB and caches for 5 min.
+   */
+  private getCachedCollaboratorRole(userId: string, storySlug: string) {
+    return this.cacheService.getOrSet(
       CacheKeyBuilder.collaboratorRole(userId, storySlug),
-      async () => ({
-        role: await this.collaboratorQueryService.getCollaboratorRole(userId, storySlug),
-      }),
+      () => this.collaboratorQueryService.getCollaboratorRole(userId, storySlug),
       { ttlKey: 'COLLABORATOR_ROLE' }
     );
-
-    return cachedAccess.role;
   }
 
+  /**
+   * Fetches the user's cached vote on a PR, falling back to the DB if not found.
+   */
+  private async getCachedUserVote(
+    pullRequestId: string,
+    userId: string
+  ): Promise<ICurrentUserPRVote> {
+    const cached = await this.cacheService.get<ICurrentUserPRVote>(
+      CacheKeyBuilder.pullRequestUserVote(pullRequestId, userId)
+    );
+
+    if (cached) return cached;
+
+    const userVote = await this.prVoteRepository.getUserVote(pullRequestId, userId);
+
+    return cachePRUserVote(this.cacheService, pullRequestId, userId, userVote.vote);
+  }
+
+  // ─── Access guard ─────────────────────────────────────────────────────────
+
+  /**
+   * Validates that the user is a collaborator on the story linked to the PR.
+   * Uses cached metadata + cached role to avoid DB hits on warm paths.
+   */
   private async getAccessiblePullRequest(
     userId: string,
     pullRequestId: string
   ): Promise<ICachedPRVoteMetadata> {
     const pullRequest = await this.getPullRequestMetadata(pullRequestId);
-    const storySettings = await this.getStorySettingsBySlug(pullRequest.storySlug);
-    const allowGeneralVoting =
-      storySettings.settings.isPublic && storySettings.settings.allowVoting;
 
-    if (!allowGeneralVoting) {
-      const userStoryRole = await this.getCachedCollaboratorRole(userId, pullRequest.storySlug);
+    const userStoryRole = await this.getCachedCollaboratorRole(userId, pullRequest.storySlug);
 
-      if (!userStoryRole) {
-        this.throwForbiddenError(
-          'FORBIDDEN',
-          'You do not have access to this pull request vote API.'
-        );
-      }
+    if (!userStoryRole) {
+      this.throwForbiddenError(
+        'FORBIDDEN',
+        'You do not have access to this pull request vote API.'
+      );
     }
 
     return pullRequest;
   }
 
-  private ensureVotingIsAllowed(pullRequest: Pick<IPullRequest, 'status'>) {
+  // ─── Business rule guard ──────────────────────────────────────────────────
+
+  private ensureVotingIsAllowed(pullRequest: ICachedPRVoteMetadata) {
     const blockedStatuses = new Set<IPullRequest['status']>([
       PRStatus.CLOSED,
       PRStatus.REJECTED,
@@ -139,46 +124,7 @@ class PrVoteService extends BaseModule {
     }
   }
 
-  private async getVoteStats(pullRequestId: string): Promise<ICachedPRVoteStats> {
-    return this.cacheService.getOrSet(
-      CacheKeyBuilder.pullRequestVoteSummary(pullRequestId),
-      async () => {
-        const { voteStats } = await this.hydratePullRequestVoteCache(pullRequestId);
-        return voteStats;
-      },
-      { ttlKey: 'PULL_REQUEST_VOTE_SUMMARY' }
-    );
-  }
-
-  private async getCachedUserVote(
-    pullRequestId: string,
-    userId: string
-  ): Promise<ICurrentUserPRVote> {
-    return this.cacheService.getOrSet(
-      CacheKeyBuilder.pullRequestUserVote(pullRequestId, userId),
-      () => this.prVoteRepository.getUserVote(pullRequestId, userId),
-      { ttlKey: 'PULL_REQUEST_USER_VOTE' }
-    );
-  }
-
-  private async syncVoteCaches(input: {
-    pullRequestId: string;
-    userId: string;
-    currentUserVote: TPRVoteValue | null;
-    voteStats: ICachedPRVoteStats;
-    pullRequest?: Pick<IPullRequest, '_id' | 'storySlug' | 'authorId' | 'status'>;
-  }): Promise<void> {
-    const tasks: Promise<unknown>[] = [
-      cachePRVoteSummary(this.cacheService, input.pullRequestId, input.voteStats),
-      cachePRUserVote(this.cacheService, input.pullRequestId, input.userId, input.currentUserVote),
-    ];
-
-    if (input.pullRequest) {
-      tasks.push(cachePRVoteMetadata(this.cacheService, input.pullRequest));
-    }
-
-    await Promise.all(tasks);
-  }
+  // ─── Result builder ───────────────────────────────────────────────────────
 
   private buildVoteSummary(
     pullRequestId: string,
@@ -195,6 +141,40 @@ class PrVoteService extends BaseModule {
     };
   }
 
+  // ─── Vote stats cache helpers ─────────────────────────────────────────────
+
+  /**
+   * Fetches aggregate vote stats from cache; falls back to DB and caches for 2 min.
+   */
+  private async getCachedVoteStats(pullRequestId: string) {
+    const cached = await this.cacheService.get<
+      Omit<IPRVoteSummary, 'pullRequestId' | 'currentUserVote'>
+    >(CacheKeyBuilder.pullRequestVoteSummary(pullRequestId));
+
+    if (cached) return cached;
+
+    const voteStats = await this.prVoteRepository.getVoteStats(pullRequestId);
+
+    await cachePRVoteSummary(this.cacheService, pullRequestId, voteStats);
+
+    return voteStats;
+  }
+
+  /**
+   * Invalidates all vote-related cache entries for a PR.
+   */
+  private invalidateVoteCache(pullRequestId: string, userId?: string): Promise<void> {
+    const keys = [CacheKeyBuilder.pullRequestVoteSummary(pullRequestId)];
+
+    if (userId) {
+      keys.push(CacheKeyBuilder.pullRequestUserVote(pullRequestId, userId));
+    }
+
+    return this.cacheService.delMany(keys);
+  }
+
+  // ─── Public vote operations ───────────────────────────────────────────────
+
   async castVote(input: ICastPRVoteDTO): Promise<IPRVoteSummary> {
     const pullRequest = await this.getAccessiblePullRequest(input.userId, input.pullRequestId);
 
@@ -206,47 +186,39 @@ class PrVoteService extends BaseModule {
       input.vote
     );
 
-    let voteStats: ICachedPRVoteStats;
-
-    if (mutationResult.changed) {
-      const updatedPullRequest = await this.pullRequestRepository.applyVoteMutation(
+    if (!mutationResult.changed) {
+      // Vote didn't change — serve from cache to avoid any extra DB work
+      const voteStats = await this.getCachedVoteStats(input.pullRequestId);
+      return this.buildVoteSummary(
         input.pullRequestId,
-        {
-          userId: input.userId,
-          currentVote: mutationResult.currentVote,
-          previousVote: mutationResult.previousVote,
-        }
-      );
-
-      if (!updatedPullRequest) {
-        this.throwNotFoundError(
-          'PULL_REQUEST_NOT_FOUND',
-          'The requested pull request was not found. Please check the ID and try again.'
-        );
-      }
-
-      voteStats = buildPRVoteStatsFromPullRequest(updatedPullRequest);
-
-      await this.syncVoteCaches({
-        pullRequestId: input.pullRequestId,
-        userId: input.userId,
-        currentUserVote: mutationResult.currentVote,
         voteStats,
-        pullRequest: updatedPullRequest,
-      });
-    } else {
-      voteStats = await this.getVoteStats(input.pullRequestId);
-      await cachePRUserVote(
-        this.cacheService,
-        input.pullRequestId,
-        input.userId,
-        mutationResult.currentVote
+        mutationResult.currentVote as TPRVoteValue
       );
     }
 
+    // Vote changed — use atomic $inc on the PR document (no aggregate needed)
+    const updatedPR = await this.pullRequestRepository.applyVoteMutation(input.pullRequestId, {
+      currentVote: mutationResult.currentVote,
+      previousVote: mutationResult.previousVote,
+      userId: input.userId,
+    });
+
+    // Invalidate stale cache and repopulate from the updated PR document
+    await this.invalidateVoteCache(input.pullRequestId, input.userId);
+
+    const freshVoteStats = updatedPR
+      ? buildPRVoteStatsFromPullRequest(updatedPR)
+      : await this.prVoteRepository.getVoteStats(input.pullRequestId);
+
+    await Promise.all([
+      cachePRVoteSummary(this.cacheService, input.pullRequestId, freshVoteStats),
+      cachePRUserVote(this.cacheService, input.pullRequestId, input.userId, input.vote),
+      updatedPR ? cachePRVoteMetadata(this.cacheService, updatedPR) : Promise.resolve(),
+    ]);
+
     return this.buildVoteSummary(
       input.pullRequestId,
-      voteStats,
+      freshVoteStats,
       mutationResult.currentVote as TPRVoteValue
     );
   }
@@ -261,48 +233,39 @@ class PrVoteService extends BaseModule {
       input.userId
     );
 
-    let voteStats: ICachedPRVoteStats;
-
-    if (mutationResult.changed) {
-      const updatedPullRequest = await this.pullRequestRepository.applyVoteMutation(
-        input.pullRequestId,
-        {
-          currentVote: mutationResult.currentVote,
-          previousVote: mutationResult.previousVote,
-        }
-      );
-
-      if (!updatedPullRequest) {
-        this.throwNotFoundError(
-          'PULL_REQUEST_NOT_FOUND',
-          'The requested pull request was not found. Please check the ID and try again.'
-        );
-      }
-
-      voteStats = buildPRVoteStatsFromPullRequest(updatedPullRequest);
-
-      await this.syncVoteCaches({
-        pullRequestId: input.pullRequestId,
-        userId: input.userId,
-        currentUserVote: null,
-        voteStats,
-        pullRequest: updatedPullRequest,
-      });
-    } else {
-      voteStats = await this.getVoteStats(input.pullRequestId);
-      await cachePRUserVote(this.cacheService, input.pullRequestId, input.userId, null);
+    if (!mutationResult.changed) {
+      const voteStats = await this.getCachedVoteStats(input.pullRequestId);
+      return this.buildVoteSummary(input.pullRequestId, voteStats, null);
     }
 
-    return this.buildVoteSummary(input.pullRequestId, voteStats, null);
+    // Vote removed — atomic $inc decrement
+    const updatedPR = await this.pullRequestRepository.applyVoteMutation(input.pullRequestId, {
+      currentVote: null,
+      previousVote: mutationResult.previousVote,
+    });
+
+    await this.invalidateVoteCache(input.pullRequestId, input.userId);
+
+    const freshVoteStats = updatedPR
+      ? buildPRVoteStatsFromPullRequest(updatedPR)
+      : await this.prVoteRepository.getVoteStats(input.pullRequestId);
+
+    await Promise.all([
+      cachePRVoteSummary(this.cacheService, input.pullRequestId, freshVoteStats),
+      cachePRUserVote(this.cacheService, input.pullRequestId, input.userId, null),
+    ]);
+
+    return this.buildVoteSummary(input.pullRequestId, freshVoteStats, null);
   }
 
   async getVoteSummary(input: IGetPRVoteDTO): Promise<IPRVoteSummary> {
-    await this.getAccessiblePullRequest(input.userId, input.pullRequestId);
-
-    const [userVote, voteStats] = await Promise.all([
+    // Access check + user vote fetch run in parallel
+    const [, userVote] = await Promise.all([
+      this.getAccessiblePullRequest(input.userId, input.pullRequestId),
       this.getCachedUserVote(input.pullRequestId, input.userId),
-      this.getVoteStats(input.pullRequestId),
     ]);
+
+    const voteStats = await this.getCachedVoteStats(input.pullRequestId);
 
     return this.buildVoteSummary(input.pullRequestId, voteStats, userVote.vote);
   }

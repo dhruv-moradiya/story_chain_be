@@ -1,5 +1,6 @@
 import { BasePipelineBuilder } from '@/shared/pipelines/base.pipeline.builder';
 import { toId } from '@/utils';
+import { PRReviewStatus } from '../types/prReview-enum';
 
 class PrReviewPipelineBuilder extends BasePipelineBuilder<PrReviewPipelineBuilder> {
   matchByPullRequestId(pullRequestId: string) {
@@ -58,6 +59,62 @@ class PrReviewPipelineBuilder extends BasePipelineBuilder<PrReviewPipelineBuilde
       updatedAt: 1,
       reviewer: 1,
     });
+  }
+
+  /**
+   * Builds a pipeline that aggregates all reviews for a PR into a summary:
+   * { reviewsReceived, approvers[], blockers[] }
+   */
+  buildReviewSummaryPipeline(pullRequestId: string) {
+    return this.matchByPullRequestId(pullRequestId)
+      .addStages([
+        {
+          $group: {
+            _id: '$pullRequestId',
+            reviewsReceived: { $sum: 1 },
+            approvers: {
+              $push: {
+                $cond: [{ $eq: ['$reviewStatus', PRReviewStatus.APPROVED] }, '$reviewerId', null],
+              },
+            },
+            blockers: {
+              $push: {
+                $cond: [
+                  {
+                    $in: [
+                      '$reviewStatus',
+                      [PRReviewStatus.CHANGES_REQUESTED, PRReviewStatus.NEEDS_WORK],
+                    ],
+                  },
+                  '$reviewerId',
+                  null,
+                ],
+              },
+            },
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            reviewsReceived: 1,
+            approvers: {
+              $filter: {
+                input: '$approvers',
+                as: 'reviewerId',
+                cond: { $ne: ['$$reviewerId', null] },
+              },
+            },
+            blockers: {
+              $filter: {
+                input: '$blockers',
+                as: 'reviewerId',
+                cond: { $ne: ['$$reviewerId', null] },
+              },
+            },
+          },
+        },
+      ])
+      .build();
   }
 }
 

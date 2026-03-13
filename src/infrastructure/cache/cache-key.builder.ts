@@ -13,7 +13,9 @@ export type CacheEntity =
   | 'reading-history'
   | 'autosave'
   | 'search'
-  | 'session';
+  | 'session'
+  | 'pull-request'
+  | 'pr-vote';
 
 /**
  * Operation types for cache keys
@@ -487,5 +489,59 @@ export class CacheKeyBuilder {
       operation: 'role',
       identifiers: { userId, storySlug },
     });
+  }
+
+  // ═══════════════════════════════════════════
+  // PULL REQUEST KEYS
+  // ═══════════════════════════════════════════
+
+  /**
+   * Cache key for pull request detail by ID
+   * @example "sc:pull-request:detail:prId=abc123"
+   */
+  static pullRequestDetail(prId: string): string {
+    return this.build({
+      entity: 'pull-request',
+      operation: 'detail',
+      identifiers: { prId },
+    });
+  }
+
+  /**
+   * Cache key for PR vote stats (aggregate upvotes/downvotes/score)
+   * @example "sc:pr-vote:count:prId=abc123"
+   */
+  static prVoteStats(prId: string): string {
+    return this.build({
+      entity: 'pr-vote',
+      operation: 'count',
+      identifiers: { prId },
+    });
+  }
+
+  /**
+   * Cache key for a single user’s vote on a PR
+   * @example "sc:pr-vote:detail:prId=abc123:userId=user_xyz"
+   */
+  static prUserVote(prId: string, userId: string): string {
+    return this.build({
+      entity: 'pr-vote',
+      operation: 'detail',
+      identifiers: { prId, userId },
+    });
+  }
+
+  /**
+   * All keys to invalidate when votes change on a PR
+   */
+  static invalidatePrVotes(prId: string): string[] {
+    return [this.prVoteStats(prId)];
+  }
+
+  /**
+   * All keys to invalidate when a PR changes
+   */
+  static invalidatePullRequest(prId: string): string[] {
+    return [this.pullRequestDetail(prId)];
   }
 }

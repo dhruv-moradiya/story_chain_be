@@ -41,6 +41,12 @@ export const CACHE_TTL = {
   PULL_REQUEST_USER_VOTE: 60 * 5, // 5 minutes
 
   // ═══════════════════════════════════════════
+  // PULL REQUEST DATA
+  // ═══════════════════════════════════════════
+  PULL_REQUEST: 60 * 5, // 5 minutes
+  PR_VOTE_STATS: 30, // 30 seconds - live vote counts
+
+  // ═══════════════════════════════════════════
   // SHORT-LIVED DATA
   // ═══════════════════════════════════════════
   RATE_LIMIT: 60, // 1 minute

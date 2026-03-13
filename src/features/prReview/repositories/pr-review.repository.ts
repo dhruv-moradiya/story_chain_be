@@ -1,25 +1,23 @@
-import { toId } from '@/utils';
 import { BaseRepository } from '@/utils/baseClass';
 import { IOperationOptions } from '@/types';
 import { PipelineStage } from 'mongoose';
 import { singleton } from 'tsyringe';
 import { PRReview } from '@models/prReview.model';
-import { ISubmitPRReviewDTO } from '@/dto/pr-review.dto';
 import { PrReviewPipelineBuilder } from '../pipelines/prReview.pipeline.builder';
 import {
   IPRReview,
   IPRReviewDoc,
   IPRReviewSummary,
   IPRReviewWithReviewer,
-  TPRReviewStatus,
 } from '../types/prReview.types';
-import { PRReviewStatus } from '../types/prReview-enum';
 
 @singleton()
 class PrReviewRepository extends BaseRepository<IPRReview, IPRReviewDoc> {
   constructor() {
     super(PRReview);
   }
+
+  // ─── Internal aggregation helper ────────────────────────────────────────
 
   async aggregateReviews<T = IPRReview>(
     pipeline: PipelineStage[],
@@ -31,57 +29,50 @@ class PrReviewRepository extends BaseRepository<IPRReview, IPRReviewDoc> {
       .exec();
   }
 
+  // ─── Finders ────────────────────────────────────────────────────────────
+
   async findByPullRequestAndReviewer(pullRequestId: string, reviewerId: string) {
     return this.findOne({ filter: { pullRequestId, reviewerId } });
   }
 
-  async submitReview(input: ISubmitPRReviewDTO): Promise<{
-    review: IPRReview;
-    previousStatus: TPRReviewStatus | null;
-    isNew: boolean;
-  }> {
-    const existingReview = await this.findByPullRequestAndReviewer(
-      input.pullRequestId,
-      input.userId
-    );
+  // ─── Write operations (pure DB — no business logic) ─────────────────────
 
-    if (!existingReview) {
-      const review = await this.create({
-        data: {
-          pullRequestId: input.pullRequestId,
-          reviewerId: input.userId,
-          reviewStatus: input.reviewStatus,
-          summary: input.summary,
-          feedback: input.feedback,
-          overallRating: input.overallRating,
-        },
-      });
+  /**
+   * Creates a new review document.
+   * Caller (service) is responsible for deciding whether to create or update.
+   */
+  async createReview(
+    input: Pick<
+      IPRReview,
+      'pullRequestId' | 'reviewerId' | 'reviewStatus' | 'summary' | 'feedback' | 'overallRating'
+    >
+  ): Promise<IPRReview> {
+    return this.create({ data: input });
+  }
 
-      return {
-        review,
-        previousStatus: null,
-        isNew: true,
-      };
-    }
-
-    const review = await this.findOneAndUpdate({
-      filter: { pullRequestId: input.pullRequestId, reviewerId: input.userId },
+  /**
+   * Updates an existing review document.
+   * Caller (service) provides the exact fields to overwrite.
+   */
+  async updateReview(
+    pullRequestId: string,
+    reviewerId: string,
+    update: Pick<IPRReview, 'reviewStatus' | 'summary' | 'feedback' | 'overallRating'>
+  ): Promise<IPRReview | null> {
+    return this.findOneAndUpdate({
+      filter: { pullRequestId, reviewerId },
       update: {
         $set: {
-          reviewStatus: input.reviewStatus,
-          summary: input.summary,
-          feedback: input.feedback,
-          overallRating: input.overallRating,
+          reviewStatus: update.reviewStatus,
+          summary: update.summary,
+          feedback: update.feedback,
+          overallRating: update.overallRating,
         },
       },
     });
-
-    return {
-      review: review as IPRReview,
-      previousStatus: existingReview.reviewStatus,
-      isNew: false,
-    };
   }
+
+  // ─── Aggregate queries ───────────────────────────────────────────────────
 
   async getReviewsForPullRequest(pullRequestId: string): Promise<IPRReviewWithReviewer[]> {
     const pipeline = new PrReviewPipelineBuilder()
@@ -113,58 +104,9 @@ class PrReviewRepository extends BaseRepository<IPRReview, IPRReviewDoc> {
   }
 
   async getReviewSummary(pullRequestId: string): Promise<IPRReviewSummary> {
-    const [reviewSummary] = await this.model.aggregate<IPRReviewSummary>([
-      {
-        $match: {
-          pullRequestId: toId(pullRequestId),
-        },
-      },
-      {
-        $group: {
-          _id: '$pullRequestId',
-          reviewsReceived: { $sum: 1 },
-          approvers: {
-            $push: {
-              $cond: [{ $eq: ['$reviewStatus', PRReviewStatus.APPROVED] }, '$reviewerId', null],
-            },
-          },
-          blockers: {
-            $push: {
-              $cond: [
-                {
-                  $in: [
-                    '$reviewStatus',
-                    [PRReviewStatus.CHANGES_REQUESTED, PRReviewStatus.NEEDS_WORK],
-                  ],
-                },
-                '$reviewerId',
-                null,
-              ],
-            },
-          },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          reviewsReceived: 1,
-          approvers: {
-            $filter: {
-              input: '$approvers',
-              as: 'reviewerId',
-              cond: { $ne: ['$$reviewerId', null] },
-            },
-          },
-          blockers: {
-            $filter: {
-              input: '$blockers',
-              as: 'reviewerId',
-              cond: { $ne: ['$$reviewerId', null] },
-            },
-          },
-        },
-      },
-    ]);
+    const pipeline = new PrReviewPipelineBuilder().buildReviewSummaryPipeline(pullRequestId);
+
+    const [reviewSummary] = await this.aggregateReviews<IPRReviewSummary>(pipeline);
 
     return (
       reviewSummary ?? {
