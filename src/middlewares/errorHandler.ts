@@ -192,7 +192,7 @@ export function globalErrorHandler(isDevelopment: boolean = false) {
     }
 
     // ----------------------------------------------------
-    // 5. Fastify Built-in Validation Error (schema validation)
+    // 5. Fastify Built-in Validation Error (AJV schema validation)
     // ----------------------------------------------------
     if (
       typeof error === 'object' &&
@@ -201,14 +201,58 @@ export function globalErrorHandler(isDevelopment: boolean = false) {
       Array.isArray((error as Record<string, unknown>).validation)
     ) {
       const err = error as FastifyError & { validationContext?: string };
-      const context = err.validationContext || 'body';
-      const message = err.message || HTTP_STATUS.UNPROCESSABLE_ENTITY.message;
+      const context = err.validationContext ?? 'body';
 
+      type AjvError = {
+        instancePath: string;
+        schemaPath: string;
+        keyword: string;
+        params?: Record<string, unknown>;
+        message?: string;
+      };
+
+      const rawErrors = (error as Record<string, unknown>).validation as AjvError[];
+
+      // Parse AJV errors into clean { field, message } objects
+      const fieldErrors = rawErrors.map((ajvErr) => {
+        // instancePath = "/title" → "title", "" → context (e.g. "body")
+        const rawPath = ajvErr.instancePath.replace(/^\//, '').replace(/\//g, '.');
+
+        let field = rawPath || context;
+
+        // AJV keyword "required" puts the missing field in params.missingProperty
+        if (ajvErr.keyword === 'required' && ajvErr.params?.missingProperty) {
+          const missing = String(ajvErr.params.missingProperty).replace(/^\//, '');
+          field = rawPath ? `${rawPath}.${missing}` : missing;
+        }
+
+        // Capitalise first letter of the field name for a friendlier message
+        const fieldLabel = field.charAt(0).toUpperCase() + field.slice(1);
+        const message = ajvErr.message
+          ? `${fieldLabel} ${ajvErr.message}`
+          : `${fieldLabel} is invalid`;
+
+        return { field, message, code: ajvErr.keyword };
+      });
+
+      // For a single field error, surface field + message at the top level (mirrors ZodError handler)
+      if (fieldErrors.length === 1) {
+        const { field, message } = fieldErrors[0];
+        const validationError = new ApiError(
+          'VALIDATION_FAILED',
+          HTTP_STATUS.UNPROCESSABLE_ENTITY.code,
+          message,
+          { field, details: { context, errors: fieldErrors } }
+        );
+        return reply.code(validationError.statusCode).send(validationError.toJSON(isDevelopment));
+      }
+
+      const summary = fieldErrors.map((e) => e.message).join(', ');
       const validationError = new ApiError(
         'VALIDATION_FAILED',
         HTTP_STATUS.UNPROCESSABLE_ENTITY.code,
-        `${context} validation failed: ${message}`,
-        { details: { context, validation: (error as Record<string, unknown>).validation } }
+        `${context.charAt(0).toUpperCase() + context.slice(1)} validation failed: ${summary}`,
+        { details: { context, errors: fieldErrors } }
       );
 
       return reply.code(validationError.statusCode).send(validationError.toJSON(isDevelopment));
