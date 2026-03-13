@@ -5,11 +5,13 @@ import { PullRequestRepository } from '@/features/pullRequest/repositories/pullR
 import { PullRequestQueryService } from '@/features/pullRequest/services/pull-request-query.service';
 import { PRStatus, PRTimelineAction } from '@/features/pullRequest/types/pullRequest-enum';
 import { IPullRequest } from '@/features/pullRequest/types/pullRequest.types';
+import { cachePRVoteMetadata } from '@/features/prVote/utils/prVote-cache';
 import { CollaboratorQueryService } from '@/features/storyCollaborator/services/collaborator-query.service';
 import {
   TStoryCollaboratorPermission,
   TStoryCollaboratorRole,
 } from '@/features/storyCollaborator/types/storyCollaborator.types';
+import { CacheService } from '@/infrastructure/cache/cache.service';
 import { sanitizeContent } from '@/utils/sanitizer';
 import { BaseModule } from '@/utils/baseClass';
 import { inject, singleton } from 'tsyringe';
@@ -26,6 +28,8 @@ class PrReviewService extends BaseModule {
     private readonly pullRequestQueryService: PullRequestQueryService,
     @inject(TOKENS.PullRequestRepository)
     private readonly pullRequestRepository: PullRequestRepository,
+    @inject(TOKENS.CacheService)
+    private readonly cacheService: CacheService,
     @inject(TOKENS.CollaboratorQueryService)
     private readonly collaboratorQueryService: CollaboratorQueryService
   ) {
@@ -193,18 +197,25 @@ class PrReviewService extends BaseModule {
       });
     }
 
-    await this.pullRequestRepository.syncReviewState(input.pullRequestId, {
-      status: nextStatus,
-      reviewsReceived: reviewSummary.reviewsReceived,
-      approvalsStatus: {
-        received: approvalsReceived,
-        pending: approvalsPending,
-        approvers: reviewSummary.approvers,
-        blockers: reviewSummary.blockers,
-        canMerge,
-      },
-      timelineEntries,
-    });
+    const updatedPullRequest = await this.pullRequestRepository.syncReviewState(
+      input.pullRequestId,
+      {
+        status: nextStatus,
+        reviewsReceived: reviewSummary.reviewsReceived,
+        approvalsStatus: {
+          received: approvalsReceived,
+          pending: approvalsPending,
+          approvers: reviewSummary.approvers,
+          blockers: reviewSummary.blockers,
+          canMerge,
+        },
+        timelineEntries,
+      }
+    );
+
+    if (updatedPullRequest) {
+      await cachePRVoteMetadata(this.cacheService, updatedPullRequest);
+    }
 
     const review = await this.prReviewRepository.getReviewForPullRequestAndReviewer(
       input.pullRequestId,

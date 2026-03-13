@@ -6,7 +6,7 @@ import {
 } from '../types/pullRequest.types';
 import { PullRequest } from '@models/pullRequest.model';
 import { BaseRepository } from '@utils/baseClass';
-import { PRStatus } from '../types/pullRequest-enum';
+import { PRStatus, PRTimelineAction } from '../types/pullRequest-enum';
 import { ID } from '@/types';
 import { TPRVoteValue } from '@/features/prVote/types/prVote.types';
 
@@ -92,6 +92,68 @@ export class PullRequestRepository extends BaseRepository<IPullRequest, IPullReq
           metadata: {
             vote: timelineContext.vote,
             previousVote: timelineContext.previousVote,
+          },
+        },
+      };
+    }
+
+    return this.findOneAndUpdate({
+      filter: { _id: prId },
+      update,
+    });
+  }
+
+  async applyVoteMutation(
+    prId: string,
+    input: {
+      currentVote: TPRVoteValue | null;
+      previousVote: TPRVoteValue | null;
+      userId?: string;
+    }
+  ) {
+    const toCounters = (vote: TPRVoteValue | null) => ({
+      upvotes: vote === 1 ? 1 : 0,
+      downvotes: vote === -1 ? 1 : 0,
+      score: vote ?? 0,
+    });
+
+    const previousCounters = toCounters(input.previousVote);
+    const currentCounters = toCounters(input.currentVote);
+
+    const update: {
+      $inc: {
+        'votes.upvotes': number;
+        'votes.downvotes': number;
+        'votes.score': number;
+      };
+      $push?: {
+        timeline: {
+          action: TPRTimelineAction;
+          performedBy: string;
+          performedAt: Date;
+          metadata: {
+            vote: TPRVoteValue;
+            previousVote: TPRVoteValue | null;
+          };
+        };
+      };
+    } = {
+      $inc: {
+        'votes.upvotes': currentCounters.upvotes - previousCounters.upvotes,
+        'votes.downvotes': currentCounters.downvotes - previousCounters.downvotes,
+        'votes.score': currentCounters.score - previousCounters.score,
+      },
+    };
+
+    if (input.userId && input.currentVote !== null) {
+      update.$push = {
+        timeline: {
+          action: PRTimelineAction.VOTED,
+          performedBy: input.userId,
+          performedAt: new Date(),
+          metadata: {
+            vote: input.currentVote,
+            previousVote: input.previousVote,
           },
         },
       };

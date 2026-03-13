@@ -8,6 +8,12 @@ import { PullRequestRepository } from '@features/pullRequest/repositories/pullRe
 import { PullRequestValidator } from '@features/pullRequest/validators/pullRequest.validator';
 import { PullRequestDiffService } from '@/features/pullRequest/services/pull-request-diff.service';
 import { PRStatus, PRTimelineAction } from '@features/pullRequest/types/pullRequest-enum';
+import { CacheService } from '@/infrastructure/cache/cache.service';
+import {
+  buildPRVoteStatsFromPullRequest,
+  cachePRVoteMetadata,
+  cachePRVoteSummary,
+} from '@/features/prVote/utils/prVote-cache';
 
 /**
  * Service for managing Pull Requests.
@@ -21,7 +27,9 @@ export class PullRequestService extends BaseModule implements ICreatePullRequest
     @inject(TOKENS.PullRequestValidator)
     private readonly pullRequestValidator: PullRequestValidator,
     @inject(TOKENS.PullRequestDiffService)
-    private readonly pullRequestDiffService: PullRequestDiffService
+    private readonly pullRequestDiffService: PullRequestDiffService,
+    @inject(TOKENS.CacheService)
+    private readonly cacheService: CacheService
   ) {
     super();
   }
@@ -81,6 +89,11 @@ export class PullRequestService extends BaseModule implements ICreatePullRequest
         ],
       },
     });
+
+    await Promise.all([
+      cachePRVoteMetadata(this.cacheService, pr),
+      cachePRVoteSummary(this.cacheService, String(pr._id), buildPRVoteStatsFromPullRequest(pr)),
+    ]);
 
     this.logInfo(`PR created: "${pr.title}" [${prType}] by ${userId} for story ${storySlug}`);
 

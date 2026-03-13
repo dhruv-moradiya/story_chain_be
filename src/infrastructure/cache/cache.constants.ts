@@ -18,6 +18,7 @@ export const CACHE_TTL = {
   STORY_TREE: 60 * 15, // 15 minutes
   COLLABORATOR_LIST: 60 * 15, // 15 minutes
   COLLABORATOR_ROLE: 60 * 5, // 5 minutes
+  PULL_REQUEST_METADATA: 60 * 10, // 10 minutes
 
   // ═══════════════════════════════════════════
   // DYNAMIC LISTS - Updated frequently
@@ -36,6 +37,8 @@ export const CACHE_TTL = {
   READING_HISTORY: 60 * 5, // 5 minutes
   NOTIFICATION_COUNT: 60 * 2, // 2 minutes
   NOTIFICATION_LIST: 60 * 5, // 5 minutes
+  PULL_REQUEST_VOTE_SUMMARY: 60 * 2, // 2 minutes
+  PULL_REQUEST_USER_VOTE: 60 * 5, // 5 minutes
 
   // ═══════════════════════════════════════════
   // SHORT-LIVED DATA

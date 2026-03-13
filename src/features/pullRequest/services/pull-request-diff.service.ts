@@ -52,7 +52,6 @@ export class PullRequestDiffService extends BaseModule {
     }
 
     this.throwBadRequest('INVALID_INPUT', `Unknown PR type: ${(input as IPullRequestDto).prType}`);
-    throw new Error('Unreachable');
   }
 
   /**

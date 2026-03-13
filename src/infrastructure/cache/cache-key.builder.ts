@@ -7,6 +7,7 @@ export type CacheEntity =
   | 'story'
   | 'chapter'
   | 'user'
+  | 'pull-request'
   | 'notification'
   | 'collaborator'
   | 'reading-history'
@@ -22,6 +23,7 @@ export type CacheOperation =
   | 'list'
   | 'tree'
   | 'count'
+  | 'summary'
   | 'search'
   | 'overview'
   | 'settings'
@@ -260,6 +262,49 @@ export class CacheKeyBuilder {
       entity: 'user',
       operation: 'detail',
       identifiers: { clerkId },
+    });
+  }
+
+  // ═══════════════════════════════════════════
+  // PULL REQUEST KEYS
+  // ═══════════════════════════════════════════
+
+  /**
+   * Cache key for pull request vote/access metadata
+   * @example "sc:pull-request:detail:pullRequestId=pr_123:metadata"
+   */
+  static pullRequestMetadata(pullRequestId: string): string {
+    return this.build({
+      entity: 'pull-request',
+      operation: 'detail',
+      identifiers: { pullRequestId },
+      variant: 'metadata',
+    });
+  }
+
+  /**
+   * Cache key for aggregated pull request vote summary
+   * @example "sc:pull-request:summary:pullRequestId=pr_123:votes"
+   */
+  static pullRequestVoteSummary(pullRequestId: string): string {
+    return this.build({
+      entity: 'pull-request',
+      operation: 'summary',
+      identifiers: { pullRequestId },
+      variant: 'votes',
+    });
+  }
+
+  /**
+   * Cache key for current user's vote on a pull request
+   * @example "sc:pull-request:summary:pullRequestId=pr_123:userId=user_123:user-vote"
+   */
+  static pullRequestUserVote(pullRequestId: string, userId: string): string {
+    return this.build({
+      entity: 'pull-request',
+      operation: 'summary',
+      identifiers: { pullRequestId, userId },
+      variant: 'user-vote',
     });
   }
 
