@@ -21,6 +21,7 @@ export const createApp = async () => {
 
   const app = Fastify({
     logger: env.NODE_ENV === 'development',
+    trustProxy: true,
   });
 
   // Register plugins

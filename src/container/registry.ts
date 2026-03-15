@@ -14,6 +14,10 @@ import { RedisService } from '@config/services/redis.service';
 // CACHING & QUEUE SERVICES
 // ═══════════════════════════════════════════
 import { CacheService } from '@infrastructure/cache/cache.service';
+import { QueueService } from '@infrastructure/queue/queue.service';
+import { WorkerService } from '@infrastructure/queue/worker.service';
+import { SchedulerService } from '@infrastructure/scheduler/scheduler.service';
+import { NotificationWorker } from '@features/notification/workers/notification.worker';
 
 // ═══════════════════════════════════════════
 // TRANSFORMERS
@@ -126,6 +130,26 @@ export function registerServices(): void {
   container.register(
     TOKENS.CacheService,
     { useClass: CacheService },
+    { lifecycle: Lifecycle.Singleton }
+  );
+  container.register(
+    TOKENS.QueueService,
+    { useClass: QueueService },
+    { lifecycle: Lifecycle.Singleton }
+  );
+  container.register(
+    TOKENS.WorkerService,
+    { useClass: WorkerService },
+    { lifecycle: Lifecycle.Singleton }
+  );
+  container.register(
+    TOKENS.SchedulerService,
+    { useClass: SchedulerService },
+    { lifecycle: Lifecycle.Singleton }
+  );
+  container.register(
+    TOKENS.NotificationWorker,
+    { useClass: NotificationWorker },
     { lifecycle: Lifecycle.Singleton }
   );
 

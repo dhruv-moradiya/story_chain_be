@@ -5,6 +5,7 @@ const PUBLIC_AUTHOR_PROJECTION: PipelineStage.Project['$project'] = {
   clerkId: 1,
   username: 1,
   avatarUrl: 1,
+  email: 1,
 };
 
 const PUBLIC_AUTHOR_CARD_PROJECTION = {

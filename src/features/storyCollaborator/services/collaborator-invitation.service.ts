@@ -19,6 +19,7 @@ import { NotificationService } from '@features/notification/services/notificatio
 import { StoryRepository } from '@features/story/repositories/story.repository';
 import { CacheService } from '@/infrastructure/cache/cache.service';
 import { CACHE_TTL, CacheKeyBuilder } from '@/infrastructure';
+import { UserRepository } from '@features/user/repositories/user.repository';
 
 @singleton()
 class CollaboratorInvitationService extends BaseModule implements ICollaboratorInvitationService {
@@ -32,7 +33,9 @@ class CollaboratorInvitationService extends BaseModule implements ICollaboratorI
     @inject(TOKENS.StoryRepository)
     private readonly storyRepo: StoryRepository,
     @inject(TOKENS.NotificationService)
-    private readonly notificationService: NotificationService
+    private readonly notificationService: NotificationService,
+    @inject(TOKENS.UserRepository)
+    private readonly userRepo: UserRepository
   ) {
     super();
   }
@@ -122,17 +125,18 @@ class CollaboratorInvitationService extends BaseModule implements ICollaboratorI
       }
     );
 
-    // TODO: Add in queue
+    // Enqueue notification asynchronously via the job queue
     try {
-      await this.notificationService.createNotificationForCollabInvitation({
-        invitedUser: input.invitedUser,
-        inviterUser: input.inviterUser,
+      await this.notificationService.enqueueCollabInvitation({
+        invitedUserId: input.invitedUser.id,
+        inviterName: input.inviterUser.name,
+        storyName: story.title,
+        storySlug: story.slug,
         role: input.role,
-        story,
       });
     } catch (error) {
       // We do not throw here to ensure the invitation remains valid even if notification fails
-      this.logError('Failed to send notification for collaborator invite', { error });
+      this.logError('Failed to enqueue notification for collaborator invite', { error });
     }
 
     return invitation;
@@ -157,6 +161,36 @@ class CollaboratorInvitationService extends BaseModule implements ICollaboratorI
 
     if (!collaborator) {
       this.throwNotFoundError('Collaborator not found or no update was applied.');
+    }
+
+    // Enqueue accept/reject notification to the inviter
+    try {
+      // Look up the story and the accepting/declining user for notification context
+      const story = await this.storyRepo.findBySlug(slug);
+      const respondingUser = await this.userRepo.findByClerkId(userId);
+
+      if (story && respondingUser && collaborator.invitedBy) {
+        const inviterUserId = collaborator.invitedBy;
+
+        if (status === StoryCollaboratorStatus.ACCEPTED) {
+          await this.notificationService.enqueueCollabAccepted({
+            inviterUserId,
+            acceptedByName: respondingUser.username,
+            storyName: story.title,
+            storySlug: story.slug,
+          });
+        } else if (status === StoryCollaboratorStatus.DECLINED) {
+          await this.notificationService.enqueueCollabRejected({
+            inviterUserId,
+            declinedByName: respondingUser.username,
+            storyName: story.title,
+            storySlug: story.slug,
+          });
+        }
+      }
+    } catch (error) {
+      // Non-blocking: don't fail the status update if notification enqueue fails
+      this.logError('Failed to enqueue accept/reject notification', { error });
     }
 
     return collaborator;

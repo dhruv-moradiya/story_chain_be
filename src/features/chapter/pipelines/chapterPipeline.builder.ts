@@ -178,6 +178,50 @@ class ChapterPipelineBuilder extends BasePipelineBuilder<ChapterPipelineBuilder>
     return this;
   }
 
+  /**
+   * Attaches previous chapters (ancestors) array
+   */
+  attachPreviousChapters(options?: { project?: PipelineStage.Project['$project'] }) {
+    this.pipeline.push({
+      $lookup: {
+        from: 'chapters',
+        let: { ancestorSlugs: '$ancestorSlugs' },
+        pipeline: [
+          {
+            $match: {
+              $expr: { $in: ['$slug', { $ifNull: ['$$ancestorSlugs', []] }] },
+            },
+          },
+          ...(options?.project ? [{ $project: options.project }] : []),
+        ],
+        as: 'previousChapters',
+      },
+    });
+    return this;
+  }
+
+  /**
+   * Attaches next chapters (direct children) array
+   */
+  attachNextChapters(options?: { project?: PipelineStage.Project['$project'] }) {
+    this.pipeline.push({
+      $lookup: {
+        from: 'chapters',
+        let: { slug: '$slug' },
+        pipeline: [
+          {
+            $match: {
+              $expr: { $eq: ['$parentChapterSlug', '$$slug'] },
+            },
+          },
+          ...(options?.project ? [{ $project: options.project }] : []),
+        ],
+        as: 'nextChapters',
+      },
+    });
+    return this;
+  }
+
   // ==================== PRESETS ====================
 
   /**

@@ -7,7 +7,10 @@ import { PUBLIC_AUTHOR_PROJECTION } from '../pipelines/chapter.projections';
 import { ChapterRepository } from '../repositories/chapter.repository';
 import { IChapter } from '../types/chapter.types';
 import { IChapterQueryService } from './interfaces/chapter-query.interface';
-import { IChapterWithStoryResponse } from '@/types/response/chapter.response.types';
+import {
+  IChapterWithStoryResponse,
+  IChapterDetailsResponse,
+} from '@/types/response/chapter.response.types';
 import { getDisplayNumberStages } from '@/shared/pipelines';
 
 @singleton()
@@ -36,6 +39,18 @@ export class ChapterQueryService extends BaseModule implements IChapterQueryServ
 
   async getByStory(storySlug: string): Promise<IChapter[]> {
     return this.chapterRepo.findByStorySlug(storySlug);
+  }
+
+  async getChapterDetails(chapterSlug: string): Promise<IChapterDetailsResponse> {
+    const pipeline = new ChapterPipelineBuilder()
+      .findBySlug(chapterSlug)
+      .attachAuthor({ project: PUBLIC_AUTHOR_PROJECTION })
+      .attachPreviousChapters({ project: { _id: 1, title: 1, slug: 1 } })
+      .attachNextChapters({ project: { _id: 1, title: 1, slug: 1 } })
+      .build();
+
+    const [chapter] = await this.chapterRepo.aggregateChapters<IChapterDetailsResponse>(pipeline);
+    return chapter;
   }
 
   /**

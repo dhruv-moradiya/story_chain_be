@@ -1,8 +1,9 @@
 /**
- * Queue Infrastructure (Planned)
+ * Queue Infrastructure
  *
- * TODO: Implement BullMQ queue service
- * See: docs/architecture/redis-cache-queue-architecture.md
+ * BullMQ-based job queue management with type-safe producers and consumers.
  */
 
-export {};
+export * from './queue.types.js';
+export * from './queue.service.js';
+export * from './worker.service.js';

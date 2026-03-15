@@ -53,11 +53,11 @@ export class ChapterController extends BaseModule {
    * Get chapter details by slug
    * Response includes: full chapter info with story slug, story title, and author details
    */
-  getChapterBySlug = catchAsync(
+  getChapterDetails = catchAsync(
     async (request: FastifyRequest<{ Params: { chapterSlug: string } }>, reply: FastifyReply) => {
       const { chapterSlug } = request.params;
 
-      const chapter = await this.chapterQueryService.getBySlug(chapterSlug);
+      const chapter = await this.chapterQueryService.getChapterDetails(chapterSlug);
 
       if (!chapter) {
         this.throwNotFoundError('CHAPTER_NOT_FOUND', 'Chapter not found.');

@@ -1,5 +1,8 @@
 import { IOperationOptions } from '@/types';
-import { IChapterWithStoryResponse } from '@/types/response/chapter.response.types';
+import {
+  IChapterWithStoryResponse,
+  IChapterDetailsResponse,
+} from '@/types/response/chapter.response.types';
 import { IChapter } from '../../types/chapter.types';
 
 interface IChapterQueryService {
@@ -10,7 +13,7 @@ interface IChapterQueryService {
   getById(chapterId: string, options?: IOperationOptions): Promise<IChapter | null>;
   getByStory(storySlug: string): Promise<IChapter[]>;
   getByAuthor(userId: string): Promise<IChapterWithStoryResponse[]>;
-  // getDetails(chapterId: string): Promise<IChapterDetails | null>;
+  getChapterDetails(chapterSlug: string): Promise<IChapterDetailsResponse | null>;
 
   searchChapters(
     filters: { q?: string; slug?: string; storySlug?: string; userId?: string },

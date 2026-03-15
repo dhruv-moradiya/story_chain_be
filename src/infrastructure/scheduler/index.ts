@@ -1,8 +1,7 @@
 /**
- * Scheduler Infrastructure (Planned)
+ * Scheduler Infrastructure
  *
- * TODO: Implement scheduler service for cron jobs
- * See: docs/architecture/redis-cache-queue-architecture.md
+ * Cron-based scheduled jobs built on top of BullMQ repeatable jobs.
  */
 
-export {};
+export * from './scheduler.service.js';

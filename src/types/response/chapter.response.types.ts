@@ -1,30 +1,18 @@
-export interface IChapterWithStoryResponse {
-  _id: string;
-  title: string;
-  status: string;
-  pullRequest: {
-    isPR: boolean;
-    prId?: string;
-    status?: string;
-    submittedAt?: Date;
-    reviewedBy?: string;
-    reviewedAt?: Date;
-    rejectionReason?: string;
-  };
-  stats: {
-    reads: number;
-    comments: number;
-    childBranches: number;
-  };
-  createdAt: Date;
-  updatedAt: Date;
-  storySlug: string;
+import { IChapter } from '@/features/chapter/types/chapter.types';
+import { IUser } from '@/features/user/types/user.types';
+
+export interface IChapterWithStoryResponse extends Omit<
+  IChapter,
+  'authorId' | 'pullRequest' | 'stats'
+> {
   storyTitle: string;
-  author: {
-    clerkId: string;
-    username: string;
-    firstName: string;
-    lastName: string;
-    imageUrl?: string;
-  };
+  author: Pick<IUser, 'clerkId' | 'username' | 'avatarUrl'>;
+  pullRequest: Partial<IChapter['pullRequest']>;
+  stats: Partial<IChapter['stats']>;
+}
+
+export interface IChapterDetailsResponse extends IChapter {
+  author: Pick<IUser, 'clerkId' | 'username' | 'avatarUrl' | 'email'>;
+  previousChapters: Array<{ title: string; slug: string }>;
+  nextChapters: Array<{ title: string; slug: string }>;
 }

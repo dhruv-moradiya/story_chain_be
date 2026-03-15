@@ -82,10 +82,10 @@ export async function chapterRoutes(fastify: FastifyInstance) {
           },
           required: ['chapterSlug'],
         },
-        response: ChapterResponses.chapterDetails,
+        // response: ChapterResponses.chapterDetails,
       },
     },
-    chapterController.getChapterBySlug
+    chapterController.getChapterDetails
   );
 
   /**
