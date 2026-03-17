@@ -1,5 +1,14 @@
 import { IChapter } from '@/features/chapter/types/chapter.types';
 import { IUser } from '@/features/user/types/user.types';
+import { IPublicUserResponseWithEmail } from './user.response.types';
+
+export interface ILatestChaptersResponse {
+  storySlug: string;
+  chapterSlug: string;
+  title: string;
+  stats: IChapter['stats'];
+  author: IPublicUserResponseWithEmail;
+}
 
 export interface IChapterWithStoryResponse extends Omit<
   IChapter,

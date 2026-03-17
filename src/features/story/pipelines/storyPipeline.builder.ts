@@ -5,6 +5,7 @@ import { toId } from '@/utils';
 import { IStory, IStorySettings } from '../types/story.types';
 
 import { StoryStatus } from '../types/story-enum';
+import { PUBLIC_USER_PROJECTION, attachUserStages } from '@/shared/pipelines';
 
 class StoryPipelineBuilder extends BasePipelineBuilder<StoryPipelineBuilder> {
   /**
@@ -201,6 +202,7 @@ class StoryPipelineBuilder extends BasePipelineBuilder<StoryPipelineBuilder> {
                     clerkId: 1,
                     username: 1,
                     email: 1,
+                    avatarUrl: 1,
                   },
                 },
               ],
@@ -214,7 +216,10 @@ class StoryPipelineBuilder extends BasePipelineBuilder<StoryPipelineBuilder> {
             $project: {
               role: 1,
               status: 1,
-              details: 1,
+              clerkId: '$details.clerkId',
+              username: '$details.username',
+              email: '$details.email',
+              avatarUrl: '$details.avatarUrl',
             },
           },
         ],
@@ -244,141 +249,17 @@ class StoryPipelineBuilder extends BasePipelineBuilder<StoryPipelineBuilder> {
           },
           { $sort: { createdAt: -1 } },
           { $limit: limit },
-          {
-            $lookup: {
-              from: 'chapters',
-              let: {
-                ancestorSlugs: '$ancestorSlugs',
-              },
-              pipeline: [
-                {
-                  $match: {
-                    $expr: {
-                      $in: ['$slug', '$$ancestorSlugs'],
-                    },
-                  },
-                },
-                {
-                  $project: {
-                    _id: 0,
-                    slug: 1,
-                    branchIndex: 1,
-                  },
-                },
-              ],
-              as: 'ancestorDetails',
-            },
-          },
-          {
-            $addFields: {
-              ancestorDetails: {
-                $map: {
-                  input: '$ancestorSlugs',
-                  as: 'ancestorSlug',
-                  in: {
-                    $arrayElemAt: [
-                      {
-                        $filter: {
-                          input: '$ancestorDetails',
-                          cond: {
-                            $eq: ['$$this.slug', '$$ancestorSlug'],
-                          },
-                        },
-                      },
-                      0,
-                    ],
-                  },
-                },
-              },
-            },
-          },
-          {
-            $addFields: {
-              displayNumber: {
-                $cond: {
-                  if: {
-                    $eq: [
-                      {
-                        $size: {
-                          $ifNull: ['$ancestorSlugs', []],
-                        },
-                      },
-                      0,
-                    ],
-                  },
-                  then: {
-                    $toString: '$branchIndex',
-                  },
-                  else: {
-                    $concat: [
-                      {
-                        $reduce: {
-                          input: '$ancestorDetails',
-                          initialValue: '',
-                          in: {
-                            $concat: [
-                              '$$value',
-                              {
-                                $cond: [
-                                  {
-                                    $eq: ['$$value', ''],
-                                  },
-                                  '',
-                                  '.',
-                                ],
-                              },
-                              {
-                                $toString: '$$this.branchIndex',
-                              },
-                            ],
-                          },
-                        },
-                      },
-                      '.',
-                      { $toString: '$branchIndex' },
-                    ],
-                  },
-                },
-              },
-            },
-          },
-          {
-            $lookup: {
-              from: 'users',
-              let: { authorId: '$authorId' },
-              pipeline: [
-                {
-                  $match: {
-                    $expr: {
-                      $eq: ['$clerkId', '$$authorId'],
-                    },
-                  },
-                },
-                {
-                  $project: {
-                    _id: 0,
-                    clerkId: 1,
-                    username: 1,
-                    email: 1,
-                    avatarUrl: 1,
-                  },
-                },
-              ],
-              as: 'author',
-            },
-          },
-          {
-            $addFields: {
-              author: { $first: '$author' },
-            },
-          },
+          ...attachUserStages({
+            localField: 'authorId',
+            as: 'author',
+            project: PUBLIC_USER_PROJECTION,
+          }),
           {
             $project: {
               storySlug: 1,
               slug: 1,
               displayNumber: 1,
               stats: 1,
-              vote: 1,
               author: 1,
               title: 1,
             },
@@ -402,7 +283,6 @@ class StoryPipelineBuilder extends BasePipelineBuilder<StoryPipelineBuilder> {
 
   getStoryOverviewPreset(slug: string) {
     return this.findBySlug(slug)
-      .projectSettings(['genres', 'contentRating'])
       .attachCollaborators()
       .attachLatestChapters(2)
       .removeFields(['createdAt', 'updatedAt', 'creatorId']);

@@ -1,36 +1,42 @@
-import { ID } from '..';
+import { IStory } from '@features/story/types/story.types';
 import {
   TStoryCollaboratorRole,
   TStoryCollaboratorStatus,
 } from '@/features/storyCollaborator/types/storyCollaborator.types';
-import {
-  IStory,
-  IStoryStats,
-  TStoryContentRating,
-  TStoryGenre,
-} from '@features/story/types/story.types';
+import { ILatestChaptersResponse } from './chapter.response.types';
 
-interface IStoryCreator {
+interface IStoryCreatorWithEmail {
   clerkId: string;
   email: string;
   username: string;
   avatar: string;
 }
 
-interface IGetStoryOverviewBySlugResponse {
-  _id: ID;
-  title: string;
-  slug: string;
-  description: string;
-  coverImage?: {
-    url: string;
-    publicId: string;
-  };
-  tags: string[];
-  creatorId: string;
-  stats: IStoryStats;
-  createdAt: Date;
-  updatedAt: Date;
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+interface IStoryCreator extends Omit<IStoryCreatorWithEmail, 'email'> {}
+
+interface IStoryCollaboratorOverview {
+  clerkId: string;
+  username: string;
+  avatar: string;
+  email: string;
+  role: TStoryCollaboratorRole;
+  status: TStoryCollaboratorStatus;
+}
+
+export interface IStoryOverviewResponse extends Omit<
+  IStory,
+  | 'creatorId'
+  | 'collaboratorIds'
+  | 'settings'
+  | 'cardImage'
+  | 'trendingScore'
+  | 'createdAt'
+  | 'updatedAt'
+> {
+  creator: IStoryCreator;
+  collaborators: IStoryCollaboratorOverview[];
+  latestChapters: ILatestChaptersResponse[];
 }
 
 interface IStoryWithCreator extends Omit<
@@ -43,9 +49,7 @@ interface IStoryWithCreator extends Omit<
   | 'createdAt'
   | 'updatedAt'
 > {
-  creator: IStoryCreator;
-  genres: TStoryGenre[];
-  contentRating: TStoryContentRating;
+  collaborators: IStoryCollaboratorOverview[];
 }
 
 interface IStoryCollaboratorUser {
@@ -64,12 +68,7 @@ interface IStoryCollaboratorDetailsResponse {
   updatedAt: Date;
 }
 
-export type {
-  IGetStoryOverviewBySlugResponse,
-  IStoryCollaboratorDetailsResponse,
-  IStoryCreator,
-  IStoryWithCreator,
-};
+export type { IStoryCollaboratorDetailsResponse, IStoryCreator, IStoryWithCreator };
 
 // Domain validation types
 export interface PublishValidationResult {

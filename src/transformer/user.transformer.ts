@@ -1,10 +1,10 @@
-import { IUser } from '@features/user/types/user.types';
 import {
   ICurrentUserResponse,
-  IPublicUserResponse,
-  IUserSearchItemResponse,
+  IPublicUserResponseWithEmail,
   IUserProfileResponse,
+  IUserSearchItemResponse,
 } from '@/types/response/user.response.types';
+import { IUser } from '@features/user/types/user.types';
 
 export class UserTransformer {
   static currentUserResponse(input: IUser): ICurrentUserResponse {
@@ -29,12 +29,12 @@ export class UserTransformer {
     };
   }
 
-  static publicUserResponse(input: IUser): IPublicUserResponse {
+  static publicUserResponse(input: IUser): IPublicUserResponseWithEmail {
     return {
       clerkId: input.clerkId,
       username: input.username,
       email: input.email,
-      avatarUrl: input.avatarUrl,
+      avatarUrl: input.avatarUrl ?? '',
     };
   }
 

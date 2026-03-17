@@ -1,3 +1,4 @@
+import { IChapterStats } from '@/features/chapter/types/chapter.types';
 import { PipelineStage } from 'mongoose';
 
 /** Type for pipeline stages that can be used inside nested $lookup pipelines */
@@ -145,6 +146,20 @@ export function extractPrIdStage(): PipelineStage.Set {
       prId: {
         $ifNull: ['$pullRequest.prId', null],
       },
+    },
+  };
+}
+
+export function projectChapterStatsStage(keys: (keyof IChapterStats)[]): PipelineStage.Project {
+  const statsFields: Partial<Record<keyof IChapterStats, string>> = {};
+
+  keys.forEach((key) => {
+    statsFields[key] = `$stats.${key}`;
+  });
+
+  return {
+    $project: {
+      stats: statsFields,
     },
   };
 }

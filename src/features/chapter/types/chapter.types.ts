@@ -9,6 +9,39 @@ import { CHAPTER_PR_STATUSES, CHAPTER_STATUSES } from './chapter-enum';
 export type TChapterStatus = (typeof CHAPTER_STATUSES)[number];
 export type TChapterPRStatus = (typeof CHAPTER_PR_STATUSES)[number];
 
+export interface IChapterStats {
+  reads: number;
+  uniqueReaders: number;
+
+  completions: number;
+  dropOffs: number;
+
+  totalReadTime: number; // sum of all users
+  avgReadTime: number;
+
+  completionRate: number; // percentage
+  engagementScore: number; // 0-100 score
+
+  comments: number;
+  childBranches: number;
+}
+
+export interface IChapterPullRequest {
+  isPR: boolean;
+  prId?: ID;
+  status: TChapterPRStatus;
+  submittedAt?: Date;
+  reviewedBy?: ID;
+  reviewedAt?: Date;
+  rejectionReason?: string;
+}
+
+export interface IChapterVotes {
+  upvotes: number;
+  downvotes: number;
+  score: number;
+}
+
 /**
  * Represents a single chapter within a story.
  */
@@ -27,44 +60,17 @@ export interface IChapter {
   branchIndex: number;
   displayNumber?: string;
 
-  votes: {
-    upvotes: number;
-    downvotes: number;
-    score: number;
-  };
+  votes: IChapterVotes;
 
   status: TChapterStatus;
   isEnding: boolean;
 
-  pullRequest: {
-    isPR: boolean;
-    prId?: ID;
-    status: TChapterPRStatus;
-    submittedAt?: Date;
-    reviewedBy?: ID;
-    reviewedAt?: Date;
-    rejectionReason?: string;
-  };
+  pullRequest: IChapterPullRequest;
 
   version: number;
   previousVersionId?: ID;
 
-  stats: {
-    reads: number;
-    uniqueReaders: number;
-
-    completions: number;
-    dropOffs: number;
-
-    totalReadTime: number; // sum of all users
-    avgReadTime: number;
-
-    completionRate: number; // percentage
-    engagementScore: number; // 0-100 score
-
-    comments: number;
-    childBranches: number;
-  };
+  stats: IChapterStats;
 
   reportCount: number;
   isFlagged: boolean;

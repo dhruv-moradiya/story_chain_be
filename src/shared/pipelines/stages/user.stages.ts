@@ -32,6 +32,15 @@ interface AttachUserOptions {
 }
 
 /**
+ * Type for stages that are allowed inside sub-pipelines (e.g., in $lookup or $facet).
+ * Excludes stages like $merge, $out, and $indexStats.
+ */
+export type SubPipelineStage = Exclude<
+  PipelineStage,
+  PipelineStage.Merge | PipelineStage.Out | PipelineStage.IndexStats
+>;
+
+/**
  * Creates pipeline stages to attach user data via $lookup.
  * Joins on clerkId field.
  *
@@ -43,7 +52,7 @@ interface AttachUserOptions {
  *   project: PUBLIC_USER_PROJECTION
  * }));
  */
-export function attachUserStages(options: AttachUserOptions): PipelineStage[] {
+export function attachUserStages(options: AttachUserOptions): SubPipelineStage[] {
   const {
     localField,
     as,
@@ -52,7 +61,7 @@ export function attachUserStages(options: AttachUserOptions): PipelineStage[] {
     unsetLocalField = false,
   } = options;
 
-  const stages: PipelineStage[] = [
+  const stages: SubPipelineStage[] = [
     {
       $lookup: {
         from: 'users',

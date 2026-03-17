@@ -1,6 +1,6 @@
-import { IOperationOptions } from '@/types';
-import { IStoryWithCreator } from '@/types/response/story.response.types';
 import { IChapter } from '@/features/chapter/types/chapter.types';
+import { IOperationOptions } from '@/types';
+import { IStoryOverviewResponse } from '@/types/response/story.response.types';
 import { IStory, IStorySettingsWithImages } from '../../types/story.types';
 
 interface IStoryTreeResult {
@@ -25,7 +25,7 @@ interface IStoryQueryService {
   getStoryTreeBySlug(slug: string): Promise<IStoryTreeResult>;
 
   // Overview and settings (throws if not found)
-  getStoryOverviewBySlug(slug: string): Promise<IStoryWithCreator>;
+  getStoryOverviewBySlug(slug: string): Promise<IStoryOverviewResponse>;
   getStorySettingsBySlug(slug: string): Promise<IStorySettingsWithImages>;
 
   // Search

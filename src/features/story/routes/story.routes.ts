@@ -399,7 +399,7 @@ export async function storyRoutes(fastify: FastifyInstance) {
         tags: ['Stories'],
         security: [{ bearerAuth: [] }],
         params: zodToJsonSchema(StorySlugSchema),
-        // response: StoryResponses.storyOverview,
+        response: StoryResponses.storyOverview,
       },
     },
     storyController.getStoryOverviewBySlug

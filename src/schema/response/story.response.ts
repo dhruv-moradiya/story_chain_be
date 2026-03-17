@@ -4,24 +4,24 @@ import {
   STORY_STATUSES,
 } from '@/features/story/types/story-enum.js';
 import {
-  apiArrayResponse,
-  apiResponse,
-  createdResponse,
-  badRequestResponse,
-  unauthorizedResponse,
-  forbiddenResponse,
-  notFoundResponse,
-  conflictResponse,
-  validationErrorResponse,
-  internalErrorResponse,
-} from './helpers.js';
-import {
   STORY_COLLABORATOR_ROLES,
   STORY_COLLABORATOR_STATUSES,
 } from '@/features/storyCollaborator/types/storyCollaborator-enum.js';
-import { ImageSchema, UserSummarySchema } from './common.js';
 import { ChapterStatsSchema } from './chapter.response.js';
-import { EmbeddedCollaboratorSchema } from './collaborator.response.js';
+import { ImageSchema, UserSummarySchema } from './common.js';
+import {
+  apiArrayResponse,
+  apiResponse,
+  badRequestResponse,
+  conflictResponse,
+  createdResponse,
+  forbiddenResponse,
+  internalErrorResponse,
+  notFoundResponse,
+  unauthorizedResponse,
+  validationErrorResponse,
+} from './helpers.js';
+import { votesSchema } from './index.js';
 
 // ═══════════════════════════════════════════
 // STORY DATA SCHEMAS
@@ -55,6 +55,7 @@ export const StoryStatsSchema = {
     totalVotes: { type: 'number' },
     uniqueContributors: { type: 'number' },
     averageRating: { type: 'number' },
+    ...votesSchema.properties,
   },
 };
 
@@ -88,6 +89,34 @@ export const StorySchema = {
   },
 };
 
+export const StoryGenreSchema = {
+  type: 'array',
+  items: {
+    type: 'string',
+    enum: STORY_GENRES,
+  },
+};
+
+export const StoryContentRatingSchema = {
+  type: 'string',
+  enum: STORY_CONTENT_RATINGS,
+};
+
+export const StoryCollaboratorSchema = {
+  type: 'array',
+  items: {
+    type: 'object',
+    properties: {
+      username: { type: 'string' },
+      email: { type: 'string' },
+      clerkId: { type: 'string' },
+      avatarUrl: { type: 'string' },
+      role: { type: 'string', enum: STORY_COLLABORATOR_ROLES },
+      roleStatus: { type: 'string', enum: STORY_COLLABORATOR_STATUSES },
+    },
+  },
+};
+
 /**
  * Minimal chapter summary embedded inside the story overview.
  * Author uses the shared UserSummarySchema; stats use ChapterStatsSchema.
@@ -95,7 +124,6 @@ export const StorySchema = {
 export const LatestChapterSchema = {
   type: 'object',
   properties: {
-    _id: { type: 'string' },
     storySlug: { type: 'string' },
     slug: { type: 'string' },
     title: { type: 'string' },
@@ -113,24 +141,13 @@ export const StoryOverviewSchema = {
     slug: { type: 'string' },
     description: { type: 'string' },
     settings: StorySettingsSchema,
-    genres: {
-      type: 'array',
-      items: {
-        type: 'string',
-        enum: Object.values(STORY_GENRES),
-      },
-    },
-    contentRating: { type: 'string', enum: Object.values(STORY_CONTENT_RATINGS) },
     tags: { type: 'array', items: { type: 'string' } },
     stats: StoryStatsSchema,
     status: { type: 'string', enum: STORY_STATUSES },
     trendingScore: { type: 'number' },
     publishedAt: { type: 'string', format: 'date-time' },
     lastActivityAt: { type: 'string', format: 'date-time' },
-    collaborators: {
-      type: 'array',
-      items: EmbeddedCollaboratorSchema,
-    },
+    collaborators: StoryCollaboratorSchema,
     latestChapters: {
       type: 'array',
       items: LatestChapterSchema,

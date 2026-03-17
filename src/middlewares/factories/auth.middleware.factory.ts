@@ -6,6 +6,7 @@ import { HTTP_STATUS } from '@constants/httpStatus';
 import { UserRepository } from '@features/user/repositories/user.repository';
 import { PlatformRoleRepository } from '@features/platformRole/repositories/platformRole.repository';
 import { logger } from '@utils/logger';
+import { ApiError } from '@/utils/apiResponse';
 
 @singleton()
 export class AuthMiddlewareFactory {
@@ -25,10 +26,7 @@ export class AuthMiddlewareFactory {
         const auth = getAuth(request);
 
         if (!auth?.userId) {
-          return reply.code(HTTP_STATUS.UNAUTHORIZED.code).send({
-            error: 'Authentication required',
-            message: 'You must be logged in to access this resource.',
-          });
+          return reply.code(HTTP_STATUS.UNAUTHORIZED.code).send(ApiError.unauthorized());
         }
 
         const [user, platformRole] = await Promise.all([
@@ -37,10 +35,7 @@ export class AuthMiddlewareFactory {
         ]);
 
         if (!user) {
-          return reply.code(HTTP_STATUS.UNAUTHORIZED.code).send({
-            error: 'User not found',
-            message: 'Your account could not be located. Please contact support if this continues.',
-          });
+          return reply.code(HTTP_STATUS.UNAUTHORIZED.code).send(ApiError.notFound());
         }
 
         if (!platformRole) {

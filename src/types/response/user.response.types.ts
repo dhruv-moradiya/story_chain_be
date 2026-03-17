@@ -26,8 +26,11 @@ interface ICurrentUserResponse {
 interface IPublicUserResponse {
   clerkId: string;
   username: string;
+  avatarUrl: string;
+}
+
+interface IPublicUserResponseWithEmail extends IPublicUserResponse {
   email: string;
-  avatarUrl?: string;
 }
 
 // User Search Response Item
@@ -65,6 +68,7 @@ interface IUserUpdateResponse {
 export type {
   ICurrentUserResponse,
   IPublicUserResponse,
+  IPublicUserResponseWithEmail,
   IUserSearchItemResponse,
   IUserProfileResponse,
   IUserUpdateResponse,
