@@ -145,13 +145,15 @@ export const StoryOverviewSchema = {
     stats: StoryStatsSchema,
     status: { type: 'string', enum: STORY_STATUSES },
     trendingScore: { type: 'number' },
-    publishedAt: { type: 'string', format: 'date-time' },
-    lastActivityAt: { type: 'string', format: 'date-time' },
     collaborators: StoryCollaboratorSchema,
     latestChapters: {
       type: 'array',
       items: LatestChapterSchema,
     },
+    coverImage: { ...ImageSchema },
+    cardImage: { ...ImageSchema },
+    publishedAt: { type: 'string', format: 'date-time' },
+    lastActivityAt: { type: 'string', format: 'date-time' },
   },
 };
 

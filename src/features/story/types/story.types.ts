@@ -17,7 +17,7 @@ interface IStorySettings {
   contentRating: TStoryContentRating;
 }
 
-interface IStoryStats {
+interface IStoryStats extends Record<string, number> {
   totalChapters: number;
   totalBranches: number;
   totalReads: number;

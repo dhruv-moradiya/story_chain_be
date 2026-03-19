@@ -1,19 +1,25 @@
-import { inject, singleton } from 'tsyringe';
-import { TOKENS } from '@container/tokens';
+import { StoryQueryService } from '@/features/story/services';
+import { CollaboratorQueryService } from '@/features/storyCollaborator/services';
 import { IOperationOptions } from '@/types';
+import { TOKENS } from '@container/tokens';
 import { BaseModule } from '@utils/baseClass';
-import { IChapter } from '../types/chapter.types';
-import { TChapterAddRootDTO, ICreateChildChapterSimpleDTO } from '../dto/chapter.dto';
 import { createSlug } from '@utils/helpter';
+import { inject, singleton } from 'tsyringe';
+import { ICreateChildChapterSimpleDTO, TChapterAddRootDTO } from '../dto/chapter.dto';
 import { ChapterRepository } from '../repositories/chapter.repository';
 import { ChapterStatus } from '../types/chapter-enum';
+import { IChapter } from '../types/chapter.types';
 import { IChapterCrudService } from './interfaces/chapter-crud.interface';
 
 @singleton()
 export class ChapterCrudService extends BaseModule implements IChapterCrudService {
   constructor(
     @inject(TOKENS.ChapterRepository)
-    private readonly chapterRepo: ChapterRepository
+    private readonly chapterRepo: ChapterRepository,
+    @inject(TOKENS.CollaboratorQueryService)
+    private readonly collaboratorQueryService: CollaboratorQueryService,
+    @inject(TOKENS.StoryQueryService)
+    private readonly storyQueryService: StoryQueryService
   ) {
     super();
   }
@@ -74,6 +80,29 @@ export class ChapterCrudService extends BaseModule implements IChapterCrudServic
       parentChapterSlug,
       status = ChapterStatus.DRAFT,
     } = input;
+
+    const story = await this.storyQueryService.getBySlug(storySlug, options);
+
+    if (!story) {
+      this.throwNotFoundError('Story not found.');
+    }
+
+    const storyCollaborator = await this.collaboratorQueryService.getCollaboratorsByStorySlug({
+      slug: storySlug,
+    });
+
+    if (!story.settings.allowBranching) {
+      const isCollaborator = storyCollaborator.some(
+        (collaborator) => collaborator.user.clerkId === userId
+      );
+      if (!isCollaborator) {
+        this.throwUnauthorizedError('You are not authorized to create chapter in this story.');
+      }
+    }
+
+    if (status === ChapterStatus.PUBLISHED && story.settings.requireApproval) {
+      this.throwUnauthorizedError('You need to create a pull request to merge this chapter.');
+    }
 
     // 1. Validate and fetch parent
     const parentChapter = await this._getParentAndValidate(parentChapterSlug, storySlug, options);

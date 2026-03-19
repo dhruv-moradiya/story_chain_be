@@ -6,10 +6,15 @@ export const CACHE_TTL = {
   // ═══════════════════════════════════════════
   // STABLE DATA - Rarely changes
   // ═══════════════════════════════════════════
+  STORY_AGGREGATE: 60 * 60 * 24 * 7, // 24 hour
   STORY_DETAIL: 60 * 60, // 1 hour
   STORY_SETTINGS: 60 * 60, // 1 hour
+  STORY_STATS: 60 * 2, // 2 minutes
   USER_PROFILE: 60 * 60, // 1 hour
   CHAPTER_DETAIL: 60 * 30, // 30 minutes
+  STORY_COLLABORATOR: 60 * 20, // 20 minutes
+  STORY_COLLABORATOR_LIST: 60 * 20, // 20 minutes
+  STORY_LATEST_CHAPTERS: 60 * 20, // 20 minutes
 
   // ═══════════════════════════════════════════
   // SEMI-STABLE DATA - Changes occasionally

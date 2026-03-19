@@ -18,6 +18,7 @@ import { QueueService } from '@infrastructure/queue/queue.service';
 import { WorkerService } from '@infrastructure/queue/worker.service';
 import { SchedulerService } from '@infrastructure/scheduler/scheduler.service';
 import { NotificationWorker } from '@features/notification/workers/notification.worker';
+import { StoryCacheService } from '@infrastructure/cache/story-cache.service';
 
 // ═══════════════════════════════════════════
 // TRANSFORMERS
@@ -152,6 +153,8 @@ export function registerServices(): void {
     { useClass: NotificationWorker },
     { lifecycle: Lifecycle.Singleton }
   );
+
+  container.register(TOKENS.StoryCacheService, { useClass: StoryCacheService });
 
   // ═══════════════════════════════════════════
   // TRANSFORMERS

@@ -331,32 +331,33 @@ export class StoryController extends BaseModule {
       }>,
       reply: FastifyReply
     ) => {
-      const { clerkId: userId } = request.user;
       const { slug } = request.params;
-      const { title, content, parentChapterSlug } = request.body;
+      const { clerkId: userId } = request.user;
+      const { title, content, parentChapterSlug, status } = request.body;
 
-      // Get story by slug to get storyId
-      const story = await this.storyQueryService.getBySlug(slug);
+      // const story = await this.storyQueryService.getBySlug(slug);
 
       let newChapter;
       if (!parentChapterSlug) {
         this.logDebug('Creating root chapter');
         // Create root chapter
         newChapter = await this.chapterCrudService.createRoot({
-          storySlug: story.slug,
+          storySlug: slug,
           userId,
           title,
           content,
+          status,
         });
       } else {
         this.logDebug('Creating child chapter');
         // Create child chapter
         newChapter = await this.chapterCrudService.createChild({
-          storySlug: story.slug,
+          storySlug: slug,
           userId,
           title,
           content,
           parentChapterSlug,
+          status,
         });
       }
 

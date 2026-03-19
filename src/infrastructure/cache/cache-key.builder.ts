@@ -22,16 +22,25 @@ export type CacheEntity =
  */
 export type CacheOperation =
   | 'detail'
+  | 'aggregate'
+  | 'stats'
+  | 'user'
+  | 'settings'
+  | 'collaborator'
+  | 'members'
+  | 'mini'
+  | 'lock'
   | 'list'
   | 'tree'
-  | 'count'
+  | 'counts'
   | 'summary'
   | 'search'
   | 'overview'
   | 'settings'
   | 'drafts'
   | 'role'
-  | 'unread';
+  | 'unread'
+  | 'latest-chapters';
 
 /**
  * Options for building cache keys
@@ -151,6 +160,14 @@ export class CacheKeyBuilder {
     });
   }
 
+  static storyAggregate(slug: string): string {
+    return this.build({
+      entity: 'story',
+      operation: 'aggregate',
+      identifiers: { slug },
+    });
+  }
+
   /**
    * Cache key for story chapter tree
    * @example "sc:story:tree:slug=my-adventure"
@@ -187,6 +204,14 @@ export class CacheKeyBuilder {
     });
   }
 
+  static storyStats(slug: string): string {
+    return this.build({
+      entity: 'story',
+      operation: 'stats',
+      identifiers: { slug },
+    });
+  }
+
   /**
    * Cache key for published/new/featured story lists
    * @example "sc:story:list:published"
@@ -208,6 +233,22 @@ export class CacheKeyBuilder {
       entity: 'story',
       operation: 'list',
       identifiers: { userId },
+    });
+  }
+
+  static storyCollaborator(slug: string, userId: string): string {
+    return this.build({
+      entity: 'story',
+      operation: 'collaborator',
+      identifiers: { slug, userId },
+    });
+  }
+
+  static storyCollaboratorList(slug: string): string {
+    return this.build({
+      entity: 'story',
+      operation: 'collaborator',
+      identifiers: { slug },
     });
   }
 
@@ -321,7 +362,7 @@ export class CacheKeyBuilder {
   static notificationCount(userId: string): string {
     return this.build({
       entity: 'notification',
-      operation: 'count',
+      operation: 'counts',
       identifiers: { userId },
     });
   }
@@ -514,7 +555,7 @@ export class CacheKeyBuilder {
   static prVoteStats(prId: string): string {
     return this.build({
       entity: 'pr-vote',
-      operation: 'count',
+      operation: 'counts',
       identifiers: { prId },
     });
   }

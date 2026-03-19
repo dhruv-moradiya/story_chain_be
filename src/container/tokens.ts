@@ -25,6 +25,11 @@ export const TOKENS = {
   StoryGuardService: Symbol.for('StoryGuardService'),
 
   // ═══════════════════════════════════════════
+  // CACHE SERVICES
+  // ═══════════════════════════════════════════
+  StoryCacheService: Symbol.for('StoryCacheService'),
+
+  // ═══════════════════════════════════════════
   // REPOSITORIES
   // ═══════════════════════════════════════════
   UserRepository: Symbol.for('UserRepository'),

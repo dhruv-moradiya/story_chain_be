@@ -5,6 +5,7 @@ type TChapterAddRootDTO = {
   userId: string;
   title: string;
   content: string;
+  status: TChapterStatus;
 };
 
 type IChapterAddChildDTO = {

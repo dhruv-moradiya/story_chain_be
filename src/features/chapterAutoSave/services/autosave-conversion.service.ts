@@ -76,6 +76,7 @@ export class AutoSaveConversionService extends BaseModule implements IAutoSaveCo
         userId,
         title: autoSave.title || 'Untitled Chapter',
         content: autoSave.content,
+        status: ChapterStatus.DRAFT,
       },
       { session }
     );

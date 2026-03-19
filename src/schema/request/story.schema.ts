@@ -7,6 +7,7 @@ import {
   STORY_STATUSES,
 } from '@/features/story/types/story-enum';
 import { STORY_COLLABORATOR_ROLES } from '@/features/storyCollaborator/types/storyCollaborator-enum';
+import { CHAPTER_STATUSES } from '@/features/chapter/types/chapter-enum';
 
 // type TStoryFields = keyof IStory;
 
@@ -175,6 +176,7 @@ const StoryAddChapterSchema = z.object({
       message: `Content must be at most ${CHAPTER_LIMITS.CONTENT.MAX_LENGTH} characters`,
     })
     .transform((s) => s.trim()),
+  status: z.enum(CHAPTER_STATUSES).default('draft'),
 });
 
 const StoryAddChapterBySlugSchema = z.object({

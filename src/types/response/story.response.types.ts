@@ -26,13 +26,7 @@ interface IStoryCollaboratorOverview {
 
 export interface IStoryOverviewResponse extends Omit<
   IStory,
-  | 'creatorId'
-  | 'collaboratorIds'
-  | 'settings'
-  | 'cardImage'
-  | 'trendingScore'
-  | 'createdAt'
-  | 'updatedAt'
+  'creatorId' | 'collaboratorIds' | 'createdAt' | 'updatedAt'
 > {
   creator: IStoryCreator;
   collaborators: IStoryCollaboratorOverview[];
