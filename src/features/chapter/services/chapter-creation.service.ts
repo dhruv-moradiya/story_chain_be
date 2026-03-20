@@ -7,12 +7,14 @@ import { IOperationOptions } from '@/types';
 import { TOKENS } from '@/container/tokens';
 import { BaseModule } from '@utils/baseClass';
 import { createSlug } from '@utils/helpter';
+import { sanitizeContent } from '@/utils/sanitizer';
 import { inject, singleton } from 'tsyringe';
 import { ICreateChildChapterSimpleDTO, TChapterAddRootDTO } from '../dto/chapter.dto';
 import { ChapterRepository } from '../repositories/chapter.repository';
 import { ChapterStatus } from '../types/chapter-enum';
 import { IChapter } from '../types/chapter.types';
 import { IChapterCreationService } from './interfaces/chapter-creation.interface';
+import { chapterVersionRepository } from '@/features/chapterVersion/repositories/chapterVersion.repository';
 
 @singleton()
 export class ChapterCreationService extends BaseModule implements IChapterCreationService {
@@ -70,12 +72,31 @@ export class ChapterCreationService extends BaseModule implements IChapterCreati
     return createSlug(title, { addSuffix: true });
   }
 
+  private async createInitialVersion(
+    chapter: IChapter,
+    input: { userId: string; content: string; title: string },
+    options: IOperationOptions
+  ): Promise<void> {
+    await chapterVersionRepository.create({
+      data: {
+        chapterSlug: chapter.slug,
+        version: 1,
+        content: input.content,
+        title: input.title,
+        editedBy: input.userId,
+      },
+      options: { session: options.session },
+    });
+  }
+
   // ═══════════════════════════════════════════
   // PUBLIC METHODS
   // ═══════════════════════════════════════════
 
   async createRoot(input: TChapterAddRootDTO, options: IOperationOptions = {}): Promise<IChapter> {
     const { storySlug, userId, title, content } = input;
+    const normalizedTitle = title.trim();
+    const normalizedContent = sanitizeContent(content.trim());
 
     // 1. Verify that no root chapter currently exists for this story
     const rootChapter = await this.chapterRepo.findOne({
@@ -92,7 +113,7 @@ export class ChapterCreationService extends BaseModule implements IChapterCreati
     const branchIndex = await this.getNextBranchIndex(storySlug, null, options);
 
     // 3. Generate unique slug based on title
-    const slug = this.generateSlug(title);
+    const slug = this.generateSlug(normalizedTitle);
 
     // 4. Create and persist the root chapter
     const chapter = await this.chapterRepo.create({
@@ -102,14 +123,24 @@ export class ChapterCreationService extends BaseModule implements IChapterCreati
         ancestorSlugs: [],
         depth: 0,
         authorId: userId,
-        title: title.trim(),
-        content: content.trim(),
+        content: normalizedContent,
+        title: normalizedTitle,
         status: ChapterStatus.PUBLISHED,
         slug,
         branchIndex,
       },
       options: { session: options.session },
     });
+
+    await this.createInitialVersion(
+      chapter,
+      {
+        userId,
+        content: normalizedContent,
+        title: normalizedTitle,
+      },
+      options
+    );
 
     // 5. Invalidate relevant story cache
     await this.storyCacheService.invalidateStoryLatestChapters(storySlug);
@@ -132,6 +163,8 @@ export class ChapterCreationService extends BaseModule implements IChapterCreati
       parentChapterSlug,
       status = ChapterStatus.DRAFT,
     } = input;
+    const normalizedTitle = title.trim();
+    const normalizedContent = sanitizeContent(content.trim());
 
     // 1. Fetch story context
     const story = await this.storyQueryService.getBySlug(storySlug, options);
@@ -171,7 +204,7 @@ export class ChapterCreationService extends BaseModule implements IChapterCreati
     const branchIndex = await this.getNextBranchIndex(storySlug, parentChapterSlug, options);
 
     // 6. Generate unique slug
-    const slug = this.generateSlug(title);
+    const slug = this.generateSlug(normalizedTitle);
 
     // 7. Persist chapter to database
     const chapter = await this.chapterRepo.create({
@@ -181,14 +214,24 @@ export class ChapterCreationService extends BaseModule implements IChapterCreati
         ancestorSlugs: newAncestorSlugs,
         depth: newDepth,
         authorId: userId,
-        title: title.trim(),
-        content: content.trim(),
+        content: normalizedContent,
+        title: normalizedTitle,
         status,
         slug,
         branchIndex,
       },
       options: { session: options.session },
     });
+
+    await this.createInitialVersion(
+      chapter,
+      {
+        userId,
+        content: normalizedContent,
+        title: normalizedTitle,
+      },
+      options
+    );
 
     // 8. Update parent statistics and clean cache
     await this.chapterRepo.incrementBranches(parentChapter.slug, options.session);

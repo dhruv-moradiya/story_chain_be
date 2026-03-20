@@ -66,7 +66,6 @@ import { ReadingHistoryService } from '@/features/readingHistory/services/readin
 import { BookmarkService } from '@/features/bookmark/services/bookmark.service';
 
 import { PullRequestService } from '@/features/pullRequest/services/pull-request.service';
-import { PullRequestValidator } from '@features/pullRequest/validators/pullRequest.validator';
 import { PullRequestDiffService } from '@/features/pullRequest/services/pull-request-diff.service';
 import { PullRequestQueryService } from '@/features/pullRequest/services/pull-request-query.service';
 
@@ -209,7 +208,6 @@ export function registerServices(): void {
   container.register(TOKENS.ReadingHistoryService, { useClass: ReadingHistoryService });
   container.register(TOKENS.BookmarkService, { useClass: BookmarkService });
   container.register(TOKENS.CommentService, { useClass: CommentService });
-  container.register(TOKENS.PullRequestValidator, { useClass: PullRequestValidator });
   container.register(TOKENS.PullRequestDiffService, { useClass: PullRequestDiffService });
   container.register(TOKENS.PullRequestQueryService, { useClass: PullRequestQueryService });
   container.register(TOKENS.PullRequestService, { useClass: PullRequestService });

@@ -45,10 +45,6 @@ const chapterVersionSchema = new Schema<IChapterVersionDoc>(
       type: Schema.Types.ObjectId,
       ref: 'ChapterVersion',
     },
-    changeMetadata: {
-      characterCountDelta: Number,
-      wordCountDelta: Number,
-    },
     isVisible: {
       type: Boolean,
       default: true,

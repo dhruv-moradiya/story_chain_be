@@ -53,12 +53,10 @@ export interface IPullRequest {
 
   // Changes
   changes: {
-    original?: string;
-    proposed?: string;
-    diff?: string;
-    lineCount?: number;
-    additionsCount?: number;
-    deletionsCount?: number;
+    original: string;
+    proposed: string;
+    wordCount: number;
+    readingMinutes: number;
   };
 
   // Status

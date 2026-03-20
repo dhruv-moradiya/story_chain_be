@@ -38,7 +38,6 @@ export interface IChapterVersion {
   editType: TChapterVersionEditType;
   prId?: ID;
   previousVersionId?: ID;
-  changeMetadata?: IChangeMetadata;
   isVisible: boolean;
   moderationInfo?: IModerationInfo;
   createdAt: Date;
