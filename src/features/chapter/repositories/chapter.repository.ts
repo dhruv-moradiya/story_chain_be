@@ -65,11 +65,11 @@ export class ChapterRepository extends BaseRepository<IChapter, IChapterDoc> {
   }
 
   async incrementBranches(
-    parentChapterId: string,
+    parentChapterSlug: string,
     session?: ClientSession
   ): Promise<IChapter | null> {
-    return this.updateById(
-      parentChapterId,
+    return this.model.findOneAndUpdate(
+      { slug: parentChapterSlug },
       {
         $inc: { 'stats.childBranches': 1 },
       },

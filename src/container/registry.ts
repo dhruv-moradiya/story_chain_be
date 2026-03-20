@@ -59,6 +59,7 @@ import { AutoSaveContentService } from '@features/chapterAutoSave/services/autos
 import { AutoSaveConversionService } from '@features/chapterAutoSave/services/autosave-conversion.service';
 
 import { ChapterCrudService } from '@features/chapter/services/chapter-crud.service';
+import { ChapterCreationService } from '@features/chapter/services/chapter-creation.service';
 import { ChapterQueryService } from '@features/chapter/services/chapter-query.service';
 
 import { ReadingHistoryService } from '@/features/readingHistory/services/readingHistory.service';
@@ -195,6 +196,7 @@ export function registerServices(): void {
   });
 
   container.register(TOKENS.ChapterCrudService, { useClass: ChapterCrudService });
+  container.register(TOKENS.ChapterCreationService, { useClass: ChapterCreationService });
   container.register(TOKENS.ChapterQueryService, { useClass: ChapterQueryService });
   container.register(TOKENS.StoryCrudService, { useClass: StoryCrudService });
   container.register(TOKENS.StoryQueryService, { useClass: StoryQueryService });

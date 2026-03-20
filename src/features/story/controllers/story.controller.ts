@@ -25,7 +25,7 @@ import { StoryMediaService } from '../services/story-media.service';
 import { StoryPublishingService } from '../services/story-publishing.service';
 
 // Import chapter service
-import { IChapterCrudService } from '@features/chapter/services/interfaces/chapter-crud.interface';
+import { ChapterCreationService } from '@/features/chapter/services/chapter-creation.service';
 
 @singleton()
 export class StoryController extends BaseModule {
@@ -38,8 +38,8 @@ export class StoryController extends BaseModule {
     private readonly storyMediaService: StoryMediaService,
     @inject(TOKENS.StoryPublishingService)
     private readonly storyPublishingService: StoryPublishingService,
-    @inject(TOKENS.ChapterCrudService)
-    private readonly chapterCrudService: IChapterCrudService
+    @inject(TOKENS.ChapterCreationService)
+    private readonly chapterCreationService: ChapterCreationService
   ) {
     super();
   }
@@ -341,7 +341,7 @@ export class StoryController extends BaseModule {
       if (!parentChapterSlug) {
         this.logDebug('Creating root chapter');
         // Create root chapter
-        newChapter = await this.chapterCrudService.createRoot({
+        newChapter = await this.chapterCreationService.createRoot({
           storySlug: slug,
           userId,
           title,
@@ -351,7 +351,7 @@ export class StoryController extends BaseModule {
       } else {
         this.logDebug('Creating child chapter');
         // Create child chapter
-        newChapter = await this.chapterCrudService.createChild({
+        newChapter = await this.chapterCreationService.createChild({
           storySlug: slug,
           userId,
           title,

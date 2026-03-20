@@ -9,23 +9,23 @@ import { IChapterAutoSave } from '../types/chapterAutoSave.types';
 import { ChapterAutoSaveRepository } from '../repositories/chapterAutoSave.repository';
 import { IAutoSaveConversionService } from './interfaces/autosave-conversion.interface';
 import { ChapterStatus } from '@/features/chapter/types/chapter-enum';
-import { IChapterCrudService } from '@features/chapter/services/interfaces/chapter-crud.interface';
 import { StoryQueryService } from '@features/story/services/story-query.service';
 import { CollaboratorQueryService } from '@features/storyCollaborator/services/collaborator-query.service';
 import { ClientSession } from 'mongoose';
 import { withTransaction } from '@utils/withTransaction';
+import { ChapterCreationService } from '@/features/chapter/services/chapter-creation.service';
 
 @singleton()
 export class AutoSaveConversionService extends BaseModule implements IAutoSaveConversionService {
   constructor(
     @inject(TOKENS.ChapterAutoSaveRepository)
     private readonly chapterAutoSaveRepo: ChapterAutoSaveRepository,
-    @inject(TOKENS.ChapterCrudService)
-    private readonly chapterCrudService: IChapterCrudService,
     @inject(TOKENS.StoryQueryService)
     private readonly storyQueryService: StoryQueryService,
     @inject(TOKENS.CollaboratorQueryService)
-    private readonly collaboratorQueryService: CollaboratorQueryService
+    private readonly collaboratorQueryService: CollaboratorQueryService,
+    @inject(TOKENS.ChapterCreationService)
+    private readonly chapterCreationService: ChapterCreationService
   ) {
     super();
   }
@@ -70,7 +70,7 @@ export class AutoSaveConversionService extends BaseModule implements IAutoSaveCo
     session?: ClientSession
   ): Promise<IChapter> {
     const story = await this.storyQueryService.getBySlug(autoSave.storySlug, { session });
-    return this.chapterCrudService.createRoot(
+    return this.chapterCreationService.createRoot(
       {
         storySlug: story.slug,
         userId,
@@ -92,7 +92,7 @@ export class AutoSaveConversionService extends BaseModule implements IAutoSaveCo
 
     const story = await this.storyQueryService.getBySlug(autoSave.storySlug, { session });
 
-    return this.chapterCrudService.createChild(
+    return this.chapterCreationService.createChild(
       {
         storySlug: story.slug,
         userId,

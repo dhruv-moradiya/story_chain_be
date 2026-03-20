@@ -57,6 +57,7 @@ export const TOKENS = {
   StoryPublishingService: Symbol.for('StoryPublishingService'),
 
   ChapterCrudService: Symbol.for('ChapterCrudService'),
+  ChapterCreationService: Symbol.for('ChapterCreationService'),
   ChapterQueryService: Symbol.for('ChapterQueryService'),
   ChapterVersionService: Symbol.for('ChapterVersionService'),
   AutoSaveQueryService: Symbol.for('AutoSaveQueryService'),
