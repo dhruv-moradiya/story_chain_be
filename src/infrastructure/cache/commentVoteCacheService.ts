@@ -91,6 +91,27 @@ export class CommentVoteCacheService extends BaseModule {
     return counts;
   }
 
+  /**
+   * Remove a vote for a user on a comment
+   * @param commentId - Comment ID
+   * @param userId - User ID
+   * @returns Success boolean and previous vote type
+   */
+  async removeVote(commentId: string, userId: string) {
+    const previousVote = await this.getUserCommentVote(userId, commentId);
+
+    if (!previousVote) {
+      return { success: false, previousVote: null };
+    }
+
+    await this.cacheService.client.srem(
+      CacheKeyBuilder.commentVoters(commentId),
+      this.voterEntry(userId, previousVote)
+    );
+
+    return { success: true, previousVote };
+  }
+
   async syncVoteCounts() {
     const commentIds = await this.commentVoteRepository.getDistinctCommentIds();
 

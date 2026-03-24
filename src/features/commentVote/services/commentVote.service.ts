@@ -43,4 +43,24 @@ export class CommentVoteService extends BaseModule {
 
     return { vote };
   }
+
+  async removeVote(input: { commentId: string; userId: string }) {
+    const { commentId, userId } = input;
+
+    const comment = await this.commentService.getComment({ commentId });
+    if (!comment) this.throwNotFoundError('Comment not found.');
+
+    const { success } = await this.commentVoteCacheService.removeVote(commentId, userId);
+
+    if (!success) {
+      this.logger.debug(`No vote found to remove for comment ${commentId} and user ${userId}`);
+      return { success: false };
+    }
+
+    await this.chapterCommentVoteQueue.enqueueRemoveVoteJob({ commentId, userId });
+
+    this.logger.debug(`Remove vote job for comment ${commentId} enqueued`);
+
+    return { success: true };
+  }
 }

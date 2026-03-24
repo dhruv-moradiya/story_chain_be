@@ -7,4 +7,5 @@ export interface ICommentVoteService {
     voteType: 'upvote' | 'downvote' | 'remove'
   ): Promise<ICommentVoteDoc>;
   getVote(userId: string, commentId: string): Promise<ICommentVoteDoc | null>;
+  removeVote(input: { commentId: string; userId: string }): Promise<{ success: boolean }>;
 }

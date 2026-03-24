@@ -42,6 +42,28 @@ export class ChapterCommentVoteQueue extends BaseModule {
     );
   }
 
+  async enqueueRemoveVoteJob(input: { commentId: string; userId: string }) {
+    this.logger.debug(`Remove vote job for comment ${input.commentId} enqueued`);
+    this.queueService.addJob(
+      this.queueName,
+      CHAPTER_COMMENT_VOTE_JOB_NAMES.REMOVE_VOTE,
+      {
+        commentId: input.commentId,
+        userId: input.userId,
+        voteType: 'remove',
+      },
+      {
+        jobId: crypto.randomUUID(),
+        removeOnComplete: true,
+        attempts: 3,
+        backoff: {
+          type: 'exponential',
+          delay: 1000,
+        },
+      }
+    );
+  }
+
   async enqueueSyncCountsJob() {
     this.logger.debug(`Sync counts job enqueued`);
 

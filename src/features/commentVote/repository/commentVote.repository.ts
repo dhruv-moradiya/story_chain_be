@@ -76,4 +76,14 @@ export class CommentVoteRepository extends BaseRepository<ICommentVote, IComment
     }
     return counts;
   }
+
+  /**
+   * Removes a vote for a comment.
+   * @param commentId - The ID of the comment.
+   * @param userId - The ID of the user.
+   * @returns The deleted vote.
+   */
+  async removeVote(commentId: string, userId: string) {
+    return this.model.findOneAndDelete({ commentId, userId }).lean();
+  }
 }
