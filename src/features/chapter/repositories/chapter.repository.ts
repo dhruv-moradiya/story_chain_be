@@ -188,6 +188,26 @@ export class ChapterRepository extends BaseRepository<IChapter, IChapterDoc> {
       .lean()
       .exec();
   }
+
+  /** Update chapter read time
+   * @param slug chapter slug
+   * @param time time to add
+   * @param options operation options
+   * @returns boolean
+   */
+  async updateChapterReadTime(
+    slug: string,
+    time: number,
+    options: IOperationOptions = {}
+  ): Promise<boolean> {
+    const result = await this.model
+      .findOneAndUpdate({ slug }, { $inc: { 'stats.totalReadTime': time } }, { new: true })
+      .session(options.session ?? null)
+      .lean()
+      .exec();
+
+    return !!result;
+  }
 }
 
 /**

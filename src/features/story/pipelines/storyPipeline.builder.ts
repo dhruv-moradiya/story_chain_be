@@ -203,6 +203,7 @@ class StoryPipelineBuilder extends BasePipelineBuilder<StoryPipelineBuilder> {
                     username: 1,
                     email: 1,
                     avatarUrl: 1,
+                    status: 1,
                   },
                 },
               ],
@@ -262,6 +263,7 @@ class StoryPipelineBuilder extends BasePipelineBuilder<StoryPipelineBuilder> {
               stats: 1,
               author: 1,
               title: 1,
+              updatedAt: 1,
             },
           },
         ],
@@ -276,8 +278,7 @@ class StoryPipelineBuilder extends BasePipelineBuilder<StoryPipelineBuilder> {
   getCurrentUserStoryPreset(userId: string) {
     return this.createdByUser(userId)
       .projectSettings(['genres', 'contentRating'])
-      .removeFields(['description'])
-      .resolveUserStoryAccess(userId)
+      .removeFields(['description', 'settings', 'coverImage', 'cardImage', '_id', 'lastActivityAt'])
       .build();
   }
 
@@ -285,7 +286,7 @@ class StoryPipelineBuilder extends BasePipelineBuilder<StoryPipelineBuilder> {
     return this.findBySlug(slug)
       .attachCollaborators()
       .attachLatestChapters(2)
-      .removeFields(['createdAt', 'updatedAt', 'creatorId']);
+      .removeFields(['createdAt', 'updatedAt', 'creatorId', '_id']);
   }
 }
 

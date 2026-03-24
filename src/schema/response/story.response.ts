@@ -130,6 +130,7 @@ export const LatestChapterSchema = {
     displayNumber: { type: 'string' },
     stats: ChapterStatsSchema,
     author: UserSummarySchema,
+    updatedAt: { type: 'string', format: 'date-time' },
   },
 };
 

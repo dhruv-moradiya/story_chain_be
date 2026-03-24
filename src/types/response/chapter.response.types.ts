@@ -8,6 +8,7 @@ export interface ILatestChaptersResponse {
   title: string;
   stats: IChapter['stats'];
   author: IPublicUserResponseWithEmail;
+  updatedAt: Date;
 }
 
 export interface IChapterWithStoryResponse extends Omit<

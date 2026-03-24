@@ -12,7 +12,7 @@ import { ChapterRepository } from '@/features/chapter/repositories/chapter.repos
 import { type IUserService } from '@/features/user/interfaces';
 import { CACHE_TTL, CacheKeyBuilder } from '@/infrastructure';
 import { CacheService } from '@/infrastructure/cache/cache.service';
-import { IStoryOverviewResponse } from '@/types/response/story.response.types';
+import { IStoryOverviewResponse, IUserStories } from '@/types/response/story.response.types';
 import { StoryPipelineBuilder } from '../pipelines/storyPipeline.builder';
 import { StoryRepository } from '../repositories/story.repository';
 import { StoryStatus } from '../types/story-enum';
@@ -57,12 +57,12 @@ class StoryQueryService extends BaseModule implements IStoryQueryService {
   /**
    * Get all stories created by a specific user
    */
-  async getAllByUserId(userId: string, options: IOperationOptions = {}): Promise<IStory[]> {
+  async getAllByUserId(userId: string, options: IOperationOptions = {}): Promise<IUserStories[]> {
     const pipeline = new StoryPipelineBuilder().getCurrentUserStoryPreset(userId);
 
     const stories = await this.cacheService.getOrSet(
       CacheKeyBuilder.userStories(userId),
-      () => this.storyRepo.aggregateStories(pipeline, options),
+      () => this.storyRepo.aggregateStories<IUserStories>(pipeline, options),
       { ttl: CACHE_TTL.USER_STORIES }
     );
 
@@ -158,23 +158,34 @@ class StoryQueryService extends BaseModule implements IStoryQueryService {
   /**
    * Get story overview with collaborators (throws if not found)
    */
+  // async getStoryOverviewBySlug(slug: string): Promise<IStoryOverviewResponse> {
+  //   return this.cacheService.getOrSet(
+  //     CacheKeyBuilder.storyOverview(slug),
+  //     async () => {
+  //       const storyPipeline = new StoryPipelineBuilder().getStoryOverviewPreset(slug).build();
+
+  //       const stories =
+  //         await this.storyRepo.aggregateStories<IStoryOverviewResponse>(storyPipeline);
+
+  //       if (!stories.length) {
+  //         this.throwNotFoundError('Story not found');
+  //       }
+
+  //       return stories[0];
+  //     },
+  //     { ttlKey: 'STORY_OVERVIEW' }
+  //   );
+  // }
   async getStoryOverviewBySlug(slug: string): Promise<IStoryOverviewResponse> {
-    return this.cacheService.getOrSet(
-      CacheKeyBuilder.storyOverview(slug),
-      async () => {
-        const storyPipeline = new StoryPipelineBuilder().getStoryOverviewPreset(slug).build();
+    const storyPipeline = new StoryPipelineBuilder().getStoryOverviewPreset(slug).build();
 
-        const stories =
-          await this.storyRepo.aggregateStories<IStoryOverviewResponse>(storyPipeline);
+    const stories = await this.storyRepo.aggregateStories<IStoryOverviewResponse>(storyPipeline);
 
-        if (!stories.length) {
-          this.throwNotFoundError('Story not found');
-        }
+    if (!stories.length) {
+      this.throwNotFoundError('Story not found');
+    }
 
-        return stories[0];
-      },
-      { ttlKey: 'STORY_OVERVIEW' }
-    );
+    return stories[0];
   }
 
   /**

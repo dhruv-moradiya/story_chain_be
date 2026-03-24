@@ -1,9 +1,29 @@
-import { IStory } from '@features/story/types/story.types';
 import {
   TStoryCollaboratorRole,
   TStoryCollaboratorStatus,
 } from '@/features/storyCollaborator/types/storyCollaborator.types';
+import {
+  IStory,
+  TStoryContentRating,
+  TStoryGenre,
+  TStoryStatus,
+} from '@features/story/types/story.types';
 import { ILatestChaptersResponse } from './chapter.response.types';
+
+// FOR STORY CARD DASHBORD
+export interface IUserStories {
+  title: string;
+  slug: string;
+  creatorId: string;
+  status: TStoryStatus;
+  tags: string[];
+  trendingScore: number;
+  publishedAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+  contentRating: TStoryContentRating;
+  genre: TStoryGenre[];
+}
 
 interface IStoryCreatorWithEmail {
   clerkId: string;
@@ -26,7 +46,7 @@ interface IStoryCollaboratorOverview {
 
 export interface IStoryOverviewResponse extends Omit<
   IStory,
-  'creatorId' | 'collaboratorIds' | 'createdAt' | 'updatedAt'
+  '_id' | 'creatorId' | 'collaboratorIds' | 'createdAt' | 'updatedAt'
 > {
   creator: IStoryCreator;
   collaborators: IStoryCollaboratorOverview[];
@@ -35,6 +55,7 @@ export interface IStoryOverviewResponse extends Omit<
 
 interface IStoryWithCreator extends Omit<
   IStory,
+  | '_id'
   | 'creatorId'
   | 'collaboratorIds'
   | 'settings'
