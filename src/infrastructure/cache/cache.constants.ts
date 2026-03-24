@@ -1,3 +1,11 @@
+export const TIME = {
+  SECOND: 1,
+  MINUTE: 60,
+  HOUR: 60 * 60,
+  DAY: 60 * 60 * 24,
+  WEEK: 60 * 60 * 24 * 7,
+} as const;
+
 /**
  * Cache TTL (Time To Live) values in seconds
  * Organized by data access patterns and freshness requirements
@@ -6,57 +14,57 @@ export const CACHE_TTL = {
   // ═══════════════════════════════════════════
   // STABLE DATA - Rarely changes
   // ═══════════════════════════════════════════
-  STORY_AGGREGATE: 60 * 60 * 24 * 7, // 24 hour
-  STORY_DETAIL: 60 * 60, // 1 hour
-  STORY_SETTINGS: 60 * 60, // 1 hour
-  STORY_STATS: 60 * 2, // 2 minutes
-  USER_PROFILE: 60 * 60, // 1 hour
-  CHAPTER_DETAIL: 60 * 30, // 30 minutes
-  STORY_COLLABORATOR: 60 * 20, // 20 minutes
-  STORY_COLLABORATOR_LIST: 60 * 20, // 20 minutes
-  STORY_LATEST_CHAPTERS: 60 * 20, // 20 minutes
+  STORY_AGGREGATE: TIME.WEEK, // 7 days
+  STORY_DETAIL: TIME.HOUR,
+  STORY_SETTINGS: TIME.HOUR,
+  STORY_STATS: 2 * TIME.MINUTE,
+  USER_PROFILE: TIME.HOUR,
+  CHAPTER_DETAIL: 30 * TIME.MINUTE,
+  STORY_COLLABORATOR: 20 * TIME.MINUTE,
+  STORY_COLLABORATOR_LIST: 20 * TIME.MINUTE,
+  STORY_LATEST_CHAPTERS: 20 * TIME.MINUTE,
 
   // ═══════════════════════════════════════════
-  // SEMI-STABLE DATA - Changes occasionally
+  // SEMI-STABLE DATA
   // ═══════════════════════════════════════════
-  STORY_OVERVIEW: 60 * 30, // 30 minutes
-  STORY_TREE: 60 * 15, // 15 minutes
-  COLLABORATOR_LIST: 60 * 15, // 15 minutes
-  COLLABORATOR_ROLE: 60 * 5, // 5 minutes
-  PULL_REQUEST_METADATA: 60 * 10, // 10 minutes
+  STORY_OVERVIEW: 30 * TIME.MINUTE,
+  STORY_TREE: 15 * TIME.MINUTE,
+  COLLABORATOR_LIST: 15 * TIME.MINUTE,
+  COLLABORATOR_ROLE: 5 * TIME.MINUTE,
+  PULL_REQUEST_METADATA: 10 * TIME.MINUTE,
 
   // ═══════════════════════════════════════════
-  // DYNAMIC LISTS - Updated frequently
+  // DYNAMIC LISTS
   // ═══════════════════════════════════════════
-  STORY_LIST_PUBLISHED: 60 * 10, // 10 minutes
-  STORY_LIST_NEW: 60 * 5, // 5 minutes
-  STORY_LIST_TRENDING: 60 * 5, // 5 minutes
-  STORY_LIST_FEATURED: 60 * 15, // 15 minutes
-  SEARCH_RESULTS: 60 * 3, // 3 minutes
+  STORY_LIST_PUBLISHED: 10 * TIME.MINUTE,
+  STORY_LIST_NEW: 5 * TIME.MINUTE,
+  STORY_LIST_TRENDING: 5 * TIME.MINUTE,
+  STORY_LIST_FEATURED: 15 * TIME.MINUTE,
+  SEARCH_RESULTS: 3 * TIME.MINUTE,
 
   // ═══════════════════════════════════════════
   // USER-SPECIFIC DATA
   // ═══════════════════════════════════════════
-  USER_STORIES: 60 * 10, // 10 minutes
-  USER_DRAFTS: 60 * 5, // 5 minutes
-  READING_HISTORY: 60 * 5, // 5 minutes
-  NOTIFICATION_COUNT: 60 * 2, // 2 minutes
-  NOTIFICATION_LIST: 60 * 5, // 5 minutes
-  PULL_REQUEST_VOTE_SUMMARY: 60 * 2, // 2 minutes
-  PULL_REQUEST_USER_VOTE: 60 * 5, // 5 minutes
+  USER_STORIES: 10 * TIME.MINUTE,
+  USER_DRAFTS: 5 * TIME.MINUTE,
+  READING_HISTORY: 5 * TIME.MINUTE,
+  NOTIFICATION_COUNT: 2 * TIME.MINUTE,
+  NOTIFICATION_LIST: 5 * TIME.MINUTE,
+  PULL_REQUEST_VOTE_SUMMARY: 2 * TIME.MINUTE,
+  PULL_REQUEST_USER_VOTE: 5 * TIME.MINUTE,
 
   // ═══════════════════════════════════════════
   // PULL REQUEST DATA
   // ═══════════════════════════════════════════
-  PULL_REQUEST: 60 * 5, // 5 minutes
-  PR_VOTE_STATS: 30, // 30 seconds - live vote counts
+  PULL_REQUEST: 5 * TIME.MINUTE,
+  PR_VOTE_STATS: 30 * TIME.SECOND,
 
   // ═══════════════════════════════════════════
   // SHORT-LIVED DATA
   // ═══════════════════════════════════════════
-  RATE_LIMIT: 60, // 1 minute
-  SESSION_DATA: 60 * 30, // 30 minutes
-  AUTOSAVE_LOCK: 60 * 2, // 2 minutes
+  RATE_LIMIT: 1 * TIME.MINUTE,
+  SESSION_DATA: 30 * TIME.MINUTE,
+  AUTOSAVE_LOCK: 2 * TIME.MINUTE,
 } as const;
 
 export type TCacheTTLKey = keyof typeof CACHE_TTL;
@@ -67,3 +75,39 @@ export type TCacheTTLKey = keyof typeof CACHE_TTL;
 export const CACHE_PREFIX = {
   APP: 'sc', // StoryChain
 } as const;
+
+export const CRON = {
+  EVERY_SECOND: '* * * * * *',
+  EVERY_MINUTE: '* * * * *',
+  EVERY_5_MINUTES: '*/5 * * * *',
+  EVERY_10_MINUTES: '*/10 * * * *',
+  EVERY_15_MINUTES: '*/15 * * * *',
+  EVERY_30_MINUTES: '*/30 * * * *',
+
+  EVERY_HOUR: '0 * * * *',
+  EVERY_2_HOURS: '0 */2 * * *',
+  EVERY_6_HOURS: '0 */6 * * *',
+  EVERY_12_HOURS: '0 */12 * * *',
+
+  EVERY_DAY: '0 0 * * *',
+  EVERY_WEEK: '0 0 * * 0', // Sunday
+  EVERY_MONTH: '0 0 1 * *',
+} as const;
+
+/**
+ * Usage examples
+ * cron.everyMinutes(10)   // * /10 * * * *
+ * cron.everyHours(2)      // 0 * /2 * * *
+ * cron.dailyAt(2)         // 0 2 * * *
+ * cron.weeklyAt(1, 3)     // Monday 3 AM
+ */
+export const cron = {
+  everyMinutes: (n: number) => `*/${n} * * * *`,
+  everyHours: (n: number) => `0 */${n} * * *`,
+  dailyAt: (hour: number, minute = 0) => `${minute} ${hour} * * *`,
+  weeklyAt: (day: number, hour = 0, minute = 0) => `${minute} ${hour} * * ${day}`, // 0 = Sunday
+};
+
+export const JOB_CRON = {
+  SYNC_VOTE_COUNTS: CRON.EVERY_10_MINUTES,
+};

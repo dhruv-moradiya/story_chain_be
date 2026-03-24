@@ -92,6 +92,7 @@ export class AutoSaveQueryService extends BaseModule implements IAutoSaveQuerySe
       // If wordCount was requested but content was NOT originally requested,
       // and we had to add content to dbFields, we should probably remove it from final output
       if (fields && wordCountRequested && !fields.includes('content')) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         delete (mapped as any).content;
       }
 

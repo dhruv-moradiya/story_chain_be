@@ -29,7 +29,7 @@ const AddPrCommentSchema = z.object({
     })
     .optional(),
 
-  parentCommentId: z.string().trim().min(1, 'parentCommentId cannot be empty').optional(),
+  parentCommentId: ObjectIdSchema().optional(),
 });
 
 const EditPrCommentSchema = z.object({

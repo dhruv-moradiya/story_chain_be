@@ -7,6 +7,11 @@ export const TOKENS = {
   RedisService: Symbol.for('RedisService'),
 
   // ═══════════════════════════════════════════
+  // DOMAIN QUEUES
+  // ═══════════════════════════════════════════
+  ChapterCommentVoteQueue: Symbol.for('ChapterCommentVoteQueue'),
+
+  // ═══════════════════════════════════════════
   // TRANSFORMERS
   // ═══════════════════════════════════════════
   WebhookTransformer: Symbol.for('WebhookTransformer'),
@@ -28,6 +33,7 @@ export const TOKENS = {
   // CACHE SERVICES
   // ═══════════════════════════════════════════
   StoryCacheService: Symbol.for('StoryCacheService'),
+  CommentVoteCacheService: Symbol.for('CommentVoteCacheService'),
 
   // ═══════════════════════════════════════════
   // REPOSITORIES
@@ -46,6 +52,7 @@ export const TOKENS = {
   PrCommentRepository: Symbol.for('PrCommentRepository'),
   PrReviewRepository: Symbol.for('PrReviewRepository'),
   PrVoteRepository: Symbol.for('PrVoteRepository'),
+  CommentVoteRepository: Symbol.for('CommentVoteRepository'),
 
   // ═══════════════════════════════════════════
   // FEATURE SERVICES
@@ -82,6 +89,7 @@ export const TOKENS = {
   ReadingHistoryService: Symbol.for('ReadingHistoryService'),
   SessionService: Symbol.for('SessionService'),
   PlatformRoleService: Symbol.for('PlatformRoleService'),
+  CommentVoteService: Symbol.for('CommentVoteService'),
 
   // ═══════════════════════════════════════════
   // CONTROLLERS

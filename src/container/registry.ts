@@ -19,6 +19,8 @@ import { WorkerService } from '@infrastructure/queue/worker.service';
 import { SchedulerService } from '@infrastructure/scheduler/scheduler.service';
 import { NotificationWorker } from '@features/notification/workers/notification.worker';
 import { StoryCacheService } from '@infrastructure/cache/story-cache.service';
+import { CommentVoteCacheService } from '@infrastructure/cache/commentVoteCacheService';
+import { ChapterCommentVoteQueue } from '@infrastructure/domains/chapterCommentVote.queue';
 
 // ═══════════════════════════════════════════
 // TRANSFORMERS
@@ -39,6 +41,7 @@ import { ReadingHistoryRepository } from '@/features/readingHistory/repositories
 import { PrCommentRepository } from '@/features/prComment/repositories/pr-comment-repository';
 import { PrReviewRepository } from '@/features/prReview/repositories/pr-review.repository';
 import { PrVoteRepository } from '@/features/prVote/repositories/pr-vote-repository';
+import { CommentVoteRepository } from '@/features/commentVote/repository/commentVote.repository';
 
 // ═══════════════════════════════════════════
 // FEATURE SERVICES
@@ -72,6 +75,8 @@ import { PullRequestQueryService } from '@/features/pullRequest/services/pull-re
 import { PrCommentService } from '@/features/prComment/services/prComment.service';
 import { PrReviewService } from '@/features/prReview/services/prReview.service';
 import { PrVoteService } from '@/features/prVote/services/prVote.service';
+
+import { CommentVoteService } from '@/features/commentVote/services/commentVote.service';
 
 // ═══════════════════════════════════════════
 // CONTROLLERS
@@ -153,8 +158,14 @@ export function registerServices(): void {
     { useClass: NotificationWorker },
     { lifecycle: Lifecycle.Singleton }
   );
+  container.register(
+    TOKENS.ChapterCommentVoteQueue,
+    { useClass: ChapterCommentVoteQueue },
+    { lifecycle: Lifecycle.Singleton }
+  );
 
   container.register(TOKENS.StoryCacheService, { useClass: StoryCacheService });
+  container.register(TOKENS.CommentVoteCacheService, { useClass: CommentVoteCacheService });
 
   // ═══════════════════════════════════════════
   // TRANSFORMERS
@@ -179,6 +190,7 @@ export function registerServices(): void {
   container.register(TOKENS.PrCommentRepository, { useClass: PrCommentRepository });
   container.register(TOKENS.PrReviewRepository, { useClass: PrReviewRepository });
   container.register(TOKENS.PrVoteRepository, { useClass: PrVoteRepository });
+  container.register(TOKENS.CommentVoteRepository, { useClass: CommentVoteRepository });
 
   // ═══════════════════════════════════════════
   // FEATURE SERVICES
@@ -214,6 +226,7 @@ export function registerServices(): void {
   container.register(TOKENS.PrCommentService, { useClass: PrCommentService });
   container.register(TOKENS.PrReviewService, { useClass: PrReviewService });
   container.register(TOKENS.PrVoteService, { useClass: PrVoteService });
+  container.register(TOKENS.CommentVoteService, { useClass: CommentVoteService });
 
   // ═══════════════════════════════════════════
   // CONTROLLERS

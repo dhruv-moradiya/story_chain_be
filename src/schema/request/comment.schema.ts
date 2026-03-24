@@ -1,13 +1,14 @@
 import { z } from 'zod';
+import { ObjectIdSchema } from '@/utils/index';
 
 const CommentIdSchema = z.object({
-  commentId: z.string(),
+  commentId: ObjectIdSchema(),
 });
 
 const CommentCreateSchema = z.object({
   chapterSlug: z.string(),
   content: z.string(),
-  parentCommentId: z.string().optional(),
+  parentCommentId: ObjectIdSchema().optional(),
 });
 
 const CommentUpdateSchema = z.object({
@@ -17,8 +18,8 @@ const CommentUpdateSchema = z.object({
 const CommentByChapterSchema = z.object({
   chapterSlug: z.string(),
   limit: z.coerce.number().optional().default(10),
-  cursor: z.string().optional(),
-  parentCommentId: z.string().optional(),
+  cursor: ObjectIdSchema().optional(),
+  parentCommentId: ObjectIdSchema().optional(),
 });
 
 export type TCommentIdSchema = z.infer<typeof CommentIdSchema>;

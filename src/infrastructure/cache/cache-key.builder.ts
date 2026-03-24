@@ -15,7 +15,8 @@ export type CacheEntity =
   | 'search'
   | 'session'
   | 'pull-request'
-  | 'pr-vote';
+  | 'pr-vote'
+  | 'comment-vote';
 
 /**
  * Operation types for cache keys
@@ -289,6 +290,34 @@ export class CacheKeyBuilder {
       entity: 'chapter',
       operation: 'list',
       identifiers: { storySlug },
+    });
+  }
+
+  // ═══════════════════════════════════════════
+  // COMMENT VOTE KEYS
+  // ═══════════════════════════════════════════
+
+  /**
+   * Cache key for a comment's vote counts
+   * @example "sc:comment-vote:stats:commentId=comment_123"
+   */
+  static commentVotes(commentId: string): string {
+    return this.build({
+      entity: 'comment-vote',
+      operation: 'stats',
+      identifiers: { commentId },
+    });
+  }
+
+  /**
+   * Cache key for a comment's voters Hash/Set
+   * @example "sc:comment-vote:members:commentId=comment_123"
+   */
+  static commentVoters(commentId: string): string {
+    return this.build({
+      entity: 'comment-vote',
+      operation: 'members',
+      identifiers: { commentId },
     });
   }
 

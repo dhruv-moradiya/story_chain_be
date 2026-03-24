@@ -5,6 +5,7 @@
  * All job data must be defined here to ensure type safety across the system.
  */
 
+import { TCommentVoteType } from '@/features/commentVote/types/commentVote.types';
 import { TNotificationType } from '@features/notification/types/notification.types';
 import { NotificationContext } from '@shared/services/notificationFactory.service';
 
@@ -19,6 +20,7 @@ import { NotificationContext } from '@shared/services/notificationFactory.servic
 export const QUEUE_NAMES = {
   NOTIFICATION: 'notification',
   EMAIL: 'email',
+  CHAPTER_COMMENT_VOTE: 'chapter-comment-vote',
 } as const;
 
 export type TQueueName = (typeof QUEUE_NAMES)[keyof typeof QUEUE_NAMES];
@@ -37,6 +39,14 @@ export const NOTIFICATION_JOB_NAMES = {
 
 export type TNotificationJobName =
   (typeof NOTIFICATION_JOB_NAMES)[keyof typeof NOTIFICATION_JOB_NAMES];
+
+export const CHAPTER_COMMENT_VOTE_JOB_NAMES = {
+  VOTE: 'vote',
+  SYNC_COUNTS: 'sync-counts',
+} as const;
+
+export type TChapterCommentVoteJobName =
+  (typeof CHAPTER_COMMENT_VOTE_JOB_NAMES)[keyof typeof CHAPTER_COMMENT_VOTE_JOB_NAMES];
 
 // ═══════════════════════════════════════════
 // JOB DATA PAYLOADS
@@ -76,6 +86,12 @@ export interface IEmailJobData {
   templateData: Record<string, string | number | boolean>;
 }
 
+export interface IChapterCommentVoteJobData {
+  commentId: string;
+  userId: string;
+  voteType: TCommentVoteType;
+}
+
 /**
  * Maps each queue name to its expected job data type.
  * This ensures type safety when adding/processing jobs.
@@ -83,6 +99,7 @@ export interface IEmailJobData {
 export interface IQueueJobDataMap {
   [QUEUE_NAMES.NOTIFICATION]: INotificationJobData;
   [QUEUE_NAMES.EMAIL]: IEmailJobData;
+  [QUEUE_NAMES.CHAPTER_COMMENT_VOTE]: IChapterCommentVoteJobData;
 }
 
 // ═══════════════════════════════════════════
