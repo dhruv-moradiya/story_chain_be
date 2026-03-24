@@ -8,6 +8,7 @@ export interface ILatestChaptersResponse {
   title: string;
   stats: IChapter['stats'];
   author: IPublicUserResponseWithEmail;
+  updatedAt: Date;
 }
 
 export interface IChapterWithStoryResponse extends Omit<
@@ -21,6 +22,7 @@ export interface IChapterWithStoryResponse extends Omit<
 }
 
 export interface IChapterDetailsResponse extends IChapter {
+  content: string;
   author: Pick<IUser, 'clerkId' | 'username' | 'avatarUrl' | 'email'>;
   previousChapters: Array<{ title: string; slug: string }>;
   nextChapters: Array<{ title: string; slug: string }>;

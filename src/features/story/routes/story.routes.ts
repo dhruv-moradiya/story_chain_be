@@ -38,21 +38,29 @@ const StoryApiRoutes = {
   GetAllStories: '/all',
   CreateBulkStories: '/bulk-create',
 
-  // By Slug
+  // QUERY
   GetBySlug: '/slug/:slug',
+  GetTreeBySlug: '/slug/:slug/tree',
+  GetCollaboratorsBySlug: '/slug/:slug/collaborators',
+  GetStoryOverviewBySlug: '/slug/:slug/overview',
+  GetSignatureUrlBySlug: '/slug/:slug/signature-url',
+  GetStorySettingsBySlug: '/slug/:slug/settings',
+
+  // UPDATE STORY STATUS
   PublishBySlug: '/slug/:slug/publish',
+
+  // UPDATE STORY METADATA
   UpdateSettingsBySlug: '/slug/:slug/settings',
   UpdateStoryCoverImageBySlug: '/slug/:slug/cover-image',
   UpdateStoryCardImageBySlug: '/slug/:slug/card-image',
-  GetTreeBySlug: '/slug/:slug/tree',
-  GetCollaboratorsBySlug: '/slug/:slug/collaborators',
-  CreateInvitationBySlug: '/slug/:slug/collaborators',
+
+  // COLLABORATORS
   AcceptInvitationById: '/slug/:slug/collaborators/accept-invitation',
+  CreateInvitationBySlug: '/slug/:slug/collaborators',
   DeclineInvitationById: '/slug/:slug/collaborators/decline-invitation',
+
+  // CHAPTERS
   AddChapterBySlug: '/slug/:slug/chapters',
-  GetSignatureUrlBySlug: '/slug/:slug/signature-url',
-  GetStoryOverviewBySlug: '/slug/:slug/overview',
-  GetStorySettingsBySlug: '/slug/:slug/settings',
 } as const;
 
 export { StoryApiRoutes };

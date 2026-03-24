@@ -53,12 +53,13 @@ export interface IChapter {
   parentChapterSlug?: string | null;
   ancestorSlugs: string[];
   depth: number;
-  authorId: string;
   content: string;
   title: string;
   chapterNumber?: number;
   branchIndex: number;
   displayNumber?: string;
+
+  authorId: string;
 
   votes: IChapterVotes;
 

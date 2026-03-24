@@ -18,6 +18,9 @@ import { QueueService } from '@infrastructure/queue/queue.service';
 import { WorkerService } from '@infrastructure/queue/worker.service';
 import { SchedulerService } from '@infrastructure/scheduler/scheduler.service';
 import { NotificationWorker } from '@features/notification/workers/notification.worker';
+import { StoryCacheService } from '@infrastructure/cache/story-cache.service';
+import { CommentVoteCacheService } from '@infrastructure/cache/commentVoteCacheService';
+import { ChapterCommentVoteQueue } from '@infrastructure/domains/chapterCommentVote.queue';
 
 // ═══════════════════════════════════════════
 // TRANSFORMERS
@@ -38,6 +41,7 @@ import { ReadingHistoryRepository } from '@/features/readingHistory/repositories
 import { PrCommentRepository } from '@/features/prComment/repositories/pr-comment-repository';
 import { PrReviewRepository } from '@/features/prReview/repositories/pr-review.repository';
 import { PrVoteRepository } from '@/features/prVote/repositories/pr-vote-repository';
+import { CommentVoteRepository } from '@/features/commentVote/repository/commentVote.repository';
 
 // ═══════════════════════════════════════════
 // FEATURE SERVICES
@@ -58,19 +62,21 @@ import { AutoSaveContentService } from '@features/chapterAutoSave/services/autos
 import { AutoSaveConversionService } from '@features/chapterAutoSave/services/autosave-conversion.service';
 
 import { ChapterCrudService } from '@features/chapter/services/chapter-crud.service';
+import { ChapterCreationService } from '@features/chapter/services/chapter-creation.service';
 import { ChapterQueryService } from '@features/chapter/services/chapter-query.service';
 
 import { ReadingHistoryService } from '@/features/readingHistory/services/readingHistory.service';
 import { BookmarkService } from '@/features/bookmark/services/bookmark.service';
 
 import { PullRequestService } from '@/features/pullRequest/services/pull-request.service';
-import { PullRequestValidator } from '@features/pullRequest/validators/pullRequest.validator';
 import { PullRequestDiffService } from '@/features/pullRequest/services/pull-request-diff.service';
 import { PullRequestQueryService } from '@/features/pullRequest/services/pull-request-query.service';
 
 import { PrCommentService } from '@/features/prComment/services/prComment.service';
 import { PrReviewService } from '@/features/prReview/services/prReview.service';
 import { PrVoteService } from '@/features/prVote/services/prVote.service';
+
+import { CommentVoteService } from '@/features/commentVote/services/commentVote.service';
 
 // ═══════════════════════════════════════════
 // CONTROLLERS
@@ -152,6 +158,14 @@ export function registerServices(): void {
     { useClass: NotificationWorker },
     { lifecycle: Lifecycle.Singleton }
   );
+  container.register(
+    TOKENS.ChapterCommentVoteQueue,
+    { useClass: ChapterCommentVoteQueue },
+    { lifecycle: Lifecycle.Singleton }
+  );
+
+  container.register(TOKENS.StoryCacheService, { useClass: StoryCacheService });
+  container.register(TOKENS.CommentVoteCacheService, { useClass: CommentVoteCacheService });
 
   // ═══════════════════════════════════════════
   // TRANSFORMERS
@@ -176,6 +190,7 @@ export function registerServices(): void {
   container.register(TOKENS.PrCommentRepository, { useClass: PrCommentRepository });
   container.register(TOKENS.PrReviewRepository, { useClass: PrReviewRepository });
   container.register(TOKENS.PrVoteRepository, { useClass: PrVoteRepository });
+  container.register(TOKENS.CommentVoteRepository, { useClass: CommentVoteRepository });
 
   // ═══════════════════════════════════════════
   // FEATURE SERVICES
@@ -192,6 +207,7 @@ export function registerServices(): void {
   });
 
   container.register(TOKENS.ChapterCrudService, { useClass: ChapterCrudService });
+  container.register(TOKENS.ChapterCreationService, { useClass: ChapterCreationService });
   container.register(TOKENS.ChapterQueryService, { useClass: ChapterQueryService });
   container.register(TOKENS.StoryCrudService, { useClass: StoryCrudService });
   container.register(TOKENS.StoryQueryService, { useClass: StoryQueryService });
@@ -204,13 +220,13 @@ export function registerServices(): void {
   container.register(TOKENS.ReadingHistoryService, { useClass: ReadingHistoryService });
   container.register(TOKENS.BookmarkService, { useClass: BookmarkService });
   container.register(TOKENS.CommentService, { useClass: CommentService });
-  container.register(TOKENS.PullRequestValidator, { useClass: PullRequestValidator });
   container.register(TOKENS.PullRequestDiffService, { useClass: PullRequestDiffService });
   container.register(TOKENS.PullRequestQueryService, { useClass: PullRequestQueryService });
   container.register(TOKENS.PullRequestService, { useClass: PullRequestService });
   container.register(TOKENS.PrCommentService, { useClass: PrCommentService });
   container.register(TOKENS.PrReviewService, { useClass: PrReviewService });
   container.register(TOKENS.PrVoteService, { useClass: PrVoteService });
+  container.register(TOKENS.CommentVoteService, { useClass: CommentVoteService });
 
   // ═══════════════════════════════════════════
   // CONTROLLERS

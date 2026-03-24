@@ -23,6 +23,10 @@ class CacheService extends BaseModule {
     super();
   }
 
+  get client() {
+    return this.redisService.getClient();
+  }
+
   // ═══════════════════════════════════════════
   // Core Cache Operations
   // ═══════════════════════════════════════════

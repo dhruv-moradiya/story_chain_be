@@ -140,10 +140,14 @@ class ReadingHistoryRepository extends BaseRepository<IReadingHistory, IReadingH
       {
         userId: input.userId,
         storySlug: input.storySlug,
-        'chaptersRead.chapterSlug': input.chapterSlug,
-        'chaptersRead.activeSessionId': input.sessionId,
-        'chaptersRead.lastHeartbeatAt': {
-          $gte: new Date(Date.now() - options.maxAllowedGap * 1000),
+        chaptersRead: {
+          $elemMatch: {
+            chapterSlug: input.chapterSlug,
+            activeSessionId: input.sessionId,
+            lastHeartbeatAt: {
+              $gte: new Date(Date.now() - options.maxAllowedGap * 1000),
+            },
+          },
         },
       },
       {
@@ -189,8 +193,12 @@ class ReadingHistoryRepository extends BaseRepository<IReadingHistory, IReadingH
       {
         userId,
         storySlug,
-        'chaptersRead.chapterSlug': chapterSlug,
-        'chaptersRead.hasQualifiedRead': false,
+        chaptersRead: {
+          $elemMatch: {
+            chapterSlug: chapterSlug,
+            hasQualifiedRead: false,
+          },
+        },
       },
       {
         'chaptersRead.$': 1,
@@ -203,8 +211,12 @@ class ReadingHistoryRepository extends BaseRepository<IReadingHistory, IReadingH
       {
         userId,
         storySlug,
-        'chaptersRead.chapterSlug': chapterSlug,
-        'chaptersRead.hasQualifiedRead': false,
+        chaptersRead: {
+          $elemMatch: {
+            chapterSlug: chapterSlug,
+            hasQualifiedRead: false,
+          },
+        },
       },
       {
         $set: {

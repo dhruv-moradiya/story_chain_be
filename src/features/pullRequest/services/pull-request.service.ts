@@ -1,11 +1,19 @@
+import { IOperationOptions } from '@/types';
 import { inject, singleton } from 'tsyringe';
 import { BaseModule } from '@utils/baseClass';
 import { TOKENS } from '@container/tokens';
 import { IPullRequestDto, IUpdatePRLableDTO } from '@dto/pullRequest.dto';
-import { IPullRequest } from '@features/pullRequest/types/pullRequest.types';
+import { IPullRequest, TPRType } from '@features/pullRequest/types/pullRequest.types';
+import { IStoryCollaborator } from '@features/storyCollaborator/types/storyCollaborator.types';
+import { StoryRepository } from '@features/story/repositories/story.repository';
+import { ChapterRepository } from '@features/chapter/repositories/chapter.repository';
+import { StoryCollaboratorRepository } from '@features/storyCollaborator/repositories/storyCollaborator.repository';
+import { PullRequestRules } from '@domain/pullRequest.rules';
+import { StoryCollaboratorStatus } from '@features/storyCollaborator/types/storyCollaborator-enum';
+import { PRType } from '@features/pullRequest/types/pullRequest-enum';
+import { IStory } from '@features/story/types/story.types';
 import { ICreatePullRequestService } from '@features/pullRequest/services/interfaces/create-pull-request.service';
 import { PullRequestRepository } from '@features/pullRequest/repositories/pullRequest.repository';
-import { PullRequestValidator } from '@features/pullRequest/validators/pullRequest.validator';
 import { PullRequestDiffService } from '@/features/pullRequest/services/pull-request-diff.service';
 import { PRStatus, PRTimelineAction } from '@features/pullRequest/types/pullRequest-enum';
 import { CacheService } from '@/infrastructure/cache/cache.service';
@@ -14,6 +22,7 @@ import {
   cachePRVoteMetadata,
   cachePRVoteSummary,
 } from '@/features/prVote/utils/prVote-cache';
+import { ChapterQueryService } from '@/features/chapter/services/chapter-query.service';
 
 /**
  * Service for managing Pull Requests.
@@ -24,12 +33,18 @@ export class PullRequestService extends BaseModule implements ICreatePullRequest
   constructor(
     @inject(TOKENS.PullRequestRepository)
     private readonly pullRequestRepository: PullRequestRepository,
-    @inject(TOKENS.PullRequestValidator)
-    private readonly pullRequestValidator: PullRequestValidator,
     @inject(TOKENS.PullRequestDiffService)
     private readonly pullRequestDiffService: PullRequestDiffService,
     @inject(TOKENS.CacheService)
-    private readonly cacheService: CacheService
+    private readonly cacheService: CacheService,
+    @inject(TOKENS.ChapterQueryService)
+    private readonly chapterQueryService: ChapterQueryService,
+    @inject(TOKENS.StoryRepository)
+    private readonly storyRepository: StoryRepository,
+    @inject(TOKENS.ChapterRepository)
+    private readonly chapterRepository: ChapterRepository,
+    @inject(TOKENS.StoryCollaboratorRepository)
+    private readonly storyCollaboratorRepository: StoryCollaboratorRepository
   ) {
     super();
   }
@@ -55,14 +70,35 @@ export class PullRequestService extends BaseModule implements ICreatePullRequest
     } = input;
 
     // ── 1. Validate Request ──────────────────────────────────────────────────
-    // This validates story, collaborator role/status, parent/chapter existence, and duplicates.
-    await this.pullRequestValidator.validateCreateRequest(
-      userId,
-      storySlug,
-      chapterSlug,
-      parentChapterSlug,
-      prType
-    );
+    const story = await this.validateStory(storySlug);
+    const collaborator = await this.validateCollaborator(storySlug, userId);
+    this.validatePullRequestRules(story, collaborator);
+
+    if (prType === PRType.NEW_CHAPTER) {
+      if (!parentChapterSlug) {
+        this.throwBadRequest('PARENT_CHAPTER_REQUIRED', 'Parent chapter slug is required.');
+      }
+      const parentChapter = await this.chapterRepository.findBySlug(parentChapterSlug);
+      if (!parentChapter) {
+        this.throwNotFoundError('PARENT_CHAPTER_NOT_FOUND', 'Parent chapter not found.');
+      }
+      if (parentChapter.storySlug !== storySlug) {
+        this.throwBadRequest(
+          'INVALID_PARENT_CHAPTER',
+          'Parent chapter does not belong to this story.'
+        );
+      }
+    } else {
+      const chapter = await this.chapterRepository.findBySlug(chapterSlug);
+      if (!chapter) {
+        this.throwNotFoundError('CHAPTER_NOT_FOUND', 'Chapter not found.');
+      }
+      if (chapter.storySlug !== storySlug) {
+        this.throwBadRequest('INVALID_CHAPTER', 'Target chapter does not belong to this story.');
+      }
+    }
+
+    await this.validateDuplicatePR(userId, storySlug, chapterSlug);
 
     // ── 2. Build Changes (Diff) ──────────────────────────────────────────────
     const resolvedChanges = this.pullRequestDiffService.resolveChanges(input);
@@ -113,5 +149,97 @@ export class PullRequestService extends BaseModule implements ICreatePullRequest
     }
 
     return pr;
+  }
+
+  async generate(
+    input: {
+      chapterSlug: string;
+      storySlug: string;
+      userId: string;
+      prType: TPRType;
+      title: string;
+      description: string;
+    },
+    options: IOperationOptions = {}
+  ) {
+    const { chapterSlug, storySlug, userId } = input;
+
+    // ── 1. Validate Generate Request ─────────────────────────────────────────
+    const story = await this.validateStory(storySlug);
+    const collaborator = await this.validateCollaborator(storySlug, userId);
+    this.validatePullRequestRules(story, collaborator);
+    await this.validateDuplicatePR(userId, storySlug, chapterSlug);
+
+    // ── 2. Fetch Chapter ─────────────────────────────────────────────────────
+    const chapter = await this.chapterQueryService.getBySlug(chapterSlug, {
+      session: options.session,
+    });
+
+    if (!chapter) {
+      this.throwNotFoundError('Chapter not found.');
+    }
+  }
+
+  // ═══════════════════════════════════════════
+  // PRIVATE VALIDATION HELPERS
+  // ═══════════════════════════════════════════
+
+  private async validateStory(storySlug: string): Promise<IStory> {
+    const story = await this.storyRepository.findBySlug(storySlug);
+    if (!story) {
+      this.throwNotFoundError('STORY_NOT_FOUND', 'Story not found.');
+    }
+    return story;
+  }
+
+  private async validateCollaborator(
+    storySlug: string,
+    userId: string
+  ): Promise<IStoryCollaborator> {
+    const collaborator = await this.storyCollaboratorRepository.findByStoryAndUser(
+      storySlug,
+      userId
+    );
+
+    if (!collaborator || collaborator.status !== StoryCollaboratorStatus.ACCEPTED) {
+      this.throwForbiddenError(
+        'FORBIDDEN',
+        'You must be an accepted collaborator to create a pull request.'
+      );
+    }
+    return collaborator;
+  }
+
+  private validatePullRequestRules(story: IStory, collaborator: IStoryCollaborator): void {
+    if (!PullRequestRules.canRoleCreatePR(collaborator.role)) {
+      this.throwForbiddenError(
+        'FORBIDDEN',
+        'Your collaborator role does not permit creating pull requests.'
+      );
+    }
+
+    const genRule = PullRequestRules.canGeneratePR(story, collaborator.role);
+    if (!genRule.allowed) {
+      this.throwForbiddenError('FORBIDDEN', genRule.message!);
+    }
+  }
+
+  private async validateDuplicatePR(
+    userId: string,
+    storySlug: string,
+    chapterSlug: string
+  ): Promise<void> {
+    const existingOpenPRs = await this.pullRequestRepository.findOpenPRsByAuthorForStory(
+      userId,
+      storySlug
+    );
+    const openChapterSlugs = existingOpenPRs.map((pr) => pr.chapterSlug);
+
+    if (PullRequestRules.hasDuplicateOpenPR(userId, chapterSlug, openChapterSlugs)) {
+      this.throwConflictError(
+        'CONFLICT',
+        'You already have an open pull request for this chapter. Close or merge it first.'
+      );
+    }
   }
 }

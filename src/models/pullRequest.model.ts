@@ -105,43 +105,9 @@ const pullRequestSchema = new Schema<IPullRequestDoc>(
         maxlength: 100000,
       },
 
-      /**
-       * DIFF: Unified diff format showing line-by-line changes
-       * USE: Display visual diff in UI, easier code review
-       * UPDATE: Generated automatically from original vs proposed
-       * FORMAT: Standard unified diff (-, +, @ markers)
-       * GENERATE: On PR creation in PRService.createPR()
-       * SIZE: Usually 10-20% of original size
-       * EXAMPLE: "- old line\n+ new line\n  unchanged line"
-       */
-      diff: {
-        type: String,
-        maxlength: 100000,
-      },
+      wordCount: Number,
 
-      /**
-       * LINE_COUNT: Total lines in diff
-       * USE: Quick stat for UI, helps gauge change size
-       * UPDATE: Calculated on creation from diff
-       * CALCULATE: Count all lines in diff including context
-       */
-      lineCount: Number,
-
-      /**
-       * ADDITIONS_COUNT: Number of lines added
-       * USE: Quick stat showing additions
-       * UPDATE: Calculated on creation
-       * CALCULATE: Count lines starting with '+' in diff
-       */
-      additionsCount: Number,
-
-      /**
-       * DELETIONS_COUNT: Number of lines deleted
-       * USE: Quick stat showing deletions
-       * UPDATE: Calculated on creation
-       * CALCULATE: Count lines starting with '-' in diff
-       */
-      deletionsCount: Number,
+      readingMinutes: Number,
     },
 
     // ==================== STATUS ====================
@@ -505,24 +471,6 @@ const pullRequestSchema = new Schema<IPullRequestDoc>(
         default: 0,
         min: 0,
       },
-
-      /**
-       * TIME_TO_MERGE: How long from creation to merge?
-       * UNIT: Minutes
-       * USE: Track approval speed, performance metric
-       * CALCULATE: (mergedAt - createdAt) / 60000
-       * EMPTY: null if not merged yet
-       * ANALYSIS: Long timeToMerge might indicate approval issues
-       */
-      timeToMerge: Number,
-
-      /**
-       * AVG_REVIEW_TIME: Average time per reviewer took to review
-       * UNIT: Minutes
-       * USE: Performance metric for reviewers
-       * CALCULATE: Avg of (review.createdAt - previous_action.time)
-       */
-      avgReviewTime: Number,
     },
 
     // ==================== APPROVAL STATUS ====================

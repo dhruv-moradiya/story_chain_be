@@ -1,6 +1,6 @@
 import { IChapter } from '@/features/chapter/types/chapter.types';
 import { IOperationOptions } from '@/types';
-import { IStoryOverviewResponse } from '@/types/response/story.response.types';
+import { IStoryOverviewResponse, IUserStories } from '@/types/response/story.response.types';
 import { IStory, IStorySettingsWithImages } from '../../types/story.types';
 
 interface IStoryTreeResult {
@@ -13,7 +13,7 @@ interface IStoryQueryService {
   getBySlug(slug: string, options?: { fields?: string[] } & IOperationOptions): Promise<IStory>;
 
   // User-specific queries
-  getAllByUserId(userId: string, options?: IOperationOptions): Promise<IStory[]>;
+  getAllByUserId(userId: string, options?: IOperationOptions): Promise<IUserStories[]>;
   getDraftsByUserId(userId: string, options?: IOperationOptions): Promise<IStory[]>;
 
   // Public queries

@@ -108,6 +108,8 @@ class ReadingHistoryService extends BaseModule implements IReadingHistoryService
       return;
     }
 
+    await this.chapterRepository.updateChapterReadTime(input.chapterSlug, HEARTBEAT_INTERVAL);
+
     // STEP 2 — Check qualification (only if not yet qualified)
     const history = await this.readingHistoryRepository.getUnqualifiedChapterSession(
       input.userId,

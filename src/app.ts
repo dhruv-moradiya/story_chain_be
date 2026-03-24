@@ -15,9 +15,15 @@ import { TOKENS } from './container';
 import { FastifyRequest } from 'fastify';
 import { ApiError } from './utils/apiResponse';
 import fastifyMetrics from 'fastify-metrics';
+import { FastifyAdapter } from '@bull-board/fastify';
+import { createBullBoard } from '@bull-board/api';
+import { QUEUE_NAMES, QueueService } from './infrastructure';
+import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
+import { bootstrapSchedulers, bootstrapWorkers } from './infrastructure/queue/worker.bootstrap';
 
 export const createApp = async () => {
   const redisService = container.resolve<RedisService>(TOKENS.RedisService);
+  const queueService = container.resolve<QueueService>(TOKENS.QueueService);
 
   const app = Fastify({
     logger: env.NODE_ENV === 'development',
@@ -33,6 +39,25 @@ export const createApp = async () => {
   await app.register(helmet);
   await app.register(clerkPlugin);
   await app.register(fastifyMetrics);
+
+  const serverAdapter = new FastifyAdapter();
+  serverAdapter.setBasePath('/admin/queues');
+
+  const queues = [
+    QUEUE_NAMES.CHAPTER_COMMENT_VOTE,
+    QUEUE_NAMES.EMAIL,
+    QUEUE_NAMES.NOTIFICATION,
+  ].map((name) => new BullMQAdapter(queueService.getQueue(name)));
+
+  createBullBoard({
+    queues,
+    serverAdapter,
+    options: {
+      uiConfig: {
+        boardTitle: 'StoryChain Queues',
+      },
+    },
+  });
 
   await app.register(rateLimit, {
     global: true,
@@ -118,6 +143,14 @@ export const createApp = async () => {
 
   // Register routes
   await registerRoutes(app);
+
+  await bootstrapSchedulers();
+
+  bootstrapWorkers();
+
+  await app.register(serverAdapter.registerPlugin(), {
+    prefix: '/admin/queues',
+  });
 
   const isDevelopment = process.env.NODE_ENV !== 'production';
 

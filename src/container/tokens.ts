@@ -7,6 +7,11 @@ export const TOKENS = {
   RedisService: Symbol.for('RedisService'),
 
   // ═══════════════════════════════════════════
+  // DOMAIN QUEUES
+  // ═══════════════════════════════════════════
+  ChapterCommentVoteQueue: Symbol.for('ChapterCommentVoteQueue'),
+
+  // ═══════════════════════════════════════════
   // TRANSFORMERS
   // ═══════════════════════════════════════════
   WebhookTransformer: Symbol.for('WebhookTransformer'),
@@ -25,6 +30,12 @@ export const TOKENS = {
   StoryGuardService: Symbol.for('StoryGuardService'),
 
   // ═══════════════════════════════════════════
+  // CACHE SERVICES
+  // ═══════════════════════════════════════════
+  StoryCacheService: Symbol.for('StoryCacheService'),
+  CommentVoteCacheService: Symbol.for('CommentVoteCacheService'),
+
+  // ═══════════════════════════════════════════
   // REPOSITORIES
   // ═══════════════════════════════════════════
   UserRepository: Symbol.for('UserRepository'),
@@ -41,6 +52,7 @@ export const TOKENS = {
   PrCommentRepository: Symbol.for('PrCommentRepository'),
   PrReviewRepository: Symbol.for('PrReviewRepository'),
   PrVoteRepository: Symbol.for('PrVoteRepository'),
+  CommentVoteRepository: Symbol.for('CommentVoteRepository'),
 
   // ═══════════════════════════════════════════
   // FEATURE SERVICES
@@ -52,6 +64,7 @@ export const TOKENS = {
   StoryPublishingService: Symbol.for('StoryPublishingService'),
 
   ChapterCrudService: Symbol.for('ChapterCrudService'),
+  ChapterCreationService: Symbol.for('ChapterCreationService'),
   ChapterQueryService: Symbol.for('ChapterQueryService'),
   ChapterVersionService: Symbol.for('ChapterVersionService'),
   AutoSaveQueryService: Symbol.for('AutoSaveQueryService'),
@@ -69,7 +82,6 @@ export const TOKENS = {
   PullRequestService: Symbol.for('PullRequestService'),
   PullRequestQueryService: Symbol.for('PullRequestQueryService'),
   PullRequestDiffService: Symbol.for('PullRequestDiffService'),
-  PullRequestValidator: Symbol.for('PullRequestValidator'),
   PrCommentService: Symbol.for('PrCommentService'),
   PrReviewService: Symbol.for('PrReviewService'),
   PrVoteService: Symbol.for('PrVoteService'),
@@ -77,6 +89,7 @@ export const TOKENS = {
   ReadingHistoryService: Symbol.for('ReadingHistoryService'),
   SessionService: Symbol.for('SessionService'),
   PlatformRoleService: Symbol.for('PlatformRoleService'),
+  CommentVoteService: Symbol.for('CommentVoteService'),
 
   // ═══════════════════════════════════════════
   // CONTROLLERS
