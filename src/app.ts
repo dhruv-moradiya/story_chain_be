@@ -20,6 +20,7 @@ import { createBullBoard } from '@bull-board/api';
 import { QUEUE_NAMES, QueueService } from './infrastructure';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 import { bootstrapSchedulers, bootstrapWorkers } from './infrastructure/queue/worker.bootstrap';
+import { logger } from './utils/logger';
 
 export const createApp = async () => {
   const redisService = container.resolve<RedisService>(TOKENS.RedisService);
@@ -137,6 +138,10 @@ export const createApp = async () => {
     staticCSP: true,
     transformStaticCSP: (header) => header,
   });
+
+  logger.info('[APP]: Flushing Redis cache');
+  await redisService.flush();
+  logger.info('[APP]: Redis cache flushed');
 
   // Health check
   app.get('/health', async () => ({ status: 'ok' }));

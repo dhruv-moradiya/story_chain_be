@@ -314,4 +314,8 @@ export abstract class BaseRepository<TEntity, TDocument extends Document> {
 
     return query.lean<TEntity>().exec();
   }
+
+  async bulkWrite(operations: any[], options: IOperationOptions = {}): Promise<any> {
+    return this.model.bulkWrite(operations, options);
+  }
 }

@@ -65,14 +65,12 @@ export class ChapterCommentVoteQueue extends BaseModule {
   }
 
   async enqueueSyncCountsJob() {
-    this.logger.debug(`Sync counts job enqueued`);
-
     this.scheduler.register({
       queueName: this.queueName,
       jobName: CHAPTER_COMMENT_VOTE_JOB_NAMES.SYNC_COUNTS,
       description: 'Syncs comment vote counts to database',
       data: { commentId: '__all__', userId: '', voteType: 'downvote' },
-      schedule: { pattern: CRON.EVERY_10_MINUTES },
+      schedule: { pattern: CRON.EVERY_MINUTE },
     });
   }
 }

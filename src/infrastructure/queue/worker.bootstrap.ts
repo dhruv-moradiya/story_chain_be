@@ -6,18 +6,18 @@ import { logger } from '@/utils/logger';
 import { ChapterCommentVoteQueue } from '../domains/chapterCommentVote.queue';
 
 export function bootstrapWorkers(): void {
-  logger.debug('🚀 Bootstrapping workers');
+  logger.info('[BOOTSTRAP-WORKERS]: 🚀 Bootstrapping workers');
   const workerService = container.resolve<WorkerService>(TOKENS.WorkerService);
 
   workerService.registerWorker(QUEUE_NAMES.CHAPTER_COMMENT_VOTE, commentVoteProcessor, 1);
-  logger.debug('✅ Workers bootstrapped');
+  logger.info('[BOOTSTRAP-WORKERS]: ✅ Workers bootstrapped');
 }
 
 export async function bootstrapSchedulers(): Promise<void> {
-  logger.debug('⏰ Bootstrapping schedulers');
+  logger.info('[BOOTSTRAP-SCHEDULERS]: ⏰ Bootstrapping schedulers');
 
   const voteQueue = container.resolve(ChapterCommentVoteQueue);
   await voteQueue.enqueueSyncCountsJob();
 
-  logger.debug('✅ Schedulers bootstrapped');
+  logger.info('[BOOTSTRAP-SCHEDULERS]: ✅ Schedulers bootstrapped');
 }

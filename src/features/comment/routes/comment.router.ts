@@ -20,6 +20,9 @@ const CommentApiRoutes = {
   Delete: '/:commentId',
   Get: '/:commentId',
   GetByChapter: '/chapter/:chapterSlug',
+
+  // TESTING APIs
+  syncCounts: '/sync-counts',
 } as const;
 
 export async function commentRoutes(fastify: FastifyInstance) {
@@ -27,6 +30,15 @@ export async function commentRoutes(fastify: FastifyInstance) {
 
   const authFactory = container.resolve<AuthMiddlewareFactory>(TOKENS.AuthMiddlewareFactory);
   const validateAuth = authFactory.createAuthMiddleware();
+
+  fastify.get(
+    CommentApiRoutes.syncCounts,
+    {
+      preHandler: [validateAuth],
+      config: { rateLimit: RateLimits.WRITE },
+    },
+    commentController.syncCounts
+  );
 
   fastify.post(
     CommentApiRoutes.Create,

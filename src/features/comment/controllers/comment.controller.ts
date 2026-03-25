@@ -20,6 +20,13 @@ class CommentController extends BaseModule {
     super();
   }
 
+  syncCounts = catchAsync(async (_request: FastifyRequest, reply: FastifyReply) => {
+    await this.commentService.syncCounts();
+    return reply
+      .code(HTTP_STATUS.OK.code)
+      .send(ApiResponse.success(null, 'OK', 'Counts synced successfully'));
+  });
+
   addComment = catchAsync(
     async (request: FastifyRequest<{ Body: IAddCommentDTO }>, reply: FastifyReply) => {
       const userId = request.user.clerkId;
