@@ -21,8 +21,9 @@ interface IGetCommentDTO {
 interface IGetCommentsDTO {
   chapterSlug: string;
   limit?: number;
-  cursor?: string;
+  page?: number;
   parentCommentId?: string;
+  userId?: string;
 }
 
 export type {

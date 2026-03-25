@@ -8,7 +8,6 @@ import {
   IAddCommentDTO,
   IDeleteCommentDTO,
   IGetCommentDTO,
-  IGetCommentsDTO,
   IUpdateCommentDTO,
 } from '@/dto/comments.dto';
 import { HTTP_STATUS } from '@/constants/httpStatus';
@@ -77,19 +76,23 @@ class CommentController extends BaseModule {
   getComments = catchAsync(
     async (
       request: FastifyRequest<{
-        Params: IGetCommentsDTO;
-        Querystring: { limit?: number; cursor?: string; parentCommentId?: string };
+        Params: { chapterSlug: string };
+        Querystring: { limit?: number; page?: number; parentCommentId?: string };
       }>,
       reply: FastifyReply
     ) => {
       const { chapterSlug } = request.params;
-      const { limit, cursor, parentCommentId } = request.query;
+      const { limit, page = 1, parentCommentId } = request.query;
+
+      // Extract userId optionally for fetching user's vote state
+      const userId = request.user?.clerkId;
 
       const result = await this.commentService.getComments({
         chapterSlug,
         limit,
-        cursor,
+        page,
         parentCommentId,
+        userId,
       });
       return reply
         .code(HTTP_STATUS.OK.code)

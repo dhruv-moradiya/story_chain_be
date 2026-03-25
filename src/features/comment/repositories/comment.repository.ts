@@ -1,6 +1,7 @@
 import { BaseRepository } from '@/utils/baseClass';
 import { singleton } from 'tsyringe';
 import { IComment, ICommentDoc } from '../types/comment.types';
+import { ICommentResponse } from '@/types/response/comment.response.types';
 import { Comment } from '@/models/comment.model';
 import {
   IAddCommentDTO,
@@ -10,6 +11,7 @@ import {
 } from '@/dto/comments.dto';
 import { FilterQuery } from 'mongoose';
 import { IOperationOptions } from '@/types';
+import { CommentPipelineBuilder } from '../pipelines/commentPipeline.builder';
 
 @singleton()
 class CommentRepository extends BaseRepository<IComment, ICommentDoc> {
@@ -49,8 +51,20 @@ class CommentRepository extends BaseRepository<IComment, ICommentDoc> {
     return this.findOne({ filter: { _id: commentId } });
   }
 
-  async getComments(comment: IGetCommentsDTO): Promise<IComment[]> {
-    const { chapterSlug, limit = 10, cursor, parentCommentId } = comment;
+  async getComments(comment: IGetCommentsDTO): Promise<ICommentResponse[]> {
+    const { chapterSlug, limit = 10, page = 1, parentCommentId, userId } = comment;
+
+    const builder = new CommentPipelineBuilder()
+      .getChapterCommentsPreset(chapterSlug, userId)
+      .when(!!parentCommentId, (b: CommentPipelineBuilder) => b.byParent(parentCommentId!))
+      .when(!parentCommentId, (b: CommentPipelineBuilder) => b.filterTopLevel())
+      .paginate(page, limit);
+
+    return this.model.aggregate<ICommentResponse>(builder.build()).exec();
+  }
+
+  async countComments(comment: Partial<IGetCommentsDTO>): Promise<number> {
+    const { chapterSlug, parentCommentId } = comment;
     const query: FilterQuery<ICommentDoc> = { chapterSlug, isDeleted: false };
 
     if (parentCommentId) {
@@ -59,11 +73,7 @@ class CommentRepository extends BaseRepository<IComment, ICommentDoc> {
       query.parentCommentId = null;
     }
 
-    if (cursor) {
-      query._id = { $lt: cursor };
-    }
-
-    return this.model.find(query).sort({ createdAt: -1 }).limit(limit).exec();
+    return this.model.countDocuments(query).exec();
   }
 
   async updateVoteCount(input: {

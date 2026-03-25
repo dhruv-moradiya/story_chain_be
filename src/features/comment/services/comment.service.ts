@@ -9,6 +9,10 @@ import {
   IUpdateCommentDTO,
 } from '@/dto/comments.dto';
 import { IComment } from '../types/comment.types';
+import {
+  ICommentPaginatedResponse,
+  ICommentResponse,
+} from '@/types/response/comment.response.types';
 import { CommentRepository } from '../repositories/comment.repository';
 import { TOKENS } from '@/container';
 import { sanitizeContent } from '@/utils/sanitizer';
@@ -86,8 +90,42 @@ class CommentService extends BaseModule implements ICommentCrudService {
     return this.commentRepository.getComment(_comment);
   }
 
-  getComments(_comment: IGetCommentsDTO): Promise<IComment[]> {
-    return this.commentRepository.getComments(_comment);
+  async getComments(comment: IGetCommentsDTO): Promise<ICommentPaginatedResponse> {
+    const { page = 1, limit = 10 } = comment;
+
+    const [docs, totalDocs] = await Promise.all([
+      this.commentRepository.getComments(comment),
+      this.commentRepository.countComments(comment),
+    ]);
+
+    return this.formatPaginatedResponse(docs, totalDocs, page, limit);
+  }
+
+  private formatPaginatedResponse(
+    docs: ICommentResponse[],
+    totalDocs: number,
+    page: number,
+    limit: number
+  ): ICommentPaginatedResponse {
+    const totalPages = Math.ceil(totalDocs / limit);
+    const pagingCounter = (page - 1) * limit + 1;
+    const hasPrevPage = page > 1;
+    const hasNextPage = page < totalPages;
+    const prevPage = hasPrevPage ? page - 1 : null;
+    const nextPage = hasNextPage ? page + 1 : null;
+
+    return {
+      docs,
+      totalDocs,
+      limit,
+      totalPages,
+      page,
+      pagingCounter,
+      hasPrevPage,
+      hasNextPage,
+      prevPage,
+      nextPage,
+    };
   }
 }
 

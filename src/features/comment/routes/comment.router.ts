@@ -6,7 +6,8 @@ import { type AuthMiddlewareFactory } from '@/middlewares/factories';
 import { CommentController } from '../controllers/comment.controller';
 import { CommentResponses } from '../schema/response/comment.response.schema';
 import {
-  CommentByChapterSchema,
+  CommentByChapterParamsSchema,
+  CommentByChapterQuerySchema,
   CommentCreateSchema,
   CommentIdSchema,
   CommentUpdateSchema,
@@ -106,12 +107,13 @@ export async function commentRoutes(fastify: FastifyInstance) {
   fastify.get(
     CommentApiRoutes.GetByChapter,
     {
+      preHandler: [validateAuth],
       config: { rateLimit: RateLimits.PUBLIC_READ },
       schema: {
         description: 'Get comments for a chapter',
         tags: ['Comments'],
-        // querystring: zodToJsonSchema(CommentByChapterQuerySchema), // TODO: Define query schema separately if strict validation needed
-        params: zodToJsonSchema(CommentByChapterSchema),
+        querystring: zodToJsonSchema(CommentByChapterQuerySchema),
+        params: zodToJsonSchema(CommentByChapterParamsSchema),
         response: CommentResponses.commentList,
       },
     },
