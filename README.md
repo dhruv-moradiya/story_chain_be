@@ -214,13 +214,36 @@ CLOUDINARY_API_SECRET=secret
 
 ---
 
-## 🐳 12. Docker
+## 🐳 12. Docker & Containerization
 
 The project uses a **Multi-Stage Dockerfile** to minimize image size and maximize security.
 
 - **Stage 1 (Builder)**: Uses `node:20-alpine` to compile TS and install all dev dependencies.
 - **Stage 2 (Runner)**: Uses `node:20-alpine`, installs only production dependencies, and copies the `dist/` folder.
-- **Port**: Default production port is `8080`.
+
+### 12.1 Local Development (Recommended)
+
+Use `docker compose` to run the entire stack (App + MongoDB with Replica Set + Redis). This is the fastest way to get a local environment identical to the dependencies in production.
+
+| Scenario                        | Command                                      |
+| :------------------------------ | :------------------------------------------- |
+| **Start everything (detached)** | `docker compose up -d`                       |
+| **Start existing containers**   | `docker compose start`                       |
+| **Start and show logs**         | `docker compose up`                          |
+| **Rebuild & Restart**           | `docker compose up -d --build`               |
+| **Stop everything**             | `docker compose down`                        |
+| **View logs for app only**      | `docker compose logs -f app`                 |
+| **Stop but keep volumes**       | `docker compose stop`                        |
+| **Remove volumes (reset DB)**   | `docker compose down -v`                     |
+| **Remove volumes (reset DB)**   | `docker volume rm story_chain_be_redis-data` |
+| **Remove volumes (reset DB)**   | `docker volume rm story_chain_be_mongo-data` |
+
+> [!IMPORTANT]
+> The app is exposed at **`http://localhost:4000`** while running via Docker Compose.
+
+### 12.2 Building Individual Images
+
+If you only want to build or run the backend container without compose:
 
 **Build Command**:
 
@@ -228,11 +251,24 @@ The project uses a **Multi-Stage Dockerfile** to minimize image size and maximiz
 docker build -t story-chain-be .
 ```
 
-**Run Command**:
+**Run New Container**:
+Ensure your `.env` file is present in the root directory:
 
 ```bash
 docker run -p 8080:8080 --env-file .env story-chain-be
 ```
+
+**Start Existing Container**:
+
+```bash
+docker start story-chain-be
+```
+
+### 12.3 Docker Maintenance
+
+- **Clean up unused images**: `docker image prune -f`
+- **Clean up all unused resources**: `docker system prune -a --volumes`
+- **List running containers**: `docker ps`
 
 ---
 
