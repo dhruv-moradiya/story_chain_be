@@ -23,8 +23,6 @@ export async function commentVoteProcessor(
 
   const { commentId, userId, voteType } = job.data;
 
-  logger.debug(`[CommentVoteWorker] Job ${job.name} started for comment ${commentId}`);
-
   if (job.name === CHAPTER_COMMENT_VOTE_JOB_NAMES.SYNC_COUNTS) {
     await commentVoteCacheService.syncVoteCounts();
     return { success: true, processedAt: new Date() };

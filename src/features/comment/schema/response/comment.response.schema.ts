@@ -33,12 +33,11 @@ export const CommentSchema = {
       properties: {
         clerkId: { type: 'string' },
         username: { type: 'string' },
-        firstName: { type: 'string' },
-        lastName: { type: 'string' },
-        imageUrl: { type: 'string', nullable: true },
+        avatarUrl: { type: 'string', nullable: true },
       },
     },
     currentUserVote: { type: 'string', nullable: true, enum: ['upvote', 'downvote', null] },
+    replyCount: { type: 'number' },
   },
 };
 

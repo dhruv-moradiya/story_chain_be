@@ -132,6 +132,43 @@ class CommentPipelineBuilder extends BasePipelineBuilder<CommentPipelineBuilder>
   }
 
   /**
+   * Attaches the reply count to each comment.
+   */
+  attachReplyCount() {
+    this.pipeline.push(
+      {
+        $lookup: {
+          from: 'comments',
+          let: { commentId: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$parentCommentId', '$$commentId'] },
+                    { $eq: ['$isDeleted', false] },
+                  ],
+                },
+              },
+            },
+            { $count: 'count' },
+          ],
+          as: '_replyCount',
+        },
+      },
+      {
+        $addFields: {
+          replyCount: { $ifNull: [{ $arrayElemAt: ['$_replyCount.count', 0] }, 0] },
+        },
+      },
+      {
+        $unset: '_replyCount',
+      }
+    );
+    return this;
+  }
+
+  /**
    * Sorts comments by creation date (newest first by default).
    */
   sortByNewest() {
@@ -168,6 +205,7 @@ class CommentPipelineBuilder extends BasePipelineBuilder<CommentPipelineBuilder>
   getChapterCommentsPreset(chapterSlug: string, userId?: string) {
     return this.byChapter(chapterSlug)
       .filterNotDeleted()
+      .attachReplyCount()
       .attachAuthor()
       .attachUserVote(userId)
       .sortByNewest();

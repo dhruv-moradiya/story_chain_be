@@ -146,6 +146,7 @@ export const StoryOverviewSchema = {
     stats: StoryStatsSchema,
     status: { type: 'string', enum: STORY_STATUSES },
     trendingScore: { type: 'number' },
+    totalStoryReadTime: { type: 'number' },
     collaborators: StoryCollaboratorSchema,
     latestChapters: {
       type: 'array',
