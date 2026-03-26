@@ -30,12 +30,27 @@ class CommentService extends BaseModule implements ICommentCrudService {
   }
 
   async syncCounts(): Promise<void> {
-    // 1. Get all votes counts in ONE aggregation query
+    // 1. Get all votes counts from current vote records
     const counts = await this.commentVoteRepository.getAllCommentVoteCounts();
+    const commentIdsWithVotes = counts.map((c) => c._id);
+
+    // 2. Clear counts for comments that no longer have any votes (reconcile stale non-zero fields)
+    await this.commentRepository.updateMany(
+      {
+        _id: { $nin: commentIdsWithVotes },
+        $or: [{ 'votes.upvotes': { $ne: 0 } }, { 'votes.downvotes': { $ne: 0 } }],
+      },
+      {
+        $set: {
+          'votes.upvotes': 0,
+          'votes.downvotes': 0,
+        },
+      }
+    );
 
     if (!counts.length) return;
 
-    // 2. Build bulk update operations
+    // 3. Build bulk update operations for present counts
     const bulkOps = counts.map((c) => ({
       updateOne: {
         filter: { _id: c._id },
@@ -48,7 +63,7 @@ class CommentService extends BaseModule implements ICommentCrudService {
       },
     }));
 
-    // 3. Execute all updates in ONE batch command
+    // 4. Batch update current vote totals
     await this.commentRepository.bulkWrite(bulkOps);
   }
 

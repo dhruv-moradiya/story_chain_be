@@ -3,7 +3,12 @@ import { container } from 'tsyringe';
 import mongoose from 'mongoose';
 
 import { TOKENS } from '@container/tokens';
-import { CHAPTER_COMMENT_VOTE_JOB_NAMES, IChapterCommentVoteJobData, IJobResult } from '..';
+import {
+  CHAPTER_COMMENT_VOTE_JOB_NAMES,
+  IChapterCommentVoteJobData,
+  IChapterCommentVoteJobDataMap,
+  IJobResult,
+} from '..';
 
 import { logger } from '@/utils/logger';
 import { CommentVoteRepository } from '@/features/commentVote/repository/commentVote.repository';
@@ -21,8 +26,6 @@ export async function commentVoteProcessor(
     TOKENS.CommentVoteCacheService
   );
 
-  const { commentId, userId, voteType } = job.data;
-
   if (job.name === CHAPTER_COMMENT_VOTE_JOB_NAMES.SYNC_COUNTS) {
     await commentVoteCacheService.syncVoteCounts();
     return { success: true, processedAt: new Date() };
@@ -34,7 +37,13 @@ export async function commentVoteProcessor(
     await session.withTransaction(async () => {
       switch (job.name) {
         case CHAPTER_COMMENT_VOTE_JOB_NAMES.VOTE: {
-          if (voteType === 'remove') return;
+          const { commentId, userId, voteType } = job.data;
+          if (voteType === 'remove') {
+            logger.warn(
+              `[CommentVoteWorker] Unexpected 'remove' voteType in VOTE job for comment ${commentId}`
+            );
+            return;
+          }
 
           const oldVote = await commentVoteRepository.upsertVote(commentId, userId, voteType, {
             session,
@@ -65,11 +74,21 @@ export async function commentVoteProcessor(
         }
 
         case CHAPTER_COMMENT_VOTE_JOB_NAMES.REMOVE_VOTE: {
-          const deletedVote = await commentVoteRepository.removeVote(commentId, userId, {
-            session,
-          });
+          const { commentId, userId, voteId } =
+            job.data as IChapterCommentVoteJobDataMap[typeof CHAPTER_COMMENT_VOTE_JOB_NAMES.REMOVE_VOTE];
+          const deletedVote = await commentVoteRepository.removeVote(
+            commentId,
+            userId,
+            { _id: voteId },
+            { session }
+          );
 
-          if (!deletedVote) return;
+          if (!deletedVote) {
+            logger.debug(
+              `[CommentVoteWorker] No matching vote found to remove for comment ${commentId} and user ${userId}`
+            );
+            return;
+          }
 
           await commentRepository.updateVoteCount({
             commentId,
@@ -86,7 +105,7 @@ export async function commentVoteProcessor(
       }
     });
 
-    logger.debug(`[CommentVoteWorker] Job ${job.name} completed for comment ${commentId}`);
+    logger.debug(`[CommentVoteWorker] Job ${job.name} completed for comment ${job.data.commentId}`);
 
     return { success: true, processedAt: new Date() };
   } catch (error) {

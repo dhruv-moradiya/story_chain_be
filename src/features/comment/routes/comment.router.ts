@@ -2,7 +2,10 @@ import { FastifyInstance } from 'fastify';
 import { container } from 'tsyringe';
 import zodToJsonSchema from 'zod-to-json-schema';
 import { TOKENS } from '@/container';
-import { type AuthMiddlewareFactory } from '@/middlewares/factories';
+import {
+  type AuthMiddlewareFactory,
+  type PlatformRoleMiddlewareFactory,
+} from '@/middlewares/factories';
 import { CommentController } from '../controllers/comment.controller';
 import { CommentResponses } from '../schema/response/comment.response.schema';
 import {
@@ -22,7 +25,7 @@ const CommentApiRoutes = {
   Get: '/:commentId',
   GetByChapter: '/chapter/:chapterSlug',
 
-  // TESTING APIs
+  // TESTING APIs (Admin only)
   syncCounts: '/sync-counts',
 } as const;
 
@@ -30,13 +33,24 @@ export async function commentRoutes(fastify: FastifyInstance) {
   const commentController = container.resolve<CommentController>(TOKENS.CommentController);
 
   const authFactory = container.resolve<AuthMiddlewareFactory>(TOKENS.AuthMiddlewareFactory);
-  const validateAuth = authFactory.createAuthMiddleware();
+  const platformRoleFactory = container.resolve<PlatformRoleMiddlewareFactory>(
+    TOKENS.PlatformRoleMiddlewareFactory
+  );
 
-  fastify.get(
+  const validateAuth = authFactory.createAuthMiddleware();
+  const PlatformRoleGuards = platformRoleFactory.createGuards();
+
+  // Trigger manual sync of comment vote counts (SUPER_ADMIN only)
+  fastify.post(
     CommentApiRoutes.syncCounts,
     {
-      preHandler: [validateAuth],
-      config: { rateLimit: RateLimits.WRITE },
+      preHandler: [validateAuth, PlatformRoleGuards.superAdmin],
+      config: { rateLimit: RateLimits.CRITICAL },
+      schema: {
+        description: 'Sync all comment vote counts manually (SUPER_ADMIN only)',
+        tags: ['Comments'],
+        security: [{ bearerAuth: [] }],
+      },
     },
     commentController.syncCounts
   );

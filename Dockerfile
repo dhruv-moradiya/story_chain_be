@@ -45,7 +45,7 @@ EXPOSE 8080
 
 # Health check so Fly.io knows the container is ready
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-  CMD wget -qO- http://localhost:8080/health || exit 1
+  CMD wget -qO- http://localhost:${PORT}/health || exit 1
 
 # Start the server
 CMD ["node", "dist/server.js"]

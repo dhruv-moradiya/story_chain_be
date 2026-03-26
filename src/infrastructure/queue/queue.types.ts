@@ -97,6 +97,7 @@ export interface IChapterCommentVoteJobDataMap {
     commentId: string;
     userId: string;
     voteType: 'remove';
+    voteId?: string;
   };
   [CHAPTER_COMMENT_VOTE_JOB_NAMES.SYNC_COUNTS]: {
     commentId: string;

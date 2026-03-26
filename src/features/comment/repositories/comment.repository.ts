@@ -85,8 +85,14 @@ class CommentRepository extends BaseRepository<IComment, ICommentDoc> {
     const { commentId, voteType, increment, options = {} } = input;
     const field = voteType === 'upvote' ? 'votes.upvotes' : 'votes.downvotes';
     return this.model.updateOne(
-      { _id: commentId },
-      { $inc: { [field]: increment } },
+      { _id: commentId, isDeleted: false },
+      [
+        {
+          $set: {
+            [field]: { $max: [{ $add: [`$${field}`, increment] }, 0] },
+          },
+        },
+      ],
       { session: options.session }
     );
   }
@@ -101,8 +107,15 @@ class CommentRepository extends BaseRepository<IComment, ICommentDoc> {
     const decField = decVoteType === 'upvote' ? 'votes.upvotes' : 'votes.downvotes';
     const incField = incVoteType === 'upvote' ? 'votes.upvotes' : 'votes.downvotes';
     return this.model.updateOne(
-      { _id: commentId },
-      { $inc: { [decField]: -1, [incField]: 1 } },
+      { _id: commentId, isDeleted: false },
+      [
+        {
+          $set: {
+            [decField]: { $max: [{ $subtract: [`$${decField}`, 1] }, 0] },
+            [incField]: { $add: [`$${incField}`, 1] },
+          },
+        },
+      ],
       { session: options.session }
     );
   }

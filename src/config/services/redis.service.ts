@@ -82,7 +82,7 @@ class RedisService {
   }
 
   async flush(): Promise<void> {
-    await this.getClient().flushall();
+    await this.getClient().flushdb();
   }
 }
 

@@ -255,7 +255,7 @@ docker build -t story-chain-be .
 Ensure your `.env` file is present in the root directory:
 
 ```bash
-docker run -p 8080:8080 --env-file .env story-chain-be
+docker run --name story-chain-be -p 4000:4000 --env-file .env story-chain-be
 ```
 
 **Start Existing Container**:

@@ -21,8 +21,7 @@ export class ChapterCommentVoteQueue extends BaseModule {
   }
 
   async enqueueJob(input: ICommentVoteDTO) {
-    this.logger.debug(`Vote job for comment ${input.commentId} enqueued`);
-    this.queueService.addJob(
+    await this.queueService.addJob(
       this.queueName,
       CHAPTER_COMMENT_VOTE_JOB_NAMES.VOTE,
       {
@@ -40,17 +39,18 @@ export class ChapterCommentVoteQueue extends BaseModule {
         },
       }
     );
+    this.logger.debug(`Vote job for comment ${input.commentId} enqueued`);
   }
 
-  async enqueueRemoveVoteJob(input: { commentId: string; userId: string }) {
-    this.logger.debug(`Remove vote job for comment ${input.commentId} enqueued`);
-    this.queueService.addJob(
+  async enqueueRemoveVoteJob(input: { commentId: string; userId: string; voteId?: string }) {
+    await this.queueService.addJob(
       this.queueName,
       CHAPTER_COMMENT_VOTE_JOB_NAMES.REMOVE_VOTE,
       {
         commentId: input.commentId,
         userId: input.userId,
         voteType: 'remove',
+        voteId: input.voteId,
       },
       {
         jobId: crypto.randomUUID(),
@@ -62,6 +62,7 @@ export class ChapterCommentVoteQueue extends BaseModule {
         },
       }
     );
+    this.logger.debug(`Remove vote job for comment ${input.commentId} enqueued`);
   }
 
   async enqueueSyncCountsJob() {

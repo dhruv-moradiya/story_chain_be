@@ -313,7 +313,7 @@ class StoryPipelineBuilder extends BasePipelineBuilder<StoryPipelineBuilder> {
       },
       {
         $set: {
-          totalStoryReadTime: '$totalStoryReadTime.totalTime',
+          totalStoryReadTime: { $ifNull: ['$totalStoryReadTime.totalTime', 0] },
         },
       }
     );
