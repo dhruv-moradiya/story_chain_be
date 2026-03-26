@@ -91,6 +91,35 @@ export class CommentVoteCacheService extends BaseModule {
     return counts;
   }
 
+  /**
+   * Remove a vote for a user on a comment
+   * @param commentId - Comment ID
+   * @param userId - User ID
+   * @returns Success boolean and previous vote type
+   */
+  async removeVote(commentId: string, userId: string) {
+    const votersKey = CacheKeyBuilder.commentVoters(commentId);
+
+    // Try to remove both possible vote types from the set
+    const upvoteEntry = this.voterEntry(userId, CommentVoteType.UPVOTE);
+    const downvoteEntry = this.voterEntry(userId, CommentVoteType.DOWNVOTE);
+
+    const [upRemoved, downRemoved] = await Promise.all([
+      this.cacheService.client.srem(votersKey, upvoteEntry),
+      this.cacheService.client.srem(votersKey, downvoteEntry),
+    ]);
+
+    if (upRemoved > 0) {
+      return { success: true, previousVote: CommentVoteType.UPVOTE };
+    }
+
+    if (downRemoved > 0) {
+      return { success: true, previousVote: CommentVoteType.DOWNVOTE };
+    }
+
+    return { success: false, previousVote: null };
+  }
+
   async syncVoteCounts() {
     const commentIds = await this.commentVoteRepository.getDistinctCommentIds();
 

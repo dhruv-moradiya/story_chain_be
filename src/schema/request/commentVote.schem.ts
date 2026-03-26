@@ -8,5 +8,11 @@ const CastCommentVoteSchema = z.object({
 
 type TCastCommentVoteSchema = z.infer<typeof CastCommentVoteSchema>;
 
-export { CastCommentVoteSchema };
-export type { TCastCommentVoteSchema };
+const RemoveCommentVoteSchema = z.object({
+  commentId: ObjectIdSchema(),
+});
+
+type TRemoveCommentVoteSchema = z.infer<typeof RemoveCommentVoteSchema>;
+
+export { CastCommentVoteSchema, RemoveCommentVoteSchema };
+export type { TCastCommentVoteSchema, TRemoveCommentVoteSchema };

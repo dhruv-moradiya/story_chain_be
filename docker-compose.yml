@@ -85,7 +85,7 @@ services:
   # Redis (local cache)
   # ─────────────────────────────────────────
   redis:
-    image: redis:7-alpine
+    image: redis:7.2.4
     container_name: storychain-redis
     ports:
       - '6379:6379'

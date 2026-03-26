@@ -5,11 +5,12 @@ import { CommentVoteController } from '../controllers/commentVote.controller';
 import { RateLimits } from '@/constants/rateLimits';
 import { type AuthMiddlewareFactory } from '@/middlewares/factories';
 import zodToJsonSchema from 'zod-to-json-schema';
-import { CastCommentVoteSchema } from '@/schema/request/commentVote.schem';
+import { CastCommentVoteSchema, RemoveCommentVoteSchema } from '@/schema/request/commentVote.schem';
 
 // CommentVote API Routes
 export const CommentVoteApiRoutes = {
   CastVote: '/',
+  RemoveVote: '/',
 } as const;
 
 export async function commentVoteRoutes(fastify: FastifyInstance) {
@@ -38,5 +39,21 @@ export async function commentVoteRoutes(fastify: FastifyInstance) {
       },
     },
     commentVoteController.castVote
+  );
+
+  // Remove a vote from a comment
+  fastify.delete(
+    CommentVoteApiRoutes.RemoveVote,
+    {
+      preHandler: [validateAuth],
+      config: { rateLimit: RateLimits.WRITE },
+      schema: {
+        description: 'Remove a vote from a comment',
+        tags: ['Comment Votes'],
+        security: [{ bearerAuth: [] }],
+        body: zodToJsonSchema(RemoveCommentVoteSchema),
+      },
+    },
+    commentVoteController.removeVote
   );
 }

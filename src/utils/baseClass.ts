@@ -2,6 +2,7 @@ import { Document, FilterQuery, Model, ProjectionType, QueryOptions, UpdateQuery
 import { ID, IOperationOptions } from '@/types/index.js';
 import { ApiError, ErrorCode } from './apiResponse.js';
 import { logger } from './logger.js';
+import { UpdateResult } from 'mongoose';
 
 export interface IBaseQueryInput<TDocument> {
   filter: FilterQuery<TDocument>;
@@ -289,6 +290,18 @@ export abstract class BaseRepository<TEntity, TDocument extends Document> {
     return query.lean<TEntity>().exec();
   }
 
+  async updateMany(
+    filter: FilterQuery<TDocument>,
+    update: UpdateQuery<TDocument>,
+    options: IOperationOptions = {}
+  ): Promise<UpdateResult> {
+    const query = this.model.updateMany(filter, update, options);
+
+    if (options.session) query.session(options.session);
+
+    return query.exec();
+  }
+
   async softDelete(input: IBaseQueryInput<TDocument>): Promise<boolean> {
     const { filter, options } = input;
 
@@ -313,5 +326,9 @@ export abstract class BaseRepository<TEntity, TDocument extends Document> {
     if (options?.session) query.session(options.session);
 
     return query.lean<TEntity>().exec();
+  }
+
+  async bulkWrite(operations: any[], options: IOperationOptions = {}): Promise<any> {
+    return this.model.bulkWrite(operations, options);
   }
 }

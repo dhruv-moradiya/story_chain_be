@@ -21,8 +21,7 @@ export class ChapterCommentVoteQueue extends BaseModule {
   }
 
   async enqueueJob(input: ICommentVoteDTO) {
-    this.logger.debug(`Vote job for comment ${input.commentId} enqueued`);
-    this.queueService.addJob(
+    await this.queueService.addJob(
       this.queueName,
       CHAPTER_COMMENT_VOTE_JOB_NAMES.VOTE,
       {
@@ -40,17 +39,39 @@ export class ChapterCommentVoteQueue extends BaseModule {
         },
       }
     );
+    this.logger.debug(`Vote job for comment ${input.commentId} enqueued`);
+  }
+
+  async enqueueRemoveVoteJob(input: { commentId: string; userId: string; voteId?: string }) {
+    await this.queueService.addJob(
+      this.queueName,
+      CHAPTER_COMMENT_VOTE_JOB_NAMES.REMOVE_VOTE,
+      {
+        commentId: input.commentId,
+        userId: input.userId,
+        voteType: 'remove',
+        voteId: input.voteId,
+      },
+      {
+        jobId: crypto.randomUUID(),
+        removeOnComplete: true,
+        attempts: 3,
+        backoff: {
+          type: 'exponential',
+          delay: 1000,
+        },
+      }
+    );
+    this.logger.debug(`Remove vote job for comment ${input.commentId} enqueued`);
   }
 
   async enqueueSyncCountsJob() {
-    this.logger.debug(`Sync counts job enqueued`);
-
     this.scheduler.register({
       queueName: this.queueName,
       jobName: CHAPTER_COMMENT_VOTE_JOB_NAMES.SYNC_COUNTS,
       description: 'Syncs comment vote counts to database',
       data: { commentId: '__all__', userId: '', voteType: 'downvote' },
-      schedule: { pattern: CRON.EVERY_10_MINUTES },
+      schedule: { pattern: CRON.EVERY_MINUTE },
     });
   }
 }

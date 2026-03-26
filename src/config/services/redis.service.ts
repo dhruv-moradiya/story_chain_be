@@ -80,6 +80,10 @@ class RedisService {
   async expire(key: string, seconds: number): Promise<void> {
     await this.getClient().expire(key, seconds);
   }
+
+  async flush(): Promise<void> {
+    await this.getClient().flushdb();
+  }
 }
 
 export { RedisService };

@@ -42,6 +42,7 @@ export type TNotificationJobName =
 
 export const CHAPTER_COMMENT_VOTE_JOB_NAMES = {
   VOTE: 'vote',
+  REMOVE_VOTE: 'remove-vote',
   SYNC_COUNTS: 'sync-counts',
 } as const;
 
@@ -86,11 +87,27 @@ export interface IEmailJobData {
   templateData: Record<string, string | number | boolean>;
 }
 
-export interface IChapterCommentVoteJobData {
-  commentId: string;
-  userId: string;
-  voteType: TCommentVoteType;
+export interface IChapterCommentVoteJobDataMap {
+  [CHAPTER_COMMENT_VOTE_JOB_NAMES.VOTE]: {
+    commentId: string;
+    userId: string;
+    voteType: TCommentVoteType;
+  };
+  [CHAPTER_COMMENT_VOTE_JOB_NAMES.REMOVE_VOTE]: {
+    commentId: string;
+    userId: string;
+    voteType: 'remove';
+    voteId?: string;
+  };
+  [CHAPTER_COMMENT_VOTE_JOB_NAMES.SYNC_COUNTS]: {
+    commentId: string;
+    userId: string;
+    voteType: TCommentVoteType | 'remove';
+  };
 }
+
+export type IChapterCommentVoteJobData =
+  IChapterCommentVoteJobDataMap[keyof IChapterCommentVoteJobDataMap];
 
 /**
  * Maps each queue name to its expected job data type.
@@ -99,7 +116,7 @@ export interface IChapterCommentVoteJobData {
 export interface IQueueJobDataMap {
   [QUEUE_NAMES.NOTIFICATION]: INotificationJobData;
   [QUEUE_NAMES.EMAIL]: IEmailJobData;
-  [QUEUE_NAMES.CHAPTER_COMMENT_VOTE]: IChapterCommentVoteJobData;
+  [QUEUE_NAMES.CHAPTER_COMMENT_VOTE]: IChapterCommentVoteJobDataMap[keyof IChapterCommentVoteJobDataMap];
 }
 
 // ═══════════════════════════════════════════

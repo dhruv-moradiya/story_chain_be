@@ -15,16 +15,26 @@ const CommentUpdateSchema = z.object({
   content: z.string(),
 });
 
-const CommentByChapterSchema = z.object({
+const CommentByChapterParamsSchema = z.object({
   chapterSlug: z.string(),
-  limit: z.coerce.number().optional().default(10),
-  cursor: ObjectIdSchema().optional(),
+});
+
+const CommentByChapterQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(100).optional().default(10),
+  page: z.coerce.number().int().min(1).optional().default(1),
   parentCommentId: ObjectIdSchema().optional(),
 });
 
 export type TCommentIdSchema = z.infer<typeof CommentIdSchema>;
 export type TCommentCreateSchema = z.infer<typeof CommentCreateSchema>;
 export type TCommentUpdateSchema = z.infer<typeof CommentUpdateSchema>;
-export type TCommentByChapterSchema = z.infer<typeof CommentByChapterSchema>;
+export type TCommentByChapterParamsSchema = z.infer<typeof CommentByChapterParamsSchema>;
+export type TCommentByChapterQuerySchema = z.infer<typeof CommentByChapterQuerySchema>;
 
-export { CommentIdSchema, CommentCreateSchema, CommentUpdateSchema, CommentByChapterSchema };
+export {
+  CommentIdSchema,
+  CommentCreateSchema,
+  CommentUpdateSchema,
+  CommentByChapterParamsSchema,
+  CommentByChapterQuerySchema,
+};

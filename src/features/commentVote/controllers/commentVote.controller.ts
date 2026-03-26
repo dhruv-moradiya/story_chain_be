@@ -1,7 +1,10 @@
 import { HTTP_STATUS } from '@/constants/httpStatus';
 import { TOKENS } from '@/container';
-import { TCastCommentVoteSchema } from '@/schema/request/commentVote.schem';
-import { ApiResponse } from '@/utils/apiResponse';
+import {
+  TCastCommentVoteSchema,
+  TRemoveCommentVoteSchema,
+} from '@/schema/request/commentVote.schem';
+import { ApiResponse, ApiError } from '@/utils/apiResponse';
 import { catchAsync } from '@/utils/catchAsync';
 import { BaseModule } from '@utils/baseClass';
 import { FastifyReply, FastifyRequest } from 'fastify';
@@ -27,6 +30,23 @@ export class CommentVoteController extends BaseModule {
       this.logDebug('Vote cast successfully', { vote });
 
       return reply.code(HTTP_STATUS.OK.code).send(ApiResponse.success('Vote cast successfully'));
+    }
+  );
+
+  removeVote = catchAsync(
+    async (request: FastifyRequest<{ Body: TRemoveCommentVoteSchema }>, reply: FastifyReply) => {
+      const userId = request.user.clerkId;
+      const { commentId } = request.body;
+
+      const result = await this.commentVoteService.removeVote({ commentId, userId });
+
+      if (!result.success) {
+        throw ApiError.notFound('Vote not found');
+      }
+
+      this.logDebug('Vote removed successfully', { commentId, userId });
+
+      return reply.code(HTTP_STATUS.OK.code).send(ApiResponse.success('Vote removed successfully'));
     }
   );
 }

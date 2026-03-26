@@ -274,6 +274,53 @@ class StoryPipelineBuilder extends BasePipelineBuilder<StoryPipelineBuilder> {
     return this;
   }
 
+  attachTotalStoryReadTime() {
+    this.pipeline.push(
+      {
+        $lookup: {
+          from: 'readinghistories',
+          let: { storySlug: '$slug' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ['$storySlug', '$$storySlug'],
+                },
+              },
+            },
+            {
+              $group: {
+                _id: null,
+                totalTime: {
+                  $sum: '$totalStoryReadTime',
+                },
+              },
+            },
+            {
+              $project: {
+                _id: 0,
+              },
+            },
+          ],
+          as: 'totalStoryReadTime',
+        },
+      },
+      {
+        $unwind: {
+          path: '$totalStoryReadTime',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $set: {
+          totalStoryReadTime: { $ifNull: ['$totalStoryReadTime.totalTime', 0] },
+        },
+      }
+    );
+
+    return this;
+  }
+
   // ==================== PRESETS ====================
   getCurrentUserStoryPreset(userId: string) {
     return this.createdByUser(userId)
@@ -286,7 +333,8 @@ class StoryPipelineBuilder extends BasePipelineBuilder<StoryPipelineBuilder> {
     return this.findBySlug(slug)
       .attachCollaborators()
       .attachLatestChapters(2)
-      .removeFields(['createdAt', 'updatedAt', 'creatorId', '_id']);
+      .removeFields(['createdAt', 'updatedAt', 'creatorId', '_id'])
+      .attachTotalStoryReadTime();
   }
 }
 

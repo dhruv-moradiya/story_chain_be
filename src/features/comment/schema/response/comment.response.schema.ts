@@ -1,5 +1,4 @@
 import {
-  apiArrayResponse,
   apiResponse,
   badRequestResponse,
   createdResponse,
@@ -29,12 +28,38 @@ export const CommentSchema = {
     deletedAt: { type: 'string', format: 'date-time' },
     reportCount: { type: 'number' },
     createdAt: { type: 'string', format: 'date-time' },
+    author: {
+      type: 'object',
+      properties: {
+        clerkId: { type: 'string' },
+        username: { type: 'string' },
+        avatarUrl: { type: 'string', nullable: true },
+      },
+    },
+    currentUserVote: { type: 'string', nullable: true, enum: ['upvote', 'downvote', null] },
+    replyCount: { type: 'number' },
   },
 };
 
 export const CommentListResponseSchema = {
   type: 'array',
   items: CommentSchema,
+};
+
+export const PaginatedCommentSchema = {
+  type: 'object',
+  properties: {
+    docs: { type: 'array', items: CommentSchema },
+    totalDocs: { type: 'number' },
+    limit: { type: 'number' },
+    totalPages: { type: 'number' },
+    page: { type: 'number' },
+    pagingCounter: { type: 'number' },
+    hasPrevPage: { type: 'boolean' },
+    hasNextPage: { type: 'boolean' },
+    prevPage: { type: 'number', nullable: true },
+    nextPage: { type: 'number', nullable: true },
+  },
 };
 
 export const CommentResponses = {
@@ -64,7 +89,7 @@ export const CommentResponses = {
     500: internalErrorResponse(),
   },
   commentList: {
-    200: apiArrayResponse(CommentSchema, 'Comments retrieved successfully'),
+    200: apiResponse(PaginatedCommentSchema, 'Comments retrieved successfully'),
     404: notFoundResponse('Chapter not found'),
     500: internalErrorResponse(),
   },

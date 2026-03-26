@@ -133,9 +133,6 @@ export class QueueService extends BaseModule {
       removeOnComplete: true,
     });
 
-    this.logInfo(
-      `Scheduled job "${jobName}" on queue "${queueName}" with cron="${schedule.pattern}"`
-    );
     return job.id;
   }
 

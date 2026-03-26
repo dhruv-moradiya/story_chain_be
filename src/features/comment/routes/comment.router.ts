@@ -2,11 +2,15 @@ import { FastifyInstance } from 'fastify';
 import { container } from 'tsyringe';
 import zodToJsonSchema from 'zod-to-json-schema';
 import { TOKENS } from '@/container';
-import { type AuthMiddlewareFactory } from '@/middlewares/factories';
+import {
+  type AuthMiddlewareFactory,
+  type PlatformRoleMiddlewareFactory,
+} from '@/middlewares/factories';
 import { CommentController } from '../controllers/comment.controller';
 import { CommentResponses } from '../schema/response/comment.response.schema';
 import {
-  CommentByChapterSchema,
+  CommentByChapterParamsSchema,
+  CommentByChapterQuerySchema,
   CommentCreateSchema,
   CommentIdSchema,
   CommentUpdateSchema,
@@ -20,13 +24,36 @@ const CommentApiRoutes = {
   Delete: '/:commentId',
   Get: '/:commentId',
   GetByChapter: '/chapter/:chapterSlug',
+
+  // TESTING APIs (Admin only)
+  syncCounts: '/sync-counts',
 } as const;
 
 export async function commentRoutes(fastify: FastifyInstance) {
   const commentController = container.resolve<CommentController>(TOKENS.CommentController);
 
   const authFactory = container.resolve<AuthMiddlewareFactory>(TOKENS.AuthMiddlewareFactory);
+  const platformRoleFactory = container.resolve<PlatformRoleMiddlewareFactory>(
+    TOKENS.PlatformRoleMiddlewareFactory
+  );
+
   const validateAuth = authFactory.createAuthMiddleware();
+  const PlatformRoleGuards = platformRoleFactory.createGuards();
+
+  // Trigger manual sync of comment vote counts (SUPER_ADMIN only)
+  fastify.post(
+    CommentApiRoutes.syncCounts,
+    {
+      preHandler: [validateAuth, PlatformRoleGuards.superAdmin],
+      config: { rateLimit: RateLimits.CRITICAL },
+      schema: {
+        description: 'Sync all comment vote counts manually (SUPER_ADMIN only)',
+        tags: ['Comments'],
+        security: [{ bearerAuth: [] }],
+      },
+    },
+    commentController.syncCounts
+  );
 
   fastify.post(
     CommentApiRoutes.Create,
@@ -94,12 +121,13 @@ export async function commentRoutes(fastify: FastifyInstance) {
   fastify.get(
     CommentApiRoutes.GetByChapter,
     {
+      preHandler: [validateAuth],
       config: { rateLimit: RateLimits.PUBLIC_READ },
       schema: {
         description: 'Get comments for a chapter',
         tags: ['Comments'],
-        // querystring: zodToJsonSchema(CommentByChapterQuerySchema), // TODO: Define query schema separately if strict validation needed
-        params: zodToJsonSchema(CommentByChapterSchema),
+        querystring: zodToJsonSchema(CommentByChapterQuerySchema),
+        params: zodToJsonSchema(CommentByChapterParamsSchema),
         response: CommentResponses.commentList,
       },
     },
