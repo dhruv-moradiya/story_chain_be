@@ -7,10 +7,6 @@ import { chapterAutoSaveRoutes } from '@features/chapterAutoSave/routes/chapterA
 import { readingHistoryRoutes } from '@/features/readingHistory/routes/readingHistory.router';
 import { bookmarkRoutes } from '@/features/bookmark/routes/bookmark.routes';
 import { commentRoutes } from '@/features/comment/routes/comment.router';
-import { pullRequestRoutes } from '@/features/pullRequest/routes/pullRequest.routes';
-import { prCommentroutes } from '@/features/prComment/routes/prComment.router';
-import { prReviewRoutes } from '@/features/prReview/routes/prReview.router';
-import { prVoteRoutes } from '@/features/prVote/routes/prVote.router';
 import { commentVoteRoutes } from '@/features/commentVote/routes/commentVote.route';
 
 enum ApiRoute {
@@ -22,7 +18,6 @@ enum ApiRoute {
   READING_HISTORY = '/api/reading-history',
   BOOKMARKS = '/api/bookmarks',
   COMMENTS = '/api/comments',
-  PULL_REQUESTS = '/api/pull-requests',
   COMMENT_VOTES = '/api/comment-votes',
 }
 
@@ -35,9 +30,5 @@ export async function registerRoutes(fastify: FastifyInstance) {
   fastify.register(readingHistoryRoutes, { prefix: ApiRoute.READING_HISTORY });
   fastify.register(bookmarkRoutes, { prefix: ApiRoute.BOOKMARKS });
   fastify.register(commentRoutes, { prefix: ApiRoute.COMMENTS });
-  fastify.register(pullRequestRoutes, { prefix: ApiRoute.PULL_REQUESTS });
-  fastify.register(prCommentroutes, { prefix: ApiRoute.PULL_REQUESTS });
-  fastify.register(prReviewRoutes, { prefix: ApiRoute.PULL_REQUESTS });
-  fastify.register(prVoteRoutes, { prefix: ApiRoute.PULL_REQUESTS });
   fastify.register(commentVoteRoutes, { prefix: ApiRoute.COMMENT_VOTES });
 }

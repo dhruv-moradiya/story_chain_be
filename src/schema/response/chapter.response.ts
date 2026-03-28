@@ -24,22 +24,6 @@ export const ChapterStatsSchema = {
   },
 };
 
-/**
- * Pull-request metadata embedded in chapter responses.
- */
-export const ChapterPullRequestSchema = {
-  type: 'object',
-  properties: {
-    isPR: { type: 'boolean' },
-    prId: { type: 'string' },
-    status: { type: 'string' },
-    submittedAt: { type: 'string', format: 'date-time' },
-    reviewedBy: { type: 'string' },
-    reviewedAt: { type: 'string', format: 'date-time' },
-    rejectionReason: { type: 'string' },
-  },
-};
-
 export const ChapterSchema = {
   type: 'object',
   properties: {
@@ -79,7 +63,6 @@ export const ChapterWithStorySchema = {
         completionRate: { type: 'number' },
       },
     },
-    pullRequest: ChapterPullRequestSchema,
     reportCount: { type: 'number' },
     isFlagged: { type: 'boolean' },
     updatedAt: { type: 'string', format: 'date-time' },
@@ -104,7 +87,6 @@ export const ChapterDetailsSchema = {
     storyId: { type: 'string' },
     storySlug: { type: 'string' },
     storyTitle: { type: 'string' },
-    pullRequest: ChapterPullRequestSchema,
     stats: {
       type: 'object',
       properties: {

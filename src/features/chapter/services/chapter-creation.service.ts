@@ -190,10 +190,10 @@ export class ChapterCreationService extends BaseModule implements IChapterCreati
       this.throwUnauthorizedError(creationRule.message!);
     }
 
-    const publishRule = ChapterRules.canPublishDirectly(story, status, isAuthorOrCoAuthor);
-    if (!publishRule.allowed) {
-      this.throwUnauthorizedError(publishRule.message!);
-    }
+    // const publishRule = ChapterRules.canPublishDirectly(story, status, isAuthorOrCoAuthor);
+    // if (!publishRule.allowed) {
+    //   this.throwUnauthorizedError(publishRule.message!);
+    // }
 
     // 4. Validate and fetch parent
     const parentChapter = await this.getParentAndValidate(parentChapterSlug, storySlug, options);
