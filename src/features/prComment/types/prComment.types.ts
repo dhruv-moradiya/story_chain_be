@@ -2,25 +2,35 @@ import { Document, Types } from 'mongoose';
 import { ID } from '@/types';
 
 import { PR_COMMENT_TYPES } from './prComment-enum';
-export type PRCommentType = (typeof PR_COMMENT_TYPES)[number];
+export type TPRCommentType = (typeof PR_COMMENT_TYPES)[number];
 
 export interface IPRComment {
   _id: ID;
   pullRequestId: ID;
-  userId: string;
-  parentCommentId?: ID | null;
-  content: string;
-  commentType: PRCommentType;
+  storySlug: string; // denormalized
+  userId: string; // clerkId
+  parentCommentId: ID | null; // null = top-level, set = reply
+
+  content: string; // 1–2000 chars
+
+  commentType: TPRCommentType;
+
+  // For suggestion type only
   suggestion?: {
-    line?: number;
-    originalText?: string;
-    suggestedText?: string;
+    originalPassage: string; // exact text being flagged
+    suggestedPassage: string; // proposed replacement
+    context: string; // surrounding text to disambiguate
   };
+
+  // Edit tracking
   isEdited: boolean;
   editedAt?: Date;
-  isResolved?: boolean;
+
+  // Resolution
+  isResolved: boolean;
   resolvedBy?: string;
   resolvedAt?: Date;
+
   createdAt: Date;
   updatedAt: Date;
 }

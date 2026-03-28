@@ -6,9 +6,16 @@ export type TPRVoteValue = 1 | -1;
 export interface IPRVote {
   _id: ID;
   pullRequestId: ID;
-  userId: string;
-  vote: TPRVoteValue;
+  storySlug: string; // denormalized
+  userId: string; // clerkId
+
+  vote: TPRVoteValue; // 1 = upvote, -1 = downvote
+
+  previousVote: TPRVoteValue | null; // null = never changed, set = was flipped
+  changedAt: Date | null; // when vote was last flipped (null if never)
+
   createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface IPRVoteDoc extends Document, IPRVote {
@@ -22,15 +29,4 @@ export interface IPRVoteSummary {
   score: number;
   totalVotes: number;
   currentUserVote: TPRVoteValue | null;
-}
-
-export interface ICurrentUserPRVote {
-  pullRequestId: ID;
-  vote: TPRVoteValue | null;
-}
-
-export interface IPRVoteMutationResult {
-  currentVote: TPRVoteValue | null;
-  previousVote: TPRVoteValue | null;
-  changed: boolean;
 }
