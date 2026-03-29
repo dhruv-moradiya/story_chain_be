@@ -9,10 +9,9 @@ import { CollaboratorQueryService } from '@/features/storyCollaborator/services/
 import { WRITE_CHAPTER_ROLES } from '@/middlewares/rbac/storyRole.middleware';
 import { IChapterAutoSave } from '../types/chapterAutoSave.types';
 import { ChapterAutoSaveRepository } from '../repositories/chapterAutoSave.repository';
-import { IAutoSaveContentService } from './interfaces/autosave-content.interface';
 
 @singleton()
-export class AutoSaveContentService extends BaseModule implements IAutoSaveContentService {
+export class AutoSaveContentService extends BaseModule {
   constructor(
     @inject(TOKENS.ChapterAutoSaveRepository)
     private readonly chapterAutoSaveRepo: ChapterAutoSaveRepository,

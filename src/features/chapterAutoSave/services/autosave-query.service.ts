@@ -3,13 +3,12 @@ import { TOKENS } from '@container/tokens';
 import { ID } from '@/types';
 import { IChapterAutoSave } from '../types/chapterAutoSave.types';
 import { ChapterAutoSaveRepository } from '../repositories/chapterAutoSave.repository';
-import { IAutoSaveQueryService } from './interfaces/autosave-query.interface';
 import { IGetAutoSaveDraftDTO } from '@/dto/chapterAutoSave.dto';
 import { BaseModule } from '@/utils/baseClass';
 import { IChapterAutoSavePaginatedResponse } from '@/types/response/chapterAutoSave.response.types';
 
 @singleton()
-export class AutoSaveQueryService extends BaseModule implements IAutoSaveQueryService {
+export class AutoSaveQueryService extends BaseModule {
   constructor(
     @inject(TOKENS.ChapterAutoSaveRepository)
     private readonly chapterAutoSaveRepo: ChapterAutoSaveRepository

@@ -53,9 +53,6 @@ export class ChapterQueryService extends BaseModule implements IChapterQueryServ
     return chapter;
   }
 
-  /**
-   * Get all chapters created by a user with story info
-   */
   async getByAuthor(
     authorId: string,
     options: IOperationOptions = {}
@@ -71,27 +68,6 @@ export class ChapterQueryService extends BaseModule implements IChapterQueryServ
 
     return this.chapterRepo.aggregateChapters<IChapterWithStoryResponse>(pipeline, options);
   }
-
-  /**
-   * Get chapter details by ID with story and author info
-   */
-  // async getDetails(slug: string): Promise<IChapterDetails> {
-  //   const pipeline = new ChapterPipelineBuilder()
-  //     .findBySlug(slug)
-  //     .attachStory()
-  //     .attachAuthor()
-  //     .projectChapterWithStory()
-  //     .build();
-
-  //   const [chapter] = await this.chapterRepo.aggregateChapters(pipeline);
-  //   console.log('chapter', chapter);
-
-  //   if (!chapter) {
-  //     this.throwNotFoundError(`Chapter with slug ${slug} not found`);
-  //   }
-
-  //   return chapter;
-  // }
 
   async searchChapters(
     filters: { q?: string; slug?: string; storySlug?: string; userId?: string },

@@ -8,7 +8,6 @@ import {
   ChapterAutoSaveSearchSchema,
   ConvertAutoSaveQuerySchema,
   ConvertAutoSaveSchema,
-  EnableAutoSaveSchemaVer2,
   GetAutoSaveDraftQuerySchema,
 } from '@schema/request/chapterAutoSaveVer2.Schema';
 import { AutoSaveResponses } from '@schema/response.schema';
@@ -17,9 +16,7 @@ import { RateLimits } from '@/constants/rateLimits';
 import type {} from '@fastify/rate-limit';
 
 enum ChapterAutoSaveApiRoutes {
-  EnableAutoSave = '/enable',
   AutoSaveContent = '/save',
-  // DisableAutoSave = '/disable',
   GetAutoSaveDraft = '/draft',
   Convert = '/convert',
   Search = '/search',
@@ -48,21 +45,6 @@ export async function chapterAutoSaveRoutes(fastify: FastifyInstance) {
   );
 
   fastify.post(
-    ChapterAutoSaveApiRoutes.EnableAutoSave,
-    {
-      preHandler: [validateAuth],
-      config: { rateLimit: RateLimits.WRITE },
-      schema: {
-        description: 'Enable auto-save for a chapter',
-        tags: ['Chapter Auto-Save'],
-        body: zodToJsonSchema(EnableAutoSaveSchemaVer2),
-        response: AutoSaveResponses.enabled,
-      },
-    },
-    controller.enableAutoSave
-  );
-
-  fastify.post(
     ChapterAutoSaveApiRoutes.AutoSaveContent,
     {
       preHandler: [validateAuth],
@@ -76,20 +58,6 @@ export async function chapterAutoSaveRoutes(fastify: FastifyInstance) {
     },
     controller.autoSaveContent
   );
-
-  // fastify.post(
-  //   ChapterAutoSaveApiRoutes.DisableAutoSave,
-  //   {
-  //     preHandler: [validateAuth],
-  //     schema: {
-  //       description: 'Disable auto-save for a chapter',
-  //       tags: ['Chapter Auto-Save'],
-  //       body: zodToJsonSchema(DisableAutoSaveSchema),
-  //       response: AutoSaveResponses.disabled,
-  //     },
-  //   },
-  //   controller.disableAutoSave
-  // );
 
   /**
    * Get auto-save draft for user

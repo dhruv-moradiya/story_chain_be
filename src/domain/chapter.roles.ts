@@ -1,4 +1,3 @@
-import { ChapterStatus } from '@/features/chapter/types/chapter-enum';
 import { IChapter } from '@features/chapter/types/chapter.types';
 import { IStory } from '@features/story/types/story.types';
 
@@ -55,11 +54,6 @@ export class ChapterRules {
   static ensureCanEnableAutoSave(chapter: IChapter, userId: string): boolean {
     // rule 1: only owner/collaborator can enable autosave
     if (!this.isAuthor(chapter, userId)) return false;
-
-    // rule 2: chapter must not be deleted
-    if (chapter.status === ChapterStatus.DELETED) {
-      return false;
-    }
 
     return true;
   }

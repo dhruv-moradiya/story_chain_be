@@ -39,6 +39,7 @@ import { ChapterAutoSaveRepository } from '@features/chapterAutoSave/repositorie
 import { ChapterRepository } from '@features/chapter/repositories/chapter.repository';
 import { ReadingHistoryRepository } from '@/features/readingHistory/repositories/readingHistory.repository';
 import { CommentVoteRepository } from '@/features/commentVote/repository/commentVote.repository';
+import { PullRequestRepository } from '@features/pullRequest/repositories/pullRequest.repository';
 
 // ═══════════════════════════════════════════
 // FEATURE SERVICES
@@ -66,6 +67,7 @@ import { ReadingHistoryService } from '@/features/readingHistory/services/readin
 import { BookmarkService } from '@/features/bookmark/services/bookmark.service';
 
 import { CommentVoteService } from '@/features/commentVote/services/commentVote.service';
+import { PullRequestCommandService } from '@features/pullRequest/services/pullRequest-command.service';
 
 // ═══════════════════════════════════════════
 // CONTROLLERS
@@ -82,6 +84,7 @@ import { BookmarkController } from '@/features/bookmark/controllers/bookmark.con
 import { CommentController } from '@/features/comment/controllers/comment.controller';
 import { CommentService } from '@/features/comment/services/comment.service';
 import { CommentRepository } from '@/features/comment/repositories/comment.repository';
+import { PullRequestController } from '@features/pullRequest/controllers/pullRequest.controller';
 
 // ═══════════════════════════════════════════
 // MIDDLEWARE FACTORIES
@@ -171,6 +174,7 @@ export function registerServices(): void {
   container.register(TOKENS.ReadingHistoryRepository, { useClass: ReadingHistoryRepository });
   container.register(TOKENS.CommentRepository, { useClass: CommentRepository });
   container.register(TOKENS.CommentVoteRepository, { useClass: CommentVoteRepository });
+  container.register(TOKENS.PullRequestRepository, { useClass: PullRequestRepository });
 
   // ═══════════════════════════════════════════
   // FEATURE SERVICES
@@ -201,6 +205,7 @@ export function registerServices(): void {
   container.register(TOKENS.BookmarkService, { useClass: BookmarkService });
   container.register(TOKENS.CommentService, { useClass: CommentService });
   container.register(TOKENS.CommentVoteService, { useClass: CommentVoteService });
+  container.register(TOKENS.PullRequestCommandService, { useClass: PullRequestCommandService });
 
   // ═══════════════════════════════════════════
   // CONTROLLERS
@@ -217,6 +222,7 @@ export function registerServices(): void {
   container.register(TOKENS.ReadingHistoryController, { useClass: ReadingHistoryController });
   container.register(TOKENS.BookmarkController, { useClass: BookmarkController });
   container.register(TOKENS.CommentController, { useClass: CommentController });
+  container.register(TOKENS.PullRequestController, { useClass: PullRequestController });
 
   // ═══════════════════════════════════════════
   // MIDDLEWARE FACTORIES

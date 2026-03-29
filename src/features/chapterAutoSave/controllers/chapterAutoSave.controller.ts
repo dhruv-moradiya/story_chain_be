@@ -2,21 +2,18 @@ import { FastifyReply, FastifyRequest } from 'fastify';
 import { inject, singleton } from 'tsyringe';
 import { TOKENS } from '@container/tokens';
 import { HTTP_STATUS } from '@constants/httpStatus';
-import { TDisableAutoSaveSchema } from '@schema/request/chapterAutoSave.schema';
 import {
   ChapterAutoSaveSearchSchema,
   TAutoSaveContentSchemaVer2,
   TChapterAutoSaveSearchSchema,
   TConvertAutoSaveQuerySchema,
   TConvertAutoSaveSchema,
-  TEnableAutoSaveSchemaVer2Type,
   TGetAutoSaveDraftQuerySchema,
 } from '@schema/request/chapterAutoSaveVer2.Schema';
 
 import { ApiResponse } from '@utils/apiResponse';
 import { BaseModule } from '@utils/baseClass';
 import { catchAsync } from '@utils/catchAsync';
-import { AutoSaveLifecycleService } from '../services/autosave-lifecycle.service';
 import { AutoSaveContentService } from '../services/autosave-content.service';
 import { AutoSaveQueryService } from '../services/autosave-query.service';
 import { AutoSaveConversionService } from '../services/autosave-conversion.service';
@@ -24,8 +21,6 @@ import { AutoSaveConversionService } from '../services/autosave-conversion.servi
 @singleton()
 export class ChapterAutoSaveController extends BaseModule {
   constructor(
-    @inject(TOKENS.AutoSaveLifecycleService)
-    private readonly lifecycleService: AutoSaveLifecycleService,
     @inject(TOKENS.AutoSaveContentService)
     private readonly contentService: AutoSaveContentService,
     @inject(TOKENS.AutoSaveQueryService)
@@ -35,22 +30,6 @@ export class ChapterAutoSaveController extends BaseModule {
   ) {
     super();
   }
-
-  enableAutoSave = catchAsync(
-    async (
-      request: FastifyRequest<{ Body: TEnableAutoSaveSchemaVer2Type }>,
-      reply: FastifyReply
-    ) => {
-      const userId = request.user.clerkId;
-      const input = request.body;
-
-      const result = await this.lifecycleService.enableAutoSave({ ...input, userId });
-
-      return reply
-        .code(HTTP_STATUS.CREATED.code)
-        .send(ApiResponse.created(result, 'Auto-save enabled successfully.'));
-    }
-  );
 
   autoSaveContent = catchAsync(
     async (request: FastifyRequest<{ Body: TAutoSaveContentSchemaVer2 }>, reply: FastifyReply) => {
@@ -68,23 +47,6 @@ export class ChapterAutoSaveController extends BaseModule {
           'Content auto-saved successfully.'
         )
       );
-    }
-  );
-
-  disableAutoSave = catchAsync(
-    async (request: FastifyRequest<{ Body: TDisableAutoSaveSchema }>, reply: FastifyReply) => {
-      const userId = request.user.clerkId;
-      const { chapterSlug } = request.body;
-
-      if (!chapterSlug) {
-        this.throwBadRequest('chapterSlug is required');
-      }
-
-      await this.lifecycleService.disableAutoSave(chapterSlug, userId);
-
-      return reply
-        .code(HTTP_STATUS.CREATED.code)
-        .send(ApiResponse.created({}, 'Auto-save disabled successfully.'));
     }
   );
 

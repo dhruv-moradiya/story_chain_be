@@ -49,6 +49,7 @@ export const TOKENS = {
   ReadingHistoryRepository: Symbol.for('ReadingHistoryRepository'),
   CommentRepository: Symbol.for('CommentRepository'),
   CommentVoteRepository: Symbol.for('CommentVoteRepository'),
+  PullRequestRepository: Symbol.for('PullRequestRepository'),
 
   // ═══════════════════════════════════════════
   // FEATURE SERVICES
@@ -80,6 +81,7 @@ export const TOKENS = {
   SessionService: Symbol.for('SessionService'),
   PlatformRoleService: Symbol.for('PlatformRoleService'),
   CommentVoteService: Symbol.for('CommentVoteService'),
+  PullRequestCommandService: Symbol.for('PullRequestCommandService'),
 
   // ═══════════════════════════════════════════
   // CONTROLLERS
@@ -98,6 +100,7 @@ export const TOKENS = {
   ReportController: Symbol.for('ReportController'),
   ReadingHistoryController: Symbol.for('ReadingHistoryController'),
   SessionController: Symbol.for('SessionController'),
+  PullRequestController: Symbol.for('PullRequestController'),
   StoryCollaboratorController: Symbol.for('StoryCollaboratorController'),
 
   // ═══════════════════════════════════════════
