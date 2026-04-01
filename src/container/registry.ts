@@ -40,6 +40,9 @@ import { ChapterRepository } from '@features/chapter/repositories/chapter.reposi
 import { ReadingHistoryRepository } from '@/features/readingHistory/repositories/readingHistory.repository';
 import { CommentVoteRepository } from '@/features/commentVote/repository/commentVote.repository';
 import { PullRequestRepository } from '@features/pullRequest/repositories/pullRequest.repository';
+import { PRTimelineRepository } from '@features/prTimeline/repositories/prTimeline.repository';
+import { PRReviewRepository } from '@features/prReview/repositories/prReview.repository';
+import { PRCommentRepository } from '@features/prComment/repositories/prComment.repository';
 
 // ═══════════════════════════════════════════
 // FEATURE SERVICES
@@ -68,6 +71,10 @@ import { BookmarkService } from '@/features/bookmark/services/bookmark.service';
 
 import { CommentVoteService } from '@/features/commentVote/services/commentVote.service';
 import { PullRequestCommandService } from '@features/pullRequest/services/pullRequest-command.service';
+import { PRUpdateService } from '@features/pullRequest/services/pr-update.service';
+import { PRMergeService } from '@features/pullRequest/services/pr-merge.service';
+import { PRReviewService } from '@features/prReview/services/prReview.service';
+import { PRCommentService } from '@features/prComment/services/prComment.service';
 
 // ═══════════════════════════════════════════
 // CONTROLLERS
@@ -85,6 +92,7 @@ import { CommentController } from '@/features/comment/controllers/comment.contro
 import { CommentService } from '@/features/comment/services/comment.service';
 import { CommentRepository } from '@/features/comment/repositories/comment.repository';
 import { PullRequestController } from '@features/pullRequest/controllers/pullRequest.controller';
+import { PRManagementController } from '@features/pullRequest/controllers/prManagement.controller';
 
 // ═══════════════════════════════════════════
 // MIDDLEWARE FACTORIES
@@ -175,6 +183,9 @@ export function registerServices(): void {
   container.register(TOKENS.CommentRepository, { useClass: CommentRepository });
   container.register(TOKENS.CommentVoteRepository, { useClass: CommentVoteRepository });
   container.register(TOKENS.PullRequestRepository, { useClass: PullRequestRepository });
+  container.register(TOKENS.PRTimelineRepository, { useClass: PRTimelineRepository });
+  container.register(TOKENS.PRReviewRepository, { useClass: PRReviewRepository });
+  container.register(TOKENS.PRCommentRepository, { useClass: PRCommentRepository });
 
   // ═══════════════════════════════════════════
   // FEATURE SERVICES
@@ -206,6 +217,10 @@ export function registerServices(): void {
   container.register(TOKENS.CommentService, { useClass: CommentService });
   container.register(TOKENS.CommentVoteService, { useClass: CommentVoteService });
   container.register(TOKENS.PullRequestCommandService, { useClass: PullRequestCommandService });
+  container.register(TOKENS.PRUpdateService, { useClass: PRUpdateService });
+  container.register(TOKENS.PRMergeService, { useClass: PRMergeService });
+  container.register(TOKENS.PRReviewService, { useClass: PRReviewService });
+  container.register(TOKENS.PRCommentService, { useClass: PRCommentService });
 
   // ═══════════════════════════════════════════
   // CONTROLLERS
@@ -223,6 +238,7 @@ export function registerServices(): void {
   container.register(TOKENS.BookmarkController, { useClass: BookmarkController });
   container.register(TOKENS.CommentController, { useClass: CommentController });
   container.register(TOKENS.PullRequestController, { useClass: PullRequestController });
+  container.register(TOKENS.PRManagementController, { useClass: PRManagementController });
 
   // ═══════════════════════════════════════════
   // MIDDLEWARE FACTORIES

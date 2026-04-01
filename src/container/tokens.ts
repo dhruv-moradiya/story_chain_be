@@ -50,6 +50,9 @@ export const TOKENS = {
   CommentRepository: Symbol.for('CommentRepository'),
   CommentVoteRepository: Symbol.for('CommentVoteRepository'),
   PullRequestRepository: Symbol.for('PullRequestRepository'),
+  PRTimelineRepository: Symbol.for('PRTimelineRepository'),
+  PRReviewRepository: Symbol.for('PRReviewRepository'),
+  PRCommentRepository: Symbol.for('PRCommentRepository'),
 
   // ═══════════════════════════════════════════
   // FEATURE SERVICES
@@ -82,6 +85,10 @@ export const TOKENS = {
   PlatformRoleService: Symbol.for('PlatformRoleService'),
   CommentVoteService: Symbol.for('CommentVoteService'),
   PullRequestCommandService: Symbol.for('PullRequestCommandService'),
+  PRUpdateService: Symbol.for('PRUpdateService'),
+  PRMergeService: Symbol.for('PRMergeService'),
+  PRReviewService: Symbol.for('PRReviewService'),
+  PRCommentService: Symbol.for('PRCommentService'),
 
   // ═══════════════════════════════════════════
   // CONTROLLERS
@@ -101,6 +108,7 @@ export const TOKENS = {
   ReadingHistoryController: Symbol.for('ReadingHistoryController'),
   SessionController: Symbol.for('SessionController'),
   PullRequestController: Symbol.for('PullRequestController'),
+  PRManagementController: Symbol.for('PRManagementController'),
   StoryCollaboratorController: Symbol.for('StoryCollaboratorController'),
 
   // ═══════════════════════════════════════════

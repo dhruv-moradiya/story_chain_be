@@ -9,7 +9,7 @@ export interface IPRTimeline {
   action: TPRTimelineAction; // what happened
   performedBy: string | null; // clerkId — null for system events
   performedAt: Date; // authoritative event time
-  metadata: any; // action-specific context
+  metadata: Record<string, unknown>; // action-specific context
 }
 
 export interface IPRTimelineDoc extends Document, IPRTimeline {

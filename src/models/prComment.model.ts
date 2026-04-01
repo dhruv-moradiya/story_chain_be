@@ -1,6 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
 import { IPRCommentDoc } from '@features/prComment/types/prComment.types';
-import { PR_COMMENT_TYPES } from '@features/prComment/types/prComment-enum';
 
 const prCommentSchema = new Schema<IPRCommentDoc>(
   {
@@ -33,24 +32,9 @@ const prCommentSchema = new Schema<IPRCommentDoc>(
       minlength: 1,
       maxlength: 2000,
     },
-    commentType: {
-      type: String,
-      enum: PR_COMMENT_TYPES,
-      required: true,
-    },
-    // For suggestion type only
-    suggestion: {
-      originalPassage: String,
-      suggestedPassage: String,
-      context: String,
-    },
 
     isEdited: { type: Boolean, default: false },
     editedAt: Date,
-
-    isResolved: { type: Boolean, default: false, index: true },
-    resolvedBy: { type: String, ref: 'User' },
-    resolvedAt: Date,
   },
   {
     timestamps: true,
@@ -60,7 +44,6 @@ const prCommentSchema = new Schema<IPRCommentDoc>(
 // Indexes
 prCommentSchema.index({ pullRequestId: 1, createdAt: 1 });
 prCommentSchema.index({ parentCommentId: 1, createdAt: 1 });
-prCommentSchema.index({ pullRequestId: 1, isResolved: 1 });
 prCommentSchema.index({ userId: 1, createdAt: -1 });
 
 const PRComment = mongoose.model<IPRCommentDoc>('PRComment', prCommentSchema);
