@@ -1,26 +1,21 @@
 import { Document, Types } from 'mongoose';
 import { ID } from '@/types';
 
-import { PR_COMMENT_TYPES } from './prComment-enum';
-export type PRCommentType = (typeof PR_COMMENT_TYPES)[number];
-
 export interface IPRComment {
   _id: ID;
   pullRequestId: ID;
-  userId: string;
-  parentCommentId?: ID | null;
-  content: string;
-  commentType: PRCommentType;
-  suggestion?: {
-    line?: number;
-    originalText?: string;
-    suggestedText?: string;
-  };
+  storySlug: string; // denormalized
+  userId: string; // clerkId
+
+  /** null = top-level comment, set = reply to another comment */
+  parentCommentId: ID | null;
+
+  content: string; // 1–2000 chars
+
+  // Edit tracking
   isEdited: boolean;
   editedAt?: Date;
-  isResolved?: boolean;
-  resolvedBy?: string;
-  resolvedAt?: Date;
+
   createdAt: Date;
   updatedAt: Date;
 }

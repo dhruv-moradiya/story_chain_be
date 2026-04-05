@@ -80,7 +80,6 @@ export {
 export {
   ChapterSchema,
   ChapterStatsSchema,
-  ChapterPullRequestSchema,
   ChapterWithStorySchema,
   ChapterDetailsSchema,
   ChapterResponses,

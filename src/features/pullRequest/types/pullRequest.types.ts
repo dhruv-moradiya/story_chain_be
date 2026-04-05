@@ -9,32 +9,6 @@ export type TPRLabel = (typeof PR_LABELS)[number];
 export type TPRTimelineAction = (typeof PR_TIMELINE_ACTIONS)[number];
 
 // ===========================
-// INTERFACES
-// ===========================
-export interface PRChanges {
-  original?: string;
-  proposed: string;
-  diff?: string;
-}
-
-export interface PRVotes {
-  upvotes: number;
-  downvotes: number;
-  score: number;
-}
-
-export interface PRAutoApprove {
-  enabled: boolean;
-  threshold: number;
-  timeWindow: number;
-}
-
-export interface PRStats {
-  views: number;
-  discussions: number;
-}
-
-// ===========================
 // MAIN DOCUMENT INTERFACE
 // ===========================
 export interface IPullRequest {
@@ -51,9 +25,8 @@ export interface IPullRequest {
   // PR Type
   prType: TPRType;
 
-  // Changes
-  changes: {
-    original: string;
+  // Content
+  content: {
     proposed: string;
     wordCount: number;
     readingMinutes: number;
@@ -77,6 +50,8 @@ export interface IPullRequest {
     enabled: boolean;
     threshold: number; // votes needed
     timeWindow: number; // days
+    qualifiedAt?: Date; // when score first passed threshold
+    autoApprovedAt?: Date; // when auto-approval actually fired
   };
 
   // Labels
@@ -103,31 +78,11 @@ export interface IPullRequest {
     canMerge: boolean;
   };
 
-  requiresModeration: boolean;
-  flaggedForReview: boolean;
-  moderationNotes: string;
-  reportIds: [ID];
-
-  // hasConflicts: boolean;
-
-  // conflictDescription: string;
-  // conflictResolvedAt: boolean;
-
-  // Timeline (high-level tracking)
-  timeline: Array<{
-    action: TPRTimelineAction;
-    performedBy?: string;
-    performedAt: Date;
-    // eslint-disable-next-line
-    metadata?: any;
-  }>;
-
   // Stats
   stats: {
     views: number;
     discussions: number;
-    reviewsReceived?: number;
-    timeToMerge?: number; // in minutes
+    reviewsReceived: number;
   };
 
   // Timestamps

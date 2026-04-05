@@ -35,7 +35,7 @@ const chapterAutoSaveSchema = new Schema<IChapterAutoSaveDoc>(
     content: {
       type: String,
       required: true,
-      maxlength: 10000000,
+      maxlength: 10000,
     },
 
     /**
@@ -57,17 +57,6 @@ const chapterAutoSaveSchema = new Schema<IChapterAutoSaveDoc>(
     lastSavedAt: {
       type: Date,
       default: Date.now,
-    },
-
-    /**
-     * IS_ENABLED: Is auto-save turned on?
-     * USE: Know if user enabled feature
-     * DEFAULT: false (user must enable)
-     * UPDATE: When user toggles auto-save
-     */
-    isEnabled: {
-      type: Boolean,
-      default: false,
     },
 
     /**

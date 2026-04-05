@@ -1,116 +1,103 @@
-import { TOKENS } from '@/container';
-import { ICreatePrCommentDTO, IEditPrCommentDTO, IResolvePrCommentDTO } from '@/dto/pr-comment.dto';
-import { PullRequestQueryService } from '@/features/pullRequest/services/pull-request-query.service';
-import { ID } from '@/types';
-import { BaseModule } from '@/utils/baseClass';
 import { inject, singleton } from 'tsyringe';
-import { PrCommentRepository } from '../repositories/pr-comment-repository';
-import { PRCommentType } from '../types/prComment-enum';
+import { BaseModule } from '@utils/baseClass';
+import { TOKENS } from '@container/tokens';
+import { withTransaction } from '@utils/withTransaction';
+import { PullRequestRules } from '@domain/pullRequest.rules';
+import { CollaboratorQueryService } from '@features/storyCollaborator/services/collaborator-query.service';
+import { PRCommentRepository } from '@features/prComment/repositories/prComment.repository';
+import { PRTimelineRepository } from '@features/prTimeline/repositories/prTimeline.repository';
+import { PullRequestRepository } from '@features/pullRequest/repositories/pullRequest.repository';
 import { IPRComment } from '../types/prComment.types';
+import { IAddPRCommentDTO } from '@dto/pullRequest.dto';
+import { Types } from 'mongoose';
+import { ID } from '@/types';
+import { PRTimelineAction } from '@features/pullRequest/types/pullRequest-enum';
 
 @singleton()
-class PrCommentService extends BaseModule {
+export class PRCommentService extends BaseModule {
   constructor(
-    @inject(TOKENS.PrCommentRepository)
-    private readonly prCommentRepository: PrCommentRepository,
-    @inject(TOKENS.PullRequestQueryService)
-    private readonly pullRequestService: PullRequestQueryService
+    @inject(TOKENS.PullRequestRepository)
+    private readonly prRepo: PullRequestRepository,
+
+    @inject(TOKENS.PRCommentRepository)
+    private readonly commentRepo: PRCommentRepository,
+
+    @inject(TOKENS.PRTimelineRepository)
+    private readonly timelineRepo: PRTimelineRepository,
+
+    @inject(TOKENS.CollaboratorQueryService)
+    private readonly collaboratorQueryService: CollaboratorQueryService
   ) {
     super();
   }
 
-  private async _checkPRExists(_id: ID) {
-    return await this.pullRequestService.existsPRById(_id);
-  }
+  // ─────────────────────────────────────────────────────────────────────────
+  // Add Comment
+  // ─────────────────────────────────────────────────────────────────────────
 
-  private async _checkPRCommentExists(_id: ID) {
-    return await this.prCommentRepository.existsCommentById(_id);
-  }
+  async addComment(input: IAddPRCommentDTO): Promise<IPRComment> {
+    const { prId, storySlug, userId, content, parentCommentId } = input;
 
-  async getPrCommentById(commentId: string): Promise<IPRComment> {
-    const prComment = await this.prCommentRepository.getCommentById(commentId);
-
-    if (!prComment) {
-      this.throwNotFoundError(
-        'PR_COMMENT_NOT_FOUND',
-        `The PR comment with id ${commentId} does not exist or may have been removed.`
-      );
+    // Validate content length
+    const trimmed = content.trim();
+    if (trimmed.length < 1 || trimmed.length > 2000) {
+      this.throwBadRequest('Comment content must be between 1 and 2000 characters.');
     }
 
-    return prComment;
-  }
+    return withTransaction(`PR-Comment-${prId}`, async (session) => {
+      // 1. Load PR
+      const pr = await this.prRepo.findById({ id: prId, options: { session } });
+      if (!pr) this.throwNotFoundError(`Pull request "${prId}" not found.`);
 
-  async addPrComment(input: ICreatePrCommentDTO) {
-    const prExists = await this._checkPRExists(input.pullRequestId);
+      // 2. Load user role
+      const role = await this.collaboratorQueryService.getCollaboratorRole(userId, storySlug);
 
-    if (!prExists) {
-      this.throwNotFoundError(
-        'PULL_REQUEST_NOT_FOUND',
-        'The specified pull request does not exist or may have been removed.'
-      );
-    }
+      // 3. Permission check
+      const check = PullRequestRules.canPostComment(pr, userId, role, parentCommentId ?? null);
+      if (!check.allowed) this.throwForbiddenError(check.reason!);
 
-    if (input.parentCommentId) {
-      const prCommentExists = await this._checkPRCommentExists(input.parentCommentId);
-      if (!prCommentExists) {
-        this.throwNotFoundError(
-          'PR_COMMENT_NOT_FOUND',
-          `The PR comment with id ${input.parentCommentId} does not exist or may have been removed.`
+      // 4. Validate parent comment exists if a reply
+      let resolvedParentId: ID | null = null;
+      if (parentCommentId) {
+        const parent = await this.commentRepo.findById({ id: parentCommentId });
+        if (!parent) this.throwNotFoundError(`Parent comment "${parentCommentId}" not found.`);
+        if (parent.pullRequestId.toString() !== prId) {
+          this.throwBadRequest('Parent comment does not belong to this pull request.');
+        }
+        resolvedParentId = new Types.ObjectId(parentCommentId) as unknown as ID;
+      }
+
+      // 5. Create comment
+      const comment = await this.commentRepo.create({
+        data: {
+          pullRequestId: new Types.ObjectId(prId) as unknown as ID,
+          storySlug,
+          userId,
+          parentCommentId: resolvedParentId,
+          content: trimmed,
+          isEdited: false,
+        },
+        options: { session },
+      });
+
+      // 6. Increment PR comment count
+      await this.prRepo.incrementCommentCount(prId, { session });
+
+      // 7. Timeline event (only for top-level comments)
+      if (!parentCommentId) {
+        await this.timelineRepo.appendEvent(
+          {
+            pullRequestId: pr._id,
+            storySlug,
+            action: PRTimelineAction.REVIEW_REQUESTED, // closest available: signals activity on PR
+            performedBy: userId,
+            metadata: { commentId: comment._id.toString() },
+          },
+          { session }
         );
       }
-    }
 
-    const shouldSetResolved =
-      input.commentType === PRCommentType.SUGGESTION ||
-      input.commentType === PRCommentType.REQUEST_CHANGES ||
-      input.commentType === PRCommentType.QUESTION;
-
-    const commentInput = {
-      ...input,
-      ...(shouldSetResolved && { isResolved: false }),
-    };
-
-    const prComment = await this.prCommentRepository.create({ data: commentInput });
-
-    if (!prComment) {
-      this.throwBadRequest(
-        'INTERNAL_SERVER_ERROR',
-        'Failed to create PR comment. Please try again later.'
-      );
-    }
-
-    return prComment;
-  }
-
-  async editPrComment(input: IEditPrCommentDTO) {
-    const prComment = await this.prCommentRepository.editComment(input);
-
-    if (!prComment) {
-      this.throwBadRequest(
-        'INTERNAL_SERVER_ERROR',
-        'Failed to update PR comment. Please try again later.'
-      );
-    }
-
-    return prComment;
-  }
-
-  async resolvePrComment(input: IResolvePrCommentDTO) {
-    const prComment = await this.prCommentRepository.resolveComment(input);
-
-    if (!prComment) {
-      this.throwBadRequest(
-        'INTERNAL_SERVER_ERROR',
-        'Failed to resolve PR comment. Please try again later.'
-      );
-    }
-
-    return prComment;
-  }
-
-  async getPrComments(pullRequestId: string) {
-    return await this.prCommentRepository.find({ filter: { pullRequestId } });
+      return comment;
+    });
   }
 }
-
-export { PrCommentService };

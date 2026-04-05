@@ -1,119 +1,75 @@
 import { z } from 'zod';
-import { PR_LABELS } from '@/features/pullRequest/types/pullRequest-enum';
-import { ObjectIdSchema } from '@utils/index';
+import { PR_TYPES } from '@features/pullRequest/types/pullRequest-enum';
 
-const PullRequestIdSchema = z.object({
-  pullRequestId: ObjectIdSchema(),
+// ─────────────────────────────────────────────────────────────────────────────
+// Shared sub-schemas
+// ─────────────────────────────────────────────────────────────────────────────
+
+const PRTypeSchema = z.enum(PR_TYPES, {
+  errorMap: () => ({ message: `PR type must be one of: ${PR_TYPES.join(', ')}` }),
 });
 
-const BasePullRequestSchema = z.object({
+const PRMetaSchema = z.object({
   title: z
-    .string()
-    .min(1, 'Title is required')
-    .max(200, 'Title must be under 200 characters')
-    .trim(),
-  description: z.string().max(2000, 'Description must be under 2000 characters').trim().optional(),
-  storySlug: z
-    .string()
-    .min(1, 'Story slug is required')
+    .string({ required_error: 'PR title is required.' })
     .trim()
-    .regex(
-      /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
-      'Story slug must be URL-friendly (lowercase, hyphen-separated)'
-    ),
-  isDraft: z.boolean().optional(),
+    .min(3, 'PR title must be at least 3 characters.')
+    .max(200, 'PR title must be at most 200 characters.'),
+
+  description: z
+    .string()
+    .trim()
+    .max(2000, 'Description must be at most 2000 characters.')
+    .optional(),
+
+  parentChapterSlug: z
+    .string({ required_error: 'parentChapterSlug is required.' })
+    .trim()
+    .min(1, 'parentChapterSlug cannot be empty.'),
+
+  prType: PRTypeSchema,
+
+  isDraft: z.boolean().optional().default(false),
+
+  draftReason: z
+    .string()
+    .trim()
+    .max(500, 'Draft reason must be at most 500 characters.')
+    .optional(),
 });
 
-const CreateNewChapterPRSchema = BasePullRequestSchema.extend({
-  prType: z.literal('new_chapter'),
-  chapterSlug: z
-    .string()
-    .min(1, 'Chapter slug is required')
-    .trim()
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Chapter slug must be URL-friendly'),
-  parentChapterSlug: z
-    .string()
-    .min(1, 'Parent chapter slug is required')
-    .trim()
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Parent chapter slug must be URL-friendly'),
-  changes: z.object({
-    proposed: z.string().max(100000, 'Proposed content exceeds maximum size'),
-  }),
-}).passthrough();
+// ─────────────────────────────────────────────────────────────────────────────
+// Route param schemas
+// ─────────────────────────────────────────────────────────────────────────────
 
-const CreateEditChapterPRSchema = BasePullRequestSchema.extend({
-  prType: z.literal('edit_chapter'),
-  chapterSlug: z
-    .string()
-    .min(1, 'Chapter slug is required')
-    .trim()
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Chapter slug must be URL-friendly'),
-  parentChapterSlug: z
-    .string()
-    .min(1, 'Parent chapter slug is required')
-    .trim()
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Parent chapter slug must be URL-friendly'),
-  changes: z.object({
-    original: z.string().max(100000, 'Original content exceeds maximum size'),
-    proposed: z.string().max(100000, 'Proposed content exceeds maximum size'),
-  }),
-}).passthrough();
-
-const CreateDeleteChapterPRSchema = BasePullRequestSchema.extend({
-  prType: z.literal('delete_chapter'),
-  chapterSlug: z
-    .string()
-    .min(1, 'Chapter slug is required')
-    .trim()
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Chapter slug must be URL-friendly'),
-  parentChapterSlug: z
-    .string()
-    .min(1, 'Parent chapter slug is required')
-    .trim()
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Parent chapter slug must be URL-friendly'),
-  changes: z.object({
-    original: z.string().max(100000, 'Original content exceeds maximum size'),
-  }),
-}).passthrough();
-
-const CreatePullRequestSchema = z.discriminatedUnion('prType', [
-  CreateNewChapterPRSchema,
-  CreateEditChapterPRSchema,
-  CreateDeleteChapterPRSchema,
-]);
-
-const UpdatePRLabelsSchema = z.object({
-  labels: z.array(z.enum(PR_LABELS)),
+export const StorySlugParamSchema = z.object({
+  slug: z.string({ required_error: 'Story slug is required.' }).trim().min(1),
 });
 
-const UpdatePRParamsSchema = z.object({
-  id: ObjectIdSchema(),
+// ─────────────────────────────────────────────────────────────────────────────
+// 1. Create PR from draft chapter
+//    POST /api/pull-requests/stories/:slug/from-draft
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const CreatePRFromDraftBodySchema = PRMetaSchema.extend({
+  chapterSlug: z
+    .string({ required_error: 'chapterSlug is required.' })
+    .trim()
+    .min(1, 'chapterSlug cannot be empty.'),
 });
 
-type TPullRequestIdSchema = z.infer<typeof PullRequestIdSchema>;
-type TCreateNewChapterPRSchema = z.infer<typeof CreateNewChapterPRSchema>;
-type TCreateEditChapterPRSchema = z.infer<typeof CreateEditChapterPRSchema>;
-type TCreateDeleteChapterPRSchema = z.infer<typeof CreateDeleteChapterPRSchema>;
-type TCreatePullRequestSchema = z.infer<typeof CreatePullRequestSchema>;
-type TUpdatePRLabelsSchema = z.infer<typeof UpdatePRLabelsSchema>;
-type TUpdatePRParamsSchema = z.infer<typeof UpdatePRParamsSchema>;
+export type TCreatePRFromDraftBody = z.infer<typeof CreatePRFromDraftBodySchema>;
 
-export {
-  PullRequestIdSchema,
-  CreatePullRequestSchema,
-  CreateNewChapterPRSchema,
-  CreateEditChapterPRSchema,
-  CreateDeleteChapterPRSchema,
-  UpdatePRLabelsSchema,
-  UpdatePRParamsSchema,
-};
+// ─────────────────────────────────────────────────────────────────────────────
+// 2. Create PR from auto-save
+//    POST /api/pull-requests/stories/:slug/from-autosave
+// ─────────────────────────────────────────────────────────────────────────────
 
-export type {
-  TPullRequestIdSchema,
-  TCreatePullRequestSchema,
-  TCreateNewChapterPRSchema,
-  TCreateEditChapterPRSchema,
-  TCreateDeleteChapterPRSchema,
-  TUpdatePRLabelsSchema,
-  TUpdatePRParamsSchema,
-};
+export const CreatePRFromAutoSaveBodySchema = PRMetaSchema.extend({
+  autoSaveId: z
+    .string({ required_error: 'autoSaveId is required.' })
+    .trim()
+    .min(1, 'autoSaveId cannot be empty.'),
+});
+
+export type TCreatePRFromAutoSaveBody = z.infer<typeof CreatePRFromAutoSaveBodySchema>;

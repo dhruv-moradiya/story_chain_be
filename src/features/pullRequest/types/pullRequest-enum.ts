@@ -1,26 +1,30 @@
 enum PRType {
-  NEW_CHAPTER = 'new_chapter',
-  EDIT_CHAPTER = 'edit_chapter',
-  DELETE_CHAPTER = 'delete_chapter',
+  NEW_BRANCH = 'new_branch',
+  CONTINUATION = 'continuation',
+  EDIT = 'edit',
 }
 
-const PR_TYPES = ['new_chapter', 'edit_chapter', 'delete_chapter'] as const;
+const PR_TYPES = ['new_branch', 'continuation', 'edit'] as const;
 
 enum PRStatus {
   OPEN = 'open',
   APPROVED = 'approved',
-  REJECTED = 'rejected',
   CLOSED = 'closed',
   MERGED = 'merged',
 }
 
-const PR_STATUSES = ['open', 'approved', 'rejected', 'closed', 'merged'] as const;
+const PR_STATUSES = ['open', 'approved', 'closed', 'merged'] as const;
 
 enum PRLabel {
   NEEDS_REVIEW = 'needs_review',
   QUALITY_ISSUE = 'quality_issue',
   GRAMMAR = 'grammar',
   PLOT_HOLE = 'plot_hole',
+  LORE_INCONSISTENCY = 'lore_inconsistency',
+  CONFLICT = 'conflict',
+  DUPLICATE = 'duplicate',
+  CHANGES_REQUESTED = 'changes_requested',
+  APPROVED = 'approved',
   GOOD_FIRST_PR = 'good_first_pr',
 }
 
@@ -29,11 +33,16 @@ const PR_LABELS = [
   'quality_issue',
   'grammar',
   'plot_hole',
+  'lore_inconsistency',
+  'conflict',
+  'duplicate',
+  'changes_requested',
+  'approved',
   'good_first_pr',
 ] as const;
 
 enum PRTimelineAction {
-  CREATED = 'created',
+  SUBMITTED = 'submitted',
   REVIEW_REQUESTED = 'review_requested',
   REVIEW_SUBMITTED = 'review_submitted',
   APPROVED = 'approved',
@@ -45,10 +54,12 @@ enum PRTimelineAction {
   REOPENED = 'reopened',
   MARKED_DRAFT = 'marked_draft',
   READY_FOR_REVIEW = 'ready_for_review',
+  LABEL_ADDED = 'label_added',
+  LABEL_REMOVED = 'label_removed',
 }
 
 const PR_TIMELINE_ACTIONS = [
-  'created',
+  'submitted',
   'review_requested',
   'review_submitted',
   'approved',
@@ -60,6 +71,8 @@ const PR_TIMELINE_ACTIONS = [
   'reopened',
   'marked_draft',
   'ready_for_review',
+  'label_added',
+  'label_removed',
 ] as const;
 
 export {

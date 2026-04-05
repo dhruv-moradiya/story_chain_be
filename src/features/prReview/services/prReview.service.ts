@@ -1,300 +1,138 @@
-import { TOKENS } from '@/container';
-import { IGetPRReviewsDTO, ISubmitPRReviewDTO } from '@/dto/pr-review.dto';
-import { StoryCollaboratorRules } from '@/domain/storyCollaborator.rules';
-import { PullRequestRepository } from '@/features/pullRequest/repositories/pullRequest.repository';
-import { PullRequestQueryService } from '@/features/pullRequest/services/pull-request-query.service';
-import { PRStatus, PRTimelineAction } from '@/features/pullRequest/types/pullRequest-enum';
-import { IPullRequest } from '@/features/pullRequest/types/pullRequest.types';
-import { cachePRVoteMetadata } from '@/features/prVote/utils/prVote-cache';
-import { CollaboratorQueryService } from '@/features/storyCollaborator/services/collaborator-query.service';
-import {
-  TStoryCollaboratorPermission,
-  TStoryCollaboratorRole,
-} from '@/features/storyCollaborator/types/storyCollaborator.types';
-import { CacheService } from '@/infrastructure/cache/cache.service';
-import { sanitizeContent } from '@/utils/sanitizer';
-import { BaseModule } from '@/utils/baseClass';
 import { inject, singleton } from 'tsyringe';
-import { PrReviewRepository } from '../repositories/pr-review.repository';
-import { IPRReview, IPRReviewWithReviewer } from '../types/prReview.types';
-import { PRReviewStatus } from '../types/prReview-enum';
+import { BaseModule } from '@utils/baseClass';
+import { TOKENS } from '@container/tokens';
+import { withTransaction } from '@utils/withTransaction';
+import { PullRequestRules } from '@domain/pullRequest.rules';
+import { CollaboratorQueryService } from '@features/storyCollaborator/services/collaborator-query.service';
+import { PRReviewRepository } from '@features/prReview/repositories/prReview.repository';
+import { PRTimelineRepository } from '@features/prTimeline/repositories/prTimeline.repository';
+import { PullRequestRepository } from '@features/pullRequest/repositories/pullRequest.repository';
+import { IPullRequest } from '@features/pullRequest/types/pullRequest.types';
+import { IPRReview } from '@features/prReview/types/prReview.types';
+import { PRReviewDecision } from '@features/prReview/types/prReview-enum';
+import { ISubmitPRReviewDTO } from '@dto/pullRequest.dto';
+import { PR_REVIEW_DECISIONS } from '@features/prReview/types/prReview-enum';
+import { PRTimelineAction } from '@features/pullRequest/types/pullRequest-enum';
 
 @singleton()
-class PrReviewService extends BaseModule {
+export class PRReviewService extends BaseModule {
   constructor(
-    @inject(TOKENS.PrReviewRepository)
-    private readonly prReviewRepository: PrReviewRepository,
-    @inject(TOKENS.PullRequestQueryService)
-    private readonly pullRequestQueryService: PullRequestQueryService,
     @inject(TOKENS.PullRequestRepository)
-    private readonly pullRequestRepository: PullRequestRepository,
-    @inject(TOKENS.CacheService)
-    private readonly cacheService: CacheService,
+    private readonly prRepo: PullRequestRepository,
+
+    @inject(TOKENS.PRReviewRepository)
+    private readonly reviewRepo: PRReviewRepository,
+
+    @inject(TOKENS.PRTimelineRepository)
+    private readonly timelineRepo: PRTimelineRepository,
+
     @inject(TOKENS.CollaboratorQueryService)
     private readonly collaboratorQueryService: CollaboratorQueryService
   ) {
     super();
   }
 
-  // ─── Permission helpers ───────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────────────
+  // Submit Review
+  // ─────────────────────────────────────────────────────────────────────────
 
-  private hasStoryPermission(
-    userStoryRole: TStoryCollaboratorRole | null,
-    permission: TStoryCollaboratorPermission
-  ) {
-    return userStoryRole
-      ? StoryCollaboratorRules.hasStoryPermission(userStoryRole, permission)
-      : false;
-  }
+  async submitReview(input: ISubmitPRReviewDTO): Promise<IPRReview> {
+    const { prId, storySlug, reviewerId, decision, summary, overallRating } = input;
 
-  private async getReviewAccessContext(userId: string, pullRequestId: string) {
-    const pullRequest = await this.pullRequestQueryService.getPullRequestById(pullRequestId);
-    const userStoryRole = await this.collaboratorQueryService.getCollaboratorRole(
-      userId,
-      pullRequest.storySlug
-    );
-
-    return { pullRequest, userStoryRole };
-  }
-
-  private ensureReviewAccess(userStoryRole: TStoryCollaboratorRole | null) {
-    const canReviewPRs = this.hasStoryPermission(userStoryRole, 'canReviewPRs');
-
-    if (!canReviewPRs) {
-      this.throwForbiddenError(
-        'FORBIDDEN',
-        'You do not have permission to access pull request reviews for this story.'
-      );
-    }
-  }
-
-  private ensureCanReadReviews(
-    userId: string,
-    pullRequest: IPullRequest,
-    userStoryRole: TStoryCollaboratorRole | null
-  ) {
-    const canReviewPRs = this.hasStoryPermission(userStoryRole, 'canReviewPRs');
-    const isPRAuthor = pullRequest.authorId === userId;
-
-    if (!canReviewPRs && !isPRAuthor) {
-      this.throwForbiddenError(
-        'FORBIDDEN',
-        'You do not have permission to access reviews for this pull request.'
-      );
-    }
-  }
-
-  private ensureCanSubmitReview(
-    userId: string,
-    pullRequest: IPullRequest,
-    userStoryRole: TStoryCollaboratorRole | null
-  ) {
-    this.ensureReviewAccess(userStoryRole);
-
-    if (pullRequest.authorId === userId) {
-      this.throwForbiddenError(
-        'FORBIDDEN',
-        'You cannot submit a review for your own pull request.'
+    // Validate decision value early
+    if (!(PR_REVIEW_DECISIONS as readonly string[]).includes(decision)) {
+      this.throwBadRequest(
+        `Invalid review decision "${decision}". Must be one of: ${PR_REVIEW_DECISIONS.join(', ')}.`
       );
     }
 
-    const blockedStatuses = new Set<IPullRequest['status']>([
-      PRStatus.CLOSED,
-      PRStatus.REJECTED,
-      PRStatus.MERGED,
-    ]);
+    const typedDecision = decision as IPRReview['decision'];
 
-    if (blockedStatuses.has(pullRequest.status)) {
-      this.throwForbiddenError(
-        'FORBIDDEN',
-        'Reviews cannot be submitted for this pull request in its current state.'
+    return withTransaction(`PR-Review-${prId}`, async (session) => {
+      // 1. Load PR
+      const pr = await this.prRepo.findById({ id: prId, options: { session } });
+      if (!pr) this.throwNotFoundError(`Pull request "${prId}" not found.`);
+
+      // 2. Load reviewer's role
+      const role = await this.collaboratorQueryService.getCollaboratorRole(reviewerId, storySlug);
+
+      // 3. Permission check (also validates self-review)
+      const check = PullRequestRules.canSubmitReview(pr, reviewerId, role, typedDecision);
+      if (!check.allowed) this.throwForbiddenError(check.reason!);
+
+      // 4. Upsert the review
+      const { review, isNew } = await this.reviewRepo.upsertReview(
+        {
+          pullRequestId: pr._id,
+          storySlug,
+          reviewerId,
+          decision: typedDecision,
+          summary: summary.trim(),
+          overallRating,
+        },
+        { session }
       );
-    }
+
+      // 5. Recompute approvalsStatus
+      const allReviews = await this.reviewRepo.findByPR(pr._id, { session });
+      const updatedApprovals = this.recomputeApprovalsStatus(pr, allReviews);
+      await this.prRepo.patchApprovalsStatus(prId, updatedApprovals, { session });
+
+      // 6. If all approvals received → auto-set status to 'approved'
+      if (updatedApprovals.canMerge && pr.status === 'open') {
+        await this.prRepo.setStatus(prId, 'approved', { session });
+      }
+
+      // 7. If there's a blocker (changes_requested) → revert status to open if it was approved
+      if (typedDecision === PRReviewDecision.CHANGES_REQUESTED && pr.status === 'approved') {
+        await this.prRepo.setStatus(prId, 'open', { session });
+      }
+
+      // 8. Timeline event — always use review_submitted (no separate review_updated in enum)
+      await this.timelineRepo.appendEvent(
+        {
+          pullRequestId: pr._id,
+          storySlug,
+          action: PRTimelineAction.REVIEW_SUBMITTED,
+          performedBy: reviewerId,
+          metadata: { decision, isUpdate: !isNew },
+        },
+        { session }
+      );
+
+      return review;
+    });
   }
 
-  private sanitizeReviewInput(input: ISubmitPRReviewDTO): ISubmitPRReviewDTO {
-    return {
-      ...input,
-      summary: input.summary ? sanitizeContent(input.summary) : undefined,
-      feedback: input.feedback?.map((item) => ({
-        ...item,
-        section: item.section ? sanitizeContent(item.section) : undefined,
-        comment: item.comment ? sanitizeContent(item.comment) : undefined,
-      })),
-    };
-  }
+  // ─── private helpers ───────────────────────────────────────────────────────
 
-  // ─── Upsert logic (moved from repository) ────────────────────────────────
+  private recomputeApprovalsStatus(
+    pr: IPullRequest,
+    allReviews: IPRReview[]
+  ): IPullRequest['approvalsStatus'] {
+    const approvers: string[] = [];
+    const blockers: string[] = [];
 
-  /**
-   * Creates a new review or updates an existing one.
-   * Returns the review document and metadata about what happened.
-   */
-  private async upsertReview(input: ISubmitPRReviewDTO): Promise<{
-    review: IPRReview;
-    previousStatus: IPRReview['reviewStatus'] | null;
-    isNew: boolean;
-  }> {
-    const reviewData = {
-      pullRequestId: input.pullRequestId,
-      reviewerId: input.userId,
-      reviewStatus: input.reviewStatus,
-      summary: input.summary,
-      feedback: input.feedback,
-      overallRating: input.overallRating,
-    };
-
-    const existingReview = await this.prReviewRepository.findByPullRequestAndReviewer(
-      input.pullRequestId,
-      input.userId
-    );
-
-    if (!existingReview) {
-      const review = await this.prReviewRepository.createReview(reviewData);
-      return { review, previousStatus: null, isNew: true };
+    for (const r of allReviews) {
+      if (r.decision === PRReviewDecision.APPROVE) {
+        approvers.push(r.reviewerId);
+      } else if (r.decision === PRReviewDecision.CHANGES_REQUESTED) {
+        blockers.push(r.reviewerId);
+      }
     }
 
-    const updated = await this.prReviewRepository.updateReview(input.pullRequestId, input.userId, {
-      reviewStatus: input.reviewStatus,
-      summary: input.summary,
-      feedback: input.feedback,
-      overallRating: input.overallRating,
+    const received = approvers.length;
+    const required = pr.approvalsStatus.required;
+    const pending = Math.max(0, required - received);
+    const canMerge = PullRequestRules.recalculateCanMerge({
+      required,
+      received,
+      pending,
+      approvers,
+      blockers,
+      canMerge: false,
     });
 
-    return {
-      review: (updated ?? existingReview) as IPRReview,
-      previousStatus: existingReview.reviewStatus,
-      isNew: false,
-    };
-  }
-
-  // ─── Public operations ────────────────────────────────────────────────────
-
-  async submitReview(input: ISubmitPRReviewDTO): Promise<IPRReviewWithReviewer> {
-    const accessContext = await this.getReviewAccessContext(input.userId, input.pullRequestId);
-
-    this.ensureCanSubmitReview(
-      input.userId,
-      accessContext.pullRequest,
-      accessContext.userStoryRole
-    );
-
-    const sanitizedInput = this.sanitizeReviewInput(input);
-    const submitResult = await this.upsertReview(sanitizedInput);
-    const reviewSummary = await this.prReviewRepository.getReviewSummary(input.pullRequestId);
-
-    const approvalsReceived = reviewSummary.approvers.length;
-    const approvalsPending = Math.max(
-      accessContext.pullRequest.approvalsStatus.required - approvalsReceived,
-      0
-    );
-    const canMerge = approvalsPending === 0 && reviewSummary.blockers.length === 0;
-
-    let nextStatus: IPullRequest['status'] = accessContext.pullRequest.status;
-    if (canMerge) {
-      nextStatus = PRStatus.APPROVED;
-    } else if (accessContext.pullRequest.status === PRStatus.APPROVED) {
-      nextStatus = PRStatus.OPEN;
-    }
-
-    const timelineEntries: Array<{
-      action: (typeof PRTimelineAction)[keyof typeof PRTimelineAction];
-      performedBy?: string;
-      performedAt: Date;
-      metadata?: Record<string, unknown>;
-    }> = [
-      {
-        action: PRTimelineAction.REVIEW_SUBMITTED,
-        performedBy: input.userId,
-        performedAt: new Date(),
-        metadata: {
-          reviewStatus: submitResult.review.reviewStatus,
-          previousStatus: submitResult.previousStatus,
-          isNew: submitResult.isNew,
-        },
-      },
-    ];
-
-    if (
-      [PRReviewStatus.CHANGES_REQUESTED, PRReviewStatus.NEEDS_WORK].includes(
-        submitResult.review.reviewStatus as PRReviewStatus
-      )
-    ) {
-      timelineEntries.push({
-        action: PRTimelineAction.CHANGES_REQUESTED,
-        performedBy: input.userId,
-        performedAt: new Date(),
-        metadata: {
-          reviewStatus: submitResult.review.reviewStatus,
-        },
-      });
-    }
-
-    if (canMerge && accessContext.pullRequest.status !== PRStatus.APPROVED) {
-      timelineEntries.push({
-        action: PRTimelineAction.APPROVED,
-        performedBy: input.userId,
-        performedAt: new Date(),
-        metadata: {
-          approvalsReceived,
-          requiredApprovals: accessContext.pullRequest.approvalsStatus.required,
-        },
-      });
-    }
-
-    const updatedPullRequest = await this.pullRequestRepository.syncReviewState(
-      input.pullRequestId,
-      {
-        status: nextStatus,
-        reviewsReceived: reviewSummary.reviewsReceived,
-        approvalsStatus: {
-          received: approvalsReceived,
-          pending: approvalsPending,
-          approvers: reviewSummary.approvers,
-          blockers: reviewSummary.blockers,
-          canMerge,
-        },
-        timelineEntries,
-      }
-    );
-
-    if (updatedPullRequest) {
-      await cachePRVoteMetadata(this.cacheService, updatedPullRequest);
-    }
-
-    const review = await this.prReviewRepository.getReviewForPullRequestAndReviewer(
-      input.pullRequestId,
-      input.userId
-    );
-
-    if (!review) {
-      this.throwInternalError(
-        'INTERNAL_SERVER_ERROR',
-        'Failed to load the submitted review. Please try again later.'
-      );
-    }
-
-    return review;
-  }
-
-  async getPRReviews(input: IGetPRReviewsDTO): Promise<IPRReviewWithReviewer[]> {
-    const accessContext = await this.getReviewAccessContext(input.userId, input.pullRequestId);
-
-    this.ensureCanReadReviews(input.userId, accessContext.pullRequest, accessContext.userStoryRole);
-
-    return this.prReviewRepository.getReviewsForPullRequest(input.pullRequestId);
-  }
-
-  async getMyPRReview(input: IGetPRReviewsDTO): Promise<IPRReviewWithReviewer | null> {
-    const accessContext = await this.getReviewAccessContext(input.userId, input.pullRequestId);
-
-    this.ensureCanReadReviews(input.userId, accessContext.pullRequest, accessContext.userStoryRole);
-
-    return this.prReviewRepository.getReviewForPullRequestAndReviewer(
-      input.pullRequestId,
-      input.userId
-    );
+    return { required, received, pending, approvers, blockers, canMerge };
   }
 }
-
-export { PrReviewService };

@@ -13,7 +13,9 @@
     "format:check": "prettier --check \"src/**/*.ts\"",
     "check-all": "npm run type-check && npm run lint && npm run format:check",
     "type-check": "tsc --noEmit",
-    "prepare": "husky"
+    "prepare": "husky",
+    "seed:comments": "cross-env SEED_TARGET=comments tsx src/seeders/index.ts",
+    "seed:votes": "cross-env SEED_TARGET=votes tsx src/seeders/index.ts"
   },
   "keywords": [
     "fastify",
@@ -68,6 +70,7 @@
     "@commitlint/cli": "^20.3.0",
     "@commitlint/config-conventional": "^20.3.0",
     "@eslint/js": "^9.39.2",
+    "@faker-js/faker": "^10.4.0",
     "@types/node": "^24.8.1",
     "@types/nodemailer": "^7.0.2",
     "@types/sanitize-html": "^2.16.0",

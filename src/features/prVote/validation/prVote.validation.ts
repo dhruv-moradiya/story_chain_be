@@ -1,1 +1,0 @@
-// prVote validation file

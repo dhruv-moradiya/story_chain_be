@@ -7,7 +7,6 @@ import { WRITE_CHAPTER_ROLES } from '@/middlewares/rbac/storyRole.middleware';
 import { IChapter } from '@features/chapter/types/chapter.types';
 import { IChapterAutoSave } from '../types/chapterAutoSave.types';
 import { ChapterAutoSaveRepository } from '../repositories/chapterAutoSave.repository';
-import { IAutoSaveConversionService } from './interfaces/autosave-conversion.interface';
 import { ChapterStatus } from '@/features/chapter/types/chapter-enum';
 import { StoryQueryService } from '@features/story/services/story-query.service';
 import { CollaboratorQueryService } from '@features/storyCollaborator/services/collaborator-query.service';
@@ -16,7 +15,7 @@ import { withTransaction } from '@utils/withTransaction';
 import { ChapterCreationService } from '@/features/chapter/services/chapter-creation.service';
 
 @singleton()
-export class AutoSaveConversionService extends BaseModule implements IAutoSaveConversionService {
+export class AutoSaveConversionService extends BaseModule {
   constructor(
     @inject(TOKENS.ChapterAutoSaveRepository)
     private readonly chapterAutoSaveRepo: ChapterAutoSaveRepository,

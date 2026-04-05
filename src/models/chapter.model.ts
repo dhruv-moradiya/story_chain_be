@@ -1,6 +1,7 @@
 import {
   CHAPTER_PR_STATUSES,
   CHAPTER_STATUSES,
+  ChapterPRStatus,
   ChapterStatus,
 } from '@features/chapter/types/chapter-enum';
 import { IChapterDoc } from '@features/chapter/types/chapter.types';
@@ -79,7 +80,7 @@ const chapterSchema = new Schema<IChapterDoc>(
     status: {
       type: String,
       enum: CHAPTER_STATUSES,
-      default: ChapterStatus.PUBLISHED,
+      default: ChapterStatus.DRAFT,
     },
     isEnding: {
       type: Boolean,
@@ -93,6 +94,7 @@ const chapterSchema = new Schema<IChapterDoc>(
       status: {
         type: String,
         enum: CHAPTER_PR_STATUSES,
+        default: ChapterPRStatus.PENDING,
       },
       submittedAt: Date,
       reviewedBy: { type: String, ref: 'User' },
@@ -144,8 +146,6 @@ const chapterSchema = new Schema<IChapterDoc>(
 );
 
 // Indexes
-chapterSchema.index({ storySlug: 1, parentChapterSlug: 1 });
-chapterSchema.index({ storySlug: 1, ancestorSlugs: 1 });
 chapterSchema.index({ authorId: 1, createdAt: -1 });
 chapterSchema.index({ 'votes.score': -1 });
 chapterSchema.index({ status: 1 });

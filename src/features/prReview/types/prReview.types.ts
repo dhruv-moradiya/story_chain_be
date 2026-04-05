@@ -1,24 +1,28 @@
 import { Document, Types } from 'mongoose';
 import { ID } from '@/types';
 
-import { PR_REVIEW_STATUSES } from './prReview-enum';
+import { PR_REVIEW_DECISIONS } from './prReview-enum';
 
-export type TPRReviewStatus = (typeof PR_REVIEW_STATUSES)[number];
-
-export interface IPRFeedback {
-  section?: string;
-  rating?: number;
-  comment?: string;
-}
+export type TPRReviewDecision = (typeof PR_REVIEW_DECISIONS)[number];
 
 export interface IPRReview {
   _id: ID;
   pullRequestId: ID;
-  reviewerId: string;
-  reviewStatus: TPRReviewStatus;
-  summary?: string;
-  feedback?: IPRFeedback[];
-  overallRating?: number;
+  storySlug: string; // denormalized
+  reviewerId: string; // clerkId
+
+  // The verdict
+  decision: TPRReviewDecision;
+
+  // Written feedback
+  summary: string; // overall note to author (max 3000 chars)
+  overallRating?: number; // 1–5 stars (optional)
+
+  // Revision tracking
+  isUpdated: boolean;
+  previousDecision?: string;
+  updatedAt_review: Date;
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -34,10 +38,4 @@ export interface IPRReviewWithReviewer extends IPRReview {
     email?: string;
     avatarUrl?: string;
   } | null;
-}
-
-export interface IPRReviewSummary {
-  reviewsReceived: number;
-  approvers: string[];
-  blockers: string[];
 }

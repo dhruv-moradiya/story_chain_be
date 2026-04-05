@@ -16,7 +16,6 @@ interface IChapterAutoSave {
   userId: string;
   content: string;
   lastSavedAt: Date;
-  isEnabled: boolean;
   saveCount: number;
   changes?: {
     additionsCount: number;

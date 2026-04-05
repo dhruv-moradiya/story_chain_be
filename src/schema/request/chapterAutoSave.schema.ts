@@ -1,11 +1,6 @@
 import { z } from 'zod';
 import { ObjectIdSchema } from '@utils/index';
 
-const UserIdSchema = z.string({
-  required_error: 'userId is required.',
-  invalid_type_error: 'userId must be a string.',
-});
-
 const StorySlugSchema = z.string({
   required_error: 'storySlug is required.',
   invalid_type_error: 'storySlug must be a string.',
@@ -14,11 +9,6 @@ const StorySlugSchema = z.string({
 const ParentChapterSlugSchema = z.string().optional();
 const ChapterSlugSchema = z.string().optional();
 const AutoSaveIdSchema = ObjectIdSchema().optional();
-
-const SaveTypeSchema = z.enum(['update_chapter', 'new_chapter', 'root_chapter'], {
-  required_error: 'autoSaveType is required.',
-  invalid_type_error: 'autoSaveType must be: update | new_chapter | root_chapter.',
-});
 
 const BaseAutoSaveContentSchema = z.object({
   // userId: UserIdSchema,
@@ -69,55 +59,6 @@ const AutoSaveContentSchema = z.discriminatedUnion('autoSaveType', [
   UpdateAutoSaveSchema,
 ]);
 
-const EnableAutoSaveSchema = z
-  .object({
-    userId: UserIdSchema,
-    chapterSlug: ChapterSlugSchema,
-    draftId: z.string().optional(),
-    autoSaveType: SaveTypeSchema,
-    storySlug: StorySlugSchema,
-    parentChapterSlug: ParentChapterSlugSchema,
-    autoSaveId: AutoSaveIdSchema,
-  })
-  .refine((data) => data.chapterSlug || data.draftId || data.autoSaveId, {
-    message: 'Either chapterSlug, draftId, or autoSaveId must be provided.',
-    path: ['chapterSlug'],
-  })
-  .refine(
-    (data) => {
-      if (data.autoSaveType === 'update_chapter') {
-        return data.chapterSlug && data.storySlug;
-      }
-      if (data.autoSaveType === 'root_chapter') {
-        return data.storySlug;
-      }
-      if (data.autoSaveType === 'new_chapter') {
-        return data.parentChapterSlug && data.storySlug;
-      }
-      return false;
-    },
-    {
-      message:
-        'For update: chapterSlug & storySlug required. For root_chapter: storySlug required. For new_chapter: parentChapterSlug & storySlug required.',
-      path: ['autoSaveType'],
-    }
-  );
-
-const DisableAutoSaveSchema = z
-  .object({
-    userId: UserIdSchema,
-    chapterSlug: ChapterSlugSchema,
-    draftId: z.string().optional(),
-    autoSaveType: SaveTypeSchema,
-    storySlug: StorySlugSchema,
-    parentChapterSlug: ParentChapterSlugSchema,
-    autoSaveId: AutoSaveIdSchema,
-  })
-  .refine((data) => data.chapterSlug || data.draftId || data.autoSaveId, {
-    message: 'Either chapterSlug, draftId, or autoSaveId must be provided.',
-    path: ['chapterSlug'],
-  });
-
 const PublishAutoSaveDraftSchema = z
   .object({
     // userId: UserIdSchema,
@@ -129,21 +70,9 @@ const PublishAutoSaveDraftSchema = z
     path: ['chapterSlug'],
   });
 
-type TEnableAutoSaveSchema = z.infer<typeof EnableAutoSaveSchema>;
 type TAutoSaveContentSchema = z.infer<typeof AutoSaveContentSchema>;
-type TDisableAutoSaveSchema = z.infer<typeof DisableAutoSaveSchema>;
 type TPublishAutoSaveDraftSchema = z.infer<typeof PublishAutoSaveDraftSchema>;
 
-export {
-  EnableAutoSaveSchema,
-  AutoSaveContentSchema,
-  DisableAutoSaveSchema,
-  PublishAutoSaveDraftSchema,
-};
+export { AutoSaveContentSchema, PublishAutoSaveDraftSchema };
 
-export type {
-  TEnableAutoSaveSchema,
-  TAutoSaveContentSchema,
-  TDisableAutoSaveSchema,
-  TPublishAutoSaveDraftSchema,
-};
+export type { TAutoSaveContentSchema, TPublishAutoSaveDraftSchema };

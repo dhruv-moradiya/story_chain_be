@@ -43,16 +43,16 @@ export const TOKENS = {
   ChapterRepository: Symbol.for('ChapterRepository'),
   ChapterVersionRepository: Symbol.for('ChapterVersionRepository'),
   ChapterAutoSaveRepository: Symbol.for('ChapterAutoSaveRepository'),
-  PullRequestRepository: Symbol.for('PullRequestRepository'),
   NotificationRepository: Symbol.for('NotificationRepository'),
   PlatformRoleRepository: Symbol.for('PlatformRoleRepository'),
   StoryCollaboratorRepository: Symbol.for('StoryCollaboratorRepository'),
   ReadingHistoryRepository: Symbol.for('ReadingHistoryRepository'),
   CommentRepository: Symbol.for('CommentRepository'),
-  PrCommentRepository: Symbol.for('PrCommentRepository'),
-  PrReviewRepository: Symbol.for('PrReviewRepository'),
-  PrVoteRepository: Symbol.for('PrVoteRepository'),
   CommentVoteRepository: Symbol.for('CommentVoteRepository'),
+  PullRequestRepository: Symbol.for('PullRequestRepository'),
+  PRTimelineRepository: Symbol.for('PRTimelineRepository'),
+  PRReviewRepository: Symbol.for('PRReviewRepository'),
+  PRCommentRepository: Symbol.for('PRCommentRepository'),
 
   // ═══════════════════════════════════════════
   // FEATURE SERVICES
@@ -79,17 +79,17 @@ export const TOKENS = {
   BookmarkService: Symbol.for('BookmarkService'),
   FollowService: Symbol.for('FollowService'),
   NotificationService: Symbol.for('NotificationService'),
-  PullRequestService: Symbol.for('PullRequestService'),
-  PullRequestQueryService: Symbol.for('PullRequestQueryService'),
-  PullRequestDiffService: Symbol.for('PullRequestDiffService'),
-  PrCommentService: Symbol.for('PrCommentService'),
-  PrReviewService: Symbol.for('PrReviewService'),
-  PrVoteService: Symbol.for('PrVoteService'),
   ReportService: Symbol.for('ReportService'),
   ReadingHistoryService: Symbol.for('ReadingHistoryService'),
   SessionService: Symbol.for('SessionService'),
   PlatformRoleService: Symbol.for('PlatformRoleService'),
   CommentVoteService: Symbol.for('CommentVoteService'),
+  PullRequestCommandService: Symbol.for('PullRequestCommandService'),
+  PRUpdateService: Symbol.for('PRUpdateService'),
+  PRMergeService: Symbol.for('PRMergeService'),
+  PRReviewService: Symbol.for('PRReviewService'),
+  PRCommentService: Symbol.for('PRCommentService'),
+  PRQueryService: Symbol.for('PRQueryService'),
 
   // ═══════════════════════════════════════════
   // CONTROLLERS
@@ -105,14 +105,13 @@ export const TOKENS = {
   BookmarkController: Symbol.for('BookmarkController'),
   FollowController: Symbol.for('FollowController'),
   NotificationController: Symbol.for('NotificationController'),
-  PullRequestController: Symbol.for('PullRequestController'),
-  PrCommentController: Symbol.for('PrCommentController'),
-  PrReviewController: Symbol.for('PrReviewController'),
-  PrVoteController: Symbol.for('PrVoteController'),
   ReportController: Symbol.for('ReportController'),
   ReadingHistoryController: Symbol.for('ReadingHistoryController'),
   SessionController: Symbol.for('SessionController'),
+  PullRequestController: Symbol.for('PullRequestController'),
+  PRManagementController: Symbol.for('PRManagementController'),
   StoryCollaboratorController: Symbol.for('StoryCollaboratorController'),
+  PRQueryController: Symbol.for('PRQueryController'),
 
   // ═══════════════════════════════════════════
   // MIDDLEWARE FACTORIES

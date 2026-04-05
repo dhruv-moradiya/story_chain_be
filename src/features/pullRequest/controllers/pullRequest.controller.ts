@@ -1,69 +1,91 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { inject, singleton } from 'tsyringe';
 import { TOKENS } from '@container/tokens';
+import { HTTP_STATUS } from '@constants/httpStatus';
+import { ApiResponse } from '@utils/apiResponse';
 import { BaseModule } from '@utils/baseClass';
 import { catchAsync } from '@utils/catchAsync';
-import { ApiResponse } from '@utils/apiResponse';
-import { HTTP_STATUS } from '@constants/httpStatus';
-import { PullRequestService } from '../services/pull-request.service';
-import { TCreatePullRequestSchema } from '@schema/request/pullRequest.schema';
-import { PullRequestQueryService } from '../services/pull-request-query.service';
-import { TPRLabel } from '../types/pullRequest.types';
+
+import {
+  TCreatePRFromDraftBody,
+  TCreatePRFromAutoSaveBody,
+} from '@schema/request/pullRequest.schema';
+import { PullRequestCommandService } from '../services/pullRequest-command.service';
 
 @singleton()
 export class PullRequestController extends BaseModule {
   constructor(
-    @inject(TOKENS.PullRequestService)
-    private readonly pullRequestService: PullRequestService,
-    @inject(TOKENS.PullRequestQueryService)
-    private readonly pullRequestQueryService: PullRequestQueryService
+    @inject(TOKENS.PullRequestCommandService)
+    private readonly prCommandService: PullRequestCommandService
   ) {
     super();
   }
 
-  getUserPullRequests = catchAsync(async (request: FastifyRequest, reply: FastifyReply) => {
-    const userId = request.user.clerkId;
+  /**
+   * POST /api/pull-requests/stories/:slug/from-draft
+   *
+   * Creates a new PR from an existing draft chapter owned by the current user.
+   */
+  createFromDraft = catchAsync(
+    async (
+      request: FastifyRequest<{
+        Params: { slug: string };
+        Body: TCreatePRFromDraftBody;
+      }>,
+      reply: FastifyReply
+    ) => {
+      const authorId = request.user.clerkId;
+      const storySlug = request.params.slug;
+      const body = request.body;
 
-    const prs = await this.pullRequestQueryService.getPullRequestsByUser({ userId });
-
-    return reply
-      .code(HTTP_STATUS.OK.code)
-      .send(
-        ApiResponse.fetched(
-          prs,
-          prs.length === 0 ? 'No pull requests found.' : 'Pull requests retrieved successfully.'
-        )
-      );
-  });
-
-  createPullRequest = catchAsync(
-    async (request: FastifyRequest<{ Body: TCreatePullRequestSchema }>, reply: FastifyReply) => {
-      const userId = request.user.clerkId;
-      const input = request.body;
-
-      const pr = await this.pullRequestService.create({ userId, ...input });
+      const pr = await this.prCommandService.createFromDraft({
+        chapterSlug: body.chapterSlug,
+        storySlug,
+        title: body.title,
+        description: body.description,
+        parentChapterSlug: body.parentChapterSlug,
+        prType: body.prType,
+        isDraft: body.isDraft,
+        draftReason: body.draftReason,
+        authorId,
+      });
 
       return reply
         .code(HTTP_STATUS.CREATED.code)
-        .send(ApiResponse.created({ _id: pr._id }, 'Pull request created successfully.'));
+        .send(ApiResponse.created(pr, 'Pull request created successfully from draft chapter.'));
     }
   );
 
-  updatePRLabels = catchAsync(
+  /**
+   * POST /api/pull-requests/stories/:slug/from-autosave
+   *
+   * Creates a new PR from an auto-saved chapter draft.
+   */
+  createFromAutoSave = catchAsync(
     async (
-      request: FastifyRequest<{ Params: { id: string }; Body: { labels: TPRLabel[] } }>,
-      reply
+      request: FastifyRequest<{
+        Params: { slug: string };
+        Body: TCreatePRFromAutoSaveBody;
+      }>,
+      reply: FastifyReply
     ) => {
-      const { id } = request.params;
-      const { labels } = request.body;
+      const authorId = request.user.clerkId;
+      const body = request.body;
 
-      const pr = await this.pullRequestService.updatePRLable({ prId: id, labels });
+      const pr = await this.prCommandService.createFromAutoSave({
+        autoSaveId: body.autoSaveId,
+        title: body.title,
+        description: body.description,
+        parentChapterSlug: body.parentChapterSlug,
+        prType: body.prType,
+        isDraft: body.isDraft,
+        draftReason: body.draftReason,
+        authorId,
+      });
 
       return reply
-        .code(HTTP_STATUS.OK.code)
-        .send(
-          ApiResponse.success(pr, 'OK', 'Pull request labels updated successfully.', 'UPDATED')
-        );
+        .code(HTTP_STATUS.CREATED.code)
+        .send(ApiResponse.created(pr, 'Pull request created successfully from auto-save.'));
     }
   );
 }

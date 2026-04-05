@@ -1,233 +1,138 @@
-import {
-  IPullRequest,
-  IPullRequestDoc,
-  TPRLabel,
-  TPRTimelineAction,
-} from '../types/pullRequest.types';
+import { singleton } from 'tsyringe';
 import { PullRequest } from '@models/pullRequest.model';
 import { BaseRepository } from '@utils/baseClass';
-import { PRStatus, PRTimelineAction } from '../types/pullRequest-enum';
+import { IPullRequest, IPullRequestDoc } from '@features/pullRequest/types/pullRequest.types';
+import { IOperationOptions } from '@/types';
 import { ID } from '@/types';
-import { TPRVoteValue } from '@/features/prVote/types/prVote.types';
 
+@singleton()
 export class PullRequestRepository extends BaseRepository<IPullRequest, IPullRequestDoc> {
   constructor() {
     super(PullRequest);
   }
 
-  async existsPRById(_id: ID) {
-    return this.existsById({ filter: { _id } });
-  }
+  // ─── Queries ───────────────────────────────────────────────────────────────
 
-  async findUserPRs(userId: string): Promise<IPullRequest[]> {
-    return this.find({ filter: { authorId: userId } });
-  }
-
-  /**
-   * Find all open PRs by a specific author for a given story.
-   * Used to detect duplicate open PRs targeting the same chapter.
-   */
-  async findOpenPRsByAuthorForStory(authorId: string, storySlug: string): Promise<IPullRequest[]> {
-    return this.find({ filter: { authorId, storySlug, status: PRStatus.OPEN } });
-  }
-
-  /**
-   * Find a collaborator's active (open) PR for a specific chapter.
-   */
-  async findOpenPRByAuthorAndChapter(
+  findOpenByChapterAndAuthor(
+    chapterSlug: string,
     authorId: string,
-    chapterSlug: string
+    options: IOperationOptions = {}
   ): Promise<IPullRequest | null> {
-    return this.findOne({ filter: { authorId, chapterSlug, status: PRStatus.OPEN } });
-  }
-
-  async updatePRLable(prId: string, labels: TPRLabel[]) {
-    return this.findOneAndUpdate({ filter: { _id: prId }, update: { labels } });
-  }
-
-  async syncVoteStats(
-    prId: string,
-    voteStats: {
-      upvotes: number;
-      downvotes: number;
-      score: number;
-    },
-    timelineContext?: {
-      userId: string;
-      vote: TPRVoteValue;
-      previousVote: TPRVoteValue | null;
-    }
-  ) {
-    const update: {
-      $set: {
-        'votes.upvotes': number;
-        'votes.downvotes': number;
-        'votes.score': number;
-      };
-      $push?: {
-        timeline: {
-          action: TPRTimelineAction;
-          performedBy: string;
-          performedAt: Date;
-          metadata: {
-            vote: TPRVoteValue;
-            previousVote: TPRVoteValue | null;
-          };
-        };
-      };
-    } = {
-      $set: {
-        'votes.upvotes': voteStats.upvotes,
-        'votes.downvotes': voteStats.downvotes,
-        'votes.score': voteStats.score,
+    return this.findOne({
+      filter: {
+        chapterSlug,
+        authorId,
+        status: { $in: ['open', 'approved'] },
       },
-    };
-
-    if (timelineContext) {
-      update.$push = {
-        timeline: {
-          action: 'voted',
-          performedBy: timelineContext.userId,
-          performedAt: new Date(),
-          metadata: {
-            vote: timelineContext.vote,
-            previousVote: timelineContext.previousVote,
-          },
-        },
-      };
-    }
-
-    return this.findOneAndUpdate({
-      filter: { _id: prId },
-      update,
+      options,
     });
   }
 
-  async applyVoteMutation(
-    prId: string,
-    input: {
-      currentVote: TPRVoteValue | null;
-      previousVote: TPRVoteValue | null;
-      userId?: string;
-    }
-  ) {
-    const toCounters = (vote: TPRVoteValue | null) => ({
-      upvotes: vote === 1 ? 1 : 0,
-      downvotes: vote === -1 ? 1 : 0,
-      score: vote ?? 0,
-    });
-
-    const previousCounters = toCounters(input.previousVote);
-    const currentCounters = toCounters(input.currentVote);
-
-    const update: {
-      $inc: {
-        'votes.upvotes': number;
-        'votes.downvotes': number;
-        'votes.score': number;
-      };
-      $push?: {
-        timeline: {
-          action: TPRTimelineAction;
-          performedBy: string;
-          performedAt: Date;
-          metadata: {
-            vote: TPRVoteValue;
-            previousVote: TPRVoteValue | null;
-          };
-        };
-      };
-    } = {
-      $inc: {
-        'votes.upvotes': currentCounters.upvotes - previousCounters.upvotes,
-        'votes.downvotes': currentCounters.downvotes - previousCounters.downvotes,
-        'votes.score': currentCounters.score - previousCounters.score,
-      },
-    };
-
-    if (input.userId && input.currentVote !== null) {
-      update.$push = {
-        timeline: {
-          action: PRTimelineAction.VOTED,
-          performedBy: input.userId,
-          performedAt: new Date(),
-          metadata: {
-            vote: input.currentVote,
-            previousVote: input.previousVote,
-          },
-        },
-      };
-    }
-
-    return this.findOneAndUpdate({
-      filter: { _id: prId },
-      update,
+  findOpenByStory(storySlug: string, options: IOperationOptions = {}): Promise<IPullRequest[]> {
+    return this.find({
+      filter: { storySlug, status: { $in: ['open', 'approved'] } },
+      options,
     });
   }
 
-  async syncReviewState(
-    prId: string,
-    input: {
-      status: IPullRequest['status'];
-      reviewsReceived: number;
-      approvalsStatus: {
-        received: number;
-        pending: number;
-        approvers: string[];
-        blockers: string[];
-        canMerge: boolean;
-      };
-      timelineEntries?: Array<{
-        action: TPRTimelineAction;
-        performedBy?: string;
-        performedAt: Date;
-        metadata?: Record<string, unknown>;
-      }>;
-    }
-  ) {
-    const update: {
-      $set: {
-        status: IPullRequest['status'];
-        'stats.reviewsReceived': number;
-        'approvalsStatus.received': number;
-        'approvalsStatus.pending': number;
-        'approvalsStatus.approvers': string[];
-        'approvalsStatus.blockers': string[];
-        'approvalsStatus.canMerge': boolean;
-      };
-      $push?: {
-        timeline: {
-          $each: Array<{
-            action: TPRTimelineAction;
-            performedBy?: string;
-            performedAt: Date;
-            metadata?: Record<string, unknown>;
-          }>;
-        };
-      };
-    } = {
-      $set: {
-        status: input.status,
-        'stats.reviewsReceived': input.reviewsReceived,
-        'approvalsStatus.received': input.approvalsStatus.received,
-        'approvalsStatus.pending': input.approvalsStatus.pending,
-        'approvalsStatus.approvers': input.approvalsStatus.approvers,
-        'approvalsStatus.blockers': input.approvalsStatus.blockers,
-        'approvalsStatus.canMerge': input.approvalsStatus.canMerge,
-      },
+  findOpenById(id: ID, options: IOperationOptions = {}): Promise<IPullRequest | null> {
+    return this.findById({ id, options });
+  }
+
+  findCurrentUserPullRequests(
+    userId: string,
+    options: IOperationOptions = {}
+  ): Promise<IPullRequest[]> {
+    return this.model
+      .find(
+        {
+          authorId: userId,
+          status: { $in: ['open', 'approved'] },
+        },
+        null,
+        options
+      )
+      .sort({ createdAt: -1 })
+      .exec();
+  }
+
+  // ─── Mutations ─────────────────────────────────────────────────────────────
+
+  updateMetadata(
+    id: ID,
+    fields: { title?: string; description?: string },
+    options: IOperationOptions = {}
+  ): Promise<IPullRequest | null> {
+    return this.findOneAndUpdate({
+      filter: { _id: id },
+      update: { $set: fields },
+      options: { new: true, session: options.session },
+    });
+  }
+
+  setDraftStatus(
+    id: ID,
+    isDraft: boolean,
+    draftReason: string | undefined,
+    options: IOperationOptions = {}
+  ): Promise<IPullRequest | null> {
+    const setFields: Partial<IPullRequest> & { draftReason?: string; draftedAt?: Date } = {
+      isDraft,
     };
 
-    if (input.timelineEntries && input.timelineEntries.length > 0) {
-      update.$push = {
-        timeline: {
-          $each: input.timelineEntries,
-        },
-      };
+    if (isDraft) {
+      if (draftReason) setFields.draftReason = draftReason;
+      setFields.draftedAt = new Date();
     }
 
     return this.findOneAndUpdate({
-      filter: { _id: prId, status: { $ne: PRStatus.MERGED } },
-      update,
+      filter: { _id: id },
+      update: { $set: setFields },
+      options: { new: true, session: options.session },
+    });
+  }
+
+  setLabels(
+    id: ID,
+    labels: string[],
+    options: IOperationOptions = {}
+  ): Promise<IPullRequest | null> {
+    return this.findOneAndUpdate({
+      filter: { _id: id },
+      update: { $set: { labels } },
+      options: { new: true, session: options.session },
+    });
+  }
+
+  setStatus(
+    id: ID,
+    status: IPullRequest['status'],
+    options: IOperationOptions = {}
+  ): Promise<IPullRequest | null> {
+    return this.findOneAndUpdate({
+      filter: { _id: id },
+      update: { $set: { status } },
+      options: { new: true, session: options.session },
+    });
+  }
+
+  patchApprovalsStatus(
+    id: ID,
+    approvalsStatus: IPullRequest['approvalsStatus'],
+    options: IOperationOptions = {}
+  ): Promise<IPullRequest | null> {
+    return this.findOneAndUpdate({
+      filter: { _id: id },
+      update: { $set: { approvalsStatus } },
+      options: { new: true, session: options.session },
+    });
+  }
+
+  incrementCommentCount(id: ID, options: IOperationOptions = {}): Promise<IPullRequest | null> {
+    return this.findOneAndUpdate({
+      filter: { _id: id },
+      update: { $inc: { commentCount: 1 } },
+      options: { new: true, session: options.session },
     });
   }
 }

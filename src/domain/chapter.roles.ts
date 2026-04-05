@@ -1,5 +1,4 @@
-import { ChapterStatus } from '@/features/chapter/types/chapter-enum';
-import { IChapter, TChapterStatus } from '@features/chapter/types/chapter.types';
+import { IChapter } from '@features/chapter/types/chapter.types';
 import { IStory } from '@features/story/types/story.types';
 
 export class ChapterRules {
@@ -21,27 +20,6 @@ export class ChapterRules {
       return {
         allowed: false,
         message: 'You are not authorized to create chapter in this story.',
-      };
-    }
-    return { allowed: true };
-  }
-
-  /**
-   * Rule: Check if chapter can be published directly vs requiring a PR
-   */
-  static canPublishDirectly(
-    story: IStory,
-    status: TChapterStatus,
-    isAuthorOrCoAuthor: boolean
-  ): { allowed: boolean; message?: string } {
-    if (
-      status === ChapterStatus.PUBLISHED &&
-      story.settings.requireApproval &&
-      !isAuthorOrCoAuthor
-    ) {
-      return {
-        allowed: false,
-        message: 'You need to create a pull request to publish this chapter.',
       };
     }
     return { allowed: true };
@@ -76,11 +54,6 @@ export class ChapterRules {
   static ensureCanEnableAutoSave(chapter: IChapter, userId: string): boolean {
     // rule 1: only owner/collaborator can enable autosave
     if (!this.isAuthor(chapter, userId)) return false;
-
-    // rule 2: chapter must not be deleted
-    if (chapter.status === ChapterStatus.DELETED) {
-      return false;
-    }
 
     return true;
   }

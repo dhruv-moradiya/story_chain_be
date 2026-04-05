@@ -1,19 +1,9 @@
-enum PRReviewStatus {
-  PENDING_REVIEW = 'pending_review',
-  IN_REVIEW = 'in_review',
+enum PRReviewDecision {
+  APPROVE = 'approve',
   CHANGES_REQUESTED = 'changes_requested',
-  APPROVED = 'approved',
-  NEEDS_WORK = 'needs_work',
-  DRAFT = 'draft',
+  FEEDBACK_ONLY = 'feedback_only',
 }
 
-const PR_REVIEW_STATUSES = [
-  'pending_review',
-  'in_review',
-  'changes_requested',
-  'approved',
-  'needs_work',
-  'draft',
-] as const;
+const PR_REVIEW_DECISIONS = ['approve', 'changes_requested', 'feedback_only'] as const;
 
-export { PRReviewStatus, PR_REVIEW_STATUSES };
+export { PRReviewDecision, PR_REVIEW_DECISIONS };
