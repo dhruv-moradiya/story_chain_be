@@ -75,6 +75,7 @@ import { PRUpdateService } from '@features/pullRequest/services/pr-update.servic
 import { PRMergeService } from '@features/pullRequest/services/pr-merge.service';
 import { PRReviewService } from '@features/prReview/services/prReview.service';
 import { PRCommentService } from '@features/prComment/services/prComment.service';
+import { PRQueryService } from '@features/pullRequest/services/pr-query.service';
 
 // ═══════════════════════════════════════════
 // CONTROLLERS
@@ -93,6 +94,7 @@ import { CommentService } from '@/features/comment/services/comment.service';
 import { CommentRepository } from '@/features/comment/repositories/comment.repository';
 import { PullRequestController } from '@features/pullRequest/controllers/pullRequest.controller';
 import { PRManagementController } from '@features/pullRequest/controllers/prManagement.controller';
+import { PRQueryController } from '@features/pullRequest/controllers/prQuery.controller';
 
 // ═══════════════════════════════════════════
 // MIDDLEWARE FACTORIES
@@ -221,6 +223,7 @@ export function registerServices(): void {
   container.register(TOKENS.PRMergeService, { useClass: PRMergeService });
   container.register(TOKENS.PRReviewService, { useClass: PRReviewService });
   container.register(TOKENS.PRCommentService, { useClass: PRCommentService });
+  container.register(TOKENS.PRQueryService, { useClass: PRQueryService });
 
   // ═══════════════════════════════════════════
   // CONTROLLERS
@@ -239,6 +242,7 @@ export function registerServices(): void {
   container.register(TOKENS.CommentController, { useClass: CommentController });
   container.register(TOKENS.PullRequestController, { useClass: PullRequestController });
   container.register(TOKENS.PRManagementController, { useClass: PRManagementController });
+  container.register(TOKENS.PRQueryController, { useClass: PRQueryController });
 
   // ═══════════════════════════════════════════
   // MIDDLEWARE FACTORIES

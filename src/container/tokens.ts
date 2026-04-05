@@ -89,6 +89,7 @@ export const TOKENS = {
   PRMergeService: Symbol.for('PRMergeService'),
   PRReviewService: Symbol.for('PRReviewService'),
   PRCommentService: Symbol.for('PRCommentService'),
+  PRQueryService: Symbol.for('PRQueryService'),
 
   // ═══════════════════════════════════════════
   // CONTROLLERS
@@ -110,6 +111,7 @@ export const TOKENS = {
   PullRequestController: Symbol.for('PullRequestController'),
   PRManagementController: Symbol.for('PRManagementController'),
   StoryCollaboratorController: Symbol.for('StoryCollaboratorController'),
+  PRQueryController: Symbol.for('PRQueryController'),
 
   // ═══════════════════════════════════════════
   // MIDDLEWARE FACTORIES

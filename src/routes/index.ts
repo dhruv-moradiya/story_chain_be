@@ -8,6 +8,7 @@ import { readingHistoryRoutes } from '@/features/readingHistory/routes/readingHi
 import { bookmarkRoutes } from '@/features/bookmark/routes/bookmark.routes';
 import { commentRoutes } from '@/features/comment/routes/comment.router';
 import { commentVoteRoutes } from '@/features/commentVote/routes/commentVote.route';
+import { prQueryRoutes } from '@/features/pullRequest/routes/prQuery.routes';
 import { pullRequestRoutes } from '@features/pullRequest/routes/pullRequest.routes';
 import { prManagementRoutes } from '@features/pullRequest/routes/prManagement.routes';
 
@@ -34,6 +35,7 @@ export async function registerRoutes(fastify: FastifyInstance) {
   fastify.register(bookmarkRoutes, { prefix: ApiRoute.BOOKMARKS });
   fastify.register(commentRoutes, { prefix: ApiRoute.COMMENTS });
   fastify.register(commentVoteRoutes, { prefix: ApiRoute.COMMENT_VOTES });
+  fastify.register(prQueryRoutes, { prefix: ApiRoute.PULL_REQUESTS });
   fastify.register(pullRequestRoutes, { prefix: ApiRoute.PULL_REQUESTS });
   fastify.register(prManagementRoutes, { prefix: ApiRoute.PULL_REQUESTS });
 }

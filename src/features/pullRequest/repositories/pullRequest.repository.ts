@@ -39,6 +39,23 @@ export class PullRequestRepository extends BaseRepository<IPullRequest, IPullReq
     return this.findById({ id, options });
   }
 
+  findCurrentUserPullRequests(
+    userId: string,
+    options: IOperationOptions = {}
+  ): Promise<IPullRequest[]> {
+    return this.model
+      .find(
+        {
+          authorId: userId,
+          status: { $in: ['open', 'approved'] },
+        },
+        null,
+        options
+      )
+      .sort({ createdAt: -1 })
+      .exec();
+  }
+
   // ─── Mutations ─────────────────────────────────────────────────────────────
 
   updateMetadata(
