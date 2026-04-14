@@ -97,3 +97,6 @@ export { AutoSaveDraftSchema, AutoSaveResponses } from './autoSave.response.js';
 
 // Reading History
 export { ReadingHistoryResponses } from './readingHistory.response.js';
+
+// Pull Request
+export { PullRequestSchema, PullRequestResponses } from './pullRequest.response.js';

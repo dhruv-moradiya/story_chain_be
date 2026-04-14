@@ -58,6 +58,16 @@ export class PullRequestRepository extends BaseRepository<IPullRequest, IPullReq
 
   // ─── Mutations ─────────────────────────────────────────────────────────────
 
+  async aggregatePullRequests<T = IPullRequest>(
+    pipeline: import('mongoose').PipelineStage[],
+    options: IOperationOptions = {}
+  ): Promise<T[]> {
+    return this.model
+      .aggregate<T>(pipeline)
+      .session(options.session ?? null)
+      .exec();
+  }
+
   updateMetadata(
     id: ID,
     fields: { title?: string; description?: string },
