@@ -1,6 +1,4 @@
-import { BaseModule } from '@/utils/baseClass';
-import { inject, singleton } from 'tsyringe';
-import { ICommentCrudService } from './interfaces/comment-crud.interface';
+import { TOKENS } from '@/container';
 import {
   IAddCommentDTO,
   IDeleteCommentDTO,
@@ -8,16 +6,16 @@ import {
   IGetCommentsDTO,
   IUpdateCommentDTO,
 } from '@/dto/comments.dto';
-import { IComment } from '../types/comment.types';
-import {
-  ICommentPaginatedResponse,
-  ICommentResponse,
-} from '@/types/response/comment.response.types';
-import { CommentRepository } from '../repositories/comment.repository';
-import { TOKENS } from '@/container';
-import { sanitizeContent } from '@/utils/sanitizer';
-import { ApiError } from '@/utils/apiResponse';
 import { CommentVoteRepository } from '@/features/commentVote/repository/commentVote.repository';
+import { ICommentPaginatedResponse } from '@/types/response/comment.response.types';
+import { ApiError } from '@/utils/apiResponse';
+import { BaseModule } from '@/utils/baseClass';
+import { formatPaginatedResponse } from '@/utils/helpter';
+import { sanitizeContent } from '@/utils/sanitizer';
+import { inject, singleton } from 'tsyringe';
+import { CommentRepository } from '../repositories/comment.repository';
+import { IComment } from '../types/comment.types';
+import { ICommentCrudService } from './interfaces/comment-crud.interface';
 
 @singleton()
 class CommentService extends BaseModule implements ICommentCrudService {
@@ -113,35 +111,35 @@ class CommentService extends BaseModule implements ICommentCrudService {
       this.commentRepository.countComments(comment),
     ]);
 
-    return this.formatPaginatedResponse(docs, totalDocs, page, limit);
+    return formatPaginatedResponse(docs, totalDocs, page, limit);
   }
 
-  private formatPaginatedResponse(
-    docs: ICommentResponse[],
-    totalDocs: number,
-    page: number,
-    limit: number
-  ): ICommentPaginatedResponse {
-    const totalPages = Math.ceil(totalDocs / limit);
-    const pagingCounter = (page - 1) * limit + 1;
-    const hasPrevPage = page > 1;
-    const hasNextPage = page < totalPages;
-    const prevPage = hasPrevPage ? page - 1 : null;
-    const nextPage = hasNextPage ? page + 1 : null;
+  // private formatPaginatedResponse(
+  //   docs: ICommentResponse[],
+  //   totalDocs: number,
+  //   page: number,
+  //   limit: number
+  // ): ICommentPaginatedResponse {
+  //   const totalPages = Math.ceil(totalDocs / limit);
+  //   const pagingCounter = (page - 1) * limit + 1;
+  //   const hasPrevPage = page > 1;
+  //   const hasNextPage = page < totalPages;
+  //   const prevPage = hasPrevPage ? page - 1 : null;
+  //   const nextPage = hasNextPage ? page + 1 : null;
 
-    return {
-      docs,
-      totalDocs,
-      limit,
-      totalPages,
-      page,
-      pagingCounter,
-      hasPrevPage,
-      hasNextPage,
-      prevPage,
-      nextPage,
-    };
-  }
+  //   return {
+  //     docs,
+  //     totalDocs,
+  //     limit,
+  //     totalPages,
+  //     page,
+  //     pagingCounter,
+  //     hasPrevPage,
+  //     hasNextPage,
+  //     prevPage,
+  //     nextPage,
+  //   };
+  // }
 }
 
 export { CommentService };

@@ -6,9 +6,12 @@ import { BaseModule } from '@utils/baseClass';
 import { StoryQueryService } from '@/features/story/services/story-query.service';
 import { ChapterQueryService } from '@/features/chapter/services/chapter-query.service';
 import { CollaboratorQueryService } from '@/features/storyCollaborator/services/collaborator-query.service';
-import { WRITE_CHAPTER_ROLES } from '@/middlewares/rbac/storyRole.middleware';
+import { ChapterRules } from '@/domain/chapter.rules';
+import { StoryRules } from '@/domain/story.rules';
+import { StoryCollaboratorRules } from '@/domain/storyCollaborator.rules';
 import { IChapterAutoSave } from '../types/chapterAutoSave.types';
 import { ChapterAutoSaveRepository } from '../repositories/chapterAutoSave.repository';
+import { StoryRepository } from '@/features/story/repositories/story.repository';
 
 @singleton()
 export class AutoSaveContentService extends BaseModule {
@@ -17,6 +20,8 @@ export class AutoSaveContentService extends BaseModule {
     private readonly chapterAutoSaveRepo: ChapterAutoSaveRepository,
     @inject(TOKENS.StoryQueryService)
     private readonly storyQueryService: StoryQueryService,
+    @inject(TOKENS.StoryRepository)
+    private readonly storyRepository: StoryRepository,
     @inject(TOKENS.ChapterQueryService)
     private readonly chapterQueryService: ChapterQueryService,
     @inject(TOKENS.CollaboratorQueryService)
@@ -83,25 +88,30 @@ export class AutoSaveContentService extends BaseModule {
     // 2. Verify chapter existence based on type
     if (autoSaveType === 'new_chapter') {
       const parentChapter = await this.chapterQueryService.getBySlug(input.parentChapterSlug);
-      if (!parentChapter) {
+      if (!ChapterRules.canCreateNewChapter(parentChapter)) {
         this.throwNotFoundError(`Parent chapter with slug ${input.parentChapterSlug} not found.`);
       }
     } else if (autoSaveType === 'update_chapter') {
       const chapter = await this.chapterQueryService.getBySlug(input.chapterSlug);
-      if (!chapter) {
+      if (!ChapterRules.canUpdateChapter(chapter)) {
         this.throwNotFoundError(`Chapter with slug ${input.chapterSlug} not found.`);
       }
 
       const parentChapter = await this.chapterQueryService.getBySlug(input.parentChapterSlug);
-      if (!parentChapter) {
+      if (!ChapterRules.canCreateNewChapter(parentChapter)) {
         this.throwNotFoundError(`Parent chapter with slug ${input.parentChapterSlug} not found.`);
+      }
+    } else if (autoSaveType === 'root_chapter') {
+      const hasRootChapter = await this.storyRepository.rootChapterExists(storySlug);
+      if (!StoryRules.canCreateRootChapter(hasRootChapter)) {
+        this.throwBadRequest('Root chapter already exists for this story.');
       }
     }
 
     // 3. Verify user permissions
     const userRole = await this.collaboratorQueryService.getCollaboratorRole(userId, storySlug);
 
-    if (!userRole || !WRITE_CHAPTER_ROLES.includes(userRole)) {
+    if (!StoryCollaboratorRules.canCreateAutoSave(userRole)) {
       this.throwForbiddenError('You do not have permission to create auto-save for this story.');
     }
 

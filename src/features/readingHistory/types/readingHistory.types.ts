@@ -28,3 +28,10 @@ export interface IReadingHistoryDoc extends IReadingHistory, Document {
 }
 
 export interface IChapterReadDoc extends IChapterRead, Document {}
+
+export interface IRawAnalyticsBucket {
+  bucket: string;
+  reads: number;
+  uniqueReaders: number;
+  totalReadTime: number;
+}

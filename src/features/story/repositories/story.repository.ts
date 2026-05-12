@@ -184,4 +184,13 @@ export class StoryRepository extends BaseRepository<IStory, IStoryDoc> {
       .lean()
       .exec();
   }
+
+  async rootChapterExists(slug: string, options: IOperationOptions = {}): Promise<boolean> {
+    const story = await this.model
+      .findOne({ slug }, { 'stats.totalChapters': 1 }, { session: options.session })
+      .lean()
+      .exec();
+
+    return !!story?.stats?.totalChapters;
+  }
 }

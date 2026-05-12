@@ -1,5 +1,81 @@
-import { apiArrayResponse } from './helpers.js';
-import { timestampsSchema, objectIdSchema } from './common.js';
+import { apiPaginatedResponse } from './helpers.js';
+import { objectIdSchema, timestampsSchema, votesSchema } from './common.js';
+
+const PullRequestContentSchema = {
+  type: 'object',
+  properties: {
+    proposed: { type: 'string' },
+    wordCount: { type: 'number' },
+    readingMinutes: { type: 'number' },
+  },
+};
+
+const PullRequestAutoApproveSchema = {
+  type: 'object',
+  properties: {
+    enabled: { type: 'boolean' },
+    threshold: { type: 'number' },
+    timeWindow: { type: 'number' },
+  },
+};
+
+const PullRequestApprovalsStatusSchema = {
+  type: 'object',
+  properties: {
+    required: { type: 'number' },
+    received: { type: 'number' },
+    pending: { type: 'number' },
+    approvers: { type: 'array', items: { type: 'string' } },
+    blockers: { type: 'array', items: { type: 'string' } },
+    canMerge: { type: 'boolean' },
+  },
+};
+
+const PullRequestStatsSchema = {
+  type: 'object',
+  properties: {
+    views: { type: 'number' },
+    discussions: { type: 'number' },
+    reviewsReceived: { type: 'number' },
+  },
+};
+
+const PullRequestUserSchema = {
+  type: 'object',
+  properties: {
+    clerkId: { type: 'string' },
+    username: { type: 'string' },
+    avatarUrl: { type: 'string', nullable: true },
+  },
+};
+
+const PullRequestStorySchema = {
+  type: 'object',
+  properties: {
+    title: { type: 'string' },
+    slug: { type: 'string' },
+  },
+};
+
+const PullRequestParentChapterSchema = {
+  type: 'object',
+  properties: {
+    title: { type: 'string' },
+    slug: { type: 'string' },
+  },
+};
+
+const PullRequestChapterSchema = {
+  type: 'object',
+  properties: {
+    title: { type: 'string' },
+    slug: { type: 'string' },
+    parentChapter: {
+      ...PullRequestParentChapterSchema,
+      nullable: true,
+    },
+  },
+};
 
 export const PullRequestSchema = {
   type: 'object',
@@ -7,119 +83,35 @@ export const PullRequestSchema = {
     _id: objectIdSchema,
     title: { type: 'string' },
     description: { type: 'string' },
-    storySlug: { type: 'string' },
-    chapterSlug: { type: 'string' },
-    parentChapterSlug: { type: 'string', nullable: true },
-    authorId: { type: 'string' },
     prType: { type: 'string' },
-    content: {
-      type: 'object',
-      properties: {
-        proposed: { type: 'string' },
-        wordCount: { type: 'number' },
-        readingMinutes: { type: 'number' },
-      },
-    },
+    content: PullRequestContentSchema,
     status: { type: 'string' },
-    votes: {
-      type: 'object',
-      properties: {
-        upvotes: { type: 'number' },
-        downvotes: { type: 'number' },
-        score: { type: 'number' },
-      },
-    },
+    votes: votesSchema,
     commentCount: { type: 'number' },
-    autoApprove: {
-      type: 'object',
-      properties: {
-        enabled: { type: 'boolean' },
-        threshold: { type: 'number' },
-        timeWindow: { type: 'number' },
-        qualifiedAt: { type: 'string', format: 'date-time', nullable: true },
-        autoApprovedAt: { type: 'string', format: 'date-time', nullable: true },
-      },
-      nullable: true,
-    },
-    labels: { type: 'array', items: { type: 'string' }, nullable: true },
+    autoApprove: PullRequestAutoApproveSchema,
+    labels: { type: 'array', items: { type: 'string' } },
     isDraft: { type: 'boolean' },
-    approvalsStatus: {
-      type: 'object',
-      properties: {
-        required: { type: 'number' },
-        received: { type: 'number' },
-        pending: { type: 'number' },
-        approvers: { type: 'array', items: { type: 'string' } },
-        blockers: { type: 'array', items: { type: 'string' } },
-        canMerge: { type: 'boolean' },
-      },
-      nullable: true,
-    },
-    stats: {
-      type: 'object',
-      properties: {
-        views: { type: 'number' },
-        discussions: { type: 'number' },
-        reviewsReceived: { type: 'number' },
-      },
-      nullable: true,
-    },
+    approvalsStatus: PullRequestApprovalsStatusSchema,
+    stats: PullRequestStatsSchema,
     author: {
-      type: 'object',
-      properties: {
-        clerkId: { type: 'string' },
-        username: { type: 'string' },
-        avatarUrl: { type: 'string', nullable: true },
-      },
+      ...PullRequestUserSchema,
       nullable: true,
     },
     story: {
-      type: 'object',
-      properties: {
-        title: { type: 'string' },
-        slug: { type: 'string' },
-      },
+      ...PullRequestStorySchema,
       nullable: true,
     },
     chapter: {
-      type: 'object',
-      properties: {
-        title: { type: 'string' },
-        slug: { type: 'string' },
-        parentChapter: {
-          type: 'object',
-          properties: {
-            title: { type: 'string' },
-            slug: { type: 'string' },
-          },
-          nullable: true,
-        },
-      },
+      ...PullRequestChapterSchema,
       nullable: true,
     },
     approvers: {
       type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          clerkId: { type: 'string' },
-          username: { type: 'string' },
-          avatarUrl: { type: 'string', nullable: true },
-        },
-      },
-      nullable: true,
+      items: PullRequestUserSchema,
     },
     blockers: {
       type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          clerkId: { type: 'string' },
-          username: { type: 'string' },
-          avatarUrl: { type: 'string', nullable: true },
-        },
-      },
-      nullable: true,
+      items: PullRequestUserSchema,
     },
     ...timestampsSchema,
   },
@@ -127,6 +119,9 @@ export const PullRequestSchema = {
 
 export const PullRequestResponses = {
   pullRequestList: {
-    200: apiArrayResponse(PullRequestSchema, "Fetched current user's pull requests successfully"),
+    200: apiPaginatedResponse(
+      PullRequestSchema,
+      "Fetched current user's pull requests successfully"
+    ),
   },
 };

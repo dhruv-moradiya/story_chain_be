@@ -26,6 +26,12 @@ const PUBLISH_STORY_ROLES: string[] = [
   StoryCollaboratorRole.CO_AUTHOR,
 ];
 
+// Roles that can view story analytics
+const VIEW_ANALYTICS_ROLES: string[] = [
+  StoryCollaboratorRole.OWNER,
+  StoryCollaboratorRole.CO_AUTHOR,
+];
+
 /**
  * Loads the story context by slug (or storySlug) and attaches story role info to the request.
  * This middleware assumes that the user is already authenticated and user info is attached to request.user.
@@ -129,6 +135,22 @@ export const StoryRoleGuards = {
         success: false,
         error: 'Forbidden',
         message: 'You do not have permission to publish this story.',
+      });
+    }
+  },
+
+  /**
+   * Checks if the user can view story analytics.
+   * Allowed roles: OWNER, CO_AUTHOR
+   */
+  canViewStoryAnalytics: async (request: FastifyRequest, reply: FastifyReply) => {
+    const userRole = request.userStoryRole;
+
+    if (!userRole || !VIEW_ANALYTICS_ROLES.includes(userRole)) {
+      return reply.code(HTTP_STATUS.FORBIDDEN.code).send({
+        success: false,
+        error: 'Forbidden',
+        message: 'You do not have permission to view analytics for this story.',
       });
     }
   },

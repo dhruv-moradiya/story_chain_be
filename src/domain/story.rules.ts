@@ -28,6 +28,11 @@ export class StoryRules {
     return story.creatorId === userId;
   }
 
+  static canCreateRootChapter(hasRootChapter: boolean): boolean {
+    const canCreate = !hasRootChapter;
+    return canCreate;
+  }
+
   // TODO: expand with collaborator roles
   static canAddChapter(story: IStory, userId: string): boolean {
     return story.creatorId === userId;

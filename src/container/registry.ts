@@ -67,6 +67,7 @@ import { ChapterCreationService } from '@features/chapter/services/chapter-creat
 import { ChapterQueryService } from '@features/chapter/services/chapter-query.service';
 
 import { ReadingHistoryService } from '@/features/readingHistory/services/readingHistory.service';
+import { AnalyticsService } from '@/features/readingHistory/services/analytics.service';
 import { BookmarkService } from '@/features/bookmark/services/bookmark.service';
 
 import { CommentVoteService } from '@/features/commentVote/services/commentVote.service';
@@ -88,6 +89,7 @@ import { ChapterAutoSaveController } from '@features/chapterAutoSave/controllers
 import { NotificationController } from '@features/notification/controllers/notification.controller';
 import { StoryCollaboratorController } from '@features/storyCollaborator/controllers/storyCollaborator.controller';
 import { ReadingHistoryController } from '@/features/readingHistory/controllers/readingHistory.controller';
+import { AnalyticsController } from '@/features/readingHistory/controllers/analytics.controller';
 import { BookmarkController } from '@/features/bookmark/controllers/bookmark.controller';
 import { CommentController } from '@/features/comment/controllers/comment.controller';
 import { CommentService } from '@/features/comment/services/comment.service';
@@ -215,6 +217,7 @@ export function registerServices(): void {
   container.register(TOKENS.AutoSaveContentService, { useClass: AutoSaveContentService });
   container.register(TOKENS.AutoSaveConversionService, { useClass: AutoSaveConversionService });
   container.register(TOKENS.ReadingHistoryService, { useClass: ReadingHistoryService });
+  container.register(TOKENS.AnalyticsService, { useClass: AnalyticsService });
   container.register(TOKENS.BookmarkService, { useClass: BookmarkService });
   container.register(TOKENS.CommentService, { useClass: CommentService });
   container.register(TOKENS.CommentVoteService, { useClass: CommentVoteService });
@@ -238,6 +241,7 @@ export function registerServices(): void {
     useClass: StoryCollaboratorController,
   });
   container.register(TOKENS.ReadingHistoryController, { useClass: ReadingHistoryController });
+  container.register(TOKENS.AnalyticsController, { useClass: AnalyticsController });
   container.register(TOKENS.BookmarkController, { useClass: BookmarkController });
   container.register(TOKENS.CommentController, { useClass: CommentController });
   container.register(TOKENS.PullRequestController, { useClass: PullRequestController });

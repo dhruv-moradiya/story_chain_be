@@ -52,6 +52,40 @@ export const paginationMetaSchema = {
   additionalProperties: false,
 };
 
+export const paginatedDocsSchema = (itemSchema: object) => ({
+  type: 'object',
+  properties: {
+    docs: {
+      type: 'array',
+      items: itemSchema,
+    },
+    totalDocs: { type: 'number', description: 'Total number of documents' },
+    limit: { type: 'number', description: 'Number of documents per page' },
+    totalPages: { type: 'number', description: 'Total number of pages' },
+    page: { type: 'number', description: 'Current page number (1-indexed)' },
+    pagingCounter: {
+      type: 'number',
+      description: '1-indexed position of the first document on the current page',
+    },
+    hasPrevPage: { type: 'boolean', description: 'Whether there is a previous page' },
+    hasNextPage: { type: 'boolean', description: 'Whether there is a next page' },
+    prevPage: { type: 'number', nullable: true, description: 'Previous page number' },
+    nextPage: { type: 'number', nullable: true, description: 'Next page number' },
+  },
+  required: [
+    'docs',
+    'totalDocs',
+    'limit',
+    'totalPages',
+    'page',
+    'pagingCounter',
+    'hasPrevPage',
+    'hasNextPage',
+    'prevPage',
+    'nextPage',
+  ],
+});
+
 export const paginationRequestSchema = {
   type: 'object',
   properties: {

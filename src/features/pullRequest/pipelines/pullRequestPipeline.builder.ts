@@ -2,6 +2,7 @@ import { BasePipelineBuilder } from '@/shared/pipelines/base.pipeline.builder';
 import { attachUserStages, PUBLIC_USER_PROJECTION } from '@/shared/pipelines';
 import { ID } from '@/types';
 import { toId } from '@/utils';
+import { TPRStatus } from '../types/pullRequest.types';
 
 class PullRequestPipelineBuilder extends BasePipelineBuilder<PullRequestPipelineBuilder> {
   findById(prId: ID) {
@@ -22,7 +23,7 @@ class PullRequestPipelineBuilder extends BasePipelineBuilder<PullRequestPipeline
     return this;
   }
 
-  matchStatus(statuses: string[]) {
+  matchStatus(statuses: TPRStatus[]) {
     this.pipeline.push({
       $match: {
         status: { $in: statuses },
@@ -132,14 +133,17 @@ class PullRequestPipelineBuilder extends BasePipelineBuilder<PullRequestPipeline
     return this;
   }
 
-  getCurrentUserPRsPreset(userId: string) {
-    return this.matchAuthor(userId)
-      .matchStatus(['open', 'approved'])
+  getCurrentUserPRsPreset(_userId: string, page = 1, limit = 20) {
+    return this.matchStatus(['open', 'approved', 'closed', 'merged'])
       .attachAuthor()
       .attachStory()
       .attachChapter()
       .attachReviewers()
       .sortByCreatedAt(-1)
+      .addStage({
+        $unset: ['authorId', 'storySlug', 'chapterSlug', 'parentChapterSlug'],
+      })
+      .paginate(page, limit)
       .build();
   }
 }

@@ -7,6 +7,7 @@ import {
   TStoryCollaboratorPermission,
   TStoryCollaboratorRole,
 } from '@features/storyCollaborator/types/storyCollaborator.types';
+import { WRITE_CHAPTER_ROLES } from '@/middlewares/rbac/storyRole.middleware';
 
 export class StoryCollaboratorRules {
   /**
@@ -80,5 +81,10 @@ export class StoryCollaboratorRules {
     const roleConfig = STORY_COLLABORATOR_ROLE_CONFIG[role];
     if (!roleConfig) return false;
     return roleConfig.permissions[permission] === true;
+  }
+
+  static canCreateAutoSave(userRole: TStoryCollaboratorRole | null): boolean {
+    const canCreate = !!userRole && WRITE_CHAPTER_ROLES.includes(userRole);
+    return canCreate;
   }
 }

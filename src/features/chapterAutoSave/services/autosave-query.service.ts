@@ -6,6 +6,7 @@ import { ChapterAutoSaveRepository } from '../repositories/chapterAutoSave.repos
 import { IGetAutoSaveDraftDTO } from '@/dto/chapterAutoSave.dto';
 import { BaseModule } from '@/utils/baseClass';
 import { IChapterAutoSavePaginatedResponse } from '@/types/response/chapterAutoSave.response.types';
+import { formatPaginatedResponse } from '@/utils/helpter';
 
 @singleton()
 export class AutoSaveQueryService extends BaseModule {
@@ -28,29 +29,7 @@ export class AutoSaveQueryService extends BaseModule {
       this.chapterAutoSaveRepo.countByUser(userId),
     ]);
 
-    return this.formatPaginatedResponse(docs, totalDocs, page, limit);
-  }
-
-  private formatPaginatedResponse<T>(docs: T[], totalDocs: number, page: number, limit: number) {
-    const totalPages = Math.ceil(totalDocs / limit);
-    const pagingCounter = (page - 1) * limit + 1;
-    const hasPrevPage = page > 1;
-    const hasNextPage = page < totalPages;
-    const prevPage = hasPrevPage ? page - 1 : null;
-    const nextPage = hasNextPage ? page + 1 : null;
-
-    return {
-      docs,
-      totalDocs,
-      limit,
-      totalPages,
-      page,
-      pagingCounter,
-      hasPrevPage,
-      hasNextPage,
-      prevPage,
-      nextPage,
-    };
+    return formatPaginatedResponse(docs, totalDocs, page, limit);
   }
 
   async getByChapterAndUser(chapterSlug: string, userId: string): Promise<IChapterAutoSave | null> {

@@ -25,3 +25,30 @@ export function createSlug(input: string, options: CreateSlugOptions = {}): stri
 
   return base;
 }
+
+export function formatPaginatedResponse<T>(
+  docs: T[],
+  totalDocs: number,
+  page: number,
+  limit: number
+) {
+  const totalPages = Math.ceil(totalDocs / limit);
+  const pagingCounter = (page - 1) * limit + 1;
+  const hasPrevPage = page > 1;
+  const hasNextPage = page < totalPages;
+  const prevPage = hasPrevPage ? page - 1 : null;
+  const nextPage = hasNextPage ? page + 1 : null;
+
+  return {
+    docs,
+    totalDocs,
+    limit,
+    totalPages,
+    page,
+    pagingCounter,
+    hasPrevPage,
+    hasNextPage,
+    prevPage,
+    nextPage,
+  };
+}

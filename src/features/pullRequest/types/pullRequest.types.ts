@@ -94,18 +94,18 @@ export interface IPullRequestDoc extends IPullRequest, Document {
   _id: Types.ObjectId;
 }
 
-export interface IDetailedPullRequest extends IPullRequest {
-  author?: {
-    clerkId: string;
-    username: string;
-    avatarUrl?: string;
-  };
-  story?: { title: string; slug: string };
-  chapter?: {
-    title: string;
-    slug: string;
-    parentChapter?: { title: string; slug: string };
-  };
-  approvers?: { clerkId: string; username: string; avatarUrl?: string }[];
-  blockers?: { clerkId: string; username: string; avatarUrl?: string }[];
-}
+// export interface IDetailedPullRequest extends IPullRequest {
+//   author?: {
+//     clerkId: string;
+//     username: string;
+//     avatarUrl?: string;
+//   };
+//   story?: { title: string; slug: string };
+//   chapter?: {
+//     title: string;
+//     slug: string;
+//     parentChapter?: { title: string; slug: string };
+//   };
+//   approvers?: { clerkId: string; username: string; avatarUrl?: string }[];
+//   blockers?: { clerkId: string; username: string; avatarUrl?: string }[];
+// }

@@ -33,4 +33,34 @@ interface IOperationOptions {
   limit?: number;
 }
 
+export interface IImageAsset {
+  url: string;
+  publicId: string;
+}
+
+export interface IPagination {
+  totalDocs: number;
+  limit: number;
+  totalPages: number;
+  page: number;
+  pagingCounter: number;
+  hasPrevPage: boolean;
+  hasNextPage: boolean;
+  prevPage: number | null;
+  nextPage: number | null;
+}
+
+export interface IUserBasicWithEmail {
+  clerkId: string;
+  email: string;
+  username: string;
+  avatarUrl: string;
+}
+
+export interface IUserBasic {
+  title: string;
+  slug: string;
+  avatarUrl: IImageAsset;
+}
+
 export type { ID, IOperationOptions, IInviteTokenPayload };

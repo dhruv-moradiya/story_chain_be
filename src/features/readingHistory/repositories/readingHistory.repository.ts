@@ -3,7 +3,11 @@ import { ReadingHistory } from '@/models/readingHistory.model';
 import { BaseRepository } from '@/utils/baseClass';
 import { singleton } from 'tsyringe';
 import { ReadingHistoryPipelineBuilder } from '../pipelines/readingHistoryPipeline.builder';
-import { IReadingHistory, IReadingHistoryDoc } from '../types/readingHistory.types';
+import {
+  IReadingHistory,
+  IReadingHistoryDoc,
+  IRawAnalyticsBucket,
+} from '../types/readingHistory.types';
 
 @singleton()
 class ReadingHistoryRepository extends BaseRepository<IReadingHistory, IReadingHistoryDoc> {
@@ -225,6 +229,101 @@ class ReadingHistoryRepository extends BaseRepository<IReadingHistory, IReadingH
         },
       }
     );
+  }
+
+  /**
+   * Aggregate chapter-level analytics (reads, unique readers, total read time)
+   * grouped into time buckets (hour or day).
+   */
+  async aggregateChapterAnalytics(
+    chapterSlug: string,
+    from: Date,
+    to: Date,
+    bucketType: 'hour' | 'day'
+  ): Promise<IRawAnalyticsBucket[]> {
+    const dateFormat = bucketType === 'hour' ? '%Y-%m-%dT%H:00:00.000Z' : '%Y-%m-%d';
+
+    return this.model.aggregate<IRawAnalyticsBucket>([
+      {
+        $match: {
+          lastReadAt: { $gte: from, $lte: to },
+          'chaptersRead.chapterSlug': chapterSlug,
+        },
+      },
+      { $unwind: '$chaptersRead' },
+      {
+        $match: {
+          'chaptersRead.chapterSlug': chapterSlug,
+          'chaptersRead.hasQualifiedRead': true,
+        },
+      },
+      {
+        $group: {
+          _id: {
+            bucket: {
+              $dateToString: { format: dateFormat, date: '$lastReadAt' },
+            },
+          },
+          reads: { $sum: 1 },
+          uniqueReaders: { $addToSet: '$userId' },
+          totalReadTime: { $sum: '$chaptersRead.totalReadTime' },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          bucket: '$_id.bucket',
+          reads: 1,
+          uniqueReaders: { $size: '$uniqueReaders' },
+          totalReadTime: 1,
+        },
+      },
+      { $sort: { bucket: 1 } },
+    ]);
+  }
+
+  /**
+   * Aggregate story-level analytics (reads, unique readers, total read time)
+   * grouped into time buckets (hour or day).
+   */
+  async aggregateStoryAnalytics(
+    storySlug: string,
+    from: Date,
+    to: Date,
+    bucketType: 'hour' | 'day'
+  ): Promise<IRawAnalyticsBucket[]> {
+    const dateFormat = bucketType === 'hour' ? '%Y-%m-%dT%H:00:00.000Z' : '%Y-%m-%d';
+
+    return this.model.aggregate<IRawAnalyticsBucket>([
+      {
+        $match: {
+          storySlug,
+          lastReadAt: { $gte: from, $lte: to },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            bucket: {
+              $dateToString: { format: dateFormat, date: '$lastReadAt' },
+            },
+          },
+          reads: { $sum: 1 },
+          uniqueReaders: { $addToSet: '$userId' },
+          totalReadTime: { $sum: '$totalStoryReadTime' },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          bucket: '$_id.bucket',
+          reads: 1,
+          uniqueReaders: { $size: '$uniqueReaders' },
+          totalReadTime: 1,
+        },
+      },
+      { $sort: { bucket: 1 } },
+    ]);
   }
 }
 

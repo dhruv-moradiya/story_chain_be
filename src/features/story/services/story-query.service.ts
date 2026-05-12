@@ -176,6 +176,7 @@ class StoryQueryService extends BaseModule implements IStoryQueryService {
   //     { ttlKey: 'STORY_OVERVIEW' }
   //   );
   // }
+
   async getStoryOverviewBySlug(slug: string): Promise<IStoryOverviewResponse> {
     const storyPipeline = new StoryPipelineBuilder().getStoryOverviewPreset(slug).build();
 

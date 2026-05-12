@@ -5,7 +5,7 @@
 // for API responses that match the ApiResponse class structure.
 // ═══════════════════════════════════════════════════════════════════════════════
 
-import { successCodeSchema, errorCodeSchema, paginationMetaSchema } from './common.js';
+import { successCodeSchema, errorCodeSchema, paginatedDocsSchema } from './common.js';
 
 // ═══════════════════════════════════════════
 // BASE RESPONSE STRUCTURES
@@ -77,17 +77,7 @@ export const apiPaginatedResponse = (itemSchema: object, description: string) =>
   type: 'object',
   properties: {
     ...baseSuccessResponse,
-    data: {
-      type: 'object',
-      properties: {
-        items: {
-          type: 'array',
-          items: itemSchema,
-        },
-        pagination: paginationMetaSchema,
-      },
-      required: ['items', 'pagination'],
-    },
+    data: paginatedDocsSchema(itemSchema),
   },
   required: ['success', 'code', 'message', 'data'],
 });

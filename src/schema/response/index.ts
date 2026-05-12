@@ -8,6 +8,7 @@ export {
   errorCodeSchema,
   // Pagination
   paginationMetaSchema,
+  paginatedDocsSchema,
   paginationRequestSchema,
   // Common data schemas
   objectIdSchema,
