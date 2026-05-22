@@ -21,9 +21,9 @@ class DatabaseService {
     mongoose.set('strictQuery', true);
 
     const connectionInstance = await mongoose.connect(this.config.mongoUri, {
-      maxPoolSize: 10,
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 45000,
+      maxPoolSize: 10, // Limit concurrent connections to prevent overload
+      serverSelectionTimeoutMS: 5000, // Fail fast if MongoDB is unreachable
+      socketTimeoutMS: 45000, // Close sockets after 45s of inactivity to free resources
     });
 
     this.connection = connectionInstance.connection;

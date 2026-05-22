@@ -24,14 +24,13 @@ import { IPullRequest } from '../types/pullRequest.types';
 import { PRStatus } from '../types/pullRequest-enum';
 
 import { ICreatePRFromAutoSaveDTO, ICreatePRFromDraftDTO } from '@dto/pullRequest.dto';
+import { countWordsFromHTML } from '@/utils/sanitizer';
+import { createSlug } from '@/utils/helpter';
+import { NotificationService } from '@/features/notification/services/notification.service';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────────────────────────────────────
-
-function calculateWordCount(content: string): number {
-  return content.trim().split(/\s+/).filter(Boolean).length;
-}
 
 function calculateReadingMinutes(wordCount: number): number {
   // average reading speed: 200 wpm
@@ -101,7 +100,10 @@ export class PullRequestCommandService extends BaseModule {
     private readonly chapterRepo: ChapterRepository,
 
     @inject(TOKENS.ChapterAutoSaveRepository)
-    private readonly autoSaveRepo: ChapterAutoSaveRepository
+    private readonly autoSaveRepo: ChapterAutoSaveRepository,
+
+    @inject(TOKENS.NotificationService)
+    private readonly notificationService: NotificationService
   ) {
     super();
   }
@@ -177,9 +179,9 @@ export class PullRequestCommandService extends BaseModule {
       );
     }
 
-    if (!autoSave.content || autoSave.content.trim().length < 50) {
+    if (!autoSave.content || countWordsFromHTML(autoSave.content.trim()) < 30) {
       this.throwBadRequest(
-        'Auto-save content is too short to create a pull request (minimum 50 characters).'
+        'Auto-save content is too short to create a pull request (minimum 30 characters).'
       );
     }
 
@@ -202,8 +204,8 @@ export class PullRequestCommandService extends BaseModule {
       required: story.settings.requireApproval ? 1 : 0,
       received: 0,
       pending: story.settings.requireApproval ? 1 : 0,
-      approvers: [] as string[],
-      blockers: [] as string[],
+      approvers: [],
+      blockers: [],
       canMerge: !story.settings.requireApproval,
     };
   }
@@ -240,7 +242,7 @@ export class PullRequestCommandService extends BaseModule {
       await this.checkNoDuplicateOpenPR(chapterSlug, authorId);
 
       // 5. Compute content stats
-      const wordCount = calculateWordCount(chapter.content);
+      const wordCount = countWordsFromHTML(chapter.content);
       const readingMinutes = calculateReadingMinutes(wordCount);
 
       // 6. Create the PullRequest document
@@ -285,6 +287,21 @@ export class PullRequestCommandService extends BaseModule {
         { new: true, session }
       );
 
+      // 8. Notify collaborators
+      const collaborators = await this.collaboratorQueryService.getCollaboratorsByStorySlug(
+        { slug: storySlug },
+        { session }
+      );
+
+      await this.notificationService.enqueuePullRequestOpened({
+        relatedStorySlug: storySlug,
+        relatedPullRequestId: pr._id.toString(),
+        recipientUserIds: collaborators.map((c) => c.user.clerkId),
+        storyName: story.title,
+        authorName: authorId,
+        prTitle: title.trim(),
+      });
+
       return pr;
     });
   }
@@ -325,7 +342,7 @@ export class PullRequestCommandService extends BaseModule {
       const chapterSlug =
         autoSave.autoSaveType === 'update_chapter' && autoSave.chapterSlug
           ? autoSave.chapterSlug
-          : `draft-pr-${autoSave._id.toString()}`;
+          : createSlug(autoSave.title, { addSuffix: true });
 
       // 5. Guard: no duplicate open PR for the same chapter (only for update_chapter)
       if (autoSave.autoSaveType === 'update_chapter' && autoSave.chapterSlug) {
@@ -333,7 +350,7 @@ export class PullRequestCommandService extends BaseModule {
       }
 
       // 6. Compute content stats
-      const wordCount = calculateWordCount(autoSave.content);
+      const wordCount = countWordsFromHTML(autoSave.content);
       const readingMinutes = calculateReadingMinutes(wordCount);
 
       // 7. Create the PullRequest document
@@ -383,6 +400,20 @@ export class PullRequestCommandService extends BaseModule {
           );
         }
       }
+
+      const collaborators = await this.collaboratorQueryService.getCollaboratorsByStorySlug(
+        { slug: storySlug },
+        { session }
+      );
+
+      await this.notificationService.enqueuePullRequestOpened({
+        relatedStorySlug: storySlug,
+        relatedPullRequestId: pr._id.toString(),
+        recipientUserIds: collaborators.map((c) => c.user.clerkId),
+        storyName: story.title,
+        authorName: autoSave.userId.toString(), // we don't have the author's name here, only their ID. The notification processor can look up the name when processing the job.
+        prTitle: title.trim(),
+      });
 
       return pr;
     });

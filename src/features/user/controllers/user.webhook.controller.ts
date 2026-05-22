@@ -51,7 +51,7 @@ class UserWebhookController {
       case 'user.updated': {
         const parsed = this.transformer.transformUserUpdated(event.data);
         await this.userService.updateUserFromClerk(parsed);
-        return reply.code(HTTP_STATUS.OK.code).send(new ApiResponse(true, 'User updated'));
+        return reply.code(HTTP_STATUS.OK.code).send(ApiResponse.ok(null, 'User updated'));
       }
 
       // ----------------------------
@@ -74,7 +74,7 @@ class UserWebhookController {
         if (event.data.id) {
           await this.userService.handleUserDeleted(event.data.id);
         }
-        return reply.code(HTTP_STATUS.OK.code).send(new ApiResponse(true, 'User deleted'));
+        return reply.code(HTTP_STATUS.OK.code).send(ApiResponse.ok(null, 'User deleted'));
       }
 
       default:

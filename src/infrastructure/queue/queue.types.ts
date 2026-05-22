@@ -35,6 +35,7 @@ export const NOTIFICATION_JOB_NAMES = {
   COLLAB_INVITATION: 'notify:collab-invitation',
   COLLAB_ACCEPTED: 'notify:collab-accepted',
   COLLAB_REJECTED: 'notify:collab-rejected',
+  PR_OPENED: 'notify:pr-opened',
 } as const;
 
 export type TNotificationJobName =
@@ -74,6 +75,7 @@ export interface INotificationJobData {
   relatedStorySlug?: string;
   /** Chapter slug to store on the notification document for querying */
   relatedChapterSlug?: string;
+  relatedPullRequestId?: string;
 }
 
 /**

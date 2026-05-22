@@ -13,47 +13,61 @@ export type SuccessCode =
   | 'NO_CONTENT'
   | 'ACCEPTED';
 
-export class ApiResponse<T = unknown> {
+export class ApiResponse<T = void> {
   public readonly success: boolean;
   public readonly code: SuccessCode;
   public readonly message: string;
   public readonly data: T | null;
 
-  constructor(
-    success: boolean = true,
-    codeOrMessage: SuccessCode | string,
-    messageOrData?: string | T | null,
-    data?: T | null
-  ) {
-    this.success = success;
-
-    // Detect if using new signature (code, message, data) or old signature (message, data)
-    if (this.isSuccessCode(codeOrMessage)) {
-      // New signature: (success, code, message, data)
-      this.code = codeOrMessage;
-      this.message = (messageOrData as string) || '';
-      this.data = data ?? null;
-    } else {
-      // Legacy signature: (success, message, data)
-      this.code = 'SUCCESS';
-      this.message = codeOrMessage;
-      this.data = (messageOrData as T) ?? null;
-    }
+  private constructor(code: SuccessCode, message: string, data: T | null) {
+    this.success = true;
+    this.code = code;
+    this.message = message;
+    this.data = data;
   }
 
-  private isSuccessCode(value: string): value is SuccessCode {
-    const validCodes: SuccessCode[] = [
-      'SUCCESS',
-      'CREATED',
-      'UPDATED',
-      'DELETED',
-      'FETCHED',
-      'NO_CONTENT',
-      'ACCEPTED',
-    ];
-    return validCodes.includes(value as SuccessCode);
+  // ── Shorthand factories (preferred) ────────────────────────────────
+
+  /** 200 — Generic success */
+  static ok<T>(data: T, message = 'Request succeeded'): ApiResponse<T> {
+    return new ApiResponse('SUCCESS', message, data);
   }
 
+  /** 200 — Data fetched */
+  static fetched<T>(data: T, message = 'Fetched successfully'): ApiResponse<T> {
+    return new ApiResponse('FETCHED', message, data);
+  }
+
+  /** 201 — Resource created */
+  static created<T>(data: T, message = 'Created successfully'): ApiResponse<T> {
+    return new ApiResponse('CREATED', message, data);
+  }
+
+  /** 200 — Resource updated */
+  static updated<T>(data: T, message = 'Updated successfully'): ApiResponse<T> {
+    return new ApiResponse('UPDATED', message, data);
+  }
+
+  /** 200 — Resource deleted */
+  static deleted(message = 'Deleted successfully'): ApiResponse<null> {
+    return new ApiResponse('DELETED', message, null);
+  }
+
+  /** 204 — No content */
+  static noContent(message = 'No content'): ApiResponse<null> {
+    return new ApiResponse('NO_CONTENT', message, null);
+  }
+
+  /** 202 — Accepted for processing */
+  static accepted<T>(data: T, message = 'Accepted for processing'): ApiResponse<T> {
+    return new ApiResponse('ACCEPTED', message, data);
+  }
+
+  // ── Backward-compatible factory ────────────────────────────────────
+
+  /**
+   * @deprecated Prefer shorthand methods: `.fetched()`, `.created()`, `.updated()`, etc.
+   */
   static success<T>(
     data: T,
     statusKey: HttpStatusKey = 'OK',
@@ -61,33 +75,7 @@ export class ApiResponse<T = unknown> {
     code: SuccessCode = 'SUCCESS'
   ): ApiResponse<T> {
     const status = HTTP_STATUS[statusKey];
-    return new ApiResponse<T>(true, code, customMessage || status.message, data);
-  }
-
-  static created<T>(data: T, customMessage?: string): ApiResponse<T> {
-    return ApiResponse.success<T>(data, 'CREATED', customMessage, 'CREATED');
-  }
-
-  static updated<T>(data: T, customMessage?: string): ApiResponse<T> {
-    return ApiResponse.success<T>(data, 'UPDATED', customMessage || 'Updated successfully');
-  }
-
-  static deleted(customMessage?: string): ApiResponse<null> {
-    return ApiResponse.success<null>(
-      null,
-      'OK',
-      customMessage || 'Deleted successfully',
-      'DELETED'
-    );
-  }
-
-  static fetched<T>(data: T, customMessage?: string): ApiResponse<T> {
-    return ApiResponse.success<T>(data, 'OK', customMessage || 'Fetched successfully', 'FETCHED');
-  }
-
-  static noContent(customMessage?: string): ApiResponse<null> {
-    const status = HTTP_STATUS.NO_CONTENT;
-    return new ApiResponse<null>(true, 'NO_CONTENT', customMessage || status.message, null);
+    return new ApiResponse(code, customMessage || status.message, data);
   }
 }
 

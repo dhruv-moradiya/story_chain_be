@@ -105,6 +105,54 @@ export class QueueService extends BaseModule {
   }
 
   /**
+   * Add multiple jobs to a queue in bulk with type safety.
+   * Use case: Enqueue large batches of tasks efficiently (e.g. sending
+   * notifications to many users).
+   *
+   * @param queueName - Which queue to add the jobs to
+   * @param jobs      - An array of jobs, each with a name, payload, and options
+   * @returns An array of job IDs corresponding to the added jobs
+   */
+  async addBulkJobs<N extends TQueueName>(
+    queueName: N,
+    jobs: { name: string; data: IQueueJobDataMap[N]; options?: IAddJobOptions }[]
+  ): Promise<(string | undefined)[]> {
+    const queue = this.getQueue(queueName);
+
+    const bullJobs = jobs.map(({ name, data, options }) => ({
+      name,
+      data,
+      opts: {
+        jobId: options?.jobId,
+        delay: options?.delay,
+        attempts: options?.attempts ?? 3,
+        backoff: options?.backoff ?? { type: 'exponential', delay: 1000 },
+        priority: options?.priority,
+        removeOnComplete: options?.removeOnComplete ?? 1000,
+        removeOnFail: options?.removeOnFail ?? 5000,
+      },
+    }));
+
+    const chunkSize = 500;
+    const results: (string | undefined)[] = [];
+
+    try {
+      for (let i = 0; i < bullJobs.length; i += chunkSize) {
+        const chunk = bullJobs.slice(i, i + chunkSize);
+        const addedJobs = await queue.addBulk(chunk);
+        results.push(...addedJobs.map((job) => job.id));
+      }
+
+      this.logInfo(`Requested: ${jobs.length}, Added: ${results.length} jobs to "${queueName}"`);
+
+      return results;
+    } catch (error) {
+      this.logError('Bulk job enqueue failed', error);
+      throw error;
+    }
+  }
+
+  /**
    * Add a repeatable / cron-based job to a queue.
    * Use case: Schedule recurring tasks such as daily digest emails,
    * weekly cleanup, or periodic cache warm-up.

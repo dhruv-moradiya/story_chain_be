@@ -4,12 +4,14 @@ import { TOKENS } from '@/container';
 import { commentVoteProcessor } from '../processors/commentVote.processors';
 import { logger } from '@/utils/logger';
 import { ChapterCommentVoteQueue } from '../domains/chapterCommentVote.queue';
+import { notificationProcessor } from '../processors/notification.processors';
 
 export function bootstrapWorkers(): void {
   logger.info('[BOOTSTRAP-WORKERS]: 🚀 Bootstrapping workers');
   const workerService = container.resolve<WorkerService>(TOKENS.WorkerService);
 
   workerService.registerWorker(QUEUE_NAMES.CHAPTER_COMMENT_VOTE, commentVoteProcessor, 1);
+  workerService.registerWorker(QUEUE_NAMES.NOTIFICATION, notificationProcessor, 1);
   logger.info('[BOOTSTRAP-WORKERS]: ✅ Workers bootstrapped');
 }
 

@@ -1,4 +1,5 @@
 import sanitizeHtml from 'sanitize-html';
+import { htmlToText } from 'html-to-text';
 
 export const sanitizeContent = (content: string): string => {
   return sanitizeHtml(content, {
@@ -49,4 +50,17 @@ export const sanitizeContent = (content: string): string => {
       },
     },
   });
+};
+
+export const countWordsFromHTML = (html: string): number => {
+  const text = htmlToText(html, {
+    wordwrap: false,
+    selectors: [{ selector: 'img', format: 'skip' }],
+  });
+
+  const cleaned = text.replace(/\s+/g, ' ').trim();
+
+  if (!cleaned) return 0;
+
+  return cleaned.split(' ').length;
 };

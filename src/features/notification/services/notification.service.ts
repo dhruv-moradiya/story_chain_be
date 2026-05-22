@@ -296,8 +296,62 @@ export class NotificationService extends BaseModule {
 
     this.logInfo(`Enqueued collab-rejected notification for inviter="${inviterUserId}"`);
   }
+
+  /**
+   * Enqueue a notification when a new pull request is opened.
+   * Use case: Called from PullRequestCommandService.createPullRequest after
+   * a new PR is created. Notifies the story creator and collaborators.
+   *
+   * @param relatedStorySlug    - Slug of the story the PR belongs to
+   * @param relatedPullRequestId - ID of the newly created PR (for URL generation)
+   * @param authorName          - Display name of the PR author
+   * @param storyName           - Title of the story
+   * @param recipientUserIds    - Clerk IDs of collaborators/creator to notify
+   */
+  async enqueuePullRequestOpened(params: {
+    relatedStorySlug: string;
+    relatedPullRequestId: string;
+    authorName: string;
+    storyName: string;
+    recipientUserIds: string[];
+    prTitle: string;
+  }): Promise<void> {
+    const {
+      relatedStorySlug,
+      relatedPullRequestId,
+      authorName,
+      storyName,
+      recipientUserIds,
+      prTitle,
+    } = params;
+
+    await this.queueService.addBulkJobs(
+      QUEUE_NAMES.NOTIFICATION,
+      recipientUserIds.map((userId) => ({
+        name: NOTIFICATION_JOB_NAMES.PR_OPENED,
+        data: {
+          recipientUserId: userId,
+          notificationType: NotificationType.PR_OPENED,
+          context: {
+            actor: authorName,
+            storyName,
+            storySlug: relatedStorySlug,
+            pr: prTitle,
+            prId: relatedPullRequestId,
+          },
+          relatedStorySlug,
+          relatedPullRequestId,
+        },
+      }))
+    );
+
+    this.logInfo(
+      `Enqueued ${recipientUserIds.length} pull-request-opened notifications for PR="${relatedPullRequestId}"`
+    );
+  }
 }
 
+// TODO: Remove the singleton export once all callers have migrated to DI and are injecting NotificationService properly. This is just for backward compatibility with any existing code that might still be importing the service directly.
 export const notificationService = new NotificationService(
   // This singleton export is kept for backward compat but prefer DI
   null as unknown as QueueService
