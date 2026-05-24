@@ -23,7 +23,7 @@ class UserController extends BaseModule {
   }
 
   getCurrentUserDetails = catchAsync(async (request: FastifyRequest, reply: FastifyReply) => {
-    const user = request.user;
+    const user = await request.user;
 
     const responseData = UserTransformer.currentUserResponse(user);
 

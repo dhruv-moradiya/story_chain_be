@@ -63,7 +63,6 @@ if (cluster.isPrimary) {
     console.log(`Worker ${worker.process.pid} died. Restarting...`);
     cluster.fork();
   });
-
 } else {
   // Workers run the actual app
   import('./server');
@@ -104,36 +103,38 @@ npm install pm2
 ```javascript
 // ecosystem.config.js
 module.exports = {
-  apps: [{
-    name: 'storychain-api',
-    script: './dist/server.js',
+  apps: [
+    {
+      name: 'storychain-api',
+      script: './dist/server.js',
 
-    // Use all available CPUs
-    instances: 'max',  // or specific number like 8
+      // Use all available CPUs
+      instances: 'max', // or specific number like 8
 
-    // Cluster mode for load balancing
-    exec_mode: 'cluster',
+      // Cluster mode for load balancing
+      exec_mode: 'cluster',
 
-    // Memory limit per instance (8GB / 8 workers = 1GB each)
-    max_memory_restart: '900M',
+      // Memory limit per instance (8GB / 8 workers = 1GB each)
+      max_memory_restart: '900M',
 
-    // Environment variables
-    env: {
-      NODE_ENV: 'production',
-      PORT: 3000,
+      // Environment variables
+      env: {
+        NODE_ENV: 'production',
+        PORT: 3000,
+      },
+
+      // Graceful reload
+      wait_ready: true,
+      listen_timeout: 80000,
+      kill_timeout: 5000,
+
+      // Logging
+      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
+      error_file: './logs/error.log',
+      out_file: './logs/out.log',
+      merge_logs: true,
     },
-
-    // Graceful reload
-    wait_ready: true,
-    listen_timeout: 10000,
-    kill_timeout: 5000,
-
-    // Logging
-    log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
-    error_file: './logs/error.log',
-    out_file: './logs/out.log',
-    merge_logs: true,
-  }]
+  ],
 };
 ```
 
@@ -224,7 +225,7 @@ Memory per instance = (Total RAM - OS overhead) / Number of instances
 ### Recommended Settings
 
 | Configuration | API Instances | Worker Instances | Memory/Instance |
-|---------------|---------------|------------------|-----------------|
+| ------------- | ------------- | ---------------- | --------------- |
 | API Only      | 8             | 0                | 900 MB          |
 | API + Workers | 4             | 4                | 900 MB          |
 | Heavy Workers | 2             | 6                | 900 MB          |
@@ -260,7 +261,7 @@ export function startMemoryMonitor(intervalMs = 30000) {
   setInterval(() => {
     const used = process.memoryUsage();
     console.log({
-      rss: `${Math.round(used.rss / 1024 / 1024)} MB`,      // Total memory
+      rss: `${Math.round(used.rss / 1024 / 1024)} MB`, // Total memory
       heapTotal: `${Math.round(used.heapTotal / 1024 / 1024)} MB`,
       heapUsed: `${Math.round(used.heapUsed / 1024 / 1024)} MB`,
       external: `${Math.round(used.external / 1024 / 1024)} MB`,
@@ -273,12 +274,12 @@ export function startMemoryMonitor(intervalMs = 30000) {
 
 ## Performance Comparison
 
-| Setup | Requests/sec | CPU Usage | Memory Usage |
-|-------|--------------|-----------|--------------|
-| Single Process | ~1,000 | 12.5% | 500 MB |
-| 4 Workers | ~3,800 | 50% | 2 GB |
-| 8 Workers | ~7,200 | 100% | 4 GB |
-| 8 Workers + Optimized | ~9,000+ | 100% | 6 GB |
+| Setup                 | Requests/sec | CPU Usage | Memory Usage |
+| --------------------- | ------------ | --------- | ------------ |
+| Single Process        | ~1,000       | 12.5%     | 500 MB       |
+| 4 Workers             | ~3,800       | 50%       | 2 GB         |
+| 8 Workers             | ~7,200       | 100%      | 4 GB         |
+| 8 Workers + Optimized | ~9,000+      | 100%      | 6 GB         |
 
 ---
 
@@ -294,13 +295,15 @@ npm install pm2
 
 ```javascript
 module.exports = {
-  apps: [{
-    name: 'storychain',
-    script: './dist/server.js',
-    instances: 'max',
-    exec_mode: 'cluster',
-    max_memory_restart: '900M',
-  }]
+  apps: [
+    {
+      name: 'storychain',
+      script: './dist/server.js',
+      instances: 'max',
+      exec_mode: 'cluster',
+      max_memory_restart: '900M',
+    },
+  ],
 };
 ```
 
@@ -328,9 +331,9 @@ Your app now uses all 8 cores efficiently.
 
 ## Summary
 
-| What | Default | Optimized |
-|------|---------|-----------|
-| CPU Usage | 1 core (12.5%) | 8 cores (100%) |
-| Throughput | 1x | 7-8x |
-| Memory | Unmanaged | 900MB/instance |
-| Fault Tolerance | None | Auto-restart |
+| What            | Default        | Optimized      |
+| --------------- | -------------- | -------------- |
+| CPU Usage       | 1 core (12.5%) | 8 cores (100%) |
+| Throughput      | 1x             | 7-8x           |
+| Memory          | Unmanaged      | 900MB/instance |
+| Fault Tolerance | None           | Auto-restart   |

@@ -35,7 +35,7 @@ const chapterAutoSaveSchema = new Schema<IChapterAutoSaveDoc>(
     content: {
       type: String,
       required: true,
-      maxlength: 10000,
+      maxlength: 80000,
     },
 
     /**

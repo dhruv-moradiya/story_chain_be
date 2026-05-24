@@ -103,7 +103,7 @@ export const PLATFORM_ROLES = {
 export const CHAPTER_LIMITS = {
   CONTENT: {
     MIN_LENGTH: 50,
-    MAX_LENGTH: 10000,
+    MAX_LENGTH: 80000,
   },
   TITLE: {
     MIN_LENGTH: 1,

@@ -23,7 +23,7 @@ export class AuthMiddlewareFactory {
   createAuthMiddleware() {
     return async (request: FastifyRequest, reply: FastifyReply) => {
       try {
-        const auth = getAuth(request);
+        const auth = await getAuth(request);
 
         if (!auth?.userId) {
           return reply.code(HTTP_STATUS.UNAUTHORIZED.code).send(ApiError.unauthorized());
@@ -46,7 +46,7 @@ export class AuthMiddlewareFactory {
           });
         }
 
-        request.user = { ...user, ...platformRole };
+        request.user = { ...user, ...platformRole.toObject() };
       } catch (error: unknown) {
         logger.error('Received error while checking auth: ', { error });
         return reply.code(500).send({

@@ -22,6 +22,7 @@ Rate limiting is a technique used to control the number of requests a client can
 ### Real-World Analogy
 
 Imagine a popular restaurant with limited seating:
+
 - **Without rate limiting**: Everyone rushes in at once, causing chaos, long waits, and poor service for everyone
 - **With rate limiting**: A host manages the flow, allowing a controlled number of guests in at a time, ensuring quality service for all
 
@@ -46,12 +47,12 @@ User A makes requests:
 
 ### 2.1 Protection Against Attacks
 
-| Threat | How Rate Limiting Helps |
-|--------|------------------------|
+| Threat           | How Rate Limiting Helps                                                 |
+| ---------------- | ----------------------------------------------------------------------- |
 | **DDoS Attacks** | Limits the impact of distributed attacks by capping requests per source |
-| **Brute Force** | Prevents password guessing by limiting login attempts |
-| **Scraping** | Stops bots from harvesting your data too quickly |
-| **API Abuse** | Prevents malicious users from exploiting endpoints |
+| **Brute Force**  | Prevents password guessing by limiting login attempts                   |
+| **Scraping**     | Stops bots from harvesting your data too quickly                        |
+| **API Abuse**    | Prevents malicious users from exploiting endpoints                      |
 
 ### 2.2 Resource Management
 
@@ -80,6 +81,7 @@ With Rate Limiting:
 ### 2.3 Cost Control
 
 For cloud-based applications:
+
 - **Database queries** cost money (read/write operations)
 - **Bandwidth** is metered
 - **Compute time** is billed
@@ -95,15 +97,15 @@ Ensures consistent performance for all users by preventing any single user from 
 
 ### 3.1 Key Terminology
 
-| Term | Definition |
-|------|------------|
-| **Rate** | Number of allowed requests |
-| **Window** | Time period for the rate (e.g., per minute, per hour) |
-| **Limit** | Maximum requests allowed within the window |
-| **Key** | Identifier for tracking (IP address, user ID, API key) |
-| **Quota** | Total allocation over a longer period |
-| **Throttling** | Slowing down requests rather than blocking |
-| **Burst** | Allowing temporary spikes above normal rate |
+| Term           | Definition                                             |
+| -------------- | ------------------------------------------------------ |
+| **Rate**       | Number of allowed requests                             |
+| **Window**     | Time period for the rate (e.g., per minute, per hour)  |
+| **Limit**      | Maximum requests allowed within the window             |
+| **Key**        | Identifier for tracking (IP address, user ID, API key) |
+| **Quota**      | Total allocation over a longer period                  |
+| **Throttling** | Slowing down requests rather than blocking             |
+| **Burst**      | Allowing temporary spikes above normal rate            |
 
 ### 3.2 Request Flow with Rate Limiting
 
@@ -148,19 +150,19 @@ Ensures consistent performance for all users by preventing any single user from 
 
 When rate limiting is active, servers typically return these headers:
 
-| Header | Purpose | Example |
-|--------|---------|---------|
-| `X-RateLimit-Limit` | Maximum requests allowed | `100` |
-| `X-RateLimit-Remaining` | Requests left in window | `45` |
-| `X-RateLimit-Reset` | When the window resets (Unix timestamp) | `1699574400` |
-| `Retry-After` | Seconds to wait before retrying (when blocked) | `60` |
+| Header                  | Purpose                                        | Example      |
+| ----------------------- | ---------------------------------------------- | ------------ |
+| `X-RateLimit-Limit`     | Maximum requests allowed                       | `100`        |
+| `X-RateLimit-Remaining` | Requests left in window                        | `45`         |
+| `X-RateLimit-Reset`     | When the window resets (Unix timestamp)        | `1699574400` |
+| `Retry-After`           | Seconds to wait before retrying (when blocked) | `60`         |
 
 ### 3.4 HTTP Status Codes
 
-| Code | Meaning | When Used |
-|------|---------|-----------|
-| `200` | OK | Request processed successfully |
-| `429` | Too Many Requests | Rate limit exceeded |
+| Code  | Meaning             | When Used                        |
+| ----- | ------------------- | -------------------------------- |
+| `200` | OK                  | Request processed successfully   |
+| `429` | Too Many Requests   | Rate limit exceeded              |
 | `503` | Service Unavailable | Server overloaded (global limit) |
 
 ---
@@ -170,6 +172,7 @@ When rate limiting is active, servers typically return these headers:
 ### 4.1 Fixed Window Counter
 
 **How It Works:**
+
 - Divides time into fixed intervals (windows)
 - Counts requests within each window
 - Resets counter when new window starts
@@ -191,14 +194,17 @@ Timeline:
 ```
 
 **Pros:**
+
 - Simple to implement
 - Low memory usage
 - Fast lookups
 
 **Cons:**
+
 - Burst problem at window boundaries (can get 2x limit)
 
 **Burst Problem Illustrated:**
+
 ```
 Limit: 5 requests per minute
 
@@ -214,6 +220,7 @@ Limit: 5 requests per minute
 ### 4.2 Sliding Window Log
 
 **How It Works:**
+
 - Stores timestamp of each request
 - Counts requests within the sliding time window
 - Removes expired timestamps
@@ -236,10 +243,12 @@ New request at 10:02:30 → ❌ Blocked
 ```
 
 **Pros:**
+
 - Very accurate
 - No boundary burst problem
 
 **Cons:**
+
 - High memory usage (stores all timestamps)
 - More expensive to compute
 
@@ -248,6 +257,7 @@ New request at 10:02:30 → ❌ Blocked
 ### 4.3 Sliding Window Counter (Hybrid)
 
 **How It Works:**
+
 - Combines Fixed Window + Sliding Window
 - Uses weighted average of current and previous window
 
@@ -271,11 +281,13 @@ Calculation:
 ```
 
 **Pros:**
+
 - Smooths out bursts
 - Memory efficient (only 2 counters)
 - Good accuracy
 
 **Cons:**
+
 - Slightly more complex calculation
 
 ---
@@ -283,6 +295,7 @@ Calculation:
 ### 4.4 Token Bucket
 
 **How It Works:**
+
 - Bucket holds tokens (each request consumes one)
 - Tokens are added at a fixed rate
 - Requests are rejected if bucket is empty
@@ -309,6 +322,7 @@ Time 0:03: Bucket = 1 token (+1 refill)
 ```
 
 **Visual Representation:**
+
 ```
 Bucket Capacity: ████████████ (10)
 
@@ -322,11 +336,13 @@ After refill:   █            (1/10)
 ```
 
 **Pros:**
+
 - Allows controlled bursts
 - Smooth rate limiting
 - Flexible for different traffic patterns
 
 **Cons:**
+
 - More complex to implement
 - Requires storing bucket state
 
@@ -335,6 +351,7 @@ After refill:   █            (1/10)
 ### 4.5 Leaky Bucket
 
 **How It Works:**
+
 - Requests enter a queue (bucket)
 - Requests are processed at a fixed rate (leak)
 - Bucket overflows if too many requests queue up
@@ -359,10 +376,12 @@ R6, R7 are rejected (bucket full)
 ```
 
 **Pros:**
+
 - Smooths out traffic completely
 - Predictable processing rate
 
 **Cons:**
+
 - Adds latency (queuing)
 - Can reject valid bursts
 
@@ -370,13 +389,13 @@ R6, R7 are rejected (bucket full)
 
 ### 4.6 Algorithm Comparison
 
-| Algorithm | Accuracy | Memory | Burst Handling | Best For |
-|-----------|----------|--------|----------------|----------|
-| Fixed Window | Low | Very Low | Poor | Simple APIs |
-| Sliding Log | Very High | High | Excellent | Security-critical |
-| Sliding Counter | High | Low | Good | General purpose |
-| Token Bucket | High | Low | Controlled | APIs with burst needs |
-| Leaky Bucket | High | Medium | Smoothing | Traffic shaping |
+| Algorithm       | Accuracy  | Memory   | Burst Handling | Best For              |
+| --------------- | --------- | -------- | -------------- | --------------------- |
+| Fixed Window    | Low       | Very Low | Poor           | Simple APIs           |
+| Sliding Log     | Very High | High     | Excellent      | Security-critical     |
+| Sliding Counter | High      | Low      | Good           | General purpose       |
+| Token Bucket    | High      | Low      | Controlled     | APIs with burst needs |
+| Leaky Bucket    | High      | Medium   | Smoothing      | Traffic shaping       |
 
 ---
 
@@ -556,12 +575,12 @@ Request Lifecycle with Rate Limiting:
 
 ### 6.1 Core Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `max` | number/function | 1000 | Maximum requests per time window |
-| `timeWindow` | number/string | 60000 (1 min) | Duration of rate limit window |
-| `ban` | number | - | Requests to block after limit (optional) |
-| `cache` | number | 5000 | Max number of keys to track |
+| Option       | Type            | Default       | Description                              |
+| ------------ | --------------- | ------------- | ---------------------------------------- |
+| `max`        | number/function | 1000          | Maximum requests per time window         |
+| `timeWindow` | number/string   | 60000 (1 min) | Duration of rate limit window            |
+| `ban`        | number          | -             | Requests to block after limit (optional) |
+| `cache`      | number          | 5000          | Max number of keys to track              |
 
 ### 6.2 Time Window Explained
 
@@ -715,7 +734,7 @@ Different limits based on user type:
 │  Anonymous Users      → 20 requests/minute                  │
 │  Free Tier Users      → 100 requests/minute                 │
 │  Pro Users            → 1000 requests/minute                │
-│  Enterprise Users     → 10000 requests/minute               │
+│  Enterprise Users     → 80000 requests/minute               │
 │  Internal Services    → Unlimited                           │
 │                                                              │
 └─────────────────────────────────────────────────────────────┘

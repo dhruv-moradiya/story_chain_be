@@ -1,3 +1,4 @@
+import { TPlatformRole } from '@/features/platformRole/types/platformRole.types';
 import {
   ICurrentUserResponse,
   IPublicUserResponseWithEmail,
@@ -7,11 +8,14 @@ import {
 import { IUser } from '@features/user/types/user.types';
 
 export class UserTransformer {
-  static currentUserResponse(input: IUser): ICurrentUserResponse {
+  static currentUserResponse(
+    input: IUser & { role: TPlatformRole }
+  ): ICurrentUserResponse & { role: TPlatformRole } {
     return {
       clerkId: input.clerkId,
       username: input.username,
       email: input.email,
+      role: input.role,
       bio: input.bio,
       avatarUrl: input.avatarUrl,
       xp: input.xp,

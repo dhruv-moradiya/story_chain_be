@@ -1,4 +1,5 @@
 import { Badge } from '@/features/user/types/user-enum';
+import { TPlatformRole } from '@/features/platformRole/types/platformRole.types';
 import { IUserPreferences, IUserStats } from '@/features/user/types/user.types';
 
 // Current User Response
@@ -6,6 +7,7 @@ interface ICurrentUserResponse {
   clerkId: string;
   username: string;
   email: string;
+  role: TPlatformRole;
   bio?: string;
   avatarUrl?: string;
   xp: number;

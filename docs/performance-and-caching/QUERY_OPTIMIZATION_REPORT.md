@@ -53,12 +53,12 @@ Query Execution Flow:
 
 ### 1.2 Query Performance Indicators
 
-| Indicator | Good | Bad |
-|-----------|------|-----|
-| Index Used | `IXSCAN` | `COLLSCAN` |
+| Indicator          | Good                 | Bad                   |
+| ------------------ | -------------------- | --------------------- |
+| Index Used         | `IXSCAN`             | `COLLSCAN`            |
 | Documents Examined | ≈ Documents Returned | >> Documents Returned |
-| Execution Time | < 100ms | > 1000ms |
-| Keys Examined | ≈ Documents Returned | >> Documents Returned |
+| Execution Time     | < 100ms              | > 1000ms              |
+| Keys Examined      | ≈ Documents Returned | >> Documents Returned |
 
 ### 1.3 Current Model Complexity
 
@@ -85,6 +85,7 @@ Story (1) ──────────────── (N) Chapter
 ### 2.1 Current Indexes Analysis
 
 **Story Model - Current Indexes:**
+
 ```typescript
 // Field-level indexes
 title: { index: 'text' }
@@ -102,6 +103,7 @@ lastActivityAt: { index: -1 }
 ```
 
 **Chapter Model - Current Indexes:**
+
 ```typescript
 // Field-level indexes
 storyId: { index: true }
@@ -185,15 +187,14 @@ export async function ensureIndexes(): Promise<void> {
   }
 }
 
-export async function analyzeIndexUsage(
-  collectionName: string
-): Promise<IndexStats[]> {
+export async function analyzeIndexUsage(collectionName: string): Promise<IndexStats[]> {
   const db = mongoose.connection.db;
-  const stats = await db.collection(collectionName).aggregate([
-    { $indexStats: {} }
-  ]).toArray();
+  const stats = await db
+    .collection(collectionName)
+    .aggregate([{ $indexStats: {} }])
+    .toArray();
 
-  return stats.map(stat => ({
+  return stats.map((stat) => ({
     name: stat.name,
     accesses: stat.accesses.ops,
     since: stat.accesses.since,
@@ -312,7 +313,7 @@ const good3 = [
 ```typescript
 // src/features/story/repositories/story.repository.ts
 
-// ❌ SLOW for large offsets (e.g., skip: 10000)
+// ❌ SLOW for large offsets (e.g., skip: 80000)
 async findAll(options: { limit?: number; skip?: number }): Promise<IStory[]> {
   return this.model
     .find()
@@ -417,8 +418,8 @@ return story.title;
 
 // ✅ GOOD: Exclude large fields explicitly
 const story = await Story.findById(id, {
-  description: 0,  // Large text field
-  'settings': 0,   // Nested object not needed
+  description: 0, // Large text field
+  settings: 0, // Nested object not needed
 });
 ```
 
@@ -484,7 +485,7 @@ export abstract class BasePipelineBuilder<T extends BasePipelineBuilder<T>> {
   matchByIds(ids: string[]): T {
     this.pipeline.push({
       $match: {
-        _id: { $in: ids.map(id => new Types.ObjectId(id)) }
+        _id: { $in: ids.map((id) => new Types.ObjectId(id)) },
       },
     });
     return this as unknown as T;
@@ -503,10 +504,7 @@ export abstract class BasePipelineBuilder<T extends BasePipelineBuilder<T>> {
 
   paginate(page: number, limit: number): T {
     const skip = (page - 1) * limit;
-    this.pipeline.push(
-      { $skip: skip },
-      { $limit: limit }
-    );
+    this.pipeline.push({ $skip: skip }, { $limit: limit });
     return this as unknown as T;
   }
 
@@ -521,7 +519,7 @@ export abstract class BasePipelineBuilder<T extends BasePipelineBuilder<T>> {
 
     this.pipeline.push(
       { $sort: { createdAt: direction === 'next' ? -1 : 1 } },
-      { $limit: limit + 1 }  // +1 to check hasMore
+      { $limit: limit + 1 } // +1 to check hasMore
     );
 
     return this as unknown as T;
@@ -555,7 +553,7 @@ export abstract class BasePipelineBuilder<T extends BasePipelineBuilder<T>> {
     project?: Record<string, 0 | 1>;
   }): T {
     const subPipeline: PipelineStage[] = [
-      { $limit: 1 },  // Optimization: single document expected
+      { $limit: 1 }, // Optimization: single document expected
     ];
 
     if (options.project) {
@@ -629,7 +627,7 @@ export abstract class BasePipelineBuilder<T extends BasePipelineBuilder<T>> {
 
   exclude(...fields: string[]): T {
     const unset: Record<string, 0> = {};
-    fields.forEach(f => unset[f] = 0);
+    fields.forEach((f) => (unset[f] = 0));
     this.pipeline.push({ $project: unset });
     return this as unknown as T;
   }
@@ -652,17 +650,17 @@ export abstract class BasePipelineBuilder<T extends BasePipelineBuilder<T>> {
     // Wrap existing pipeline in facet
     const existingPipeline = [...this.pipeline];
     this.pipeline = [
-      ...existingPipeline.filter(stage => '$match' in stage),  // Keep matches
+      ...existingPipeline.filter((stage) => '$match' in stage), // Keep matches
       {
         $facet: {
-          [dataField]: existingPipeline.filter(stage => !('$match' in stage)),
+          [dataField]: existingPipeline.filter((stage) => !('$match' in stage)),
           [countField]: [{ $count: 'count' }],
         },
       },
       {
         $set: {
           [countField]: {
-            $ifNull: [{ $arrayElemAt: [`$${countField}.count`, 0] }, 0]
+            $ifNull: [{ $arrayElemAt: [`$${countField}.count`, 0] }, 0],
           },
         },
       },
@@ -695,8 +693,17 @@ import { PipelineStage, Types } from 'mongoose';
 import { BasePipelineBuilder } from '@utils/pipelines/basePipeline.builder';
 
 type StoryStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED' | 'DELETED';
-type StoryGenre = 'FANTASY' | 'SCI_FI' | 'MYSTERY' | 'ROMANCE' | 'HORROR' |
-                  'THRILLER' | 'ADVENTURE' | 'DRAMA' | 'COMEDY' | 'OTHER';
+type StoryGenre =
+  | 'FANTASY'
+  | 'SCI_FI'
+  | 'MYSTERY'
+  | 'ROMANCE'
+  | 'HORROR'
+  | 'THRILLER'
+  | 'ADVENTURE'
+  | 'DRAMA'
+  | 'COMEDY'
+  | 'OTHER';
 
 interface StoryFilterOptions {
   status?: StoryStatus;
@@ -707,7 +714,6 @@ interface StoryFilterOptions {
 }
 
 export class StoryPipelineBuilder extends BasePipelineBuilder<StoryPipelineBuilder> {
-
   // ═══════════════════════════════════════════════════════════════
   // MATCH OPERATIONS
   // ═══════════════════════════════════════════════════════════════
@@ -878,7 +884,7 @@ export class StoryPipelineBuilder extends BasePipelineBuilder<StoryPipelineBuild
       _id: 1,
       title: 1,
       slug: 1,
-      description: { $substrCP: ['$description', 0, 200] },  // Truncate
+      description: { $substrCP: ['$description', 0, 200] }, // Truncate
       cardImage: 1,
       'settings.genre': 1,
       'settings.contentRating': 1,
@@ -940,7 +946,6 @@ import { PipelineStage, Types } from 'mongoose';
 import { BasePipelineBuilder } from '@utils/pipelines/basePipeline.builder';
 
 export class ChapterPipelineBuilder extends BasePipelineBuilder<ChapterPipelineBuilder> {
-
   // ═══════════════════════════════════════════════════════════════
   // MATCH OPERATIONS
   // ═══════════════════════════════════════════════════════════════
@@ -983,7 +988,7 @@ export class ChapterPipelineBuilder extends BasePipelineBuilder<ChapterPipelineB
     // Optimized for loading entire chapter tree
     this.pipeline.push(
       { $match: { status: 'PUBLISHED' } },
-      { $sort: { depth: 1, createdAt: 1 } },  // Process parents first
+      { $sort: { depth: 1, createdAt: 1 } }, // Process parents first
       {
         $project: {
           _id: 1,
@@ -1015,7 +1020,7 @@ export class ChapterPipelineBuilder extends BasePipelineBuilder<ChapterPipelineB
           connectFromField: 'parentChapterId',
           connectToField: '_id',
           as: 'ancestors',
-          maxDepth: 50,  // Prevent infinite loops
+          maxDepth: 50, // Prevent infinite loops
           depthField: 'pathDepth',
         },
       },
@@ -1061,7 +1066,7 @@ export class ChapterPipelineBuilder extends BasePipelineBuilder<ChapterPipelineB
               $match: {
                 $expr: { $eq: ['$parentChapterId', '$$chapterId'] },
                 status: 'PUBLISHED',
-              }
+              },
             },
             { $count: 'count' },
           ],
@@ -1090,10 +1095,7 @@ export class ChapterPipelineBuilder extends BasePipelineBuilder<ChapterPipelineB
             {
               $match: {
                 $expr: {
-                  $and: [
-                    { $eq: ['$chapterId', '$$chapterId'] },
-                    { $eq: ['$userId', userId] },
-                  ],
+                  $and: [{ $eq: ['$chapterId', '$$chapterId'] }, { $eq: ['$userId', userId] }],
                 },
               },
             },
@@ -1219,9 +1221,7 @@ export async function explainPipeline<T>(
   model: Model<T>,
   pipeline: PipelineStage[]
 ): Promise<ExplainResult> {
-  const explanation = await model
-    .aggregate(pipeline)
-    .explain('executionStats');
+  const explanation = await model.aggregate(pipeline).explain('executionStats');
 
   const stats = explanation.stages?.[0]?.$cursor?.executionStats;
 
@@ -1353,7 +1353,7 @@ export class StoryService extends BaseModule {
           totalPages: Math.ceil(total / limit),
         };
       },
-      { ttl: 300 }  // 5 minutes for list queries
+      { ttl: 300 } // 5 minutes for list queries
     );
   }
 }
@@ -1496,9 +1496,7 @@ export function enableQueryProfiling(): void {
 }
 
 export function getSlowQueries(limit = 100): QueryLog[] {
-  return queryLogs
-    .sort((a, b) => b.executionTimeMs - a.executionTimeMs)
-    .slice(0, limit);
+  return queryLogs.sort((a, b) => b.executionTimeMs - a.executionTimeMs).slice(0, limit);
 }
 
 export function clearQueryLogs(): void {
@@ -1529,11 +1527,12 @@ export async function getIndexUsageStats(): Promise<IndexUsage[]> {
 
   for (const coll of collections) {
     try {
-      const stats = await db.collection(coll.name).aggregate([
-        { $indexStats: {} }
-      ]).toArray();
+      const stats = await db
+        .collection(coll.name)
+        .aggregate([{ $indexStats: {} }])
+        .toArray();
 
-      stats.forEach(stat => {
+      stats.forEach((stat) => {
         allStats.push({
           collection: coll.name,
           indexName: stat.name,
@@ -1549,17 +1548,13 @@ export async function getIndexUsageStats(): Promise<IndexUsage[]> {
   return allStats.sort((a, b) => b.accesses - a.accesses);
 }
 
-export async function findUnusedIndexes(
-  minDays = 7
-): Promise<IndexUsage[]> {
+export async function findUnusedIndexes(minDays = 7): Promise<IndexUsage[]> {
   const allStats = await getIndexUsageStats();
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - minDays);
 
-  return allStats.filter(stat =>
-    stat.accesses === 0 &&
-    stat.since < cutoffDate &&
-    stat.indexName !== '_id_'  // Don't suggest removing _id index
+  return allStats.filter(
+    (stat) => stat.accesses === 0 && stat.since < cutoffDate && stat.indexName !== '_id_' // Don't suggest removing _id index
   );
 }
 
@@ -1577,14 +1572,11 @@ export async function getQueryHealthReport(): Promise<object> {
   };
 }
 
-function generateRecommendations(
-  indexStats: IndexUsage[],
-  slowQueries: QueryLog[]
-): string[] {
+function generateRecommendations(indexStats: IndexUsage[], slowQueries: QueryLog[]): string[] {
   const recommendations: string[] = [];
 
   // Check for unused indexes
-  const unused = indexStats.filter(i => i.accesses === 0 && i.indexName !== '_id_');
+  const unused = indexStats.filter((i) => i.accesses === 0 && i.indexName !== '_id_');
   if (unused.length > 3) {
     recommendations.push(
       `Consider removing ${unused.length} unused indexes to improve write performance`
@@ -1592,11 +1584,9 @@ function generateRecommendations(
   }
 
   // Check for slow query patterns
-  const slowCollections = new Set(slowQueries.map(q => q.collection));
+  const slowCollections = new Set(slowQueries.map((q) => q.collection));
   if (slowCollections.size > 0) {
-    recommendations.push(
-      `Review indexes for collections: ${[...slowCollections].join(', ')}`
-    );
+    recommendations.push(`Review indexes for collections: ${[...slowCollections].join(', ')}`);
   }
 
   return recommendations;
@@ -1642,17 +1632,14 @@ export class StoryRepository extends BaseRepository<IStory, IStoryDoc> {
   // OPTIMIZED FINDERS
   // ═══════════════════════════════════════════════════════════════
 
-  async findBySlugOptimized(
-    slug: string,
-    options: FindOptions = {}
-  ): Promise<IStory | null> {
+  async findBySlugOptimized(slug: string, options: FindOptions = {}): Promise<IStory | null> {
     // Uses unique slug index - fastest possible lookup
     const query = this.model.findOne({ slug });
 
     if (options.session) query.session(options.session);
 
     return query
-      .hint({ slug: 1 })  // Force slug index
+      .hint({ slug: 1 }) // Force slug index
       .lean()
       .exec();
   }
@@ -1706,26 +1693,15 @@ export class StoryRepository extends BaseRepository<IStory, IStoryDoc> {
   }
 
   async getStoryWithDetails(slug: string): Promise<IStoryWithDetails | null> {
-    const [result] = await this.aggregateWithBuilder<IStoryWithDetails>(
-      builder => builder
-        .storyBySlug(slug)
-        .withCreator()
-        .withCollaborators()
-        .withChapterCount()
-        .detailView()
+    const [result] = await this.aggregateWithBuilder<IStoryWithDetails>((builder) =>
+      builder.storyBySlug(slug).withCreator().withCollaborators().withChapterCount().detailView()
     );
 
     return result ?? null;
   }
 
-  async getTrendingStories(
-    page: number,
-    limit: number
-  ): Promise<PaginatedResult<IStoryCard>> {
-    const pipeline = new StoryPipelineBuilder()
-      .publishedOnly()
-      .sortByTrending()
-      .build();
+  async getTrendingStories(page: number, limit: number): Promise<PaginatedResult<IStoryCard>> {
+    const pipeline = new StoryPipelineBuilder().publishedOnly().sortByTrending().build();
 
     const [result] = await this.model.aggregate([
       ...pipeline,
@@ -1807,7 +1783,7 @@ export class StoryRepository extends BaseRepository<IStory, IStoryDoc> {
             { $sort: { score: -1, createdAt: -1 } },
             { $skip: (page - 1) * limit },
             { $limit: limit },
-            { $project: { score: 0 } },  // Remove internal score
+            { $project: { score: 0 } }, // Remove internal score
           ],
           totalCount: [{ $count: 'count' }],
         },
@@ -1886,11 +1862,9 @@ export class StoryService extends BaseModule {
   async getTrendingStories(page = 1, limit = 20): Promise<PaginatedResult<IStoryCard>> {
     const cacheKey = CacheKeyBuilder.story.list(page, limit, 'trending');
 
-    return this.cache.getOrSet(
-      cacheKey,
-      () => this.storyRepo.getTrendingStories(page, limit),
-      { ttl: 300 }
-    );
+    return this.cache.getOrSet(cacheKey, () => this.storyRepo.getTrendingStories(page, limit), {
+      ttl: 300,
+    });
   }
 
   async searchStories(
@@ -1907,14 +1881,10 @@ export class StoryService extends BaseModule {
 
     return this.cache.getOrSet(
       cacheKey,
-      () => this.storyRepo.aggregateWithBuilder(
-        builder => builder
-          .lastSevenDays()
-          .withCreator()
-          .sortByNewest()
-          .paginate(1, 20)
-          .cardView()
-      ),
+      () =>
+        this.storyRepo.aggregateWithBuilder((builder) =>
+          builder.lastSevenDays().withCreator().sortByNewest().paginate(1, 20).cardView()
+        ),
       { ttl: 300 }
     );
   }

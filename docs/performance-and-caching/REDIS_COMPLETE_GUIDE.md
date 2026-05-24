@@ -19,6 +19,7 @@ A comprehensive guide to mastering Redis for your Node.js/TypeScript application
 ### What Makes Redis Powerful?
 
 Redis is an **in-memory data structure store** that can be used as:
+
 - **Cache** - Store frequently accessed data
 - **Database** - Persist data with various durability options
 - **Message Broker** - Pub/Sub and Streams for real-time messaging
@@ -29,14 +30,14 @@ Redis is an **in-memory data structure store** that can be used as:
 
 ### Key Characteristics
 
-| Feature | Description |
-|---------|-------------|
-| Speed | ~100,000 operations/second on single thread |
-| Persistence | RDB snapshots + AOF (Append Only File) |
-| Replication | Master-Replica architecture |
-| Clustering | Horizontal scaling with automatic sharding |
-| Atomicity | All operations are atomic |
-| Lua Scripting | Server-side scripts for complex operations |
+| Feature       | Description                                 |
+| ------------- | ------------------------------------------- |
+| Speed         | ~100,000 operations/second on single thread |
+| Persistence   | RDB snapshots + AOF (Append Only File)      |
+| Replication   | Master-Replica architecture                 |
+| Clustering    | Horizontal scaling with automatic sharding  |
+| Atomicity     | All operations are atomic                   |
+| Lua Scripting | Server-side scripts for complex operations  |
 
 ---
 
@@ -78,6 +79,7 @@ await redis.setrange('greeting', 6, 'Redis'); // Replace at offset
 ```
 
 **Use Cases:**
+
 - Session tokens
 - Page view counters
 - Rate limiting counters
@@ -123,6 +125,7 @@ const [cursor, fields] = await redis.hscan('user:123', 0, 'COUNT', 100);
 ```
 
 **Use Cases:**
+
 - User profiles
 - Product details
 - Configuration settings
@@ -178,6 +181,7 @@ await redis.blmove('source', 'dest', 'LEFT', 'RIGHT', 30); // Blocking version
 ```
 
 **Use Cases:**
+
 - Job queues (FIFO/LIFO)
 - Activity feeds
 - Recent items (with LTRIM for capping)
@@ -230,6 +234,7 @@ const [cursor, members] = await redis.sscan('tags:story:123', 0, 'MATCH', 'fan*'
 ```
 
 **Use Cases:**
+
 - Tags/Categories
 - Unique visitors tracking
 - Friend lists
@@ -292,6 +297,7 @@ const [cursor, members] = await redis.zscan('leaderboard', 0, 'COUNT', 100);
 ```
 
 **Use Cases:**
+
 - Leaderboards/Rankings
 - Priority queues
 - Time-based data (score = timestamp)
@@ -335,10 +341,16 @@ await redis.xgroup('CREATE', 'events', 'mygroup', '$', 'MKSTREAM'); // Create gr
 
 // Read as Consumer
 await redis.xreadgroup(
-  'GROUP', 'mygroup', 'consumer1',
-  'COUNT', 10,
-  'BLOCK', 5000,
-  'STREAMS', 'events', '>'
+  'GROUP',
+  'mygroup',
+  'consumer1',
+  'COUNT',
+  10,
+  'BLOCK',
+  5000,
+  'STREAMS',
+  'events',
+  '>'
 );
 
 // Acknowledge Processed Entry
@@ -352,6 +364,7 @@ await redis.xtrim('events', 'MAXLEN', 1000);
 ```
 
 **Use Cases:**
+
 - Event sourcing
 - Activity streams
 - Notification systems
@@ -374,7 +387,8 @@ await redis.pfadd('unique:visitors:2024-01', 'user1', 'user2', 'user3');
 await redis.pfcount('unique:visitors:2024-01'); // ~3
 
 // Merge Multiple HyperLogLogs
-await redis.pfmerge('unique:visitors:2024-q1',
+await redis.pfmerge(
+  'unique:visitors:2024-q1',
   'unique:visitors:2024-01',
   'unique:visitors:2024-02',
   'unique:visitors:2024-03'
@@ -382,6 +396,7 @@ await redis.pfmerge('unique:visitors:2024-q1',
 ```
 
 **Use Cases:**
+
 - Unique visitor counting
 - Unique search queries
 - Unique events tracking
@@ -416,6 +431,7 @@ await redis.bitpos('user:123:logins', 0); // First non-login day
 ```
 
 **Use Cases:**
+
 - Daily active users
 - Feature flags
 - User permissions
@@ -430,10 +446,17 @@ Store and query geographic coordinates.
 
 ```typescript
 // Add Locations
-await redis.geoadd('locations',
-  -122.4194, 37.7749, 'San Francisco',
-  -73.9857, 40.7484, 'New York',
-  -0.1276, 51.5074, 'London'
+await redis.geoadd(
+  'locations',
+  -122.4194,
+  37.7749,
+  'San Francisco',
+  -73.9857,
+  40.7484,
+  'New York',
+  -0.1276,
+  51.5074,
+  'London'
 );
 
 // Get Coordinates
@@ -454,6 +477,7 @@ await redis.geohash('locations', 'San Francisco'); // ["9q8yyk8yutp"]
 ```
 
 **Use Cases:**
+
 - Store locators
 - Nearby search
 - Delivery tracking
@@ -701,7 +725,8 @@ async function getStoryOverview(slug: string): Promise<StoryOverview> {
   const ttl = await redis.ttl(cacheKey);
 
   // If TTL is low, refresh in background
-  if (cached && ttl < 60) { // Less than 1 minute left
+  if (cached && ttl < 60) {
+    // Less than 1 minute left
     refreshCacheInBackground(slug).catch(console.error);
   }
 
@@ -783,17 +808,17 @@ await redis.hset('user:123', 'name', 'John', 'age', '30');
 const key = `${type}:${id}:${subtype}`;
 
 // Examples:
-'user:123:profile'
-'story:456:overview'
-'story:456:stats'
-'cache:story:overview:my-story-slug'
+('user:123:profile');
+('story:456:overview');
+('story:456:stats');
+('cache:story:overview:my-story-slug');
 
 // Add version for cache busting
-'v2:story:overview:my-story-slug'
+('v2:story:overview:my-story-slug');
 
 // Use tags for bulk invalidation patterns
-'story:overview:{slug}'
-'story:{storyId}:chapters'
+('story:overview:{slug}');
+('story:{storyId}:chapters');
 ```
 
 ### Batch Operations
@@ -806,13 +831,13 @@ for (const id of userIds) {
 }
 
 // Good - Single round trip
-const keys = userIds.map(id => `user:${id}`);
+const keys = userIds.map((id) => `user:${id}`);
 const values = await redis.mget(...keys);
-const users = values.map(v => v ? JSON.parse(v) : null);
+const users = values.map((v) => (v ? JSON.parse(v) : null));
 
 // Even better - Pipeline
 const pipeline = redis.pipeline();
-userIds.forEach(id => pipeline.hgetall(`user:${id}`));
+userIds.forEach((id) => pipeline.hgetall(`user:${id}`));
 const results = await pipeline.exec();
 ```
 
@@ -840,25 +865,25 @@ const patterns = {
 ```typescript
 const TTL = {
   // Frequently changing data
-  realtime: 30,           // 30 seconds
+  realtime: 30, // 30 seconds
 
   // Moderately changing data
-  shortTerm: 300,         // 5 minutes
+  shortTerm: 300, // 5 minutes
 
   // Slowly changing data
-  mediumTerm: 3600,       // 1 hour
+  mediumTerm: 3600, // 1 hour
 
   // Rarely changing data
-  longTerm: 86400,        // 24 hours
+  longTerm: 86400, // 24 hours
 
   // Static data
-  static: 604800,         // 7 days
+  static: 604800, // 7 days
 
   // Sessions
-  session: 86400,         // 24 hours
+  session: 86400, // 24 hours
 
   // Rate limiting windows
-  rateLimit: 60,          // 1 minute
+  rateLimit: 60, // 1 minute
 };
 ```
 
@@ -937,17 +962,9 @@ await invalidateByTag('story:123'); // Invalidates all caches related to story 1
 ### 5. Distributed Locking
 
 ```typescript
-async function acquireLock(
-  resource: string,
-  ttl: number = 10000
-): Promise<string | null> {
+async function acquireLock(resource: string, ttl: number = 80000): Promise<string | null> {
   const lockId = crypto.randomUUID();
-  const acquired = await redis.set(
-    `lock:${resource}`,
-    lockId,
-    'PX', ttl,
-    'NX'
-  );
+  const acquired = await redis.set(`lock:${resource}`, lockId, 'PX', ttl, 'NX');
   return acquired ? lockId : null;
 }
 
@@ -1095,7 +1112,7 @@ export class CacheService {
     try {
       const client = this.redis.getClient();
       const values = await client.mget(...keys);
-      return values.map(v => (v ? JSON.parse(v) : null));
+      return values.map((v) => (v ? JSON.parse(v) : null));
     } catch (error) {
       this.logger.error('Cache mget error', { keys, error });
       return keys.map(() => null);
@@ -1141,11 +1158,12 @@ interface RateLimitConfig {
 
 @injectable()
 export class RateLimiter {
-  constructor(
-    @inject(Tokens.RedisService) private readonly redis: RedisService
-  ) {}
+  constructor(@inject(Tokens.RedisService) private readonly redis: RedisService) {}
 
-  async isAllowed(identifier: string, config: RateLimitConfig): Promise<{
+  async isAllowed(
+    identifier: string,
+    config: RateLimitConfig
+  ): Promise<{
     allowed: boolean;
     remaining: number;
     resetAt: number;
@@ -1163,10 +1181,10 @@ export class RateLimiter {
       return {current, ttl}
     `;
 
-    const [current, ttl] = await client.eval(script, 1, key, windowSeconds) as [number, number];
+    const [current, ttl] = (await client.eval(script, 1, key, windowSeconds)) as [number, number];
 
     const remaining = Math.max(0, config.maxRequests - current);
-    const resetAt = Date.now() + (ttl * 1000);
+    const resetAt = Date.now() + ttl * 1000;
 
     return {
       allowed: current <= config.maxRequests,
@@ -1189,9 +1207,7 @@ import type { RedisService } from '@/config/services/redis.service';
 export class LeaderboardService {
   private readonly key = 'leaderboard:stories:trending';
 
-  constructor(
-    @inject(Tokens.RedisService) private readonly redis: RedisService
-  ) {}
+  constructor(@inject(Tokens.RedisService) private readonly redis: RedisService) {}
 
   async updateScore(storyId: string, score: number): Promise<void> {
     const client = this.redis.getClient();
@@ -1230,7 +1246,10 @@ export class LeaderboardService {
     pipeline.zscore(this.key, storyId);
     pipeline.zrevrank(this.key, storyId);
 
-    const [[, score], [, rank]] = await pipeline.exec() as [[null, string | null], [null, number | null]];
+    const [[, score], [, rank]] = (await pipeline.exec()) as [
+      [null, string | null],
+      [null, number | null],
+    ];
 
     if (score === null || rank === null) return null;
 
@@ -1248,48 +1267,48 @@ export class LeaderboardService {
 
 ### Command Cheat Sheet
 
-| Category | Command | Description |
-|----------|---------|-------------|
-| **Strings** | `SET/GET` | Basic key-value |
-| | `INCR/DECR` | Atomic counters |
-| | `MSET/MGET` | Multiple keys |
-| | `SETEX` | Set with expiration |
-| **Hashes** | `HSET/HGET` | Set/get hash field |
-| | `HGETALL` | Get all fields |
-| | `HINCRBY` | Increment field |
-| **Lists** | `LPUSH/RPUSH` | Add to list |
-| | `LPOP/RPOP` | Remove from list |
-| | `LRANGE` | Get range |
-| | `BLPOP/BRPOP` | Blocking pop |
-| **Sets** | `SADD/SREM` | Add/remove member |
-| | `SISMEMBER` | Check membership |
-| | `SINTER/SUNION` | Set operations |
-| **Sorted Sets** | `ZADD` | Add with score |
-| | `ZRANGE/ZREVRANGE` | Get by rank |
-| | `ZINCRBY` | Increment score |
-| | `ZRANK` | Get rank |
-| **Keys** | `DEL` | Delete keys |
-| | `EXPIRE/TTL` | Set/get expiration |
-| | `SCAN` | Iterate keys |
-| | `EXISTS` | Check existence |
+| Category        | Command            | Description         |
+| --------------- | ------------------ | ------------------- |
+| **Strings**     | `SET/GET`          | Basic key-value     |
+|                 | `INCR/DECR`        | Atomic counters     |
+|                 | `MSET/MGET`        | Multiple keys       |
+|                 | `SETEX`            | Set with expiration |
+| **Hashes**      | `HSET/HGET`        | Set/get hash field  |
+|                 | `HGETALL`          | Get all fields      |
+|                 | `HINCRBY`          | Increment field     |
+| **Lists**       | `LPUSH/RPUSH`      | Add to list         |
+|                 | `LPOP/RPOP`        | Remove from list    |
+|                 | `LRANGE`           | Get range           |
+|                 | `BLPOP/BRPOP`      | Blocking pop        |
+| **Sets**        | `SADD/SREM`        | Add/remove member   |
+|                 | `SISMEMBER`        | Check membership    |
+|                 | `SINTER/SUNION`    | Set operations      |
+| **Sorted Sets** | `ZADD`             | Add with score      |
+|                 | `ZRANGE/ZREVRANGE` | Get by rank         |
+|                 | `ZINCRBY`          | Increment score     |
+|                 | `ZRANK`            | Get rank            |
+| **Keys**        | `DEL`              | Delete keys         |
+|                 | `EXPIRE/TTL`       | Set/get expiration  |
+|                 | `SCAN`             | Iterate keys        |
+|                 | `EXISTS`           | Check existence     |
 
 ### When to Use What
 
-| Use Case | Data Structure |
-|----------|---------------|
-| Session storage | Hash or String |
-| Caching API responses | String (JSON) |
-| User profile | Hash |
-| Unique visitors | Set or HyperLogLog |
-| Leaderboard | Sorted Set |
-| Job queue | List or Stream |
-| Rate limiting | String (INCR) |
-| Real-time messaging | Pub/Sub or Stream |
-| Recent activity | List (capped) |
-| Tags/Categories | Set |
-| Geolocation | Geo |
-| Counters | String (INCR) |
-| Feature flags | Bitmap |
+| Use Case              | Data Structure     |
+| --------------------- | ------------------ |
+| Session storage       | Hash or String     |
+| Caching API responses | String (JSON)      |
+| User profile          | Hash               |
+| Unique visitors       | Set or HyperLogLog |
+| Leaderboard           | Sorted Set         |
+| Job queue             | List or Stream     |
+| Rate limiting         | String (INCR)      |
+| Real-time messaging   | Pub/Sub or Stream  |
+| Recent activity       | List (capped)      |
+| Tags/Categories       | Set                |
+| Geolocation           | Geo                |
+| Counters              | String (INCR)      |
+| Feature flags         | Bitmap             |
 
 ---
 

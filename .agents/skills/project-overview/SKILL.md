@@ -8,9 +8,11 @@ description: Comprehensive details about the models, folder structure, and the k
 This skill provides an overview of the StoryChain Backend's architecture, technologies, folder structure, and the entire suite of database models it utilizes.
 
 ## Project Type & Architecture
+
 This is a **Node.js/TypeScript Backend** built using the **Fastify** web framework. The project is an interactive, collaborative story-writing platform where stories can branch out into multiple chapters, resembling a community-driven "choose-your-own-adventure" ecosystem. It features pull requests (PRs) for chapter contributions, voting, and reading history tracking.
 
 **Key Technical Stack & Architecture Details:**
+
 - **Web Framework**: Fastify
 - **Database**: MongoDB (via Mongoose)
 - **Dependency Injection**: `tsyringe` (Service/Repository pattern)
@@ -60,12 +62,14 @@ src/
 The `src/models/` directory contains all Mongoose representations of the application's domain logic. Here is each and every model along with its primary purpose:
 
 ### Core Content
+
 1. **`story.model.ts`**: The root entity of a story. Contains the metadata, overall stats, and links to the initial or "root" chapter.
 2. **`chapter.model.ts`**: Represents a single node in a story. Chapters can branch off one another (parent-child relationship).
 3. **`chapterVersion.model.ts`**: Tracks historical revisions and edit history of an existing chapter.
 4. **`chapterAutoSave.modal.ts`**: Stores active draft states while users are currently writing/editing before publishing or submitting.
 
 ### Contribution & Collaboration (The PR System)
+
 5. **`pullRequest.model.ts`**: Manages community submissions. When a user wants to append a chapter to an existing story, it creates a PR that must be reviewed.
 6. **`prComment.model.ts`**: Discussion threads specific to a Pull Request.
 7. **`prReview.model.ts`**: Formal review feedback left on a Pull Request.
@@ -73,6 +77,7 @@ The `src/models/` directory contains all Mongoose representations of the applica
 9. **`storyCollaborator.model.ts`**: Manages explicit permissions and roles for users collaborating directly on a specific story.
 
 ### Social & Interaction
+
 10. **`vote.model.ts`**: General upvotes and downvotes on published stories/chapters.
 11. **`comment.model.ts`**: Public reader comments on stories or chapters.
 12. **`commentVote.model.ts`**: Upvotes/downvotes specifically for comments.
@@ -80,16 +85,17 @@ The `src/models/` directory contains all Mongoose representations of the applica
 14. **`follow.model.ts`**: Social graph model. Tracks users following other authors/users.
 
 ### Tracking & Analytics
+
 15. **`readingHistory.model.ts`**: Crucial heartbeat model tracking a user's exact reading progress, active session timestamps, total read time on a branch, and whether their read is "qualifying" (long enough to count as a real read).
 16. **`session.model.ts`**: Tracking of active user logins / client sessions.
 
 ### Platform Administration
+
 17. **`user.model.ts`**: The application's mirror of the Clerk Auth user. Stores user profiles, display names, and avatars.
 18. **`platformRole.model.ts`**: Role-Based Access Control (RBAC) definitions mapping users to global roles (Admin, Mod, etc.).
 19. **`report.model.ts`**: User-submitted reports for inappropriate content or community guideline violations.
 20. **`appeal.modal.ts`**: System allowing users to appeal reports, bans, or rejected content actions.
 21. **`notification.model.ts`**: General application notifications for users (e.g., "Your PR was accepted").
-
 
 ## Complete Model Source Codes
 
@@ -192,7 +198,6 @@ appealSchema.index({ status: 1, priority: -1, createdAt: 1 });
 appealSchema.index({ assignedTo: 1, status: 1 });
 
 export const Appeal = mongoose.model('Appeal', appealSchema);
-
 ```
 
 ### `src/models/bookmark.model.ts`
@@ -234,7 +239,6 @@ bookmarkSchema.index({ userId: 1, storySlug: 1 });
 const Bookmark = mongoose.model<IBookmarkDoc>('Bookmark', bookmarkSchema);
 
 export { Bookmark };
-
 ```
 
 ### `src/models/chapter.model.ts`
@@ -298,7 +302,7 @@ const chapterSchema = new Schema<IChapterDoc>(
       type: String,
       required: true,
       minlength: 50,
-      maxlength: 10000,
+      maxlength: 80000,
     },
     title: {
       type: String,
@@ -395,7 +399,6 @@ chapterSchema.index({ status: 1 });
 const Chapter = mongoose.model<IChapterDoc>('Chapter', chapterSchema);
 
 export { Chapter };
-
 ```
 
 ### `src/models/chapterAutoSave.modal.ts`
@@ -541,7 +544,6 @@ const ChapterAutoSave = mongoose.model<IChapterAutoSaveDoc>(
 );
 
 export { ChapterAutoSave };
-
 ```
 
 ### `src/models/chapterVersion.model.ts`
@@ -622,7 +624,6 @@ chapterVersionSchema.index({ isVisible: 1 });
 const ChapterVersion = mongoose.model('ChapterVersion', chapterVersionSchema);
 
 export { ChapterVersion };
-
 ```
 
 ### `src/models/comment.model.ts`
@@ -695,7 +696,6 @@ commentSchema.index({ parentCommentId: 1 });
 const Comment = mongoose.model<ICommentDoc>('Comment', commentSchema);
 
 export { Comment };
-
 ```
 
 ### `src/models/commentVote.model.ts`
@@ -732,7 +732,6 @@ const commentVoteSchema = new Schema<ICommentVoteDoc>(
 commentVoteSchema.index({ commentId: 1, userId: 1 }, { unique: true });
 
 export const CommentVote = mongoose.model<ICommentVoteDoc>('CommentVote', commentVoteSchema);
-
 ```
 
 ### `src/models/follow.model.ts`
@@ -766,7 +765,6 @@ followSchema.index({ followerId: 1, followingId: 1 }, { unique: true });
 const Follow = mongoose.model('Follow', followSchema);
 
 export { Follow };
-
 ```
 
 ### `src/models/notification.model.ts`
@@ -810,7 +808,6 @@ const notificationSchema = new Schema<INotificationDoc>({
 const Notification = mongoose.model('Notification', notificationSchema);
 
 export { Notification };
-
 ```
 
 ### `src/models/platformRole.model.ts`
@@ -850,7 +847,6 @@ platformRoleSchema.index(
 );
 
 export const PlatformRole = mongoose.model<IPlatformRoleDoc>('PlatformRole', platformRoleSchema);
-
 ```
 
 ### `src/models/prComment.model.ts`
@@ -997,7 +993,6 @@ prCommentSchema.index({ userId: 1, createdAt: -1 });
 const PRComment = mongoose.model('PRComment', prCommentSchema);
 
 export { PRComment };
-
 ```
 
 ### `src/models/prReview.model.ts`
@@ -1075,7 +1070,6 @@ prReviewSchema.index({ pullRequestId: 1, reviewerId: 1 }, { unique: true });
 const PRReview = mongoose.model('PRReview', prReviewSchema);
 
 export { PRReview };
-
 ```
 
 ### `src/models/prVote.model.ts`
@@ -1114,7 +1108,6 @@ prVoteSchema.index({ pullRequestId: 1, userId: 1 }, { unique: true });
 const PRVote = mongoose.model('PRVote', prVoteSchema);
 
 export { PRVote };
-
 ```
 
 ### `src/models/pullRequest.model.ts`
@@ -1743,7 +1736,6 @@ pullRequestSchema.index({ 'votes.score': -1 });
 const PullRequest = mongoose.model<IPullRequestDoc>('PullRequest', pullRequestSchema);
 
 export { PullRequest };
-
 ```
 
 ### `src/models/readingHistory.model.ts`
@@ -1849,7 +1841,6 @@ const ReadingHistory = mongoose.model<IReadingHistoryDoc>('ReadingHistory', read
 const ChapterRead = mongoose.model<IChapterReadDoc>('ChapterRead', chapterReadSchema);
 
 export { ReadingHistory, ChapterRead };
-
 ```
 
 ### `src/models/report.model.ts`
@@ -1913,7 +1904,6 @@ reportSchema.index({ reporterId: 1 });
 const Report = mongoose.model('Report', reportSchema);
 
 export { Report };
-
 ```
 
 ### `src/models/session.model.ts`
@@ -1967,7 +1957,6 @@ sessionSchema.index({ userId: 1, status: 1 });
 const Session = mongoose.model('Session', sessionSchema);
 
 export { Session };
-
 ```
 
 ### `src/models/story.model.ts`
@@ -2102,7 +2091,6 @@ storySchema.index({ title: 'text', description: 'text' });
 const Story = mongoose.model<IStoryDoc>('Story', storySchema);
 
 export { Story };
-
 ```
 
 ### `src/models/storyCollaborator.model.ts`
@@ -2165,7 +2153,6 @@ const StoryCollaborator = mongoose.model<IStoryCollaboratorDoc>(
 );
 
 export { StoryCollaborator };
-
 ```
 
 ### `src/models/user.model.ts`
@@ -2332,7 +2319,6 @@ userSchema.index({ createdAt: -1 });
 const User = mongoose.model<IUserDoc>('User', userSchema);
 
 export { User };
-
 ```
 
 ### `src/models/vote.model.ts`
@@ -2406,6 +2392,4 @@ voteSchema.pre('validate', function (next) {
 const Vote = mongoose.model('Vote', voteSchema);
 
 export { Vote };
-
 ```
-

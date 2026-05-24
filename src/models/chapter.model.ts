@@ -57,7 +57,7 @@ const chapterSchema = new Schema<IChapterDoc>(
       type: String,
       required: true,
       minlength: 50,
-      maxlength: 10000,
+      maxlength: 80000,
     },
     title: {
       type: String,

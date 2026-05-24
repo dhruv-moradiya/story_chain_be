@@ -25,7 +25,46 @@ export const UserSchema = {
     email: { type: 'string' },
     bio: { type: 'string' },
     avatarUrl: { type: 'string' },
-    role: { type: 'string', enum: ['USER', 'MODERATOR', 'ADMIN', 'SUPER_ADMIN'] },
+    xp: { type: 'number' },
+    level: { type: 'number' },
+    badges: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+          description: { type: 'string' },
+          iconUrl: { type: 'string' },
+        },
+      },
+    },
+    stats: {
+      type: 'object',
+      properties: {
+        storiesPublished: { type: 'number' },
+        chaptersPublished: { type: 'number' },
+        totalReads: { type: 'number' },
+        totalClaps: { type: 'number' },
+      },
+    },
+    preferences: {
+      type: 'object',
+      properties: {
+        theme: { type: 'string', enum: ['light', 'dark', 'system'] },
+        notificationsEnabled: { type: 'boolean' },
+      },
+    },
+    isActive: { type: 'boolean' },
+    isBanned: { type: 'boolean' },
+    banReason: { type: 'string' },
+    bannedUntil: { type: 'string', format: 'date-time' },
+    lastActive: { type: 'string', format: 'date-time' },
+    createdAt: { type: 'string', format: 'date-time' },
+    updatedAt: { type: 'string', format: 'date-time' },
+    role: {
+      type: 'string',
+      enum: ['USER', 'APPEAL_MODERATOR', 'PLATFORM_MODERATOR', 'SUPER_ADMIN'],
+    },
   },
 };
 
