@@ -139,6 +139,14 @@ const chapterSchema = new Schema<IChapterDoc>(
       type: Boolean,
       default: false,
     },
+
+    // Coin gating
+    coinPrice: {
+      type: Number,
+      default: 0,
+      min: 0,
+      // 0 = free to read, >0 = costs coins to unlock
+    },
   },
   {
     timestamps: true,

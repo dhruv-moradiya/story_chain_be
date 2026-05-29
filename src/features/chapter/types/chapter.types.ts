@@ -75,6 +75,10 @@ export interface IChapter {
 
   reportCount: number;
   isFlagged: boolean;
+
+  /** 0 = free to read, >0 = costs this many coins to unlock */
+  coinPrice: number;
+
   createdAt: Date;
   updatedAt: Date;
 }
