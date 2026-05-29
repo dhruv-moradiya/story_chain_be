@@ -28,8 +28,8 @@ module.exports = {
     // Subject must not end with period
     'subject-full-stop': [2, 'never', '.'],
     // Subject max length
-    'subject-max-length': [2, 'always', 72],
+    'subject-max-length': [2, 'always', 300],
     // Header max length
-    'header-max-length': [2, 'always', 100],
+    'header-max-length': [2, 'always', 300],
   },
 };

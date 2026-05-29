@@ -112,6 +112,17 @@ const storySchema = new Schema<IStoryDoc>(
       type: Date,
       default: Date.now,
     },
+
+    // World & Gallery links
+    worldId: {
+      type: Schema.Types.ObjectId,
+      ref: 'StoryWorld',
+    },
+    moodboardImageIds: {
+      type: [Schema.Types.ObjectId],
+      ref: 'GalleryImage',
+      default: [],
+    },
   },
   { timestamps: true }
 );

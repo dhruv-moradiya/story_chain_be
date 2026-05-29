@@ -67,6 +67,10 @@ interface IStory {
   lastActivityAt: Date;
   publishedAt: Date;
 
+  // World & Gallery links
+  worldId?: ID;
+  moodboardImageIds: ID[];
+
   createdAt: Date;
   updatedAt: Date;
 }
