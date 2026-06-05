@@ -6,12 +6,17 @@ import {
   type AuthMiddlewareFactory,
   type PlatformRoleMiddlewareFactory,
 } from '@/middlewares/factories';
-import { CoinBundleCreateSchema } from '@schema/request/coinBundle.schema';
+import {
+  CoinBundleCreateSchema,
+  CoinBundleAdminListQuerySchema,
+} from '@schema/request/coinBundle.schema';
+import { CoinBundleResponses } from '@schema/response/coinBundle.response';
 import { type CoinBundleController } from '../controllers/coinBundle.controller';
 import { RateLimits } from '@/constants/rateLimits';
 
 const CoinBundleApiRoutes = {
   Create: '/',
+  AdminList: '/admin/coin-bundles',
 } as const;
 
 export { CoinBundleApiRoutes };
@@ -44,5 +49,25 @@ export async function coinBundleRoutes(fastify: FastifyInstance) {
       },
     },
     coinBundleController.create
+  );
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // GET /admin/coin-bundles  — Super Admin only, no cache
+  // ──────────────────────────────────────────────────────────────────────────
+  fastify.get(
+    CoinBundleApiRoutes.AdminList,
+    {
+      preHandler: [validateAuth, PlatformRoleGuards.superAdmin],
+      config: { rateLimit: RateLimits.AUTHENTICATED },
+      schema: {
+        description:
+          'List all coin bundles for admin. Supports filtering by name, isActive, isDeleted, bundleType and sorting by displayOrder, createdAt, or name. Results are never cached.',
+        tags: ['Coin Bundles'],
+        security: [{ bearerAuth: [] }],
+        querystring: zodToJsonSchema(CoinBundleAdminListQuerySchema),
+        response: CoinBundleResponses.coinBundleAdminList,
+      },
+    },
+    coinBundleController.listForAdmin
   );
 }

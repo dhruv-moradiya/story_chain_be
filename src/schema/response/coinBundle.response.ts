@@ -1,5 +1,5 @@
 import { objectIdSchema, dateSchema, ImageSchema } from './common.js';
-import { createResponses } from './helpers.js';
+import { createResponses, apiArrayResponse } from './helpers.js';
 
 const CoinBundleRestrictionsSchema = {
   type: 'object',
@@ -69,4 +69,7 @@ export const CoinBundleSchema = {
 
 export const CoinBundleResponses = {
   coinBundleCreated: createResponses(CoinBundleSchema, 'Coin bundle created successfully'),
+  coinBundleAdminList: {
+    200: apiArrayResponse(CoinBundleSchema, 'Coin bundles list fetched successfully'),
+  },
 };

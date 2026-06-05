@@ -2,9 +2,12 @@ import { inject, singleton } from 'tsyringe';
 import { TOKENS } from '@container/tokens';
 import { ApiError } from '@utils/apiResponse';
 import { createSlug } from '@utils/helpter';
-import { CoinBundleRepository } from '../repositories/coinBundle.repository';
+import { CoinBundleRepository, IAdminListFilter } from '../repositories/coinBundle.repository';
 import { ICoinBundle } from '../types/coinBundle.types';
-import { TCoinBundleCreateSchema } from '@schema/request/coinBundle.schema';
+import {
+  TCoinBundleCreateSchema,
+  TCoinBundleAdminListQuerySchema,
+} from '@schema/request/coinBundle.schema';
 
 @singleton()
 export class CoinBundleService {
@@ -53,5 +56,18 @@ export class CoinBundleService {
     };
 
     return this.repo.create({ data: payload });
+  }
+
+  async listForAdmin(query: TCoinBundleAdminListQuerySchema): Promise<ICoinBundle[]> {
+    const filter: IAdminListFilter = {
+      isDeleted: query.isDeleted,
+      sortBy: query.sortBy,
+      sortOrder: query.sortOrder,
+      ...(query.search !== undefined && { search: query.search }),
+      ...(query.isActive !== undefined && { isActive: query.isActive }),
+      ...(query.bundleType !== undefined && { bundleType: query.bundleType }),
+    };
+
+    return this.repo.findForAdmin(filter);
   }
 }

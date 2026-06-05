@@ -127,5 +127,32 @@ const CoinBundleCreateSchema = z
 
 type TCoinBundleCreateSchema = z.infer<typeof CoinBundleCreateSchema>;
 
-export { CoinBundleCreateSchema };
-export type { TCoinBundleCreateSchema };
+// ─── Admin list query params ───────────────────────────────────────────────
+
+const COIN_BUNDLE_SORT_FIELDS = ['displayOrder', 'createdAt', 'name'] as const;
+
+const CoinBundleAdminListQuerySchema = z.object({
+  search: z.string().trim().optional(),
+
+  isActive: z
+    .string()
+    .optional()
+    .transform((v) => (v === 'true' ? true : v === 'false' ? false : undefined)),
+
+  isDeleted: z
+    .string()
+    .optional()
+    .default('false')
+    .transform((v) => v === 'true'),
+
+  bundleType: z.enum(BUNDLE_TYPES).optional(),
+
+  sortBy: z.enum(COIN_BUNDLE_SORT_FIELDS).default('displayOrder'),
+
+  sortOrder: z.enum(['asc', 'desc']).default('asc'),
+});
+
+type TCoinBundleAdminListQuerySchema = z.infer<typeof CoinBundleAdminListQuerySchema>;
+
+export { CoinBundleCreateSchema, CoinBundleAdminListQuerySchema };
+export type { TCoinBundleCreateSchema, TCoinBundleAdminListQuerySchema };

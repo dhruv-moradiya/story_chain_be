@@ -1,6 +1,10 @@
 import { HTTP_STATUS } from '@constants/httpStatus';
 import { TOKENS } from '@container/tokens';
-import { TCoinBundleCreateSchema } from '@schema/request/coinBundle.schema';
+import {
+  TCoinBundleCreateSchema,
+  TCoinBundleAdminListQuerySchema,
+  CoinBundleAdminListQuerySchema,
+} from '@schema/request/coinBundle.schema';
 import { ApiResponse } from '@utils/apiResponse';
 import { BaseModule } from '@utils/baseClass';
 import { catchAsync } from '@utils/catchAsync';
@@ -29,6 +33,24 @@ export class CoinBundleController extends BaseModule {
       return reply
         .code(HTTP_STATUS.CREATED.code)
         .send(ApiResponse.created(bundle, 'Coin bundle created successfully'));
+    }
+  );
+
+  listForAdmin = catchAsync(
+    async (
+      request: FastifyRequest<{ Querystring: TCoinBundleAdminListQuerySchema }>,
+      reply: FastifyReply
+    ) => {
+      const query = CoinBundleAdminListQuerySchema.parse(request.query);
+
+      const bundles = await this.coinBundleService.listForAdmin(query);
+
+      this.logInfo(`CoinBundle admin list fetched: ${bundles.length} results`);
+
+      return reply
+        .code(HTTP_STATUS.OK.code)
+        .header('Cache-Control', 'no-store')
+        .send(ApiResponse.fetched(bundles, 'Coin bundles fetched successfully'));
     }
   );
 }
