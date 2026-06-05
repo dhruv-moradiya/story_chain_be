@@ -101,3 +101,6 @@ export { ReadingHistoryResponses } from './readingHistory.response.js';
 
 // Pull Request
 export { PullRequestSchema, PullRequestResponses } from './pullRequest.response.js';
+
+// Coin Bundle
+export { CoinBundleSchema, CoinBundleResponses } from './coinBundle.response.js';

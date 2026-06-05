@@ -12,6 +12,7 @@ import { prQueryRoutes } from '@/features/pullRequest/routes/prQuery.routes';
 import { pullRequestRoutes } from '@features/pullRequest/routes/pullRequest.routes';
 import { prManagementRoutes } from '@features/pullRequest/routes/prManagement.routes';
 import { analyticsRoutes } from '@/features/readingHistory/routes/analytics.router';
+import { coinBundleRoutes } from '@/features/coinBundle/routes/coinBundle.routes';
 
 enum ApiRoute {
   USERS = '/api/users',
@@ -25,6 +26,7 @@ enum ApiRoute {
   COMMENT_VOTES = '/api/comment-votes',
   PULL_REQUESTS = '/api/pull-requests',
   ANALYTICS = '/api/analytics',
+  COIN_BUNDLES = '/api/coin-bundles',
 }
 
 export async function registerRoutes(fastify: FastifyInstance) {
@@ -41,4 +43,5 @@ export async function registerRoutes(fastify: FastifyInstance) {
   fastify.register(pullRequestRoutes, { prefix: ApiRoute.PULL_REQUESTS });
   fastify.register(prManagementRoutes, { prefix: ApiRoute.PULL_REQUESTS });
   fastify.register(analyticsRoutes, { prefix: ApiRoute.ANALYTICS });
+  fastify.register(coinBundleRoutes, { prefix: ApiRoute.COIN_BUNDLES });
 }

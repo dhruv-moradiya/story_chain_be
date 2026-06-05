@@ -43,6 +43,7 @@ import { PullRequestRepository } from '@features/pullRequest/repositories/pullRe
 import { PRTimelineRepository } from '@features/prTimeline/repositories/prTimeline.repository';
 import { PRReviewRepository } from '@features/prReview/repositories/prReview.repository';
 import { PRCommentRepository } from '@features/prComment/repositories/prComment.repository';
+import { CoinBundleRepository } from '@features/coinBundle/repositories/coinBundle.repository';
 
 // ═══════════════════════════════════════════
 // FEATURE SERVICES
@@ -77,6 +78,7 @@ import { PRMergeService } from '@features/pullRequest/services/pr-merge.service'
 import { PRReviewService } from '@features/prReview/services/prReview.service';
 import { PRCommentService } from '@features/prComment/services/prComment.service';
 import { PRQueryService } from '@features/pullRequest/services/pr-query.service';
+import { CoinBundleService } from '@features/coinBundle/services/coinBundle.service';
 
 // ═══════════════════════════════════════════
 // CONTROLLERS
@@ -97,6 +99,7 @@ import { CommentRepository } from '@/features/comment/repositories/comment.repos
 import { PullRequestController } from '@features/pullRequest/controllers/pullRequest.controller';
 import { PRManagementController } from '@features/pullRequest/controllers/prManagement.controller';
 import { PRQueryController } from '@features/pullRequest/controllers/prQuery.controller';
+import { CoinBundleController } from '@features/coinBundle/controllers/coinBundle.controller';
 
 // ═══════════════════════════════════════════
 // MIDDLEWARE FACTORIES
@@ -190,6 +193,7 @@ export function registerServices(): void {
   container.register(TOKENS.PRTimelineRepository, { useClass: PRTimelineRepository });
   container.register(TOKENS.PRReviewRepository, { useClass: PRReviewRepository });
   container.register(TOKENS.PRCommentRepository, { useClass: PRCommentRepository });
+  container.register(TOKENS.CoinBundleRepository, { useClass: CoinBundleRepository });
 
   // ═══════════════════════════════════════════
   // FEATURE SERVICES
@@ -227,6 +231,7 @@ export function registerServices(): void {
   container.register(TOKENS.PRReviewService, { useClass: PRReviewService });
   container.register(TOKENS.PRCommentService, { useClass: PRCommentService });
   container.register(TOKENS.PRQueryService, { useClass: PRQueryService });
+  container.register(TOKENS.CoinBundleService, { useClass: CoinBundleService });
 
   // ═══════════════════════════════════════════
   // CONTROLLERS
@@ -247,6 +252,7 @@ export function registerServices(): void {
   container.register(TOKENS.PullRequestController, { useClass: PullRequestController });
   container.register(TOKENS.PRManagementController, { useClass: PRManagementController });
   container.register(TOKENS.PRQueryController, { useClass: PRQueryController });
+  container.register(TOKENS.CoinBundleController, { useClass: CoinBundleController });
 
   // ═══════════════════════════════════════════
   // MIDDLEWARE FACTORIES

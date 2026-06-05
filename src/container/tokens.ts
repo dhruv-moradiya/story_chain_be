@@ -53,6 +53,7 @@ export const TOKENS = {
   PRTimelineRepository: Symbol.for('PRTimelineRepository'),
   PRReviewRepository: Symbol.for('PRReviewRepository'),
   PRCommentRepository: Symbol.for('PRCommentRepository'),
+  CoinBundleRepository: Symbol.for('CoinBundleRepository'),
 
   // ═══════════════════════════════════════════
   // FEATURE SERVICES
@@ -91,6 +92,7 @@ export const TOKENS = {
   PRReviewService: Symbol.for('PRReviewService'),
   PRCommentService: Symbol.for('PRCommentService'),
   PRQueryService: Symbol.for('PRQueryService'),
+  CoinBundleService: Symbol.for('CoinBundleService'),
 
   // ═══════════════════════════════════════════
   // CONTROLLERS
@@ -114,6 +116,7 @@ export const TOKENS = {
   PRManagementController: Symbol.for('PRManagementController'),
   StoryCollaboratorController: Symbol.for('StoryCollaboratorController'),
   PRQueryController: Symbol.for('PRQueryController'),
+  CoinBundleController: Symbol.for('CoinBundleController'),
 
   // ═══════════════════════════════════════════
   // MIDDLEWARE FACTORIES
