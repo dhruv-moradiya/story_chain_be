@@ -7,14 +7,21 @@ import { ICoinBundle } from '../types/coinBundle.types';
 import {
   TCoinBundleCreateSchema,
   TCoinBundleAdminListQuerySchema,
+  TCoinBundleUpdateSchema,
+  TCoinBundleDisplayOrderSchema,
 } from '@schema/request/coinBundle.schema';
+import { CoinBundleCacheService } from '@infrastructure/cache/coinBundle-cache.service';
 
 @singleton()
 export class CoinBundleService {
   constructor(
     @inject(TOKENS.CoinBundleRepository)
-    private readonly repo: CoinBundleRepository
+    private readonly repo: CoinBundleRepository,
+    @inject(TOKENS.CoinBundleCacheService)
+    private readonly cache: CoinBundleCacheService
   ) {}
+
+  // ─── POST /coin-bundles ────────────────────────────────────────────────────
 
   async create(input: TCoinBundleCreateSchema, createdBy: string): Promise<ICoinBundle> {
     const { name, slug: slugInput, baseCoins, bonusCoins = 0, ...rest } = input;
@@ -36,7 +43,6 @@ export class CoinBundleService {
       totalCoins,
       createdBy,
       ...rest,
-      // Ensure defaults for nested restrictions
       restrictions: {
         type: rest.restrictions?.type ?? 'unlimited',
         firstPurchaseOnly: rest.restrictions?.firstPurchaseOnly ?? false,
@@ -58,6 +64,8 @@ export class CoinBundleService {
     return this.repo.create({ data: payload });
   }
 
+  // ─── GET /admin/coin-bundles ───────────────────────────────────────────────
+
   async listForAdmin(query: TCoinBundleAdminListQuerySchema): Promise<ICoinBundle[]> {
     const filter: IAdminListFilter = {
       isDeleted: query.isDeleted,
@@ -69,5 +77,129 @@ export class CoinBundleService {
     };
 
     return this.repo.findForAdmin(filter);
+  }
+
+  // ─── PUT /coin-bundles/:slug ───────────────────────────────────────────────
+
+  async update(
+    slug: string,
+    input: TCoinBundleUpdateSchema,
+    updatedBy: string
+  ): Promise<ICoinBundle> {
+    const existing = await this.repo.findActiveBySlug(slug);
+    if (!existing) {
+      throw ApiError.notFound('NOT_FOUND', `Coin bundle "${slug}" not found`);
+    }
+
+    // Recalculate totalCoins if baseCoins or bonusCoins are in the body
+    const { baseCoins, bonusCoins, ...rest } = input;
+
+    const coinUpdate: Partial<ICoinBundle> = {};
+    if (baseCoins !== undefined || bonusCoins !== undefined) {
+      const newBase = baseCoins ?? existing.baseCoins;
+      const newBonus = bonusCoins ?? existing.bonusCoins;
+      coinUpdate.baseCoins = newBase;
+      coinUpdate.bonusCoins = newBonus;
+      coinUpdate.totalCoins = newBase + newBonus;
+    }
+
+    const update: Partial<ICoinBundle> = {
+      ...rest,
+      ...coinUpdate,
+      updatedBy,
+    };
+
+    const updated = await this.repo.updateBySlug(slug, update);
+    if (!updated) {
+      throw ApiError.notFound('NOT_FOUND', `Coin bundle "${slug}" not found`);
+    }
+
+    await this.cache.invalidate(slug);
+    return updated;
+  }
+
+  // ─── PATCH /coin-bundles/:slug/toggle-active ──────────────────────────────
+
+  async toggleActive(
+    slug: string,
+    updatedBy: string
+  ): Promise<Pick<ICoinBundle, 'slug' | 'isActive' | 'updatedAt'>> {
+    const existing = await this.repo.findActiveBySlug(slug);
+    if (!existing) {
+      throw ApiError.notFound('NOT_FOUND', `Coin bundle "${slug}" not found`);
+    }
+
+    const updated = await this.repo.updateBySlug(slug, {
+      isActive: !existing.isActive,
+      updatedBy,
+    });
+
+    if (!updated) {
+      throw ApiError.notFound('NOT_FOUND', `Coin bundle "${slug}" not found`);
+    }
+
+    await this.cache.invalidate(slug);
+    return { slug: updated.slug, isActive: updated.isActive, updatedAt: updated.updatedAt };
+  }
+
+  // ─── PATCH /coin-bundles/:slug/display-order ──────────────────────────────
+
+  async updateDisplayOrder(
+    slug: string,
+    input: TCoinBundleDisplayOrderSchema,
+    updatedBy: string
+  ): Promise<Pick<ICoinBundle, 'slug' | 'displayOrder' | 'updatedAt'>> {
+    const existing = await this.repo.findActiveBySlug(slug);
+    if (!existing) {
+      throw ApiError.notFound('NOT_FOUND', `Coin bundle "${slug}" not found`);
+    }
+
+    const updated = await this.repo.updateBySlug(slug, {
+      displayOrder: input.displayOrder,
+      updatedBy,
+    });
+
+    if (!updated) {
+      throw ApiError.notFound('NOT_FOUND', `Coin bundle "${slug}" not found`);
+    }
+
+    // Only list caches need invalidation — individual detail cache is still valid
+    await this.cache.invalidateLists();
+
+    return {
+      slug: updated.slug,
+      displayOrder: updated.displayOrder,
+      updatedAt: updated.updatedAt,
+    };
+  }
+
+  // ─── DELETE /coin-bundles/:slug ────────────────────────────────────────────
+
+  async softDelete(
+    slug: string,
+    deletedBy: string
+  ): Promise<Pick<ICoinBundle, 'slug' | 'isDeleted' | 'deletedAt' | 'deletedBy'>> {
+    // Use findAnyBySlug to distinguish "not found" from "already deleted"
+    const existing = await this.repo.findAnyBySlug(slug);
+    if (!existing) {
+      throw ApiError.notFound('NOT_FOUND', `Coin bundle "${slug}" not found`);
+    }
+    if (existing.isDeleted) {
+      throw ApiError.badRequest('INVALID_INPUT', `Coin bundle "${slug}" is already deleted`);
+    }
+
+    const deleted = await this.repo.markDeleted(slug, deletedBy);
+    if (!deleted) {
+      throw ApiError.notFound('NOT_FOUND', `Coin bundle "${slug}" not found`);
+    }
+
+    await this.cache.invalidate(slug);
+
+    return {
+      slug: deleted.slug,
+      isDeleted: deleted.isDeleted,
+      deletedAt: deleted.deletedAt,
+      deletedBy: deleted.deletedBy,
+    };
   }
 }

@@ -34,6 +34,7 @@ export const TOKENS = {
   // ═══════════════════════════════════════════
   StoryCacheService: Symbol.for('StoryCacheService'),
   CommentVoteCacheService: Symbol.for('CommentVoteCacheService'),
+  CoinBundleCacheService: Symbol.for('CoinBundleCacheService'),
 
   // ═══════════════════════════════════════════
   // REPOSITORIES

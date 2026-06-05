@@ -51,4 +51,47 @@ export class CoinBundleRepository extends BaseRepository<ICoinBundle, ICoinBundl
 
     return CoinBundle.find(query).sort(sort).lean<ICoinBundle[]>().exec();
   }
+
+  /**
+   * Finds a non-deleted bundle by slug. Used before any mutation to
+   * confirm existence, then returns the doc for business-logic checks.
+   */
+  async findActiveBySlug(slug: string): Promise<ICoinBundle | null> {
+    return CoinBundle.findOne({ slug, isDeleted: false }).lean<ICoinBundle>().exec();
+  }
+
+  /**
+   * Finds a bundle by slug regardless of isDeleted state.
+   * Used for the soft-delete endpoint which needs to check isDeleted = false first.
+   */
+  async findAnyBySlug(slug: string): Promise<ICoinBundle | null> {
+    return CoinBundle.findOne({ slug }).lean<ICoinBundle>().exec();
+  }
+
+  /**
+   * Applies a partial update to a non-deleted bundle and returns the new doc.
+   */
+  async updateBySlug(slug: string, update: Partial<ICoinBundle>): Promise<ICoinBundle | null> {
+    return CoinBundle.findOneAndUpdate(
+      { slug, isDeleted: false },
+      { $set: update },
+      { new: true, runValidators: true }
+    )
+      .lean<ICoinBundle>()
+      .exec();
+  }
+
+  /**
+   * Soft-deletes a bundle that is not already deleted.
+   * Returns the updated doc, or null if not found / already deleted.
+   */
+  async markDeleted(slug: string, deletedBy: string): Promise<ICoinBundle | null> {
+    return CoinBundle.findOneAndUpdate(
+      { slug, isDeleted: false },
+      { $set: { isDeleted: true, deletedAt: new Date(), deletedBy } },
+      { new: true }
+    )
+      .lean<ICoinBundle>()
+      .exec();
+  }
 }

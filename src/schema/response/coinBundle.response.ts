@@ -1,5 +1,5 @@
 import { objectIdSchema, dateSchema, ImageSchema } from './common.js';
-import { createResponses, apiArrayResponse } from './helpers.js';
+import { createResponses, apiArrayResponse, apiResponse } from './helpers.js';
 
 const CoinBundleRestrictionsSchema = {
   type: 'object',
@@ -71,5 +71,48 @@ export const CoinBundleResponses = {
   coinBundleCreated: createResponses(CoinBundleSchema, 'Coin bundle created successfully'),
   coinBundleAdminList: {
     200: apiArrayResponse(CoinBundleSchema, 'Coin bundles list fetched successfully'),
+  },
+  coinBundleUpdated: {
+    200: apiResponse(CoinBundleSchema, 'Coin bundle updated successfully'),
+  },
+  coinBundleToggleActive: {
+    200: apiResponse(
+      {
+        type: 'object',
+        properties: {
+          slug: { type: 'string' },
+          isActive: { type: 'boolean' },
+          updatedAt: dateSchema,
+        },
+      },
+      'isActive toggled successfully'
+    ),
+  },
+  coinBundleDisplayOrder: {
+    200: apiResponse(
+      {
+        type: 'object',
+        properties: {
+          slug: { type: 'string' },
+          displayOrder: { type: 'number' },
+          updatedAt: dateSchema,
+        },
+      },
+      'displayOrder updated successfully'
+    ),
+  },
+  coinBundleDeleted: {
+    200: apiResponse(
+      {
+        type: 'object',
+        properties: {
+          slug: { type: 'string' },
+          isDeleted: { type: 'boolean', const: true },
+          deletedAt: dateSchema,
+          deletedBy: { type: 'string' },
+        },
+      },
+      'Coin bundle soft-deleted successfully'
+    ),
   },
 };

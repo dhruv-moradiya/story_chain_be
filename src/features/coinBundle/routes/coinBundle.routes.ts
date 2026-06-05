@@ -9,6 +9,8 @@ import {
 import {
   CoinBundleCreateSchema,
   CoinBundleAdminListQuerySchema,
+  CoinBundleUpdateSchema,
+  CoinBundleDisplayOrderSchema,
 } from '@schema/request/coinBundle.schema';
 import { CoinBundleResponses } from '@schema/response/coinBundle.response';
 import { type CoinBundleController } from '../controllers/coinBundle.controller';
@@ -17,6 +19,10 @@ import { RateLimits } from '@/constants/rateLimits';
 const CoinBundleApiRoutes = {
   Create: '/',
   AdminList: '/admin/coin-bundles',
+  Update: '/:slug',
+  ToggleActive: '/:slug/toggle-active',
+  DisplayOrder: '/:slug/display-order',
+  Delete: '/:slug',
 } as const;
 
 export { CoinBundleApiRoutes };
@@ -32,13 +38,15 @@ export async function coinBundleRoutes(fastify: FastifyInstance) {
   const validateAuth = authFactory.createAuthMiddleware();
   const PlatformRoleGuards = platformRoleFactory.createGuards();
 
+  const superAdminHandlers = [validateAuth, PlatformRoleGuards.superAdmin];
+
   // ──────────────────────────────────────────────────────────────────────────
-  // POST /coin-bundles  — Super Admin only
+  // POST /coin-bundles  — Create a new bundle
   // ──────────────────────────────────────────────────────────────────────────
   fastify.post(
     CoinBundleApiRoutes.Create,
     {
-      preHandler: [validateAuth, PlatformRoleGuards.superAdmin],
+      preHandler: superAdminHandlers,
       config: { rateLimit: RateLimits.WRITE },
       schema: {
         description:
@@ -52,16 +60,16 @@ export async function coinBundleRoutes(fastify: FastifyInstance) {
   );
 
   // ──────────────────────────────────────────────────────────────────────────
-  // GET /admin/coin-bundles  — Super Admin only, no cache
+  // GET /admin/coin-bundles  — Admin list (no cache)
   // ──────────────────────────────────────────────────────────────────────────
   fastify.get(
     CoinBundleApiRoutes.AdminList,
     {
-      preHandler: [validateAuth, PlatformRoleGuards.superAdmin],
+      preHandler: superAdminHandlers,
       config: { rateLimit: RateLimits.AUTHENTICATED },
       schema: {
         description:
-          'List all coin bundles for admin. Supports filtering by name, isActive, isDeleted, bundleType and sorting by displayOrder, createdAt, or name. Results are never cached.',
+          'List all coin bundles for admin. Supports filtering and sorting. Results are never cached.',
         tags: ['Coin Bundles'],
         security: [{ bearerAuth: [] }],
         querystring: zodToJsonSchema(CoinBundleAdminListQuerySchema),
@@ -69,5 +77,86 @@ export async function coinBundleRoutes(fastify: FastifyInstance) {
       },
     },
     coinBundleController.listForAdmin
+  );
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // PUT /coin-bundles/:slug  — Full update
+  // ──────────────────────────────────────────────────────────────────────────
+  fastify.put(
+    CoinBundleApiRoutes.Update,
+    {
+      preHandler: superAdminHandlers,
+      config: { rateLimit: RateLimits.WRITE },
+      schema: {
+        description:
+          'Full update of a coin bundle. slug/totalCoins/createdBy are ignored. updatedBy is set from auth token. Invalidates coin:bundle:{slug}, coin:bundles:active, coin:bundles:featured.',
+        tags: ['Coin Bundles'],
+        security: [{ bearerAuth: [] }],
+        params: { type: 'object', properties: { slug: { type: 'string' } }, required: ['slug'] },
+        body: zodToJsonSchema(CoinBundleUpdateSchema),
+        response: CoinBundleResponses.coinBundleUpdated,
+      },
+    },
+    coinBundleController.update
+  );
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // PATCH /coin-bundles/:slug/toggle-active
+  // ──────────────────────────────────────────────────────────────────────────
+  fastify.patch(
+    CoinBundleApiRoutes.ToggleActive,
+    {
+      preHandler: superAdminHandlers,
+      config: { rateLimit: RateLimits.WRITE },
+      schema: {
+        description:
+          'Flips isActive for the bundle. No body required. Immediately invalidates cache.',
+        tags: ['Coin Bundles'],
+        security: [{ bearerAuth: [] }],
+        params: { type: 'object', properties: { slug: { type: 'string' } }, required: ['slug'] },
+        response: CoinBundleResponses.coinBundleToggleActive,
+      },
+    },
+    coinBundleController.toggleActive
+  );
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // PATCH /coin-bundles/:slug/display-order
+  // ──────────────────────────────────────────────────────────────────────────
+  fastify.patch(
+    CoinBundleApiRoutes.DisplayOrder,
+    {
+      preHandler: superAdminHandlers,
+      config: { rateLimit: RateLimits.WRITE },
+      schema: {
+        description: 'Updates only the displayOrder. Used for drag-to-reorder in the admin panel.',
+        tags: ['Coin Bundles'],
+        security: [{ bearerAuth: [] }],
+        params: { type: 'object', properties: { slug: { type: 'string' } }, required: ['slug'] },
+        body: zodToJsonSchema(CoinBundleDisplayOrderSchema),
+        response: CoinBundleResponses.coinBundleDisplayOrder,
+      },
+    },
+    coinBundleController.updateDisplayOrder
+  );
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // DELETE /coin-bundles/:slug  — Soft delete
+  // ──────────────────────────────────────────────────────────────────────────
+  fastify.delete(
+    CoinBundleApiRoutes.Delete,
+    {
+      preHandler: superAdminHandlers,
+      config: { rateLimit: RateLimits.WRITE },
+      schema: {
+        description:
+          'Soft-deletes a bundle (isDeleted=true, deletedAt=now). Document is preserved for CoinOrder references. 400 if already deleted.',
+        tags: ['Coin Bundles'],
+        security: [{ bearerAuth: [] }],
+        params: { type: 'object', properties: { slug: { type: 'string' } }, required: ['slug'] },
+        response: CoinBundleResponses.coinBundleDeleted,
+      },
+    },
+    coinBundleController.softDelete
   );
 }

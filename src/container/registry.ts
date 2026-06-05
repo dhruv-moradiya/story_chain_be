@@ -20,6 +20,7 @@ import { SchedulerService } from '@infrastructure/scheduler/scheduler.service';
 import { NotificationWorker } from '@features/notification/workers/notification.worker';
 import { StoryCacheService } from '@infrastructure/cache/story-cache.service';
 import { CommentVoteCacheService } from '@infrastructure/cache/commentVoteCacheService';
+import { CoinBundleCacheService } from '@infrastructure/cache/coinBundle-cache.service';
 import { ChapterCommentVoteQueue } from '@infrastructure/domains/chapterCommentVote.queue';
 
 // ═══════════════════════════════════════════
@@ -168,6 +169,7 @@ export function registerServices(): void {
 
   container.register(TOKENS.StoryCacheService, { useClass: StoryCacheService });
   container.register(TOKENS.CommentVoteCacheService, { useClass: CommentVoteCacheService });
+  container.register(TOKENS.CoinBundleCacheService, { useClass: CoinBundleCacheService });
 
   // ═══════════════════════════════════════════
   // TRANSFORMERS

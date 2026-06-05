@@ -13,7 +13,8 @@ export type CacheEntity =
   | 'autosave'
   | 'search'
   | 'session'
-  | 'comment-vote';
+  | 'comment-vote'
+  | 'coin-bundle';
 
 /**
  * Operation types for cache keys
@@ -38,7 +39,9 @@ export type CacheOperation =
   | 'drafts'
   | 'role'
   | 'unread'
-  | 'latest-chapters';
+  | 'latest-chapters'
+  | 'active'
+  | 'featured';
 
 /**
  * Options for building cache keys
@@ -513,5 +516,44 @@ export class CacheKeyBuilder {
       operation: 'role',
       identifiers: { userId, storySlug },
     });
+  }
+
+  // ═══════════════════════════════════════════
+  // COIN BUNDLE KEYS
+  // ═══════════════════════════════════════════
+
+  /**
+   * Cache key for a single coin bundle by slug
+   * @example "sc:coin-bundle:detail:slug=gold-100"
+   */
+  static coinBundleDetail(slug: string): string {
+    return this.build({
+      entity: 'coin-bundle',
+      operation: 'detail',
+      identifiers: { slug },
+    });
+  }
+
+  /**
+   * Cache key for the active bundles list
+   * @example "sc:coin-bundle:active"
+   */
+  static coinBundlesActive(): string {
+    return `${this.APP_PREFIX}:coin-bundle:active`;
+  }
+
+  /**
+   * Cache key for the featured bundles list
+   * @example "sc:coin-bundle:featured"
+   */
+  static coinBundlesFeatured(): string {
+    return `${this.APP_PREFIX}:coin-bundle:featured`;
+  }
+
+  /**
+   * Returns all cache keys to invalidate when a coin bundle mutates
+   */
+  static invalidateCoinBundle(slug: string): string[] {
+    return [this.coinBundleDetail(slug), this.coinBundlesActive(), this.coinBundlesFeatured()];
   }
 }

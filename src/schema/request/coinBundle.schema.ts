@@ -154,5 +154,111 @@ const CoinBundleAdminListQuerySchema = z.object({
 
 type TCoinBundleAdminListQuerySchema = z.infer<typeof CoinBundleAdminListQuerySchema>;
 
-export { CoinBundleCreateSchema, CoinBundleAdminListQuerySchema };
-export type { TCoinBundleCreateSchema, TCoinBundleAdminListQuerySchema };
+// ─── Route param schemas ───────────────────────────────────────────────────
+
+const CoinBundleSlugParamSchema = z.object({
+  slug: z.string().min(1, 'slug param is required'),
+});
+
+// ─── PUT /coin-bundles/:slug — full update ─────────────────────────────────
+// Same shape as create but all fields are optional.
+// slug, totalCoins, and createdBy are stripped/ignored.
+
+const CoinBundleUpdateSchema = z
+  .object({
+    name: z.string().trim().min(1).max(100, 'name must be ≤ 100 chars').optional(),
+
+    // slug is intentionally excluded — cannot be changed after creation
+
+    description: z.string().trim().max(500, 'description must be ≤ 500 chars').optional(),
+
+    bundleType: z
+      .enum(BUNDLE_TYPES, {
+        errorMap: () => ({ message: `bundleType must be one of: ${BUNDLE_TYPES.join(', ')}` }),
+      })
+      .optional(),
+
+    baseCoins: z.number().int().min(1, 'baseCoins must be ≥ 1').optional(),
+
+    bonusCoins: z.number().int().min(0).optional(),
+
+    inrPrice: z.number().int().min(0, 'inrPrice must be ≥ 0 (in paise)').optional(),
+
+    usdPrice: z.number().int().min(0).optional(),
+
+    currencies: z.array(z.enum(SUPPORTED_CURRENCIES)).min(1).optional(),
+
+    thumbnail: z
+      .object({
+        url: z.string().url('thumbnail.url must be a valid URL'),
+        publicId: z.string().min(1, 'thumbnail.publicId is required'),
+      })
+      .optional(),
+
+    isFeatured: z.boolean().optional(),
+    isPopular: z.boolean().optional(),
+    displayOrder: z.number().int().min(0).optional(),
+
+    promotionalBadge: z.string().trim().max(50, 'promotionalBadge must be ≤ 50 chars').optional(),
+    marketingTagline: z.string().trim().max(150, 'marketingTagline must be ≤ 150 chars').optional(),
+
+    isActive: z.boolean().optional(),
+
+    startDate: z.coerce.date().optional(),
+    endDate: z.coerce.date().optional(),
+
+    startTime: z
+      .string()
+      .regex(/^\d{2}:\d{2}:\d{2}$/, 'startTime must be in HH:mm:ss format')
+      .optional(),
+    endTime: z
+      .string()
+      .regex(/^\d{2}:\d{2}:\d{2}$/, 'endTime must be in HH:mm:ss format')
+      .optional(),
+
+    timezone: z.string().optional(),
+
+    restrictions: RestrictionsSchema.optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.startDate && data.endDate && data.endDate <= data.startDate) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['endDate'],
+        message: 'endDate must be after startDate',
+      });
+    }
+
+    if (data.currencies?.includes('USD') && data.usdPrice === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['usdPrice'],
+        message: 'usdPrice must be > 0 when USD is included in currencies',
+      });
+    }
+  });
+
+// ─── PATCH /coin-bundles/:slug/display-order ──────────────────────────────
+
+const CoinBundleDisplayOrderSchema = z.object({
+  displayOrder: z.number().int().min(0, 'displayOrder must be ≥ 0'),
+});
+
+type TCoinBundleSlugParamSchema = z.infer<typeof CoinBundleSlugParamSchema>;
+type TCoinBundleUpdateSchema = z.infer<typeof CoinBundleUpdateSchema>;
+type TCoinBundleDisplayOrderSchema = z.infer<typeof CoinBundleDisplayOrderSchema>;
+
+export {
+  CoinBundleCreateSchema,
+  CoinBundleAdminListQuerySchema,
+  CoinBundleSlugParamSchema,
+  CoinBundleUpdateSchema,
+  CoinBundleDisplayOrderSchema,
+};
+export type {
+  TCoinBundleCreateSchema,
+  TCoinBundleAdminListQuerySchema,
+  TCoinBundleSlugParamSchema,
+  TCoinBundleUpdateSchema,
+  TCoinBundleDisplayOrderSchema,
+};

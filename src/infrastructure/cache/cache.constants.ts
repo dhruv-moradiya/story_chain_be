@@ -65,6 +65,13 @@ export const CACHE_TTL = {
   RATE_LIMIT: 1 * TIME.MINUTE,
   SESSION_DATA: 30 * TIME.MINUTE,
   AUTOSAVE_LOCK: 2 * TIME.MINUTE,
+
+  // ═══════════════════════════════════════════
+  // COIN BUNDLE DATA
+  // ═══════════════════════════════════════════
+  COIN_BUNDLE_DETAIL: 30 * TIME.MINUTE,
+  COIN_BUNDLE_ACTIVE_LIST: 10 * TIME.MINUTE,
+  COIN_BUNDLE_FEATURED_LIST: 15 * TIME.MINUTE,
 } as const;
 
 export type TCacheTTLKey = keyof typeof CACHE_TTL;
