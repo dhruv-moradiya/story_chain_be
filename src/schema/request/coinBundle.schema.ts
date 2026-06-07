@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { cloudinaryUrlRegex } from '@constants/index';
 import {
   BUNDLE_TYPES,
   RESTRICTION_TYPES,
@@ -6,7 +7,10 @@ import {
 } from '@features/coinBundle/types/coinBundle-enum';
 
 const ThumbnailSchema = z.object({
-  url: z.string().url('thumbnail.url must be a valid URL'),
+  url: z
+    .string()
+    .url('thumbnail.url must be a valid URL')
+    .refine((url) => cloudinaryUrlRegex.test(url), 'thumbnail.url must be a valid Cloudinary URL'),
   publicId: z.string().min(1, 'thumbnail.publicId is required'),
 });
 
@@ -188,12 +192,7 @@ const CoinBundleUpdateSchema = z
 
     currencies: z.array(z.enum(SUPPORTED_CURRENCIES)).min(1).optional(),
 
-    thumbnail: z
-      .object({
-        url: z.string().url('thumbnail.url must be a valid URL'),
-        publicId: z.string().min(1, 'thumbnail.publicId is required'),
-      })
-      .optional(),
+    thumbnail: ThumbnailSchema.optional(),
 
     isFeatured: z.boolean().optional(),
     isPopular: z.boolean().optional(),
@@ -244,9 +243,22 @@ const CoinBundleDisplayOrderSchema = z.object({
   displayOrder: z.number().int().min(0, 'displayOrder must be ≥ 0'),
 });
 
+// ─── PATCH /coin-bundles/:slug/thumbnail ──────────────────────────────────
+
+const CoinBundleUpdateThumbnailSchema = z.object({
+  thumbnail: z.object({
+    url: z
+      .string()
+      .url('Invalid URL format')
+      .refine((url) => cloudinaryUrlRegex.test(url), 'URL must be a valid Cloudinary URL'),
+    publicId: z.string().min(1, 'publicId is required'),
+  }),
+});
+
 type TCoinBundleSlugParamSchema = z.infer<typeof CoinBundleSlugParamSchema>;
 type TCoinBundleUpdateSchema = z.infer<typeof CoinBundleUpdateSchema>;
 type TCoinBundleDisplayOrderSchema = z.infer<typeof CoinBundleDisplayOrderSchema>;
+type TCoinBundleUpdateThumbnailSchema = z.infer<typeof CoinBundleUpdateThumbnailSchema>;
 
 export {
   CoinBundleCreateSchema,
@@ -254,6 +266,7 @@ export {
   CoinBundleSlugParamSchema,
   CoinBundleUpdateSchema,
   CoinBundleDisplayOrderSchema,
+  CoinBundleUpdateThumbnailSchema,
 };
 export type {
   TCoinBundleCreateSchema,
@@ -261,4 +274,5 @@ export type {
   TCoinBundleSlugParamSchema,
   TCoinBundleUpdateSchema,
   TCoinBundleDisplayOrderSchema,
+  TCoinBundleUpdateThumbnailSchema,
 };

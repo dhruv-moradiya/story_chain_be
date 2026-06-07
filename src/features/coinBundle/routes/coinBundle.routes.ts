@@ -11,6 +11,7 @@ import {
   CoinBundleAdminListQuerySchema,
   CoinBundleUpdateSchema,
   CoinBundleDisplayOrderSchema,
+  CoinBundleUpdateThumbnailSchema,
 } from '@schema/request/coinBundle.schema';
 import { CoinBundleResponses } from '@schema/response/coinBundle.response';
 import { type CoinBundleController } from '../controllers/coinBundle.controller';
@@ -22,6 +23,8 @@ const CoinBundleApiRoutes = {
   Update: '/:slug',
   ToggleActive: '/:slug/toggle-active',
   DisplayOrder: '/:slug/display-order',
+  UpdateThumbnail: '/:slug/thumbnail',
+  GetSignatureUrlBySlug: '/signature-url',
   Delete: '/:slug',
 } as const;
 
@@ -138,6 +141,42 @@ export async function coinBundleRoutes(fastify: FastifyInstance) {
       },
     },
     coinBundleController.updateDisplayOrder
+  );
+
+  fastify.get(
+    CoinBundleApiRoutes.GetSignatureUrlBySlug,
+    {
+      preHandler: [validateAuth],
+      config: { rateLimit: RateLimits.WRITE },
+      schema: {
+        description: 'Get image upload signature URL by slug',
+        tags: ['Coin Bundles'],
+        security: [{ bearerAuth: [] }],
+        response: CoinBundleResponses.signatureUrl,
+      },
+    },
+    coinBundleController.getSignatureURLBySlug
+  );
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // PATCH /coin-bundles/:slug/thumbnail  — Update bundle thumbnail
+  // ──────────────────────────────────────────────────────────────────────────
+  fastify.patch(
+    CoinBundleApiRoutes.UpdateThumbnail,
+    {
+      preHandler: superAdminHandlers,
+      config: { rateLimit: RateLimits.WRITE },
+      schema: {
+        description:
+          'Update coin bundle thumbnail image. Accepts a Cloudinary URL and publicId. Invalidates bundle cache.',
+        tags: ['Coin Bundles'],
+        security: [{ bearerAuth: [] }],
+        params: { type: 'object', properties: { slug: { type: 'string' } }, required: ['slug'] },
+        body: zodToJsonSchema(CoinBundleUpdateThumbnailSchema),
+        response: CoinBundleResponses.coinBundleThumbnailUpdated,
+      },
+    },
+    coinBundleController.updateThumbnail
   );
 
   // ──────────────────────────────────────────────────────────────────────────

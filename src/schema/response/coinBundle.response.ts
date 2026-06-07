@@ -101,6 +101,19 @@ export const CoinBundleResponses = {
       'displayOrder updated successfully'
     ),
   },
+  coinBundleThumbnailUpdated: {
+    200: apiResponse(
+      {
+        type: 'object',
+        properties: {
+          slug: { type: 'string' },
+          thumbnail: { ...ImageSchema, nullable: true },
+          updatedAt: dateSchema,
+        },
+      },
+      'Coin bundle thumbnail updated successfully'
+    ),
+  },
   coinBundleDeleted: {
     200: apiResponse(
       {
@@ -113,6 +126,17 @@ export const CoinBundleResponses = {
         },
       },
       'Coin bundle soft-deleted successfully'
+    ),
+  },
+  signatureUrl: {
+    200: apiResponse(
+      {
+        type: 'object',
+        properties: {
+          uploadURL: { type: 'string' },
+        },
+      },
+      'Upload signature generated successfully'
     ),
   },
 };

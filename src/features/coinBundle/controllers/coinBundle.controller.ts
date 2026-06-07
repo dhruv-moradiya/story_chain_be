@@ -5,9 +5,12 @@ import {
   TCoinBundleAdminListQuerySchema,
   TCoinBundleUpdateSchema,
   TCoinBundleDisplayOrderSchema,
+  TCoinBundleUpdateThumbnailSchema,
+  CoinBundleCreateSchema,
   CoinBundleAdminListQuerySchema,
   CoinBundleUpdateSchema,
   CoinBundleDisplayOrderSchema,
+  CoinBundleUpdateThumbnailSchema,
 } from '@schema/request/coinBundle.schema';
 import { ApiResponse } from '@utils/apiResponse';
 import { BaseModule } from '@utils/baseClass';
@@ -27,12 +30,10 @@ export class CoinBundleController extends BaseModule {
     super();
   }
 
-  // ─── POST /coin-bundles ───────────────────────────────────────────────────
-
   create = catchAsync(
     async (request: FastifyRequest<{ Body: TCoinBundleCreateSchema }>, reply: FastifyReply) => {
-      const { body, user } = request;
-      const createdBy = user.clerkId;
+      const body = CoinBundleCreateSchema.parse(request.body);
+      const createdBy = request.user.clerkId;
 
       const bundle = await this.coinBundleService.create(body, createdBy);
 
@@ -43,8 +44,6 @@ export class CoinBundleController extends BaseModule {
         .send(ApiResponse.created(bundle, 'Coin bundle created successfully'));
     }
   );
-
-  // ─── GET /admin/coin-bundles ──────────────────────────────────────────────
 
   listForAdmin = catchAsync(
     async (
@@ -62,8 +61,6 @@ export class CoinBundleController extends BaseModule {
         .send(ApiResponse.fetched(bundles, 'Coin bundles fetched successfully'));
     }
   );
-
-  // ─── PUT /coin-bundles/:slug ──────────────────────────────────────────────
 
   update = catchAsync(
     async (
@@ -84,8 +81,6 @@ export class CoinBundleController extends BaseModule {
     }
   );
 
-  // ─── PATCH /coin-bundles/:slug/toggle-active ─────────────────────────────
-
   toggleActive = catchAsync(async (request: FastifyRequest<SlugParam>, reply: FastifyReply) => {
     const { slug } = request.params;
     const updatedBy = request.user.clerkId;
@@ -98,8 +93,6 @@ export class CoinBundleController extends BaseModule {
       .code(HTTP_STATUS.OK.code)
       .send(ApiResponse.updated(result, 'Coin bundle active state toggled'));
   });
-
-  // ─── PATCH /coin-bundles/:slug/display-order ─────────────────────────────
 
   updateDisplayOrder = catchAsync(
     async (
@@ -120,8 +113,6 @@ export class CoinBundleController extends BaseModule {
     }
   );
 
-  // ─── DELETE /coin-bundles/:slug ───────────────────────────────────────────
-
   softDelete = catchAsync(async (request: FastifyRequest<SlugParam>, reply: FastifyReply) => {
     const { slug } = request.params;
     const deletedBy = request.user.clerkId;
@@ -134,4 +125,32 @@ export class CoinBundleController extends BaseModule {
       .code(HTTP_STATUS.OK.code)
       .send(ApiResponse.ok(result, 'Coin bundle deleted successfully'));
   });
+
+  getSignatureURLBySlug = catchAsync(async (_: FastifyRequest, reply: FastifyReply) => {
+    const uploadParams = await this.coinBundleService.getImageUploadParams();
+    console.log('Generated upload parameters:', uploadParams);
+
+    return reply
+      .code(HTTP_STATUS.OK.code)
+      .send(ApiResponse.fetched(uploadParams, 'Upload parameters generated successfully'));
+  });
+
+  updateThumbnail = catchAsync(
+    async (
+      request: FastifyRequest<SlugParam & { Body: TCoinBundleUpdateThumbnailSchema }>,
+      reply: FastifyReply
+    ) => {
+      const { slug } = request.params;
+      const body = CoinBundleUpdateThumbnailSchema.parse(request.body);
+      const updatedBy = request.user.clerkId;
+
+      const result = await this.coinBundleService.updateThumbnail(slug, body.thumbnail, updatedBy);
+
+      this.logInfo(`CoinBundle "${slug}" thumbnail updated by ${updatedBy}`);
+
+      return reply
+        .code(HTTP_STATUS.OK.code)
+        .send(ApiResponse.updated(result, 'Coin bundle thumbnail updated successfully'));
+    }
+  );
 }

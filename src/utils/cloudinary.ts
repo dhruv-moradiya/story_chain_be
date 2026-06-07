@@ -24,12 +24,32 @@ const THUMBNAIL_TRANSFORMATION = 'w_400,h_300,c_fill,q_auto,f_auto';
  * Includes an `eager` transformation so Cloudinary also stores a thumbnail
  * variant the moment the upload completes.
  *
+ * Pass any folder path you need — the function is not tied to stories.
+ *
+ * @param folderPath - Cloudinary folder to upload into.
+ *   Built-in helpers (`getStoryUploadSignature`, `getBundleUploadSignature`,
+ *   `getCharacterUploadSignature`) construct this for you, or you can supply
+ *   a fully custom path.
+ *
+ * @example
+ * // Stories
+ * getSignatureURL(`stories/${storySlug}`)
+ *
+ * // Bundles
+ * getSignatureURL(`bundles/${bundleId}`)
+ *
+ * // Characters
+ * getSignatureURL(`characters/${characterId}`)
+ *
+ * // Fully custom path
+ * getSignatureURL('marketing/banners/2025')
+ *
  * The client should POST these params (plus the file) to:
  *   https://api.cloudinary.com/v1_1/<cloud_name>/image/upload
  */
-const getSignatureURL = (slug: string) => {
-  if (!slug) {
-    throw new Error('Story slug is required to generate signature URL');
+const getSignatureURL = (folderPath: string) => {
+  if (!folderPath) {
+    throw new Error('folderPath is required to generate a Cloudinary signature URL');
   }
 
   const timestamp = Math.floor(Date.now() / 1000);
@@ -37,7 +57,7 @@ const getSignatureURL = (slug: string) => {
   // `eager` must be included in the signature so Cloudinary validates it.
   const paramsToSign = {
     eager: THUMBNAIL_TRANSFORMATION,
-    folder: `stories/${slug}`,
+    folder: folderPath,
     timestamp,
   };
 
@@ -47,9 +67,31 @@ const getSignatureURL = (slug: string) => {
     `?timestamp=${timestamp}` +
     `&signature=${signature}` +
     `&api_key=${env.CLOUDINARY_API_KEY}` +
-    `&folder=stories/${slug}` +
+    `&folder=${folderPath}` +
     `&eager=${encodeURIComponent(THUMBNAIL_TRANSFORMATION)}`
   );
+};
+
+// ---------------------------------------------------------------------------
+// Convenience wrappers — keep call-sites readable without exposing folder
+// path logic to every controller.
+// ---------------------------------------------------------------------------
+
+/** Signature URL scoped to a specific story's folder. */
+const getStoryUploadSignature = (storySlug: string) => {
+  if (!storySlug) throw new Error('storySlug is required');
+  return getSignatureURL(`stories/${storySlug}`);
+};
+
+/** Signature URL scoped to a specific bundle's folder. */
+const getBundleUploadSignature = () => {
+  return getSignatureURL(`bundles`);
+};
+
+/** Signature URL scoped to a specific character's folder. */
+const getCharacterUploadSignature = (characterId: string) => {
+  if (!characterId) throw new Error('characterId is required');
+  return getSignatureURL(`characters/${characterId}`);
 };
 
 /**
@@ -78,4 +120,10 @@ const getCloudinaryImageUrls = (publicId: string) => {
   return { originalUrl, thumbnailUrl };
 };
 
-export { getSignatureURL, getCloudinaryImageUrls };
+export {
+  getSignatureURL,
+  getStoryUploadSignature,
+  getBundleUploadSignature,
+  getCharacterUploadSignature,
+  getCloudinaryImageUrls,
+};

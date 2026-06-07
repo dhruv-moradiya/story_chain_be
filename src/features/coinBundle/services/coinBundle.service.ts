@@ -11,6 +11,7 @@ import {
   TCoinBundleDisplayOrderSchema,
 } from '@schema/request/coinBundle.schema';
 import { CoinBundleCacheService } from '@infrastructure/cache/coinBundle-cache.service';
+import { env } from '@/config/env';
 
 @singleton()
 export class CoinBundleService {
@@ -20,8 +21,6 @@ export class CoinBundleService {
     @inject(TOKENS.CoinBundleCacheService)
     private readonly cache: CoinBundleCacheService
   ) {}
-
-  // ─── POST /coin-bundles ────────────────────────────────────────────────────
 
   async create(input: TCoinBundleCreateSchema, createdBy: string): Promise<ICoinBundle> {
     const { name, slug: slugInput, baseCoins, bonusCoins = 0, ...rest } = input;
@@ -64,8 +63,6 @@ export class CoinBundleService {
     return this.repo.create({ data: payload });
   }
 
-  // ─── GET /admin/coin-bundles ───────────────────────────────────────────────
-
   async listForAdmin(query: TCoinBundleAdminListQuerySchema): Promise<ICoinBundle[]> {
     const filter: IAdminListFilter = {
       isDeleted: query.isDeleted,
@@ -78,8 +75,6 @@ export class CoinBundleService {
 
     return this.repo.findForAdmin(filter);
   }
-
-  // ─── PUT /coin-bundles/:slug ───────────────────────────────────────────────
 
   async update(
     slug: string,
@@ -118,8 +113,6 @@ export class CoinBundleService {
     return updated;
   }
 
-  // ─── PATCH /coin-bundles/:slug/toggle-active ──────────────────────────────
-
   async toggleActive(
     slug: string,
     updatedBy: string
@@ -141,8 +134,6 @@ export class CoinBundleService {
     await this.cache.invalidate(slug);
     return { slug: updated.slug, isActive: updated.isActive, updatedAt: updated.updatedAt };
   }
-
-  // ─── PATCH /coin-bundles/:slug/display-order ──────────────────────────────
 
   async updateDisplayOrder(
     slug: string,
@@ -173,8 +164,6 @@ export class CoinBundleService {
     };
   }
 
-  // ─── DELETE /coin-bundles/:slug ────────────────────────────────────────────
-
   async softDelete(
     slug: string,
     deletedBy: string
@@ -200,6 +189,43 @@ export class CoinBundleService {
       isDeleted: deleted.isDeleted,
       deletedAt: deleted.deletedAt,
       deletedBy: deleted.deletedBy,
+    };
+  }
+
+  async getImageUploadParams() {
+    const { getBundleUploadSignature } = await import('@/utils/cloudinary.js');
+    const signatureURL = getBundleUploadSignature();
+
+    return {
+      uploadURL: `https://api.cloudinary.com/v1_1/${env.CLOUDINARY_CLOUD_NAME}/image/upload${signatureURL}`,
+    };
+  }
+
+  async updateThumbnail(
+    slug: string,
+    thumbnail: { url: string; publicId: string },
+    updatedBy: string
+  ): Promise<Pick<ICoinBundle, 'slug' | 'thumbnail' | 'updatedAt'>> {
+    const existing = await this.repo.findActiveBySlug(slug);
+    if (!existing) {
+      throw ApiError.notFound('NOT_FOUND', `Coin bundle "${slug}" not found`);
+    }
+
+    const updated = await this.repo.updateBySlug(slug, {
+      thumbnail,
+      updatedBy,
+    });
+
+    if (!updated) {
+      throw ApiError.notFound('NOT_FOUND', `Coin bundle "${slug}" not found`);
+    }
+
+    await this.cache.invalidate(slug);
+
+    return {
+      slug: updated.slug,
+      thumbnail: updated.thumbnail,
+      updatedAt: updated.updatedAt,
     };
   }
 }
