@@ -9,12 +9,18 @@ import { IStoryUpdateCardImageBySlugDTO, IStoryUpdateCoverImageBySlugDTO } from 
 import { IStoryMediaService } from './interfaces/story-media.interface';
 import { StoryRepository } from '../repositories/story.repository';
 import { IStory } from '../types/story.types';
+import { CacheService } from '@/infrastructure/cache/cache.service';
+import { StoryTimelineService } from './story-timeline.service';
 
 @singleton()
 class StoryMediaService extends BaseModule implements IStoryMediaService {
   constructor(
     @inject(TOKENS.StoryRepository)
-    private readonly storyRepo: StoryRepository
+    private readonly storyRepo: StoryRepository,
+    @inject(TOKENS.CacheService)
+    private readonly cacheService: CacheService,
+    @inject(TOKENS.StoryTimelineService)
+    private readonly storyTimelineService: StoryTimelineService
   ) {
     super();
   }
@@ -23,7 +29,7 @@ class StoryMediaService extends BaseModule implements IStoryMediaService {
    * Add or update card image for a story
    */
   async addOrUpdateCardImage(input: IStoryUpdateCardImageBySlugDTO): Promise<IStory['cardImage']> {
-    const { slug, cardImage } = input;
+    const { slug, userId, cardImage } = input;
 
     const story = await this.storyRepo.findOneAndUpdate({
       filter: { slug },
@@ -35,6 +41,11 @@ class StoryMediaService extends BaseModule implements IStoryMediaService {
       this.throwNotFoundError('STORY_NOT_FOUND', 'Story not found. Unable to update card image.');
     }
 
+    await Promise.all([
+      this.storyTimelineService.recordCardImageUpdated(slug, userId),
+      this.cacheService.invalidateStory(slug),
+    ]);
+
     return story.cardImage;
   }
 
@@ -44,7 +55,7 @@ class StoryMediaService extends BaseModule implements IStoryMediaService {
   async addOrUpdateCoverImage(
     input: IStoryUpdateCoverImageBySlugDTO
   ): Promise<IStory['coverImage']> {
-    const { slug, coverImage } = input;
+    const { slug, userId, coverImage } = input;
 
     const story = await this.storyRepo.findOneAndUpdate({
       filter: { slug },
@@ -55,6 +66,11 @@ class StoryMediaService extends BaseModule implements IStoryMediaService {
     if (!story) {
       this.throwNotFoundError('STORY_NOT_FOUND', 'Story not found. Unable to update cover image.');
     }
+
+    await Promise.all([
+      this.storyTimelineService.recordCoverImageUpdated(slug, userId),
+      this.cacheService.invalidateStory(slug),
+    ]);
 
     return story.coverImage;
   }

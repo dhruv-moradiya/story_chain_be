@@ -327,6 +327,82 @@ enum StoryStatus {
 
 const STORY_STATUSES = ['draft', 'published', 'archived', 'deleted'] as const;
 
+enum StoryTimelineAction {
+  // Story lifecycle
+  STORY_CREATED = 'story_created',
+  STORY_PUBLISHED = 'story_published',
+  STORY_ARCHIVED = 'story_archived',
+  STORY_DELETED = 'story_deleted',
+
+  // Content events
+  CHAPTER_ADDED = 'chapter_added',
+  CHAPTER_UPDATED = 'chapter_updated',
+  CHAPTER_DELETED = 'chapter_deleted',
+  CHAPTER_MARKED_ENDING = 'chapter_marked_ending',
+
+  // Pull Request events
+  PR_SUBMITTED = 'pr_submitted',
+  PR_APPROVED = 'pr_approved',
+  PR_MERGED = 'pr_merged',
+  PR_REJECTED = 'pr_rejected',
+  PR_CLOSED = 'pr_closed',
+
+  // Collaborator events
+  COLLABORATOR_ADDED = 'collaborator_added',
+  COLLABORATOR_REMOVED = 'collaborator_removed',
+  COLLABORATOR_ROLE_CHANGED = 'collaborator_role_changed',
+  COLLABORATOR_INVITED = 'collaborator_invited',
+  COLLABORATOR_INVITATION_ACCEPTED = 'collaborator_invitation_accepted',
+  COLLABORATOR_INVITATION_REJECTED = 'collaborator_invitation_rejected',
+
+  // Settings events
+  SETTINGS_UPDATED = 'settings_updated',
+  COVER_IMAGE_UPDATED = 'cover_image_updated',
+  CARD_IMAGE_UPDATED = 'card_image_updated',
+
+  // Moderation events
+  STORY_FLAGGED = 'story_flagged',
+  STORY_UNFLAGGED = 'story_unflagged',
+}
+
+const STORY_TIMELINE_ACTIONS = [
+  // Story lifecycle
+  'story_created',
+  'story_published',
+  'story_archived',
+  'story_deleted',
+
+  // Content events
+  'chapter_added',
+  'chapter_updated',
+  'chapter_deleted',
+  'chapter_marked_ending',
+
+  // Pull Request events
+  'pr_submitted',
+  'pr_approved',
+  'pr_merged',
+  'pr_rejected',
+  'pr_closed',
+
+  // Collaborator events
+  'collaborator_added',
+  'collaborator_removed',
+  'collaborator_role_changed',
+  'collaborator_invited',
+  'collaborator_invitation_accepted',
+  'collaborator_invitation_rejected',
+
+  // Settings events
+  'settings_updated',
+  'cover_image_updated',
+  'card_image_updated',
+
+  // Moderation events
+  'story_flagged',
+  'story_unflagged',
+] as const;
+
 export {
   STORY_GENRES,
   STORY_CONTENT_RATINGS,
@@ -334,4 +410,6 @@ export {
   StoryGenre,
   StoryContentRating,
   StoryStatus,
+  StoryTimelineAction,
+  STORY_TIMELINE_ACTIONS,
 };

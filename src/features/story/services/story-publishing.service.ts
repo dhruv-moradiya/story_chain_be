@@ -7,12 +7,15 @@ import { StoryRules } from '@/domain/story.rules';
 import { IStoryPublishingService } from './interfaces/story-publishing.interface';
 import { StoryRepository } from '../repositories/story.repository';
 import { IStory } from '../types/story.types';
+import { StoryTimelineService } from './story-timeline.service';
 
 @singleton()
 class StoryPublishingService extends BaseModule implements IStoryPublishingService {
   constructor(
     @inject(TOKENS.StoryRepository)
-    private readonly storyRepo: StoryRepository
+    private readonly storyRepo: StoryRepository,
+    @inject(TOKENS.StoryTimelineService)
+    private readonly storyTimelineService: StoryTimelineService
   ) {
     super();
   }
@@ -38,6 +41,13 @@ class StoryPublishingService extends BaseModule implements IStoryPublishingServi
 
     if (!result.modifiedCount) {
       this.throwInternalError('Unable to publish the story. Please try again.');
+    }
+
+    // Record timeline entry (non-blocking — don't let a timeline write failure roll back the publish)
+    try {
+      await this.storyTimelineService.recordStoryPublished(slug, userId);
+    } catch (error) {
+      this.logError('Failed to record story_published timeline event', { error, slug });
     }
 
     // Return the updated story
@@ -67,6 +77,13 @@ class StoryPublishingService extends BaseModule implements IStoryPublishingServi
 
     if (!updatedStory) {
       this.throwInternalError('Unable to unpublish the story. Please try again.');
+    }
+
+    // Record timeline entry — story archived / returned to draft
+    try {
+      await this.storyTimelineService.recordStoryArchived(slug, userId);
+    } catch (error) {
+      this.logError('Failed to record story_archived timeline event', { error, slug });
     }
 
     return updatedStory;

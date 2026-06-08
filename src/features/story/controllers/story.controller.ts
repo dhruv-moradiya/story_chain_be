@@ -96,10 +96,12 @@ export class StoryController extends BaseModule {
       reply: FastifyReply
     ) => {
       const { slug } = request.params;
+      const userId = request.user.clerkId;
 
       const input: IStoryUpdateSettingDTO = {
         ...request.body,
         slug,
+        userId,
       };
 
       const story = await this.storyCrudService.updateSettingsBySlug(input);
@@ -286,10 +288,12 @@ export class StoryController extends BaseModule {
       reply: FastifyReply
     ) => {
       const { slug } = request.params;
+      const userId = request.user.clerkId;
       const { coverImage: coverImageInfo } = request.body;
 
       const coverImage = await this.storyMediaService.addOrUpdateCoverImage({
         slug,
+        userId,
         coverImage: coverImageInfo,
       });
 
@@ -305,10 +309,12 @@ export class StoryController extends BaseModule {
       reply: FastifyReply
     ) => {
       const { slug } = request.params;
+      const userId = request.user.clerkId;
       const { cardImage: cardImageInfo } = request.body;
 
       const cardImage = await this.storyMediaService.addOrUpdateCardImage({
         slug,
+        userId,
         cardImage: cardImageInfo,
       });
 

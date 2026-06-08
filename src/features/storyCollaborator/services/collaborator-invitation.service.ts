@@ -20,6 +20,7 @@ import { StoryRepository } from '@features/story/repositories/story.repository';
 import { CacheService } from '@/infrastructure/cache/cache.service';
 import { CACHE_TTL, CacheKeyBuilder } from '@/infrastructure';
 import { UserRepository } from '@features/user/repositories/user.repository';
+import { StoryTimelineService } from '@features/story/services/story-timeline.service';
 
 @singleton()
 class CollaboratorInvitationService extends BaseModule implements ICollaboratorInvitationService {
@@ -35,7 +36,9 @@ class CollaboratorInvitationService extends BaseModule implements ICollaboratorI
     @inject(TOKENS.NotificationService)
     private readonly notificationService: NotificationService,
     @inject(TOKENS.UserRepository)
-    private readonly userRepo: UserRepository
+    private readonly userRepo: UserRepository,
+    @inject(TOKENS.StoryTimelineService)
+    private readonly storyTimelineService: StoryTimelineService
   ) {
     super();
   }
@@ -121,6 +124,13 @@ class CollaboratorInvitationService extends BaseModule implements ICollaboratorI
           this.throwInternalError('Invitation could not be created due to an unexpected error.');
         }
 
+        await this.storyTimelineService.recordCollaboratorInvited(
+          input.slug,
+          input.inviterUser.id,
+          { targetUserId: input.invitedUser.id, role: input.role },
+          { session }
+        );
+
         return { invitation, story };
       }
     );
@@ -163,7 +173,7 @@ class CollaboratorInvitationService extends BaseModule implements ICollaboratorI
       this.throwNotFoundError('Collaborator not found or no update was applied.');
     }
 
-    // Enqueue accept/reject notification to the inviter
+    // Enqueue accept/reject notification and record timeline entry
     try {
       // Look up the story and the accepting/declining user for notification context
       const story = await this.storyRepo.findBySlug(slug);
@@ -173,24 +183,34 @@ class CollaboratorInvitationService extends BaseModule implements ICollaboratorI
         const inviterUserId = collaborator.invitedBy;
 
         if (status === StoryCollaboratorStatus.ACCEPTED) {
-          await this.notificationService.enqueueCollabAccepted({
-            inviterUserId,
-            acceptedByName: respondingUser.username,
-            storyName: story.title,
-            storySlug: story.slug,
-          });
+          await Promise.all([
+            this.notificationService.enqueueCollabAccepted({
+              inviterUserId,
+              acceptedByName: respondingUser.username,
+              storyName: story.title,
+              storySlug: story.slug,
+            }),
+            this.storyTimelineService.recordCollaboratorInvitationAccepted(slug, userId, {
+              role: collaborator.role,
+            }),
+          ]);
         } else if (status === StoryCollaboratorStatus.DECLINED) {
-          await this.notificationService.enqueueCollabRejected({
-            inviterUserId,
-            declinedByName: respondingUser.username,
-            storyName: story.title,
-            storySlug: story.slug,
-          });
+          await Promise.all([
+            this.notificationService.enqueueCollabRejected({
+              inviterUserId,
+              declinedByName: respondingUser.username,
+              storyName: story.title,
+              storySlug: story.slug,
+            }),
+            this.storyTimelineService.recordCollaboratorInvitationRejected(slug, userId),
+          ]);
         }
       }
     } catch (error) {
-      // Non-blocking: don't fail the status update if notification enqueue fails
-      this.logError('Failed to enqueue accept/reject notification', { error });
+      // Non-blocking: don't fail the status update if notification or timeline write fails
+      this.logError('Failed to enqueue accept/reject notification or record timeline event', {
+        error,
+      });
     }
 
     return collaborator;

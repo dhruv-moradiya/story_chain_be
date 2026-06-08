@@ -120,10 +120,47 @@ const getCloudinaryImageUrls = (publicId: string) => {
   return { originalUrl, thumbnailUrl };
 };
 
+/**
+ * Deletes a Cloudinary asset by its public ID.
+ *
+ * The `resource_type` defaults to `'image'`; pass `'video'` or `'raw'`
+ * when deleting non-image assets.
+ *
+ * @param publicId    - The Cloudinary public_id of the asset to delete.
+ * @param resourceType - The resource type: `'image'` | `'video'` | `'raw'`.
+ *                       Defaults to `'image'`.
+ * @returns The Cloudinary API result object `{ result: 'ok' | 'not found' }`.
+ *
+ * @throws  When the Cloudinary API call fails (network error, invalid
+ *          credentials, etc.).
+ *
+ * @example
+ * // Delete an image
+ * await deleteCloudinaryAsset('stories/my-slug/image123');
+ *
+ * // Delete a video
+ * await deleteCloudinaryAsset('stories/my-slug/intro_video', 'video');
+ */
+const deleteCloudinaryAsset = async (
+  publicId: string,
+  resourceType: 'image' | 'video' | 'raw' = 'image'
+) => {
+  if (!publicId) {
+    throw new Error('publicId is required to delete a Cloudinary asset');
+  }
+
+  const result = await cloudinary.uploader.destroy(publicId, {
+    resource_type: resourceType,
+  });
+
+  return result;
+};
+
 export {
   getSignatureURL,
   getStoryUploadSignature,
   getBundleUploadSignature,
   getCharacterUploadSignature,
   getCloudinaryImageUrls,
+  deleteCloudinaryAsset,
 };

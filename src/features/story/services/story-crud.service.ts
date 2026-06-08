@@ -19,6 +19,7 @@ import { IStoryCrudService } from './interfaces/story-crud.interface';
 import { StoryRepository } from '../repositories/story.repository';
 import { IStory } from '../types/story.types';
 import { CacheService } from '@/infrastructure/cache/cache.service';
+import { StoryTimelineService } from './story-timeline.service';
 
 @singleton()
 class StoryCrudService extends BaseModule implements IStoryCrudService {
@@ -27,7 +28,8 @@ class StoryCrudService extends BaseModule implements IStoryCrudService {
     private readonly cacheService: CacheService,
     @inject(TOKENS.StoryRepository) private readonly storyRepo: StoryRepository,
     @inject(TOKENS.CollaboratorLifecycleService)
-    private readonly collaboratorLifecycleService: CollaboratorLifecycleService
+    private readonly collaboratorLifecycleService: CollaboratorLifecycleService,
+    @inject(TOKENS.StoryTimelineService) private readonly storyTimelineService: StoryTimelineService
   ) {
     super();
   }
@@ -69,6 +71,8 @@ class StoryCrudService extends BaseModule implements IStoryCrudService {
         options
       );
 
+      await this.storyTimelineService.recordStoryCreated(story.slug, creatorId, options);
+
       await this.cacheService.invalidateStory(story.slug);
 
       return story;
@@ -102,6 +106,8 @@ class StoryCrudService extends BaseModule implements IStoryCrudService {
 
   async updateStatus(input: IUpdateStoryStatusDTO): Promise<IStory> {
     const { slug, userId, status } = input;
+
+    // --- Guards (outside transaction — read-only checks) ---
     const story = await this.storyRepo.findBySlug(slug);
 
     if (!story) this.throwNotFoundError('STORY_NOT_FOUND', 'Story not found.');
@@ -120,32 +126,62 @@ class StoryCrudService extends BaseModule implements IStoryCrudService {
       );
     }
 
-    const updated = await this.storyRepo.findOneAndUpdate({
-      filter: { slug },
-      update: { status },
-      options: { new: true },
+    return await withTransaction('Updating story status', async (session) => {
+      const options = { session };
+
+      const updated = await this.storyRepo.findOneAndUpdate({
+        filter: { slug },
+        update: { status },
+        options: { new: true, session },
+      });
+
+      if (!updated) {
+        this.throwInternalError('Unable to update story status. Please try again.');
+      }
+
+      // Map status value → its matching timeline action
+      const STATUS_ACTION_MAP = {
+        published: () => this.storyTimelineService.recordStoryPublished(slug, userId, options),
+        archived: () => this.storyTimelineService.recordStoryArchived(slug, userId, options),
+        deleted: () => this.storyTimelineService.recordStoryDeleted(slug, userId, options),
+      } as const;
+
+      const recordAction = STATUS_ACTION_MAP[status as keyof typeof STATUS_ACTION_MAP];
+      if (recordAction) await recordAction();
+
+      return updated;
     });
-
-    if (!updated) {
-      this.throwInternalError('Unable to update story status. Please try again.');
-    }
-
-    return updated;
   }
 
   async updateSettingsBySlug(input: IStoryUpdateSettingDTO): Promise<IStory> {
-    const { slug, ...update } = input;
+    const { slug, userId, ...update } = input;
 
-    const story = await this.storyRepo.updateStorySettingBySlug(slug, update);
+    // Derive which top-level fields changed for the timeline metadata
+    const changedFields = Object.keys(update);
 
-    if (!story) {
-      this.throwNotFoundError(
-        'STORY_NOT_FOUND',
-        'Unable to update settings: the story does not exist.'
+    return await withTransaction('Updating story settings', async (session) => {
+      const options = { session };
+
+      const story = await this.storyRepo.updateStorySettingBySlug(slug, update, options);
+
+      if (!story) {
+        this.throwNotFoundError(
+          'STORY_NOT_FOUND',
+          'Unable to update settings: the story does not exist.'
+        );
+      }
+
+      await this.storyTimelineService.recordSettingsUpdated(
+        slug,
+        userId,
+        { changedFields },
+        options
       );
-    }
 
-    return story;
+      await this.cacheService.invalidateStory(slug);
+
+      return story;
+    });
   }
 }
 

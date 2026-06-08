@@ -42,6 +42,7 @@ import { ReadingHistoryRepository } from '@/features/readingHistory/repositories
 import { CommentVoteRepository } from '@/features/commentVote/repository/commentVote.repository';
 import { PullRequestRepository } from '@features/pullRequest/repositories/pullRequest.repository';
 import { PRTimelineRepository } from '@features/prTimeline/repositories/prTimeline.repository';
+import { StoryTimelineRepository } from '@features/story/repositories/storyTimeline.repository';
 import { PRReviewRepository } from '@features/prReview/repositories/prReview.repository';
 import { PRCommentRepository } from '@features/prComment/repositories/prComment.repository';
 import { CoinBundleRepository } from '@features/coinBundle/repositories/coinBundle.repository';
@@ -55,6 +56,7 @@ import { StoryCrudService } from '@/features/story/services/story-crud.service';
 import { StoryQueryService } from '@/features/story/services/story-query.service';
 import { StoryMediaService } from '@/features/story/services/story-media.service';
 import { StoryPublishingService } from '@/features/story/services/story-publishing.service';
+import { StoryTimelineService } from '@/features/story/services/story-timeline.service';
 import { CollaboratorQueryService } from '@features/storyCollaborator/services/collaborator-query.service';
 import { CollaboratorInvitationService } from '@features/storyCollaborator/services/collaborator-invitation.service';
 import { CollaboratorLifecycleService } from '@features/storyCollaborator/services/collaborator-lifecycle.service';
@@ -193,6 +195,7 @@ export function registerServices(): void {
   container.register(TOKENS.CommentVoteRepository, { useClass: CommentVoteRepository });
   container.register(TOKENS.PullRequestRepository, { useClass: PullRequestRepository });
   container.register(TOKENS.PRTimelineRepository, { useClass: PRTimelineRepository });
+  container.register(TOKENS.StoryTimelineRepository, { useClass: StoryTimelineRepository });
   container.register(TOKENS.PRReviewRepository, { useClass: PRReviewRepository });
   container.register(TOKENS.PRCommentRepository, { useClass: PRCommentRepository });
   container.register(TOKENS.CoinBundleRepository, { useClass: CoinBundleRepository });
@@ -218,6 +221,7 @@ export function registerServices(): void {
   container.register(TOKENS.StoryQueryService, { useClass: StoryQueryService });
   container.register(TOKENS.StoryMediaService, { useClass: StoryMediaService });
   container.register(TOKENS.StoryPublishingService, { useClass: StoryPublishingService });
+  container.register(TOKENS.StoryTimelineService, { useClass: StoryTimelineService });
   container.register(TOKENS.AutoSaveQueryService, { useClass: AutoSaveQueryService });
   container.register(TOKENS.AutoSaveLifecycleService, { useClass: AutoSaveLifecycleService });
   container.register(TOKENS.AutoSaveContentService, { useClass: AutoSaveContentService });

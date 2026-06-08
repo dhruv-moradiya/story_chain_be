@@ -7,6 +7,7 @@ import {
   TStoryContentRating,
   TStoryGenre,
   TStoryStatus,
+  TStoryTimelineAction,
 } from '@features/story/types/story.types';
 
 const StoryUpdateDTO = z.object({
@@ -249,6 +250,7 @@ interface IStoryCollaboratorAcceptInvitationDTO {
 
 interface IStoryUpdateSettingDTO {
   slug: string;
+  userId: string;
   isPublic: boolean;
   allowBranching: boolean;
   requireApproval: boolean;
@@ -260,6 +262,7 @@ interface IStoryUpdateSettingDTO {
 
 interface IStoryUpdateCoverImageBySlugDTO {
   slug: string;
+  userId: string;
   coverImage: {
     url: string;
     publicId: string;
@@ -268,6 +271,7 @@ interface IStoryUpdateCoverImageBySlugDTO {
 
 interface IStoryUpdateCardImageBySlugDTO {
   slug: string;
+  userId: string;
   cardImage: {
     url: string;
     publicId: string;
@@ -278,6 +282,20 @@ interface IUpdateStoryStatusDTO {
   slug: string;
   userId: string;
   status: TStoryStatus;
+}
+
+interface IRecordTimelineEventDTO {
+  storySlug: string;
+  action: TStoryTimelineAction;
+
+  performedBy: string | null;
+  metadata?: Record<string, unknown>;
+}
+
+interface IGetTimelineDTO {
+  storySlug: string;
+  limit?: number;
+  skip?: number;
 }
 
 export { StoryUpdateDTO };
@@ -294,4 +312,6 @@ export type {
   IStoryUpdateCoverImageBySlugDTO,
   IUpdateStoryStatusDTO,
   IStoryUpdateCardImageBySlugDTO,
+  IRecordTimelineEventDTO,
+  IGetTimelineDTO,
 };
