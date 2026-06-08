@@ -61,6 +61,9 @@ const StoryApiRoutes = {
 
   // CHAPTERS
   AddChapterBySlug: '/slug/:slug/chapters',
+
+  // TIMELINE
+  GetTimelineBySlug: '/slug/:slug/timeline',
 } as const;
 
 export { StoryApiRoutes };
@@ -461,5 +464,30 @@ export async function storyRoutes(fastify: FastifyInstance) {
       },
     },
     storyController.updateStoryCardImageBySlug
+  );
+
+  // Get story timeline by slug
+  fastify.get(
+    StoryApiRoutes.GetTimelineBySlug,
+    {
+      preHandler: [validateAuth, loadStoryContext],
+      config: { rateLimit: RateLimits.AUTHENTICATED },
+      schema: {
+        description:
+          'Get story activity timeline by slug. Supports pagination via ?limit= and ?skip= query params.',
+        tags: ['Stories'],
+        security: [{ bearerAuth: [] }],
+        params: zodToJsonSchema(StorySlugSchema),
+        querystring: {
+          type: 'object',
+          properties: {
+            limit: { type: 'integer', minimum: 1, maximum: 100, default: 20 },
+            skip: { type: 'integer', minimum: 0, default: 0 },
+          },
+        },
+        response: StoryResponses.storyTimeline,
+      },
+    },
+    storyController.getTimelineBySlug
   );
 }

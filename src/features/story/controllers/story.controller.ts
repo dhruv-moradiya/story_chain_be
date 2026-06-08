@@ -23,6 +23,7 @@ import { StoryCrudService } from '../services/story-crud.service';
 import { StoryQueryService } from '../services/story-query.service';
 import { StoryMediaService } from '../services/story-media.service';
 import { StoryPublishingService } from '../services/story-publishing.service';
+import { StoryTimelineService } from '../services/story-timeline.service';
 
 // Import chapter service
 import { ChapterCreationService } from '@/features/chapter/services/chapter-creation.service';
@@ -39,7 +40,9 @@ export class StoryController extends BaseModule {
     @inject(TOKENS.StoryPublishingService)
     private readonly storyPublishingService: StoryPublishingService,
     @inject(TOKENS.ChapterCreationService)
-    private readonly chapterCreationService: ChapterCreationService
+    private readonly chapterCreationService: ChapterCreationService,
+    @inject(TOKENS.StoryTimelineService)
+    private readonly storyTimelineService: StoryTimelineService
   ) {
     super();
   }
@@ -372,6 +375,41 @@ export class StoryController extends BaseModule {
       return reply
         .code(HTTP_STATUS.CREATED.code)
         .send(ApiResponse.created(newChapter, 'Chapter added successfully'));
+    }
+  );
+
+  // =====================
+  // TIMELINE
+  // =====================
+
+  getTimelineBySlug = catchAsync(
+    async (
+      request: FastifyRequest<{
+        Params: TStorySlugSchema;
+        Querystring: { limit?: number; skip?: number };
+      }>,
+      reply: FastifyReply
+    ) => {
+      const { slug } = request.params;
+      const limit = request.query.limit ?? 20;
+      const skip = request.query.skip ?? 0;
+
+      const { events, total } = await this.storyTimelineService.getTimeline({
+        storySlug: slug,
+        limit,
+        skip,
+      });
+
+      this.logInfo(`Fetched timeline for story ${slug} — ${events.length} events`);
+
+      return reply
+        .code(HTTP_STATUS.OK.code)
+        .send(
+          ApiResponse.fetched(
+            { events, total, limit, skip },
+            `Timeline fetched successfully — ${total} total event(s)`
+          )
+        );
     }
   );
 }
