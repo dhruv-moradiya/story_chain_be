@@ -237,9 +237,23 @@ export const StoryTimelineEventSchema = {
   type: 'object',
   properties: {
     _id: { type: 'string' },
-    storySlug: { type: 'string' },
+    story: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        slug: { type: 'string' },
+      },
+    },
     action: { type: 'string', enum: STORY_TIMELINE_ACTIONS },
-    performedBy: { type: 'string', nullable: true },
+    performedBy: {
+      type: 'object',
+      properties: {
+        username: { type: 'string' },
+        avatarUrl: { type: 'string' },
+        clerkId: { type: 'string' },
+      },
+      nullable: true,
+    },
     performedAt: { type: 'string', format: 'date-time' },
     metadata: { type: 'object', additionalProperties: true },
   },

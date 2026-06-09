@@ -3,6 +3,7 @@ import { TOKENS } from '@container/tokens';
 import { TConvertAutoSaveDTO } from '@dto/chapterAutoSave.dto';
 import { BaseModule } from '@utils/baseClass';
 import { WRITE_CHAPTER_ROLES } from '@/middlewares/rbac/storyRole.middleware';
+import { CacheService } from '@/infrastructure/cache/cache.service';
 
 import { IChapter } from '@features/chapter/types/chapter.types';
 import { IChapterAutoSave } from '../types/chapterAutoSave.types';
@@ -24,7 +25,9 @@ export class AutoSaveConversionService extends BaseModule {
     @inject(TOKENS.CollaboratorQueryService)
     private readonly collaboratorQueryService: CollaboratorQueryService,
     @inject(TOKENS.ChapterCreationService)
-    private readonly chapterCreationService: ChapterCreationService
+    private readonly chapterCreationService: ChapterCreationService,
+    @inject(TOKENS.CacheService)
+    private readonly cacheService: CacheService
   ) {
     super();
   }
@@ -160,6 +163,11 @@ export class AutoSaveConversionService extends BaseModule {
       });
 
       await this.chapterAutoSaveRepo.deleteById(autoSaveId, { session });
+
+      // Invalidate story-level caches since a new chapter was added/updated
+      await this.cacheService.invalidateStory(autoSave.storySlug);
+      // Invalidate chapter detail and story tree caches for the new chapter
+      await this.cacheService.invalidateChapter(autoSave.storySlug, chapter.slug);
 
       return chapter;
     });

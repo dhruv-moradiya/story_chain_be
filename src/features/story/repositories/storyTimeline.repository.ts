@@ -57,6 +57,12 @@ export class StoryTimelineRepository extends BaseRepository<IStoryTimeline, ISto
         sort: { performedAt: -1 },
         limit,
         skip,
+        populate: [
+          { path: 'user', select: 'username avatarUrl clerkId' },
+          { path: 'story', select: 'title slug' },
+          { path: 'chapter', select: 'title slug' },
+          { path: 'targetUser', select: 'username clerkId' },
+        ],
       },
     });
   }
@@ -78,6 +84,12 @@ export class StoryTimelineRepository extends BaseRepository<IStoryTimeline, ISto
         sort: { performedAt: -1 },
         limit,
         skip,
+        populate: [
+          { path: 'user', select: 'username avatarUrl clerkId' },
+          { path: 'story', select: 'title slug' },
+          { path: 'chapter', select: 'title slug' },
+          { path: 'targetUser', select: 'username clerkId' },
+        ],
       },
     });
   }

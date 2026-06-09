@@ -334,18 +334,73 @@ class StoryTimelineService extends BaseModule {
       this.storyTimelineRepo.countByStory(storySlug, options),
     ]);
 
-    return { events, total };
+    const formattedEvents = events.map((eventDoc) =>
+      this.formatTimelineEvent(eventDoc)
+    ) as unknown as IStoryTimeline[];
+
+    return { events: formattedEvents, total };
   }
 
   /**
    * Fetch timeline events filtered by a specific action type.
    */
-  getTimelineByAction(
+  async getTimelineByAction(
     storySlug: string,
     action: TStoryTimelineAction,
     options?: IGetStoryTimelineOptions
   ): Promise<IStoryTimeline[]> {
-    return this.storyTimelineRepo.findByStoryAndAction(storySlug, action, options);
+    const events = await this.storyTimelineRepo.findByStoryAndAction(storySlug, action, options);
+
+    return events.map((eventDoc) =>
+      this.formatTimelineEvent(eventDoc)
+    ) as unknown as IStoryTimeline[];
+  }
+
+  private formatTimelineEvent(eventDoc: unknown): Record<string, unknown> {
+    const doc = eventDoc as Record<string, unknown>;
+    const event = (
+      doc && typeof doc === 'object' && 'toJSON' in doc && typeof doc.toJSON === 'function'
+        ? doc.toJSON()
+        : doc
+    ) as Record<string, unknown>;
+
+    // 1. performedBy
+    if (event.user) {
+      event.performedBy = event.user;
+    }
+    delete event.user;
+
+    // 2. storySlug -> story
+    if (event.story) {
+      delete event.storySlug;
+    } else if (event.storySlug) {
+      event.story = { slug: event.storySlug };
+      delete event.storySlug;
+    }
+
+    // 3. metadata chapter and targetUser
+    if (event.metadata && typeof event.metadata === 'object') {
+      const metadata = event.metadata as Record<string, unknown>;
+      if (event.chapter) {
+        metadata.chapter = event.chapter;
+        delete metadata.chapterSlug;
+      } else if (metadata.chapterSlug) {
+        metadata.chapter = { slug: metadata.chapterSlug };
+        delete metadata.chapterSlug;
+      }
+
+      if (event.targetUser) {
+        metadata.targetUser = event.targetUser;
+        delete metadata.targetUserId;
+      } else if (metadata.targetUserId) {
+        metadata.targetUser = { clerkId: metadata.targetUserId };
+        delete metadata.targetUserId;
+      }
+    }
+    delete event.chapter;
+    delete event.targetUser;
+
+    return event;
   }
 }
 

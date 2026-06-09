@@ -64,8 +64,40 @@ const storyTimelineSchema = new Schema<IStoryTimelineDoc>(
   {
     // We use `performedAt` as the authoritative time — no need for mongoose timestamps.
     timestamps: false,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
+
+// ─── Virtuals ────────────────────────────────────────────────────────────────
+
+storyTimelineSchema.virtual('user', {
+  ref: 'User',
+  localField: 'performedBy',
+  foreignField: 'clerkId',
+  justOne: true,
+});
+
+storyTimelineSchema.virtual('story', {
+  ref: 'Story',
+  localField: 'storySlug',
+  foreignField: 'slug',
+  justOne: true,
+});
+
+storyTimelineSchema.virtual('chapter', {
+  ref: 'Chapter',
+  localField: 'metadata.chapterSlug',
+  foreignField: 'slug',
+  justOne: true,
+});
+
+storyTimelineSchema.virtual('targetUser', {
+  ref: 'User',
+  localField: 'metadata.targetUserId',
+  foreignField: 'clerkId',
+  justOne: true,
+});
 
 // ─── Indexes ─────────────────────────────────────────────────────────────────
 
