@@ -45,6 +45,7 @@ const StoryApiRoutes = {
   GetStoryOverviewBySlug: '/slug/:slug/overview',
   GetSignatureUrlBySlug: '/slug/:slug/signature-url',
   GetStorySettingsBySlug: '/slug/:slug/settings',
+  GetUserRole: '/slug/:slug/user-role',
 
   // UPDATE STORY STATUS
   PublishBySlug: '/slug/:slug/publish',
@@ -489,5 +490,21 @@ export async function storyRoutes(fastify: FastifyInstance) {
       },
     },
     storyController.getTimelineBySlug
+  );
+
+  fastify.get(
+    StoryApiRoutes.GetUserRole,
+    {
+      preHandler: [validateAuth],
+      config: { rateLimit: RateLimits.AUTHENTICATED },
+      schema: {
+        description: 'Get user role for story',
+        tags: ['Stories'],
+        security: [{ bearerAuth: [] }],
+        params: zodToJsonSchema(StorySlugSchema),
+        response: StoryResponses.storyUserRole,
+      },
+    },
+    storyController.getUserRole
   );
 }

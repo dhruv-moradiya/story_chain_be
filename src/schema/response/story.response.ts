@@ -272,6 +272,14 @@ export const StoryTimelineResponseSchema = {
   },
 };
 
+export const UserStoryRoleSchema = {
+  type: 'object',
+  properties: {
+    role: { type: 'string', enum: [...STORY_COLLABORATOR_ROLES, 'reader'] },
+    roleStatus: { type: ['string', 'null'], enum: [...STORY_COLLABORATOR_STATUSES, null] },
+  },
+};
+
 // ═══════════════════════════════════════════
 // STORY RESPONSE OBJECTS
 // ═══════════════════════════════════════════
@@ -283,6 +291,12 @@ export const StoryResponses = {
     401: unauthorizedResponse(),
     409: conflictResponse('Story with this slug already exists'),
     422: validationErrorResponse('Validation failed'),
+    500: internalErrorResponse(),
+  },
+  storyUserRole: {
+    200: apiResponse(UserStoryRoleSchema, 'User role retrieved successfully'),
+    401: unauthorizedResponse(),
+    404: notFoundResponse('Story not found'),
     500: internalErrorResponse(),
   },
   bulkStoryCreated: {

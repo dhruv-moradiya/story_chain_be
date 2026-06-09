@@ -99,3 +99,8 @@ export interface StatsUpdate {
   uniqueContributors?: number;
   averageRating?: number;
 }
+
+export interface IUserStoryRole {
+  role: TStoryCollaboratorRole | 'reader';
+  roleStatus?: TStoryCollaboratorStatus | null;
+}

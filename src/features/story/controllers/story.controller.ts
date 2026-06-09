@@ -378,6 +378,21 @@ export class StoryController extends BaseModule {
     }
   );
 
+  getUserRole = catchAsync(
+    async (request: FastifyRequest<{ Params: TStorySlugSchema }>, reply: FastifyReply) => {
+      const { slug } = request.params;
+      const userId = request.user.clerkId;
+
+      const storyUserRole = await this.storyQueryService.getUserRoleBySlug(slug, userId);
+
+      this.logInfo(`Fetched user role for story ${slug} — ${storyUserRole.role}`);
+
+      return reply
+        .code(HTTP_STATUS.OK.code)
+        .send(ApiResponse.fetched(storyUserRole, 'User role fetched successfully'));
+    }
+  );
+
   // =====================
   // TIMELINE
   // =====================

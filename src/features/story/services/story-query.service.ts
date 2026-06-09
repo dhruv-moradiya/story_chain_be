@@ -12,7 +12,11 @@ import { ChapterRepository } from '@/features/chapter/repositories/chapter.repos
 import { type IUserService } from '@/features/user/interfaces';
 import { CACHE_TTL, CacheKeyBuilder } from '@/infrastructure';
 import { CacheService } from '@/infrastructure/cache/cache.service';
-import { IStoryOverviewResponse, IUserStories } from '@/types/response/story.response.types';
+import {
+  IStoryOverviewResponse,
+  IUserStories,
+  IUserStoryRole,
+} from '@/types/response/story.response.types';
 import { StoryPipelineBuilder } from '../pipelines/storyPipeline.builder';
 import { StoryRepository } from '../repositories/story.repository';
 import { StoryStatus } from '../types/story-enum';
@@ -244,6 +248,18 @@ class StoryQueryService extends BaseModule implements IStoryQueryService {
     options: IOperationOptions = {}
   ): Promise<IStory[]> {
     return this.searchStoriesByTitle(undefined, creator, fields, 50, options);
+  }
+
+  async getUserRoleBySlug(slug: string, userId: string) {
+    const storyPipeline = new StoryPipelineBuilder().getUserRole(slug, userId).build();
+
+    const stories = await this.storyRepo.aggregateStories<IUserStoryRole>(storyPipeline);
+
+    if (!stories.length) {
+      this.throwNotFoundError('Story not found');
+    }
+
+    return stories[0];
   }
 }
 

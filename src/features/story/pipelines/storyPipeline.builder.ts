@@ -45,6 +45,45 @@ class StoryPipelineBuilder extends BasePipelineBuilder<StoryPipelineBuilder> {
   }
 
   /**
+   * Retrieves all accessible stories for a user (owned + collaborators)
+   */
+  getAllAccessible(userId: string) {
+    this.pipeline.push(
+      {
+        $lookup: {
+          from: 'storycollaborators',
+          let: { storySlug: '$slug' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [{ $eq: ['$slug', '$$storySlug'] }, { $eq: ['$userId', userId] }],
+                },
+              },
+            },
+            {
+              $project: { _id: 1 },
+            },
+          ],
+          as: 'isCollaborator',
+        },
+      },
+      {
+        $match: {
+          $or: [
+            { creatorId: userId }, // User is the creator
+            { 'isCollaborator.0': { $exists: true } }, // User is a collaborator
+          ],
+        },
+      },
+      {
+        $unset: 'isCollaborator',
+      }
+    );
+    return this;
+  }
+
+  /**
    * Filters stories created within the last N days.
    */
   createdWithinLastDays(days = 7) {
@@ -321,9 +360,65 @@ class StoryPipelineBuilder extends BasePipelineBuilder<StoryPipelineBuilder> {
     return this;
   }
 
+  getUserRole(slug: string, userId: string) {
+    this.pipeline.push(
+      {
+        $match: {
+          slug,
+        },
+      },
+      {
+        $lookup: {
+          from: 'storycollaborators',
+          let: { storySlug: '$slug' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [{ $eq: ['$slug', '$$storySlug'] }, { $eq: ['$userId', userId] }],
+                },
+              },
+            },
+            {
+              $project: { role: 1, status: 1, _id: 0 },
+            },
+          ],
+          as: 'collaboratorRole',
+        },
+      },
+      {
+        $addFields: {
+          role: {
+            $cond: {
+              if: { $eq: ['$creatorId', userId] },
+              then: 'owner',
+              else: { $ifNull: [{ $first: '$collaboratorRole.role' }, 'reader'] },
+            },
+          },
+          roleStatus: {
+            $cond: {
+              if: { $eq: ['$creatorId', userId] },
+              then: 'accepted',
+              else: { $first: '$collaboratorRole.status' },
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          role: 1,
+          roleStatus: 1,
+          _id: 0,
+        },
+      }
+    );
+
+    return this;
+  }
+
   // ==================== PRESETS ====================
   getCurrentUserStoryPreset(userId: string) {
-    return this.createdByUser(userId)
+    return this.getAllAccessible(userId)
       .projectSettings(['genres', 'contentRating'])
       .removeFields(['description', 'settings', 'coverImage', 'cardImage', '_id', 'lastActivityAt'])
       .build();
