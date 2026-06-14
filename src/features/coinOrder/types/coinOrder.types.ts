@@ -21,7 +21,7 @@ export type TCoinOrderCurrency = (typeof SUPPORTED_CURRENCIES)[number];
 export interface ICoinOrder {
   _id: ID;
   userId: string;
-  bundleId: ID;
+  bundleSlug: string;
 
   // What they're getting
   baseCoins: number;
@@ -58,9 +58,8 @@ export interface ICoinOrder {
   updatedAt: Date;
 }
 
-export interface ICoinOrderDoc extends Omit<ICoinOrder, '_id' | 'bundleId' | 'couponId'>, Document {
+export interface ICoinOrderDoc extends Omit<ICoinOrder, '_id' | 'couponId'>, Document {
   _id: Types.ObjectId;
-  bundleId: Types.ObjectId;
   couponId?: Types.ObjectId;
 }
 

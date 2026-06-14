@@ -8,7 +8,7 @@ import {
 const coinOrderSchema = new Schema<ICoinOrderDoc>(
   {
     userId: { type: String, required: true, ref: 'User', index: true },
-    bundleId: { type: Schema.Types.ObjectId, required: true, ref: 'CoinBundle' },
+    bundleSlug: { type: String, required: true, ref: 'CoinBundle' },
 
     // What they're getting
     baseCoins: { type: Number, required: true },

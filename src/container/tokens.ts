@@ -30,6 +30,11 @@ export const TOKENS = {
   StoryGuardService: Symbol.for('StoryGuardService'),
 
   // ═══════════════════════════════════════════
+  // PAYMENT SERVICES
+  // ═══════════════════════════════════════════
+  RazorpayService: Symbol.for('RazorpayService'),
+
+  // ═══════════════════════════════════════════
   // CACHE SERVICES
   // ═══════════════════════════════════════════
   StoryCacheService: Symbol.for('StoryCacheService'),
@@ -55,6 +60,7 @@ export const TOKENS = {
   PRReviewRepository: Symbol.for('PRReviewRepository'),
   PRCommentRepository: Symbol.for('PRCommentRepository'),
   CoinBundleRepository: Symbol.for('CoinBundleRepository'),
+  CoinOrderRepository: Symbol.for('CoinOrderRepository'),
 
   // ═══════════════════════════════════════════
   // FEATURE SERVICES
@@ -94,6 +100,7 @@ export const TOKENS = {
   PRCommentService: Symbol.for('PRCommentService'),
   PRQueryService: Symbol.for('PRQueryService'),
   CoinBundleService: Symbol.for('CoinBundleService'),
+  CoinOrderService: Symbol.for('CoinOrderService'),
 
   // ═══════════════════════════════════════════
   // CONTROLLERS
@@ -118,6 +125,7 @@ export const TOKENS = {
   StoryCollaboratorController: Symbol.for('StoryCollaboratorController'),
   PRQueryController: Symbol.for('PRQueryController'),
   CoinBundleController: Symbol.for('CoinBundleController'),
+  CoinOrderController: Symbol.for('CoinOrderController'),
 
   // ═══════════════════════════════════════════
   // MIDDLEWARE FACTORIES

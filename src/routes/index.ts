@@ -13,6 +13,7 @@ import { pullRequestRoutes } from '@features/pullRequest/routes/pullRequest.rout
 import { prManagementRoutes } from '@features/pullRequest/routes/prManagement.routes';
 import { analyticsRoutes } from '@/features/readingHistory/routes/analytics.router';
 import { coinBundleRoutes } from '@/features/coinBundle/routes/coinBundle.routes';
+import { coinOrderRoutes } from '@/features/coinOrder/routes/coinOrder.route';
 
 enum ApiRoute {
   USERS = '/api/users',
@@ -27,6 +28,7 @@ enum ApiRoute {
   PULL_REQUESTS = '/api/pull-requests',
   ANALYTICS = '/api/analytics',
   COIN_BUNDLES = '/api/coin-bundles',
+  COIN_ORDER = '/api/coin-orders',
 }
 
 export async function registerRoutes(fastify: FastifyInstance) {
@@ -44,4 +46,5 @@ export async function registerRoutes(fastify: FastifyInstance) {
   fastify.register(prManagementRoutes, { prefix: ApiRoute.PULL_REQUESTS });
   fastify.register(analyticsRoutes, { prefix: ApiRoute.ANALYTICS });
   fastify.register(coinBundleRoutes, { prefix: ApiRoute.COIN_BUNDLES });
+  fastify.register(coinOrderRoutes, { prefix: ApiRoute.COIN_ORDER });
 }

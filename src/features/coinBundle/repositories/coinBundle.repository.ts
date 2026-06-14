@@ -29,6 +29,11 @@ export class CoinBundleRepository extends BaseRepository<ICoinBundle, ICoinBundl
     return !!exists;
   }
 
+  async checkBundleActive(slug: string): Promise<boolean> {
+    const bundle = await CoinBundle.exists({ slug, isActive: true, isDeleted: false });
+    return !!bundle;
+  }
+
   async findForAdmin(filter: IAdminListFilter): Promise<ICoinBundle[]> {
     const query: FilterQuery<ICoinBundleDoc> = {
       isDeleted: filter.isDeleted,

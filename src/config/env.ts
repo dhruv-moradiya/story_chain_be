@@ -22,6 +22,14 @@ const envSchema = z.object({
   CLOUDINARY_API_SECRET: z.string(),
 
   RAILWAY_URL: z.string().optional(),
+
+  // Razorpay Test
+  RAZORPAY_KEY_ID_TEST: z.string(),
+  RAZORPAY_KEY_SECRET_TEST: z.string(),
+
+  // Razorpay Live
+  RAZORPAY_KEY_ID_LIVE: z.string().optional(),
+  RAZORPAY_KEY_SECRET_LIVE: z.string().optional(),
 });
 
 export const env = envSchema.parse(process.env);

@@ -24,6 +24,11 @@ import { CoinBundleCacheService } from '@infrastructure/cache/coinBundle-cache.s
 import { ChapterCommentVoteQueue } from '@infrastructure/domains/chapterCommentVote.queue';
 
 // ═══════════════════════════════════════════
+// PAYMENT SERVICES
+// ═══════════════════════════════════════════
+import { RazorpayService } from '@infrastructure/payment/razorpay.service';
+
+// ═══════════════════════════════════════════
 // TRANSFORMERS
 // ═══════════════════════════════════════════
 import { WebhookTransformer } from '@features/user/builders/webhook.transformer';
@@ -45,6 +50,7 @@ import { PRTimelineRepository } from '@features/prTimeline/repositories/prTimeli
 import { PRReviewRepository } from '@features/prReview/repositories/prReview.repository';
 import { PRCommentRepository } from '@features/prComment/repositories/prComment.repository';
 import { CoinBundleRepository } from '@features/coinBundle/repositories/coinBundle.repository';
+import { CoinOrderRepository } from '@/features/coinOrder/repositories/coinOrder.repository';
 
 // ═══════════════════════════════════════════
 // FEATURE SERVICES
@@ -80,6 +86,7 @@ import { PRReviewService } from '@features/prReview/services/prReview.service';
 import { PRCommentService } from '@features/prComment/services/prComment.service';
 import { PRQueryService } from '@features/pullRequest/services/pr-query.service';
 import { CoinBundleService } from '@features/coinBundle/services/coinBundle.service';
+import { CoinOrderService } from '@/features/coinOrder/services/coinOrder.service';
 
 // ═══════════════════════════════════════════
 // CONTROLLERS
@@ -101,6 +108,7 @@ import { PullRequestController } from '@features/pullRequest/controllers/pullReq
 import { PRManagementController } from '@features/pullRequest/controllers/prManagement.controller';
 import { PRQueryController } from '@features/pullRequest/controllers/prQuery.controller';
 import { CoinBundleController } from '@features/coinBundle/controllers/coinBundle.controller';
+import { CoinOrderController } from '@/features/coinOrder/controllers/coinOrder.controller';
 
 // ═══════════════════════════════════════════
 // MIDDLEWARE FACTORIES
@@ -172,6 +180,15 @@ export function registerServices(): void {
   container.register(TOKENS.CoinBundleCacheService, { useClass: CoinBundleCacheService });
 
   // ═══════════════════════════════════════════
+  // PAYMENT SERVICES
+  // ═══════════════════════════════════════════
+  container.register(
+    TOKENS.RazorpayService,
+    { useClass: RazorpayService },
+    { lifecycle: Lifecycle.Singleton }
+  );
+
+  // ═══════════════════════════════════════════
   // TRANSFORMERS
   // ═══════════════════════════════════════════
   container.register(TOKENS.WebhookTransformer, { useClass: WebhookTransformer });
@@ -196,6 +213,7 @@ export function registerServices(): void {
   container.register(TOKENS.PRReviewRepository, { useClass: PRReviewRepository });
   container.register(TOKENS.PRCommentRepository, { useClass: PRCommentRepository });
   container.register(TOKENS.CoinBundleRepository, { useClass: CoinBundleRepository });
+  container.register(TOKENS.CoinOrderRepository, { useClass: CoinOrderRepository });
 
   // ═══════════════════════════════════════════
   // FEATURE SERVICES
@@ -234,6 +252,7 @@ export function registerServices(): void {
   container.register(TOKENS.PRCommentService, { useClass: PRCommentService });
   container.register(TOKENS.PRQueryService, { useClass: PRQueryService });
   container.register(TOKENS.CoinBundleService, { useClass: CoinBundleService });
+  container.register(TOKENS.CoinOrderService, { useClass: CoinOrderService });
 
   // ═══════════════════════════════════════════
   // CONTROLLERS
@@ -255,6 +274,7 @@ export function registerServices(): void {
   container.register(TOKENS.PRManagementController, { useClass: PRManagementController });
   container.register(TOKENS.PRQueryController, { useClass: PRQueryController });
   container.register(TOKENS.CoinBundleController, { useClass: CoinBundleController });
+  container.register(TOKENS.CoinOrderController, { useClass: CoinOrderController });
 
   // ═══════════════════════════════════════════
   // MIDDLEWARE FACTORIES

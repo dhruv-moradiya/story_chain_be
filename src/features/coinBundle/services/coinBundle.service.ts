@@ -228,4 +228,41 @@ export class CoinBundleService {
       updatedAt: updated.updatedAt,
     };
   }
+
+  // -------
+  // Queries
+  // -------
+
+  async checkBundleIsActive(slug: string) {
+    const isActive = await this.repo.checkBundleActive(slug);
+
+    if (!isActive) {
+      throw ApiError.badRequest('INVALID_INPUT', `Coin bundle "${slug}" is not active`);
+    }
+
+    return isActive;
+  }
+
+  /**
+   * Fetches a full bundle document that is active and not deleted.
+   * Used by CoinOrderService to get pricing data in a single DB call.
+   * Throws 404 if not found, 400 if found but inactive.
+   */
+  async getActiveBundle(slug: string): Promise<ICoinBundle> {
+    const bundle = await this.repo.findAnyBySlug(slug);
+
+    if (!bundle) {
+      throw ApiError.notFound('NOT_FOUND', `Coin bundle "${slug}" not found`);
+    }
+
+    if (bundle.isDeleted) {
+      throw ApiError.notFound('NOT_FOUND', `Coin bundle "${slug}" not found`);
+    }
+
+    if (!bundle.isActive) {
+      throw ApiError.badRequest('BUNDLE_INACTIVE', `Coin bundle "${slug}" is not active`);
+    }
+
+    return bundle;
+  }
 }
