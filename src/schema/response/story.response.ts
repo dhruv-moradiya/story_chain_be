@@ -2,6 +2,7 @@ import {
   STORY_CONTENT_RATINGS,
   STORY_GENRES,
   STORY_STATUSES,
+  STORY_TIMELINE_ACTIONS,
 } from '@/features/story/types/story-enum.js';
 import {
   STORY_COLLABORATOR_ROLES,
@@ -229,6 +230,57 @@ export const StorySettingsWithImagesSchema = {
 };
 
 // ═══════════════════════════════════════════
+// STORY TIMELINE SCHEMA
+// ═══════════════════════════════════════════
+
+export const StoryTimelineEventSchema = {
+  type: 'object',
+  properties: {
+    _id: { type: 'string' },
+    story: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        slug: { type: 'string' },
+      },
+    },
+    action: { type: 'string', enum: STORY_TIMELINE_ACTIONS },
+    performedBy: {
+      type: 'object',
+      properties: {
+        username: { type: 'string' },
+        avatarUrl: { type: 'string' },
+        clerkId: { type: 'string' },
+      },
+      nullable: true,
+    },
+    performedAt: { type: 'string', format: 'date-time' },
+    metadata: { type: 'object', additionalProperties: true },
+  },
+};
+
+export const StoryTimelineResponseSchema = {
+  type: 'object',
+  properties: {
+    events: {
+      type: 'array',
+      items: StoryTimelineEventSchema,
+    },
+    total: { type: 'number' },
+    limit: { type: 'number' },
+    skip: { type: 'number' },
+  },
+};
+
+export const UserStoryRoleSchema = {
+  type: 'object',
+  properties: {
+    role: { type: 'string', enum: [...STORY_COLLABORATOR_ROLES, 'reader'] },
+    roleStatus: { type: ['string', 'null'], enum: [...STORY_COLLABORATOR_STATUSES, null] },
+  },
+};
+
+// ═══════════════════════════════════════════
 // STORY RESPONSE OBJECTS
 // ═══════════════════════════════════════════
 
@@ -239,6 +291,12 @@ export const StoryResponses = {
     401: unauthorizedResponse(),
     409: conflictResponse('Story with this slug already exists'),
     422: validationErrorResponse('Validation failed'),
+    500: internalErrorResponse(),
+  },
+  storyUserRole: {
+    200: apiResponse(UserStoryRoleSchema, 'User role retrieved successfully'),
+    401: unauthorizedResponse(),
+    404: notFoundResponse('Story not found'),
     500: internalErrorResponse(),
   },
   bulkStoryCreated: {
@@ -326,6 +384,13 @@ export const StoryResponses = {
     401: unauthorizedResponse(),
     404: notFoundResponse('Invitation not found'),
     409: conflictResponse('Invitation already processed'),
+    500: internalErrorResponse(),
+  },
+  storyTimeline: {
+    200: apiResponse(StoryTimelineResponseSchema, 'Story timeline retrieved successfully'),
+    401: unauthorizedResponse(),
+    403: forbiddenResponse('You do not have access to this story timeline'),
+    404: notFoundResponse('Story not found'),
     500: internalErrorResponse(),
   },
 };

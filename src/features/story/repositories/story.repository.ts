@@ -138,10 +138,15 @@ export class StoryRepository extends BaseRepository<IStory, IStoryDoc> {
   /** Update story settings by slug */
   async updateStorySettingBySlug(
     slug: string,
-    update: Partial<IStory['settings']>
+    update: Partial<IStory['settings']>,
+    options: IOperationOptions = {}
   ): Promise<IStory | null> {
     return this.model
-      .findOneAndUpdate({ slug }, { $set: { settings: update } }, { new: true })
+      .findOneAndUpdate(
+        { slug },
+        { $set: { settings: update } },
+        { new: true, session: options.session ?? null }
+      )
       .lean()
       .exec();
   }

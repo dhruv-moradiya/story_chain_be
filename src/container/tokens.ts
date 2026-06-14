@@ -57,6 +57,7 @@ export const TOKENS = {
   CommentVoteRepository: Symbol.for('CommentVoteRepository'),
   PullRequestRepository: Symbol.for('PullRequestRepository'),
   PRTimelineRepository: Symbol.for('PRTimelineRepository'),
+  StoryTimelineRepository: Symbol.for('StoryTimelineRepository'),
   PRReviewRepository: Symbol.for('PRReviewRepository'),
   PRCommentRepository: Symbol.for('PRCommentRepository'),
   CoinBundleRepository: Symbol.for('CoinBundleRepository'),
@@ -70,6 +71,7 @@ export const TOKENS = {
   StoryQueryService: Symbol.for('StoryQueryService'),
   StoryMediaService: Symbol.for('StoryMediaService'),
   StoryPublishingService: Symbol.for('StoryPublishingService'),
+  StoryTimelineService: Symbol.for('StoryTimelineService'),
 
   ChapterCrudService: Symbol.for('ChapterCrudService'),
   ChapterCreationService: Symbol.for('ChapterCreationService'),
