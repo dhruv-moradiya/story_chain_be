@@ -1,3 +1,4 @@
+// Test commit - This is a test change for practicing git workflow
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
