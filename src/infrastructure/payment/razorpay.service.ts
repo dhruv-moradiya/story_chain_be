@@ -24,7 +24,7 @@ export class RazorpayService extends BaseModule {
     const keyId = isProduction ? (env.RAZORPAY_KEY_ID_LIVE ?? '') : env.RAZORPAY_KEY_ID_TEST;
 
     const keySecret = isProduction
-      ? (env.RAZORPAY_KEY_SECRET_LIVE ?? '')
+      ? (env.RAZORPAY_KEY_SECRET_TEST ?? '')
       : env.RAZORPAY_KEY_SECRET_TEST;
 
     this.client = new Razorpay({ key_id: keyId, key_secret: keySecret });
