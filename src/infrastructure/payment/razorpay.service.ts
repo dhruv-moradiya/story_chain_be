@@ -20,15 +20,16 @@ export class RazorpayService extends BaseModule {
     super();
 
     const isProduction = env.NODE_ENV === 'production';
+    const hasLiveKeys = !!env.RAZORPAY_KEY_ID_LIVE && !!env.RAZORPAY_KEY_SECRET_LIVE;
 
-    const keyId = isProduction ? (env.RAZORPAY_KEY_ID_LIVE ?? '') : env.RAZORPAY_KEY_ID_TEST;
-
-    const keySecret = isProduction
-      ? (env.RAZORPAY_KEY_SECRET_TEST ?? '')
-      : env.RAZORPAY_KEY_SECRET_TEST;
+    const keyId = isProduction && hasLiveKeys ? env.RAZORPAY_KEY_ID_LIVE : env.RAZORPAY_KEY_ID_TEST;
+    const keySecret =
+      isProduction && hasLiveKeys ? env.RAZORPAY_KEY_SECRET_LIVE : env.RAZORPAY_KEY_SECRET_TEST;
 
     this.client = new Razorpay({ key_id: keyId, key_secret: keySecret });
 
-    this.logInfo(`RazorpayService initialised in ${isProduction ? 'LIVE' : 'TEST'} mode`);
+    this.logInfo(
+      `RazorpayService initialised in ${isProduction && hasLiveKeys ? 'LIVE' : 'TEST'} mode`
+    );
   }
 }
