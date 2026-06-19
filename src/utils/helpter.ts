@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { slugify } from 'transliteration';
 
 export const validateObjectId = (id: string): boolean => {
   return mongoose.Types.ObjectId.isValid(id);
@@ -11,12 +12,10 @@ export interface CreateSlugOptions {
 export function createSlug(input: string, options: CreateSlugOptions = {}): string {
   const { addSuffix = true } = options;
 
-  const base = input
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-');
+  const base = slugify(input, {
+    lowercase: true,
+    separator: '-',
+  });
 
   if (addSuffix) {
     const suffix = crypto.randomUUID().slice(0, 6);
