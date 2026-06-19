@@ -41,12 +41,13 @@ export class ChapterQueryService extends BaseModule implements IChapterQueryServ
     return this.chapterRepo.findByStorySlug(storySlug);
   }
 
-  async getChapterDetails(chapterSlug: string): Promise<IChapterDetailsResponse> {
+  async getChapterDetails(userId: string, chapterSlug: string): Promise<IChapterDetailsResponse> {
     const pipeline = new ChapterPipelineBuilder()
       .findBySlug(chapterSlug)
       .attachAuthor({ project: PUBLIC_AUTHOR_PROJECTION })
       .attachPreviousChapters({ project: { _id: 1, title: 1, slug: 1 } })
       .attachNextChapters({ project: { _id: 1, title: 1, slug: 1 } })
+      .attachCurrentUserVote(userId)
       .build();
 
     const [chapter] = await this.chapterRepo.aggregateChapters<IChapterDetailsResponse>(pipeline);

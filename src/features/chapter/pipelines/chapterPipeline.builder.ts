@@ -222,6 +222,46 @@ class ChapterPipelineBuilder extends BasePipelineBuilder<ChapterPipelineBuilder>
     return this;
   }
 
+  attachCurrentUserVote(userId: string) {
+    this.pipeline.push(
+      ...[
+        {
+          $lookup: {
+            from: 'votes',
+            let: { chapterSlug: '$slug' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ['$chapterSlug', '$$chapterSlug'] },
+                      { $eq: ['$userId', userId] },
+                    ],
+                  },
+                },
+              },
+              { $project: { vote: 1 } },
+            ],
+            as: 'currentUserVote',
+          },
+        },
+        {
+          $set: {
+            currentUserVote: {
+              $ifNull: [
+                {
+                  $arrayElemAt: ['$currentUserVote.vote', 0],
+                },
+                null,
+              ],
+            },
+          },
+        },
+      ]
+    );
+    return this;
+  }
+
   // ==================== PRESETS ====================
 
   /**

@@ -9,9 +9,12 @@ import { ChapterQueryService } from '../services/chapter-query.service';
 import {
   ChapterSearchSchema,
   TChapterSearchSchema,
+  TChapterSlugSchema,
   TCreateChapterSchema,
+  TChapterReactionSchema,
 } from '@/schema/request/chapter.schema';
 import { ChapterCreationService } from '../services/chapter-creation.service';
+import { ChapterReactionService } from '../services/chapter-reaction.service';
 
 @singleton()
 export class ChapterController extends BaseModule {
@@ -19,7 +22,9 @@ export class ChapterController extends BaseModule {
     @inject(TOKENS.ChapterQueryService)
     private readonly chapterQueryService: ChapterQueryService,
     @inject(TOKENS.ChapterCreationService)
-    private readonly chapterCreationService: ChapterCreationService
+    private readonly chapterCreationService: ChapterCreationService,
+    @inject(TOKENS.ChapterReactionService)
+    private readonly chapterReactionService: ChapterReactionService
   ) {
     super();
   }
@@ -55,9 +60,10 @@ export class ChapterController extends BaseModule {
    */
   getChapterDetails = catchAsync(
     async (request: FastifyRequest<{ Params: { chapterSlug: string } }>, reply: FastifyReply) => {
+      const userId = request.user.clerkId;
       const { chapterSlug } = request.params;
 
-      const chapter = await this.chapterQueryService.getChapterDetails(chapterSlug);
+      const chapter = await this.chapterQueryService.getChapterDetails(userId, chapterSlug);
 
       if (!chapter) {
         this.throwNotFoundError('CHAPTER_NOT_FOUND', 'Chapter not found.');
@@ -102,6 +108,25 @@ export class ChapterController extends BaseModule {
       return reply
         .code(HTTP_STATUS.OK.code)
         .send(ApiResponse.fetched(chapters, `Found ${chapters.length} chapters`));
+    }
+  );
+
+  reactToChapter = catchAsync(
+    async (
+      request: FastifyRequest<{ Params: TChapterSlugSchema; Body: TChapterReactionSchema }>,
+      reply: FastifyReply
+    ) => {
+      const { slug: chapterSlug } = request.params;
+      const { type } = request.body;
+      const userId = request.user.clerkId;
+
+      await this.chapterReactionService.reactToChapter(chapterSlug, userId, type);
+
+      // const chapter = await this.chapterQueryService.getChapterDetails(chapterSlug);
+
+      return reply
+        .code(HTTP_STATUS.OK.code)
+        .send(ApiResponse.updated(null, 'Chapter reacted successfully.'));
     }
   );
 }

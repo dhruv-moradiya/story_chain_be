@@ -73,7 +73,7 @@ export const createApp = async () => {
     errorResponseBuilder: (_request: FastifyRequest, context) => {
       return ApiError.tooManyRequests(
         'RATE_LIMIT_EXCEEDED',
-        `Too many requests — retry after ${context.after}`
+        `You've made too many requests in a short period. Please try again after ${context.after}.`
       );
     },
   });

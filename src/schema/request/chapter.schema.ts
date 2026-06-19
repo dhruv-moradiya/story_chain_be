@@ -72,6 +72,12 @@ const CreateChapterSchema = z.object({
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Parent chapter slug must be URL-friendly'),
 });
 
+const ChapterReactionSchema = z.object({
+  type: z.enum(['upvote', 'downvote'], {
+    errorMap: () => ({ message: 'Reaction type must be either upvote or downvote' }),
+  }),
+});
+
 const ChapterFieldsQuerySchema = z.object({
   fields: z
     .string()
@@ -96,6 +102,7 @@ const ChapterSearchSchema = ChapterFieldsQuerySchema.extend({
 type TChapterIdSchema = z.infer<typeof ChapterIdSchema>;
 type TChapterSlugSchema = z.infer<typeof ChapterSlugSchema>;
 type TCreateChapterSchema = z.infer<typeof CreateChapterSchema>;
+type TChapterReactionSchema = z.infer<typeof ChapterReactionSchema>;
 type TChapterFieldsQuerySchema = z.infer<typeof ChapterFieldsQuerySchema>;
 type TChapterSearchSchema = z.infer<typeof ChapterSearchSchema>;
 
@@ -103,6 +110,7 @@ export {
   ChapterIdSchema,
   ChapterSlugSchema,
   CreateChapterSchema,
+  ChapterReactionSchema,
   ChapterFieldsQuerySchema,
   ChapterSearchSchema,
 };
@@ -111,6 +119,7 @@ export type {
   TChapterIdSchema,
   TChapterSlugSchema,
   TCreateChapterSchema,
+  TChapterReactionSchema,
   TChapterFieldsQuerySchema,
   TChapterSearchSchema,
 };

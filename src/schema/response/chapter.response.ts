@@ -121,6 +121,10 @@ export const ChapterResponses = {
     200: apiResponse(ChapterDetailsSchema, 'Chapter details retrieved successfully'),
     404: errorResponse('Chapter not found'),
   },
+  chapterReaction: {
+    200: apiResponse(ChapterDetailsSchema, 'Chapter reacted successfully'),
+    404: errorResponse('Chapter not found'),
+  },
   myChapters: {
     200: apiArrayResponse(ChapterWithStorySchema, 'User chapters retrieved successfully'),
   },

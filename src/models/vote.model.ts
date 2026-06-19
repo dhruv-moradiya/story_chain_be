@@ -3,14 +3,12 @@ import { IVoteDoc } from '@features/vote/types/vote.types';
 
 const voteSchema = new Schema<IVoteDoc>(
   {
-    chapterId: {
-      type: Schema.Types.ObjectId,
-      ref: 'Chapter',
+    chapterSlug: {
+      type: String,
       index: true,
     },
-    storyId: {
-      type: Schema.Types.ObjectId,
-      ref: 'Story',
+    storySlug: {
+      type: String,
       index: true,
     },
     userId: {
@@ -36,27 +34,27 @@ const voteSchema = new Schema<IVoteDoc>(
 
 // Ensure one vote per user per chapter
 voteSchema.index(
-  { chapterId: 1, userId: 1 },
+  { chapterSlug: 1, userId: 1 },
   {
     unique: true,
-    partialFilterExpression: { chapterId: { $exists: true } },
+    partialFilterExpression: { chapterSlug: { $exists: true } },
   }
 );
 
 // Ensure one vote per user per story
 voteSchema.index(
-  { storyId: 1, userId: 1 },
+  { storySlug: 1, userId: 1 },
   {
     unique: true,
-    partialFilterExpression: { storyId: { $exists: true } },
+    partialFilterExpression: { storySlug: { $exists: true } },
   }
 );
 
-// Validation to ensure either chapterId or storyId is present, but not both
+// Validation to ensure either chapterSlug or storySlug is present, but not both
 voteSchema.pre('validate', function (next) {
-  if (!this.chapterId && !this.storyId) {
+  if (!this.chapterSlug && !this.storySlug) {
     next(new Error('Vote must belong to either a Chapter or a Story'));
-  } else if (this.chapterId && this.storyId) {
+  } else if (this.chapterSlug && this.storySlug) {
     next(new Error('Vote cannot belong to both a Chapter and a Story'));
   } else {
     next();

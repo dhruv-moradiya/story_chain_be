@@ -13,7 +13,7 @@ interface IChapterQueryService {
   getById(chapterId: string, options?: IOperationOptions): Promise<IChapter | null>;
   getByStory(storySlug: string): Promise<IChapter[]>;
   getByAuthor(userId: string): Promise<IChapterWithStoryResponse[]>;
-  getChapterDetails(chapterSlug: string): Promise<IChapterDetailsResponse | null>;
+  getChapterDetails(userId: string, chapterSlug: string): Promise<IChapterDetailsResponse | null>;
 
   searchChapters(
     filters: { q?: string; slug?: string; storySlug?: string; userId?: string },

@@ -10,19 +10,19 @@ export interface IVoteBase {
 }
 
 export interface IChapterVote extends IVoteBase {
-  chapterId: ID;
-  storyId?: never;
+  chapterSlug: string;
+  storySlug?: never;
 }
 
 export interface IStoryVote extends IVoteBase {
-  storyId: ID;
-  chapterId?: never;
+  storySlug: string;
+  chapterSlug?: never;
 }
 
 export type IVote = IChapterVote | IStoryVote;
 
 export interface IVoteDoc extends IVoteBase, Document {
   _id: Types.ObjectId;
-  chapterId?: ID;
-  storyId?: ID;
+  chapterSlug?: string;
+  storySlug?: string;
 }

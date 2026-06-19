@@ -4,7 +4,7 @@ import zodToJsonSchema from 'zod-to-json-schema';
 import { TOKENS } from '@/container';
 import { type AuthMiddlewareFactory } from '@/middlewares/factories';
 import { ChapterResponses } from '@schema/response.schema';
-import { ChapterSearchSchema } from '@schema/request/chapter.schema';
+import { ChapterSearchSchema, ChapterReactionSchema } from '@schema/request/chapter.schema';
 import { type ChapterController } from '../controllers/chapter.controller';
 import { RateLimits } from '@/constants/rateLimits';
 import type {} from '@fastify/rate-limit';
@@ -21,6 +21,8 @@ const ChapterApiRoutes = {
   GetChapterBySlug: '/slug/:chapterSlug',
 
   CreateChildChapter: '/child',
+
+  Reactions: '/:slug/reactions',
 } as const;
 
 export { ChapterApiRoutes };
@@ -71,6 +73,7 @@ export async function chapterRoutes(fastify: FastifyInstance) {
   fastify.get(
     ChapterApiRoutes.GetChapterBySlug,
     {
+      preHandler: [validateAuth],
       config: { rateLimit: RateLimits.PUBLIC_READ },
       schema: {
         description: 'Get chapter details by slug with story and author info',
@@ -106,5 +109,25 @@ export async function chapterRoutes(fastify: FastifyInstance) {
       },
     },
     chapterController.createChild
+  );
+
+  /**
+   * React to a chapter
+   * Response: full chapter info with story slug, story title, author details, stats, votes
+   */
+  fastify.post(
+    ChapterApiRoutes.Reactions,
+    {
+      preHandler: [validateAuth],
+      config: { rateLimit: RateLimits.CREATION_HOURLY },
+      schema: {
+        description: 'React to a chapter',
+        tags: ['Chapters'],
+        security: [{ bearerAuth: [] }],
+        body: zodToJsonSchema(ChapterReactionSchema),
+        response: ChapterResponses.chapterReaction,
+      },
+    },
+    chapterController.reactToChapter
   );
 }

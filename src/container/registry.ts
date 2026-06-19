@@ -52,6 +52,7 @@ import { PRReviewRepository } from '@features/prReview/repositories/prReview.rep
 import { PRCommentRepository } from '@features/prComment/repositories/prComment.repository';
 import { CoinBundleRepository } from '@features/coinBundle/repositories/coinBundle.repository';
 import { CoinOrderRepository } from '@/features/coinOrder/repositories/coinOrder.repository';
+import { VoteRepository } from '@/shared/services/vote.repository';
 
 // ═══════════════════════════════════════════
 // FEATURE SERVICES
@@ -75,6 +76,7 @@ import { AutoSaveConversionService } from '@features/chapterAutoSave/services/au
 import { ChapterCrudService } from '@features/chapter/services/chapter-crud.service';
 import { ChapterCreationService } from '@features/chapter/services/chapter-creation.service';
 import { ChapterQueryService } from '@features/chapter/services/chapter-query.service';
+import { ChapterReactionService } from '@features/chapter/services/chapter-reaction.service';
 
 import { ReadingHistoryService } from '@/features/readingHistory/services/readingHistory.service';
 import { AnalyticsService } from '@/features/readingHistory/services/analytics.service';
@@ -89,6 +91,7 @@ import { PRCommentService } from '@features/prComment/services/prComment.service
 import { PRQueryService } from '@features/pullRequest/services/pr-query.service';
 import { CoinBundleService } from '@features/coinBundle/services/coinBundle.service';
 import { CoinOrderService } from '@/features/coinOrder/services/coinOrder.service';
+import { VoteService } from '@/shared/services/vote.service';
 
 // ═══════════════════════════════════════════
 // CONTROLLERS
@@ -217,6 +220,7 @@ export function registerServices(): void {
   container.register(TOKENS.PRCommentRepository, { useClass: PRCommentRepository });
   container.register(TOKENS.CoinBundleRepository, { useClass: CoinBundleRepository });
   container.register(TOKENS.CoinOrderRepository, { useClass: CoinOrderRepository });
+  container.register(TOKENS.VoteRepository, { useClass: VoteRepository });
 
   // ═══════════════════════════════════════════
   // FEATURE SERVICES
@@ -235,6 +239,7 @@ export function registerServices(): void {
   container.register(TOKENS.ChapterCrudService, { useClass: ChapterCrudService });
   container.register(TOKENS.ChapterCreationService, { useClass: ChapterCreationService });
   container.register(TOKENS.ChapterQueryService, { useClass: ChapterQueryService });
+  container.register(TOKENS.ChapterReactionService, { useClass: ChapterReactionService });
   container.register(TOKENS.StoryCrudService, { useClass: StoryCrudService });
   container.register(TOKENS.StoryQueryService, { useClass: StoryQueryService });
   container.register(TOKENS.StoryMediaService, { useClass: StoryMediaService });
@@ -257,6 +262,7 @@ export function registerServices(): void {
   container.register(TOKENS.PRQueryService, { useClass: PRQueryService });
   container.register(TOKENS.CoinBundleService, { useClass: CoinBundleService });
   container.register(TOKENS.CoinOrderService, { useClass: CoinOrderService });
+  container.register(TOKENS.VoteService, { useClass: VoteService });
 
   // ═══════════════════════════════════════════
   // CONTROLLERS
