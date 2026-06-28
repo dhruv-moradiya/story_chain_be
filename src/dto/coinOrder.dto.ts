@@ -7,4 +7,12 @@ interface ICoinOrderCreateRequestDTO {
   couponCode?: string;
 }
 
-export type { ICoinOrderCreateRequestDTO };
+interface ICoinOrderVerifyRequestDTO {
+  userId: string;
+  coinOrderId: string;
+  razorpayPaymentId: string;
+  razorpayOrderId: string;
+  razorpaySignature: string;
+}
+
+export type { ICoinOrderCreateRequestDTO, ICoinOrderVerifyRequestDTO };

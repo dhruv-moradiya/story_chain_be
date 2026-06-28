@@ -52,6 +52,8 @@ import { PRReviewRepository } from '@features/prReview/repositories/prReview.rep
 import { PRCommentRepository } from '@features/prComment/repositories/prComment.repository';
 import { CoinBundleRepository } from '@features/coinBundle/repositories/coinBundle.repository';
 import { CoinOrderRepository } from '@/features/coinOrder/repositories/coinOrder.repository';
+import { WalletRepository } from '@/features/wallet/repositories/wallet.repository';
+import { CoinTransactionRepository } from '@/features/coinTransaction/repositories/coinTransaction.repository';
 import { VoteRepository } from '@/shared/services/vote.repository';
 
 // ═══════════════════════════════════════════
@@ -220,6 +222,8 @@ export function registerServices(): void {
   container.register(TOKENS.PRCommentRepository, { useClass: PRCommentRepository });
   container.register(TOKENS.CoinBundleRepository, { useClass: CoinBundleRepository });
   container.register(TOKENS.CoinOrderRepository, { useClass: CoinOrderRepository });
+  container.register(TOKENS.WalletRepository, { useClass: WalletRepository });
+  container.register(TOKENS.CoinTransactionRepository, { useClass: CoinTransactionRepository });
   container.register(TOKENS.VoteRepository, { useClass: VoteRepository });
 
   // ═══════════════════════════════════════════

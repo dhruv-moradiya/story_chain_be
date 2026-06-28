@@ -62,6 +62,8 @@ export const TOKENS = {
   PRCommentRepository: Symbol.for('PRCommentRepository'),
   CoinBundleRepository: Symbol.for('CoinBundleRepository'),
   CoinOrderRepository: Symbol.for('CoinOrderRepository'),
+  WalletRepository: Symbol.for('WalletRepository'),
+  CoinTransactionRepository: Symbol.for('CoinTransactionRepository'),
   VoteRepository: Symbol.for('VoteRepository'),
 
   // ═══════════════════════════════════════════
