@@ -29,6 +29,8 @@ export class CoinTransactionRepository extends BaseRepository<
         direction: input.direction,
         amount: input.amount,
         coinOrderId: input.coinOrderId,
+        chapterSlug: input.chapterSlug,
+        storySlug: input.storySlug,
         note: input.note,
         balanceBefore: input.balanceBefore,
         balanceAfter: input.balanceAfter,

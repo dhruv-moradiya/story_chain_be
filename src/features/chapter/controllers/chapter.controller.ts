@@ -15,6 +15,7 @@ import {
 } from '@/schema/request/chapter.schema';
 import { ChapterCreationService } from '../services/chapter-creation.service';
 import { ChapterReactionService } from '../services/chapter-reaction.service';
+import { ChapterUnlockService } from '../services/chapter-unlock.service';
 
 @singleton()
 export class ChapterController extends BaseModule {
@@ -24,7 +25,9 @@ export class ChapterController extends BaseModule {
     @inject(TOKENS.ChapterCreationService)
     private readonly chapterCreationService: ChapterCreationService,
     @inject(TOKENS.ChapterReactionService)
-    private readonly chapterReactionService: ChapterReactionService
+    private readonly chapterReactionService: ChapterReactionService,
+    @inject(TOKENS.ChapterUnlockService)
+    private readonly chapterUnlockService: ChapterUnlockService
   ) {
     super();
   }
@@ -127,6 +130,19 @@ export class ChapterController extends BaseModule {
       return reply
         .code(HTTP_STATUS.OK.code)
         .send(ApiResponse.updated(null, 'Chapter reacted successfully.'));
+    }
+  );
+
+  unlockChapter = catchAsync(
+    async (request: FastifyRequest<{ Params: TChapterSlugSchema }>, reply: FastifyReply) => {
+      const userId = request.user.clerkId;
+      const { slug: chapterSlug } = request.params;
+
+      await this.chapterUnlockService.unlock({ slug: chapterSlug, userId });
+
+      return reply
+        .code(HTTP_STATUS.OK.code)
+        .send(ApiResponse.updated(null, 'Chapter unlocked successfully.'));
     }
   );
 }

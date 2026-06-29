@@ -6,6 +6,19 @@ enum CoinTxType {
   DAILY_REWARD = 'daily_reward',
   ADMIN_CREDIT = 'admin_credit',
 
+  /**
+   * Coins credited to the per-story earnings pool (StoryEarningsPool) after a chapter unlock.
+   * userId is set to the story owner — direction: credit.
+   */
+  STORY_POOL_CREDIT = 'story_pool_credit',
+
+  /**
+   * Platform's cut from a chapter unlock — recorded against PLATFORM_SYSTEM_USER_ID.
+   * This is an accounting-only entry; no real wallet is modified.
+   * direction: credit.
+   */
+  PLATFORM_FEE = 'platform_fee',
+
   // Debits
   CHAPTER_UNLOCK = 'chapter_unlock',
   WITHDRAWAL = 'withdrawal',
@@ -18,6 +31,8 @@ const COIN_TX_TYPES = [
   'referral_reward',
   'daily_reward',
   'admin_credit',
+  'story_pool_credit',
+  'platform_fee',
   'chapter_unlock',
   'withdrawal',
   'admin_debit',

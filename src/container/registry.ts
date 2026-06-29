@@ -54,6 +54,7 @@ import { CoinBundleRepository } from '@features/coinBundle/repositories/coinBund
 import { CoinOrderRepository } from '@/features/coinOrder/repositories/coinOrder.repository';
 import { WalletRepository } from '@/features/wallet/repositories/wallet.repository';
 import { CoinTransactionRepository } from '@/features/coinTransaction/repositories/coinTransaction.repository';
+import { ChapterUnlockRepository } from '@/features/chapterUnlock/respositories/chapterUnlock.repository';
 import { VoteRepository } from '@/shared/services/vote.repository';
 
 // ═══════════════════════════════════════════
@@ -79,6 +80,7 @@ import { ChapterCrudService } from '@features/chapter/services/chapter-crud.serv
 import { ChapterCreationService } from '@features/chapter/services/chapter-creation.service';
 import { ChapterQueryService } from '@features/chapter/services/chapter-query.service';
 import { ChapterReactionService } from '@features/chapter/services/chapter-reaction.service';
+import { ChapterUnlockService } from '@/features/chapter/services/chapter-unlock.service';
 
 import { ReadingHistoryService } from '@/features/readingHistory/services/readingHistory.service';
 import { AnalyticsService } from '@/features/readingHistory/services/analytics.service';
@@ -226,6 +228,7 @@ export function registerServices(): void {
   container.register(TOKENS.CoinOrderRepository, { useClass: CoinOrderRepository });
   container.register(TOKENS.WalletRepository, { useClass: WalletRepository });
   container.register(TOKENS.CoinTransactionRepository, { useClass: CoinTransactionRepository });
+  container.register(TOKENS.ChapterUnlockRepository, { useClass: ChapterUnlockRepository });
   container.register(TOKENS.VoteRepository, { useClass: VoteRepository });
 
   // ═══════════════════════════════════════════
@@ -246,6 +249,7 @@ export function registerServices(): void {
   container.register(TOKENS.ChapterCreationService, { useClass: ChapterCreationService });
   container.register(TOKENS.ChapterQueryService, { useClass: ChapterQueryService });
   container.register(TOKENS.ChapterReactionService, { useClass: ChapterReactionService });
+  container.register(TOKENS.ChapterUnlockService, { useClass: ChapterUnlockService });
   container.register(TOKENS.StoryCrudService, { useClass: StoryCrudService });
   container.register(TOKENS.StoryQueryService, { useClass: StoryQueryService });
   container.register(TOKENS.StoryMediaService, { useClass: StoryMediaService });

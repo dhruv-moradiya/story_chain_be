@@ -64,6 +64,7 @@ export const TOKENS = {
   CoinOrderRepository: Symbol.for('CoinOrderRepository'),
   WalletRepository: Symbol.for('WalletRepository'),
   CoinTransactionRepository: Symbol.for('CoinTransactionRepository'),
+  ChapterUnlockRepository: Symbol.for('ChapterUnlockRepository'),
   VoteRepository: Symbol.for('VoteRepository'),
 
   // ═══════════════════════════════════════════
@@ -81,6 +82,7 @@ export const TOKENS = {
   ChapterQueryService: Symbol.for('ChapterQueryService'),
   ChapterReactionService: Symbol.for('ChapterReactionService'),
   ChapterVersionService: Symbol.for('ChapterVersionService'),
+  ChapterUnlockService: Symbol.for('ChapterUnlockService'),
   AutoSaveQueryService: Symbol.for('AutoSaveQueryService'),
   AutoSaveLifecycleService: Symbol.for('AutoSaveLifecycleService'),
   AutoSaveContentService: Symbol.for('AutoSaveContentService'),

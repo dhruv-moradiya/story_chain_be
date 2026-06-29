@@ -23,6 +23,8 @@ const ChapterApiRoutes = {
   CreateChildChapter: '/child',
 
   Reactions: '/:slug/reactions',
+
+  Unlock: '/:slug/unlock',
 } as const;
 
 export { ChapterApiRoutes };
@@ -129,5 +131,19 @@ export async function chapterRoutes(fastify: FastifyInstance) {
       },
     },
     chapterController.reactToChapter
+  );
+
+  fastify.post(
+    ChapterApiRoutes.Unlock,
+    {
+      preHandler: [validateAuth],
+      config: { rateLimit: RateLimits.FAST_WRITE },
+      schema: {
+        description: 'Unlock a chapter',
+        tags: ['Chapters'],
+        security: [{ bearerAuth: [] }],
+      },
+    },
+    chapterController.unlockChapter
   );
 }
