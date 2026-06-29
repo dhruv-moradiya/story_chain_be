@@ -21,6 +21,7 @@ interface IStorySettings {
   allowVoting: boolean;
   genres: TStoryGenre[];
   contentRating: TStoryContentRating;
+  monetizationEnabled: boolean;
 }
 
 interface IStoryStats extends Record<string, number> {

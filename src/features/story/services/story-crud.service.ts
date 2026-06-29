@@ -35,6 +35,12 @@ class StoryCrudService extends BaseModule implements IStoryCrudService {
   }
 
   async create(input: IStoryCreateDTO): Promise<IStory> {
+    const existingStory = await this.storyRepo.findBySlug(input.slug);
+
+    if (existingStory) {
+      this.throwBadRequest('STORY_ALREADY_EXISTS', `Story with slug ${input.slug} already exists.`);
+    }
+
     return await withTransaction('Creating new story', async (session) => {
       const { creatorId } = input;
       const options = { session };

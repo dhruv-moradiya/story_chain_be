@@ -98,6 +98,7 @@ const StoryCreateSchema = z.object({
       allowVoting: z.boolean().default(true),
       genres: z.array(GenreEnum).default([]),
       contentRating: ContentRatingEnum.default('general'),
+      monetizationEnabled: z.boolean().default(true),
     })
     .default({}),
 

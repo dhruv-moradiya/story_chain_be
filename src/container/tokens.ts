@@ -107,6 +107,7 @@ export const TOKENS = {
   PRQueryService: Symbol.for('PRQueryService'),
   CoinBundleService: Symbol.for('CoinBundleService'),
   CoinOrderService: Symbol.for('CoinOrderService'),
+  WalletService: Symbol.for('WalletService'),
 
   // ═══════════════════════════════════════════
   // CONTROLLERS
@@ -132,6 +133,7 @@ export const TOKENS = {
   PRQueryController: Symbol.for('PRQueryController'),
   CoinBundleController: Symbol.for('CoinBundleController'),
   CoinOrderController: Symbol.for('CoinOrderController'),
+  WalletController: Symbol.for('WalletController'),
 
   // ═══════════════════════════════════════════
   // MIDDLEWARE FACTORIES

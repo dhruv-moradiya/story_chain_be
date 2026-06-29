@@ -54,6 +54,7 @@ const storySchema = new Schema<IStoryDoc>(
       requireApproval: { type: Boolean, default: true }, // If true, branches need approval from creator/collaborators
       allowComments: { type: Boolean, default: false }, // If true, readers can comment on chapters
       allowVoting: { type: Boolean, default: false }, // If true, readers can vote on the story
+      monetizationEnabled: { type: Boolean, default: true },
 
       // Metadata
       genres: {

@@ -10,6 +10,7 @@ import { RateLimits } from '@/constants/rateLimits';
 import type {} from '@fastify/rate-limit';
 
 const BookmarkApiRoutes = {
+  Get: '/',
   Toggle: '/toggle',
 } as const;
 
@@ -33,5 +34,20 @@ export async function bookmarkRoutes(fastify: FastifyInstance) {
       },
     },
     bookmarkController.toggleBookmark
+  );
+
+  fastify.get(
+    BookmarkApiRoutes.Get,
+    {
+      preHandler: [validateAuth],
+      config: { rateLimit: RateLimits.WRITE },
+      schema: {
+        description: 'Get user bookmarks',
+        tags: ['Bookmarks'],
+        security: [{ bearerAuth: [] }],
+        response: BookmarkResponses.list,
+      },
+    },
+    bookmarkController.getBookmarks
   );
 }

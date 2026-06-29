@@ -11,10 +11,11 @@ import { sanitizeContent } from '@/utils/sanitizer';
 import { inject, singleton } from 'tsyringe';
 import { ICreateChildChapterSimpleDTO, TChapterAddRootDTO } from '../dto/chapter.dto';
 import { ChapterRepository } from '../repositories/chapter.repository';
-import { ChapterStatus } from '../types/chapter-enum';
+import { CHAPTER_PRICE, ChapterStatus, FREE_CHAPTERS_LIMIT } from '../types/chapter-enum';
 import { IChapter } from '../types/chapter.types';
 import { IChapterCreationService } from './interfaces/chapter-creation.interface';
 import { chapterVersionRepository } from '@/features/chapterVersion/repositories/chapterVersion.repository';
+import { IStory } from '@/features/story/types/story.types';
 
 @singleton()
 export class ChapterCreationService extends BaseModule implements IChapterCreationService {
@@ -70,6 +71,14 @@ export class ChapterCreationService extends BaseModule implements IChapterCreati
 
   private generateSlug(title: string): string {
     return createSlug(title, { addSuffix: true });
+  }
+
+  private calculateCoinPrice(story: IStory, totalPublishedChapters: number): number {
+    return story.settings.monetizationEnabled
+      ? totalPublishedChapters >= FREE_CHAPTERS_LIMIT
+        ? CHAPTER_PRICE.PAID
+        : CHAPTER_PRICE.FREE
+      : CHAPTER_PRICE.FREE;
   }
 
   private async createInitialVersion(
@@ -128,6 +137,7 @@ export class ChapterCreationService extends BaseModule implements IChapterCreati
         status: ChapterStatus.PUBLISHED,
         slug,
         branchIndex,
+        coinPrice: 0,
       },
       options: { session: options.session },
     });
@@ -206,6 +216,14 @@ export class ChapterCreationService extends BaseModule implements IChapterCreati
     // 6. Generate unique slug
     const slug = this.generateSlug(normalizedTitle);
 
+    // 7. Determine coin price based on parent chapter
+    const totalPublishedChapters = await this.chapterRepo.count({
+      filter: { storySlug, status: ChapterStatus.PUBLISHED },
+      options: { session: options.session },
+    });
+
+    const coinPrice = this.calculateCoinPrice(story, totalPublishedChapters);
+
     // 7. Persist chapter to database
     const chapter = await this.chapterRepo.create({
       data: {
@@ -219,6 +237,7 @@ export class ChapterCreationService extends BaseModule implements IChapterCreati
         status,
         slug,
         branchIndex,
+        coinPrice,
       },
       options: { session: options.session },
     });

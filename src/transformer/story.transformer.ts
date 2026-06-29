@@ -13,6 +13,7 @@ export class StoryTransformer {
       allowVoting: false,
       genres: [],
       contentRating: 'general',
+      monetizationEnabled: true,
       ...settings,
     };
   }

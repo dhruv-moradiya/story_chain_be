@@ -4,6 +4,7 @@ import {
   unauthorizedResponse,
   internalErrorResponse,
   notFoundResponse,
+  listResponses,
 } from '@schema/response/helpers';
 
 export const BookmarkSchema = {
@@ -16,6 +17,27 @@ export const BookmarkSchema = {
     note: { type: 'string' },
     createdAt: { type: 'string', format: 'date-time' },
     updatedAt: { type: 'string', format: 'date-time' },
+  },
+};
+
+export const BookmarkListItemSchema = {
+  type: 'object',
+  properties: {
+    ...BookmarkSchema.properties,
+    story: {
+      type: 'object',
+      properties: {
+        slug: { type: 'string' },
+        title: { type: 'string' },
+      },
+    },
+    chapter: {
+      type: 'object',
+      properties: {
+        slug: { type: 'string' },
+        title: { type: 'string' },
+      },
+    },
   },
 };
 
@@ -34,4 +56,5 @@ export const BookmarkResponses = {
     404: notFoundResponse('Story or chapter not found'),
     500: internalErrorResponse(),
   },
+  list: listResponses(BookmarkListItemSchema, 'Bookmarks retrieved successfully'),
 };

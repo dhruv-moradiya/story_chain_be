@@ -29,5 +29,20 @@ export class BookmarkController extends BaseModule {
         .send(ApiResponse.success(result, 'OK', HTTP_STATUS.OK.message, 'UPDATED'));
     }
   );
+
+  getBookmarks = catchAsync(async (request: FastifyRequest, reply: FastifyReply) => {
+    const userId = request.user.clerkId;
+
+    const result = await this.bookmarkService.getBookmarks(userId, {
+      query: '',
+      order: 'oldest',
+      page: 1,
+      limit: 10,
+    });
+
+    return reply
+      .code(HTTP_STATUS.OK.code)
+      .send(ApiResponse.success(result, 'OK', HTTP_STATUS.OK.message, 'FETCHED'));
+  });
 }
 // bookmark controller file

@@ -94,6 +94,7 @@ import { PRQueryService } from '@features/pullRequest/services/pr-query.service'
 import { CoinBundleService } from '@features/coinBundle/services/coinBundle.service';
 import { CoinOrderService } from '@/features/coinOrder/services/coinOrder.service';
 import { VoteService } from '@/shared/services/vote.service';
+import { WalletService } from '@/features/wallet/service/wallet.service';
 
 // ═══════════════════════════════════════════
 // CONTROLLERS
@@ -116,6 +117,7 @@ import { PRManagementController } from '@features/pullRequest/controllers/prMana
 import { PRQueryController } from '@features/pullRequest/controllers/prQuery.controller';
 import { CoinBundleController } from '@features/coinBundle/controllers/coinBundle.controller';
 import { CoinOrderController } from '@/features/coinOrder/controllers/coinOrder.controller';
+import { WalletController } from '@/features/wallet/controllers/waller.controller';
 
 // ═══════════════════════════════════════════
 // MIDDLEWARE FACTORIES
@@ -267,6 +269,7 @@ export function registerServices(): void {
   container.register(TOKENS.CoinBundleService, { useClass: CoinBundleService });
   container.register(TOKENS.CoinOrderService, { useClass: CoinOrderService });
   container.register(TOKENS.VoteService, { useClass: VoteService });
+  container.register(TOKENS.WalletService, { useClass: WalletService });
 
   // ═══════════════════════════════════════════
   // CONTROLLERS
@@ -289,6 +292,7 @@ export function registerServices(): void {
   container.register(TOKENS.PRQueryController, { useClass: PRQueryController });
   container.register(TOKENS.CoinBundleController, { useClass: CoinBundleController });
   container.register(TOKENS.CoinOrderController, { useClass: CoinOrderController });
+  container.register(TOKENS.WalletController, { useClass: WalletController });
 
   // ═══════════════════════════════════════════
   // MIDDLEWARE FACTORIES
