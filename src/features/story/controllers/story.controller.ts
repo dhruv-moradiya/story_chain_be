@@ -194,7 +194,8 @@ export class StoryController extends BaseModule {
   getStoryTreeBySlug = catchAsync(
     async (request: FastifyRequest<{ Params: TStorySlugSchema }>, reply: FastifyReply) => {
       const { slug } = request.params;
-      const storyTree = await this.storyQueryService.getStoryTreeBySlug(slug);
+      const userId = request.user.clerkId;
+      const storyTree = await this.storyQueryService.getStoryTreeBySlug(slug, userId);
 
       this.logInfo(`Fetched story tree for story ${slug}`);
       return reply

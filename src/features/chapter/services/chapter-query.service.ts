@@ -42,6 +42,28 @@ export class ChapterQueryService extends BaseModule implements IChapterQueryServ
   }
 
   async getChapterDetails(userId: string, chapterSlug: string): Promise<IChapterDetailsResponse> {
+    const isUnlockByUser = new ChapterPipelineBuilder()
+      .findBySlug(chapterSlug)
+      .isUnlockByUser(userId)
+      .build();
+
+    const [data] =
+      await this.chapterRepo.aggregateChapters<IChapterDetailsResponse>(isUnlockByUser);
+
+    if (!data) {
+      throw this.throwNotFoundError(
+        'CHAPTER_NOT_FOUND',
+        'The requested chapter could not be found. It may have been removed, is unavailable, or the provided chapter identifier is invalid.'
+      );
+    }
+
+    if (!data.isUnlock) {
+      throw this.throwForbiddenError(
+        'CHAPTER_NOT_UNLOCKED',
+        'This chapter is currently locked and cannot be accessed. Please unlock the chapter using your available coins or purchase access before trying again.'
+      );
+    }
+
     const pipeline = new ChapterPipelineBuilder()
       .findBySlug(chapterSlug)
       .attachAuthor({ project: PUBLIC_AUTHOR_PROJECTION })

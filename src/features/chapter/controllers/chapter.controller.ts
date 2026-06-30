@@ -69,7 +69,10 @@ export class ChapterController extends BaseModule {
       const chapter = await this.chapterQueryService.getChapterDetails(userId, chapterSlug);
 
       if (!chapter) {
-        this.throwNotFoundError('CHAPTER_NOT_FOUND', 'Chapter not found.');
+        this.throwNotFoundError(
+          'CHAPTER_NOT_FOUND',
+          'The requested chapter could not be found. It may have been removed, is unavailable, or the provided chapter identifier is invalid.'
+        );
       }
 
       return reply

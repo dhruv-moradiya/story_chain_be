@@ -26,4 +26,5 @@ export interface IChapterDetailsResponse extends IChapter {
   author: Pick<IUser, 'clerkId' | 'username' | 'avatarUrl' | 'email'>;
   previousChapters: Array<{ title: string; slug: string }>;
   nextChapters: Array<{ title: string; slug: string }>;
+  isUnlock: boolean;
 }

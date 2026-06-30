@@ -125,38 +125,33 @@ class StoryQueryService extends BaseModule implements IStoryQueryService {
   /**
    * Get story tree by slug (throws if story not found)
    */
-  async getStoryTreeBySlug(slug: string): Promise<IStoryTreeResult> {
-    return this.cacheService.getOrSet(
-      CacheKeyBuilder.storyTree(slug),
-      async () => {
-        const story = await this.storyRepo.findBySlug(slug);
+  async getStoryTreeBySlug(slug: string, userId: string): Promise<IStoryTreeResult> {
+    const story = await this.storyRepo.findBySlug(slug);
 
-        if (!story) {
-          this.throwNotFoundError('Story not found. Unable to generate chapter tree.');
-        }
+    if (!story) {
+      this.throwNotFoundError('Story not found. Unable to generate chapter tree.');
+    }
 
-        const pipeline = new ChapterPipelineBuilder()
-          .buildStoryChapterTreePreset(story.slug)
-          .build();
+    const pipeline = new ChapterPipelineBuilder()
+      .buildStoryChapterTreePreset(story.slug)
+      .isUnlockByUser(userId)
+      .build();
 
-        const chapters = await this.chapterRepo.aggregateChapters(pipeline);
+    const chapters = await this.chapterRepo.aggregateChapters(pipeline);
 
-        if (!chapters || chapters.length === 0) {
-          return {
-            slug: story.slug,
-            chapters: [],
-          };
-        }
+    if (!chapters || chapters.length === 0) {
+      return {
+        slug: story.slug,
+        chapters: [],
+      };
+    }
 
-        const tree = buildChapterTree(chapters);
+    const tree = buildChapterTree(chapters);
 
-        return {
-          slug: story.slug,
-          chapters: tree,
-        };
-      },
-      { ttlKey: 'STORY_TREE' }
-    );
+    return {
+      slug: story.slug,
+      chapters: tree,
+    };
   }
 
   /**

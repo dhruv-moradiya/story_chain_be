@@ -262,6 +262,67 @@ class ChapterPipelineBuilder extends BasePipelineBuilder<ChapterPipelineBuilder>
     return this;
   }
 
+  isUnlockByUser(userId: string) {
+    this.pipeline.push(
+      {
+        $lookup: {
+          from: 'chapterunlocks',
+          let: { chapterSlug: '$slug' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [{ $eq: ['$chapterSlug', '$$chapterSlug'] }, { $eq: ['$userId', userId] }],
+                },
+              },
+            },
+            { $limit: 1 },
+          ],
+          as: 'chapterUnlock',
+        },
+      },
+      {
+        $lookup: {
+          from: 'storycollaborators',
+          let: { storySlug: '$storySlug' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$slug', '$$storySlug'] },
+                    { $eq: ['$userId', userId] },
+                    { $eq: ['$status', 'accepted'] },
+                  ],
+                },
+              },
+            },
+            { $limit: 1 },
+          ],
+          as: 'storyCollaborator',
+        },
+      },
+      {
+        $addFields: {
+          isUnlock: {
+            $or: [
+              { $gt: [{ $size: '$chapterUnlock' }, 0] },
+              { $gt: [{ $size: '$storyCollaborator' }, 0] },
+            ],
+          },
+        },
+      },
+      {
+        $project: {
+          chapterUnlock: 0,
+          storyCollaborator: 0,
+        },
+      }
+    );
+
+    return this;
+  }
+
   // ==================== PRESETS ====================
 
   /**

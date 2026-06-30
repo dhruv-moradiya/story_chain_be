@@ -22,7 +22,7 @@ interface IStoryQueryService {
   listStories(options?: IOperationOptions): Promise<IStory[]>;
 
   // Story tree queries (throws if story not found)
-  getStoryTreeBySlug(slug: string): Promise<IStoryTreeResult>;
+  getStoryTreeBySlug(slug: string, userId: string): Promise<IStoryTreeResult>;
 
   // Overview and settings (throws if not found)
   getStoryOverviewBySlug(slug: string): Promise<IStoryOverviewResponse>;
