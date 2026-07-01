@@ -27,6 +27,7 @@ import { StoryTimelineService } from '../services/story-timeline.service';
 
 // Import chapter service
 import { ChapterCreationService } from '@/features/chapter/services/chapter-creation.service';
+import { ExploreStoriesService } from '../services/explore.service';
 
 @singleton()
 export class StoryController extends BaseModule {
@@ -42,7 +43,8 @@ export class StoryController extends BaseModule {
     @inject(TOKENS.ChapterCreationService)
     private readonly chapterCreationService: ChapterCreationService,
     @inject(TOKENS.StoryTimelineService)
-    private readonly storyTimelineService: StoryTimelineService
+    private readonly storyTimelineService: StoryTimelineService,
+    @inject(TOKENS.ExploreStoriesService) private readonly exploreService: ExploreStoriesService
   ) {
     super();
   }
@@ -426,6 +428,22 @@ export class StoryController extends BaseModule {
             `Timeline fetched successfully — ${total} total event(s)`
           )
         );
+    }
+  );
+
+  // =====================
+  // EXPLORE STORIES
+  // =====================
+
+  getFreshStories = catchAsync(
+    async (_request: FastifyRequest<{ Querystring: TStorySlugSchema }>, reply: FastifyReply) => {
+      const result = await this.exploreService.getFreshStories();
+
+      // this.logInfo(`Fetched ${result.stories.length} fresh stories`);
+
+      return reply
+        .code(HTTP_STATUS.OK.code)
+        .send(ApiResponse.fetched(result, 'Fresh stories fetched successfully'));
     }
   );
 }

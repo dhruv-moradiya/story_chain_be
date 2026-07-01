@@ -198,4 +198,26 @@ export class StoryRepository extends BaseRepository<IStory, IStoryDoc> {
 
     return !!story?.stats?.totalChapters;
   }
+
+  // EXPLORE STORIES
+
+  getFreshStories() {
+    return this.model
+      .find({ status: StoryStatus.PUBLISHED })
+      .sort({ createdAt: -1 })
+      .select({
+        slug: 1,
+        title: 1,
+        creatorId: 1,
+        coverImage: 1,
+        genre: 1,
+      })
+      .populate({
+        path: 'creatorId',
+        select: 'username',
+      })
+      .limit(10)
+      .lean()
+      .exec();
+  }
 }

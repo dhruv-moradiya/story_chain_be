@@ -67,6 +67,7 @@ import { StoryQueryService } from '@/features/story/services/story-query.service
 import { StoryMediaService } from '@/features/story/services/story-media.service';
 import { StoryPublishingService } from '@/features/story/services/story-publishing.service';
 import { StoryTimelineService } from '@/features/story/services/story-timeline.service';
+import { ExploreStoriesService } from '@features/story/services/explore.service';
 import { CollaboratorQueryService } from '@features/storyCollaborator/services/collaborator-query.service';
 import { CollaboratorInvitationService } from '@features/storyCollaborator/services/collaborator-invitation.service';
 import { CollaboratorLifecycleService } from '@features/storyCollaborator/services/collaborator-lifecycle.service';
@@ -255,6 +256,7 @@ export function registerServices(): void {
   container.register(TOKENS.StoryMediaService, { useClass: StoryMediaService });
   container.register(TOKENS.StoryPublishingService, { useClass: StoryPublishingService });
   container.register(TOKENS.StoryTimelineService, { useClass: StoryTimelineService });
+  container.register(TOKENS.ExploreStoriesService, { useClass: ExploreStoriesService });
   container.register(TOKENS.AutoSaveQueryService, { useClass: AutoSaveQueryService });
   container.register(TOKENS.AutoSaveLifecycleService, { useClass: AutoSaveLifecycleService });
   container.register(TOKENS.AutoSaveContentService, { useClass: AutoSaveContentService });

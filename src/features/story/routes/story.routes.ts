@@ -65,6 +65,9 @@ const StoryApiRoutes = {
 
   // TIMELINE
   GetTimelineBySlug: '/slug/:slug/timeline',
+
+  // EXPLORE
+  GetFreshStories: '/fresh-stories',
 } as const;
 
 export { StoryApiRoutes };
@@ -506,5 +509,21 @@ export async function storyRoutes(fastify: FastifyInstance) {
       },
     },
     storyController.getUserRole
+  );
+
+  // =====================
+  // EXPLORE STORIES
+  // =====================
+
+  fastify.get(
+    StoryApiRoutes.GetFreshStories,
+    {
+      config: { rateLimit: RateLimits.PUBLIC_READ },
+      schema: {
+        description: 'Get fresh stories',
+        tags: ['Stories'],
+      },
+    },
+    storyController.getFreshStories
   );
 }

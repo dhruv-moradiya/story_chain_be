@@ -416,6 +416,28 @@ class StoryPipelineBuilder extends BasePipelineBuilder<StoryPipelineBuilder> {
     return this;
   }
 
+  // ==================== EXPLORE ====================
+  getFreshStories() {
+    this.pipeline.push(
+      {
+        $sort: { createdAt: -1 },
+      },
+      {
+        $project: {
+          slug: 1,
+          title: 1,
+          cardImage: 1,
+          genres: '$settings.genres',
+          creator: 1,
+          createdAt: 1,
+        },
+      },
+      { $limit: 10 }
+    );
+
+    return this;
+  }
+
   // ==================== PRESETS ====================
   getCurrentUserStoryPreset(userId: string) {
     return this.getAllAccessible(userId)

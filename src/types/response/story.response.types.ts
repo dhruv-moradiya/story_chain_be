@@ -104,3 +104,17 @@ export interface IUserStoryRole {
   role: TStoryCollaboratorRole | 'reader';
   roleStatus?: TStoryCollaboratorStatus | null;
 }
+
+// =====================
+// EXPLORE STORIES
+// =====================
+
+export interface IExploreStory {
+  _id: string;
+  title: string;
+  slug: string;
+  creator: { username: string; clerkId: string };
+  cardImage?: { url: string; publicId: string };
+  genres: TStoryGenre[];
+  createdAt: string;
+}
