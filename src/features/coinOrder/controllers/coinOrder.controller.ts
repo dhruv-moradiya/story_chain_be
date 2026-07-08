@@ -41,4 +41,15 @@ export class CoinOrderController extends BaseModule {
         .send(ApiResponse.ok(order, 'Payment verified successfully'));
     }
   );
+
+  verifyWebHook = catchAsync(async (req: FastifyRequest, reply: FastifyReply) => {
+    // fastify-raw-body stores the raw Buffer on req.rawBody
+    const rawBody = (req as FastifyRequest & { rawBody: Buffer }).rawBody;
+    const signature = req.headers['x-razorpay-signature'] as string;
+
+    const result = await this.coinOrderService.verifyRazorpayWebHook({ rawBody, signature });
+
+    // Always respond 200 — Razorpay retries on any non-2xx response
+    return reply.code(HTTP_STATUS.OK.code).send(ApiResponse.ok(result, 'Webhook received'));
+  });
 }

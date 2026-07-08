@@ -30,6 +30,9 @@ const envSchema = z.object({
   // Razorpay Live
   RAZORPAY_KEY_ID_LIVE: z.string().optional(),
   RAZORPAY_KEY_SECRET_LIVE: z.string().optional(),
+
+  // Razorpay Webhook
+  RAZORPAY_WEBHOOK_SECRET: z.string(),
 });
 
 export const env = envSchema.parse(process.env);

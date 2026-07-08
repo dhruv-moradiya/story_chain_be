@@ -17,6 +17,7 @@ import { createHmac, timingSafeEqual } from 'crypto';
 export class RazorpayService extends BaseModule {
   readonly client: Razorpay;
   private readonly keySecret: string;
+  private readonly webhookSecret: string;
 
   constructor() {
     super();
@@ -30,6 +31,7 @@ export class RazorpayService extends BaseModule {
 
     this.client = new Razorpay({ key_id: keyId, key_secret: keySecret });
     this.keySecret = keySecret!;
+    this.webhookSecret = env.RAZORPAY_WEBHOOK_SECRET;
 
     this.logInfo(
       `RazorpayService initialised in ${isProduction && hasLiveKeys ? 'LIVE' : 'TEST'} mode`
@@ -63,6 +65,27 @@ export class RazorpayService extends BaseModule {
       );
     } catch {
       // Buffer lengths differ → invalid hex or length mismatch → always false
+      return false;
+    }
+  }
+
+  /**
+   * Verifies the HMAC-SHA256 webhook signature from Razorpay.
+   *
+   * Razorpay signs the RAW request body using RAZORPAY_WEBHOOK_SECRET.
+   * ⚠️  Always pass the raw Buffer/string body — never the parsed JSON object.
+   */
+  verifyWebhookSignature(rawBody: Buffer | string, razorpaySignatureHeader: string): boolean {
+    const expectedSignature = createHmac('sha256', this.webhookSecret)
+      .update(rawBody)
+      .digest('hex');
+
+    try {
+      return timingSafeEqual(
+        Buffer.from(expectedSignature, 'hex'),
+        Buffer.from(razorpaySignatureHeader, 'hex')
+      );
+    } catch {
       return false;
     }
   }

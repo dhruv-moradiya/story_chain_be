@@ -191,4 +191,118 @@ export class CoinOrderService extends BaseModule {
       coinsAdded: order.totalCoins,
     };
   }
+
+  async verifyRazorpayWebHook(input: {
+    rawBody: Buffer;
+    signature: string;
+  }): Promise<{ received: true }> {
+    const { rawBody, signature } = input;
+
+    // ── 1. Verify the webhook signature using RAZORPAY_WEBHOOK_SECRET ────────
+    // Always use the raw Buffer — never parsed JSON (whitespace/key-order matters)
+    const isValid = this.razorpayService.verifyWebhookSignature(rawBody, signature);
+
+    if (!isValid) {
+      this.logger.warn('[Webhook] Invalid Razorpay webhook signature — rejected');
+      throw ApiError.unauthorized('INVALID_SIGNATURE', 'Webhook signature verification failed');
+    }
+
+    const event = JSON.parse(rawBody.toString('utf8'));
+    const eventType: string = event.event;
+
+    this.logInfo(`[Webhook] Received event: ${eventType}`);
+
+    // ── 2. Dispatch by event type ─────────────────────────────────────────────
+    switch (eventType) {
+      case 'payment.captured': {
+        const payment = event.payload.payment.entity;
+        const razorpayOrderId: string = payment.order_id;
+        const razorpayPaymentId: string = payment.id;
+
+        // Find the CoinOrder linked to this Razorpay order
+        const order = await this.coinOrderRepo.findByRazorpayOrderId(razorpayOrderId);
+
+        if (!order) {
+          // Unknown order — could be from a different product; safe to ignore
+          this.logger.warn(`[Webhook] Unknown razorpayOrderId: ${razorpayOrderId} — skipping`);
+          break;
+        }
+
+        if (order.status === CoinOrderStatus.PAID) {
+          // Already credited by verify-payment (or a previous webhook delivery)
+          this.logInfo(`[Webhook] Order ${order._id} already paid — idempotent skip`);
+          break;
+        }
+
+        // ── Race-condition safe credit ───────────────────────────────────────
+        // markAsPaid uses { status: 'pending' } as an atomic filter.
+        // If verify-payment already ran concurrently, markAsPaid returns null
+        // and we skip — no double credit ever happens.
+        await withTransaction(`webhook:coinOrder=${order._id}`, async (session) => {
+          const updated = await this.coinOrderRepo.markAsPaid(
+            order._id,
+            { razorpayPaymentId },
+            { session }
+          );
+
+          if (!updated) {
+            // verify-payment won the race — nothing to do
+            this.logInfo(`[Webhook] Order ${order._id} already transitioned — concurrent skip`);
+            return;
+          }
+
+          // Credit coins to wallet
+          const updatedWallet = await this.walletRepo.creditCoins(order.userId, order.totalCoins, {
+            session,
+          });
+
+          if (!updatedWallet) {
+            throw ApiError.internalError('WALLET_UPDATE_FAILED', 'Failed to update wallet');
+          }
+
+          const balanceAfter = updatedWallet.balance;
+          const balanceBefore = balanceAfter - order.totalCoins;
+
+          // Append immutable ledger entry
+          await this.coinTxRepo.appendLedgerEntry(
+            {
+              userId: order.userId,
+              type: CoinTxType.PURCHASE,
+              amount: order.totalCoins,
+              direction: CoinTxDirection.CREDIT,
+              balanceBefore,
+              balanceAfter,
+              coinOrderId: order._id,
+              note: `[Webhook] Purchased coin bundle - ${order.totalCoins} coins`,
+            },
+            { session }
+          );
+
+          this.logInfo(
+            `[Webhook] Credited +${order.totalCoins} coins for order ${order._id} | new balance: ${balanceAfter}`
+          );
+        });
+        break;
+      }
+
+      case 'payment.failed': {
+        const payment = event.payload.payment.entity;
+        const razorpayOrderId: string = payment.order_id;
+        const failureReason: string =
+          payment.error_description ?? payment.error_code ?? 'Unknown failure';
+
+        await this.coinOrderRepo.markAsFailed(razorpayOrderId, failureReason);
+        this.logInfo(`[Webhook] Marked order ${razorpayOrderId} as failed: ${failureReason}`);
+        break;
+      }
+
+      default: {
+        // Unhandled event — log and ignore; always return 200 so Razorpay stops retrying
+        this.logInfo(`[Webhook] Unhandled event type '${eventType}' — ignored`);
+        break;
+      }
+    }
+
+    return { received: true };
+  }
 }
