@@ -6,7 +6,7 @@ import { catchAsync } from '@/utils/catchAsync';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { TCoinOrderCreateSchema, TCoinOrderVerifySchema } from '@/schema/request/coinOrder.schema';
 import { HTTP_STATUS } from '@/constants/httpStatus';
-import { ApiResponse } from '@/utils/apiResponse';
+import { ApiError, ApiResponse } from '@/utils/apiResponse';
 
 @singleton()
 export class CoinOrderController extends BaseModule {
@@ -46,6 +46,10 @@ export class CoinOrderController extends BaseModule {
     // fastify-raw-body stores the raw Buffer on req.rawBody
     const rawBody = (req as FastifyRequest & { rawBody: Buffer }).rawBody;
     const signature = req.headers['x-razorpay-signature'] as string;
+
+    if (!rawBody || !signature) {
+      throw ApiError.badRequest('INVALID_SIGNATURE', 'Payment signature verification failed');
+    }
 
     const result = await this.coinOrderService.verifyRazorpayWebHook({ rawBody, signature });
 

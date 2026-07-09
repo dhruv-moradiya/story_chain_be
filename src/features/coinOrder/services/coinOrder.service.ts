@@ -112,6 +112,11 @@ export class CoinOrderService extends BaseModule {
       throw ApiError.notFound('ORDER_NOT_FOUND', 'Order not found');
     }
 
+    // Check if order id matches with razorpay order id
+    if (order.razorpayOrderId !== razorpayOrderId) {
+      throw ApiError.badRequest('ORDER_MISMATCH', 'Payment details do not match the order');
+    }
+
     // Check if order is already paid
     if (order.status === CoinOrderStatus.PAID) {
       this.logInfo(`CoinOrder already paid (idempotent): ${coinOrderId}`);
@@ -123,6 +128,14 @@ export class CoinOrderService extends BaseModule {
       throw ApiError.badRequest(
         'ORDER_FAILED',
         'This order has already failed and cannot be retried'
+      );
+    }
+
+    // Fix #5: Guard REFUNDED status — never credit coins for a refunded order
+    if (order.status === CoinOrderStatus.REFUNDED) {
+      throw ApiError.badRequest(
+        'ORDER_REFUNDED',
+        'This order has been refunded and cannot be verified'
       );
     }
 
@@ -198,8 +211,17 @@ export class CoinOrderService extends BaseModule {
   }): Promise<{ received: true }> {
     const { rawBody, signature } = input;
 
-    // ── 1. Verify the webhook signature using RAZORPAY_WEBHOOK_SECRET ────────
-    // Always use the raw Buffer — never parsed JSON (whitespace/key-order matters)
+    // Fix #3a: Reject oversized payloads before any processing
+    const MAX_WEBHOOK_BODY_BYTES = 1_048_576; // 1 MB
+    if (rawBody.length > MAX_WEBHOOK_BODY_BYTES) {
+      this.logger.warn(`[Webhook] Payload too large: ${rawBody.length} bytes — rejected`);
+      throw ApiError.badRequest(
+        'PAYLOAD_TOO_LARGE',
+        'Webhook payload exceeds the allowed size limit'
+      );
+    }
+
+    // 1. Verify Razorpay webhook signature
     const isValid = this.razorpayService.verifyWebhookSignature(rawBody, signature);
 
     if (!isValid) {
@@ -207,15 +229,26 @@ export class CoinOrderService extends BaseModule {
       throw ApiError.unauthorized('INVALID_SIGNATURE', 'Webhook signature verification failed');
     }
 
+    // Fix #3b: Validate payload structure before touching the DB
     const event = JSON.parse(rawBody.toString('utf8'));
-    const eventType: string = event.event;
+    const eventType: string | undefined = event?.event;
+
+    if (!eventType) {
+      this.logger.warn('[Webhook] Malformed payload — missing event field, ignoring');
+      return { received: true };
+    }
 
     this.logInfo(`[Webhook] Received event: ${eventType}`);
 
-    // ── 2. Dispatch by event type ─────────────────────────────────────────────
+    // 2. Dispatch by event type
     switch (eventType) {
       case 'payment.captured': {
-        const payment = event.payload.payment.entity;
+        // Fix #3c: Guard against missing nested payment entity
+        const payment = event.payload?.payment?.entity;
+        if (!payment?.order_id || !payment?.id) {
+          this.logger.warn('[Webhook] payment.captured event missing payment entity — skipping');
+          break;
+        }
         const razorpayOrderId: string = payment.order_id;
         const razorpayPaymentId: string = payment.id;
 
@@ -234,7 +267,7 @@ export class CoinOrderService extends BaseModule {
           break;
         }
 
-        // ── Race-condition safe credit ───────────────────────────────────────
+        // Race-condition safe credit
         // markAsPaid uses { status: 'pending' } as an atomic filter.
         // If verify-payment already ran concurrently, markAsPaid returns null
         // and we skip — no double credit ever happens.
@@ -286,10 +319,17 @@ export class CoinOrderService extends BaseModule {
       }
 
       case 'payment.failed': {
-        const payment = event.payload.payment.entity;
+        const payment = event.payload?.payment?.entity;
+        if (!payment?.order_id) {
+          this.logger.warn('[Webhook] payment.failed event missing payment entity — skipping');
+          break;
+        }
         const razorpayOrderId: string = payment.order_id;
-        const failureReason: string =
+        const rawFailureReason: string =
           payment.error_description ?? payment.error_code ?? 'Unknown failure';
+
+        // Fix #8: Truncate to match the model's maxlength: 300 to avoid Mongoose ValidationError
+        const failureReason = String(rawFailureReason).slice(0, 300);
 
         await this.coinOrderRepo.markAsFailed(razorpayOrderId, failureReason);
         this.logInfo(`[Webhook] Marked order ${razorpayOrderId} as failed: ${failureReason}`);

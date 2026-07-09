@@ -2885,18 +2885,20 @@ export function handleRazorpayError(error: any): string {
 
 **Yes, you can cancel your subscription at any time.** Here's how it works:
 
-| Cancellation Type | What Happens |
-|-------------------|--------------|
+| Cancellation Type                            | What Happens                                                                                                                                                                  |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Cancel at end of billing cycle** (Default) | Your subscription remains active until the current billing period ends. You continue to have access to all premium features until that date. No further charges will be made. |
-| **Immediate cancellation** | Your subscription is cancelled immediately. You lose access to premium features right away. No partial refunds are issued for the remaining days in your billing cycle. |
+| **Immediate cancellation**                   | Your subscription is cancelled immediately. You lose access to premium features right away. No partial refunds are issued for the remaining days in your billing cycle.       |
 
 **How to cancel:**
+
 1. Go to **Settings > Subscription**
 2. Click **Cancel Subscription**
 3. Choose between "Cancel at end of period" or "Cancel immediately"
 4. Confirm your cancellation
 
 **What happens after cancellation:**
+
 - Your account is automatically downgraded to the **Free plan**
 - All your stories, chapters, and content remain intact
 - Collaborators beyond the Free plan limit will become read-only
@@ -2908,23 +2910,25 @@ export function handleRazorpayError(error: any): string {
 
 **Your content is never deleted.** However, feature limits will apply:
 
-| Content Type | What Happens on Downgrade |
-|--------------|---------------------------|
-| **Stories** | All stories remain accessible. If you have more than 3 stories (Free limit), you cannot create new ones until you're below the limit or upgrade. Existing stories are NOT archived or deleted. |
-| **Chapters** | All chapters remain intact. If a story exceeds 10 chapters (Free limit), you cannot add new chapters to that story until you upgrade. |
-| **Collaborators** | Existing collaborators keep their access, but in **read-only mode** if you exceed the 2-collaborator limit. They cannot edit or contribute until you upgrade or remove collaborators. |
-| **Pull Requests** | Pending PRs remain open. New PR creation is limited to 5/month on Free plan. |
-| **AI Features** | AI writing assistance is disabled immediately. |
-| **Analytics** | Reverts to basic stats only. Historical detailed analytics are preserved but inaccessible until upgrade. |
-| **Exports** | Export functionality is disabled. |
-| **Custom Themes** | Stories revert to default theme. Custom theme settings are saved and restored on upgrade. |
+| Content Type      | What Happens on Downgrade                                                                                                                                                                      |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Stories**       | All stories remain accessible. If you have more than 3 stories (Free limit), you cannot create new ones until you're below the limit or upgrade. Existing stories are NOT archived or deleted. |
+| **Chapters**      | All chapters remain intact. If a story exceeds 10 chapters (Free limit), you cannot add new chapters to that story until you upgrade.                                                          |
+| **Collaborators** | Existing collaborators keep their access, but in **read-only mode** if you exceed the 2-collaborator limit. They cannot edit or contribute until you upgrade or remove collaborators.          |
+| **Pull Requests** | Pending PRs remain open. New PR creation is limited to 5/month on Free plan.                                                                                                                   |
+| **AI Features**   | AI writing assistance is disabled immediately.                                                                                                                                                 |
+| **Analytics**     | Reverts to basic stats only. Historical detailed analytics are preserved but inaccessible until upgrade.                                                                                       |
+| **Exports**       | Export functionality is disabled.                                                                                                                                                              |
+| **Custom Themes** | Stories revert to default theme. Custom theme settings are saved and restored on upgrade.                                                                                                      |
 
 **Grace Period:**
+
 - After downgrade, you have a **7-day grace period** to manage your content
 - During this period, you can archive or delete excess stories to fit within Free limits
 - No content is automatically deleted
 
 **Re-upgrading:**
+
 - All your premium features and settings are restored immediately upon re-subscribing
 - No data is lost during the downgrade period
 
@@ -2934,16 +2938,17 @@ export function handleRazorpayError(error: any): string {
 
 **Refund Policy:**
 
-| Situation | Refund Eligibility |
-|-----------|-------------------|
-| **Within 7 days of first payment** | Full refund available, no questions asked |
-| **Technical issues preventing service use** | Pro-rated refund for affected period |
-| **Accidental duplicate payment** | Full refund of duplicate charge |
-| **After 7 days, change of mind** | No refund, but you can cancel future billing |
-| **Mid-cycle cancellation** | No partial refund for remaining days |
-| **Annual plan cancellation** | Pro-rated refund for unused months (minus 2-month discount received) |
+| Situation                                   | Refund Eligibility                                                   |
+| ------------------------------------------- | -------------------------------------------------------------------- |
+| **Within 7 days of first payment**          | Full refund available, no questions asked                            |
+| **Technical issues preventing service use** | Pro-rated refund for affected period                                 |
+| **Accidental duplicate payment**            | Full refund of duplicate charge                                      |
+| **After 7 days, change of mind**            | No refund, but you can cancel future billing                         |
+| **Mid-cycle cancellation**                  | No partial refund for remaining days                                 |
+| **Annual plan cancellation**                | Pro-rated refund for unused months (minus 2-month discount received) |
 
 **How to request a refund:**
+
 1. Email **support@storychain.com** with your:
    - Account email
    - Razorpay Payment ID (starts with `pay_`)
@@ -2960,6 +2965,7 @@ export function handleRazorpayError(error: any): string {
 | Wallet | 1-2 business days |
 
 **Non-refundable:**
+
 - Partial month charges after the 7-day period
 - Service used during the billing period
 - Fees charged by payment gateways
@@ -2970,30 +2976,32 @@ export function handleRazorpayError(error: any): string {
 
 **For Indian Users (INR):**
 
-| Payment Method | Supported | Notes |
-|----------------|-----------|-------|
-| **Credit Cards** | Visa, Mastercard, Amex, Diners, RuPay | All major cards accepted |
-| **Debit Cards** | Visa, Mastercard, RuPay | Including international debit cards |
-| **UPI** | All UPI apps | GPay, PhonePe, Paytm, BHIM, etc. |
-| **Net Banking** | 50+ banks | HDFC, ICICI, SBI, Axis, and more |
-| **Wallets** | Paytm, PhonePe, Amazon Pay, Mobikwik | Instant payment |
-| **EMI** | Credit Card EMI | 3, 6, 9, 12-month options (Pro/Premium annual plans) |
-| **Pay Later** | Simpl, LazyPay | Buy now, pay later options |
+| Payment Method   | Supported                             | Notes                                                |
+| ---------------- | ------------------------------------- | ---------------------------------------------------- |
+| **Credit Cards** | Visa, Mastercard, Amex, Diners, RuPay | All major cards accepted                             |
+| **Debit Cards**  | Visa, Mastercard, RuPay               | Including international debit cards                  |
+| **UPI**          | All UPI apps                          | GPay, PhonePe, Paytm, BHIM, etc.                     |
+| **Net Banking**  | 50+ banks                             | HDFC, ICICI, SBI, Axis, and more                     |
+| **Wallets**      | Paytm, PhonePe, Amazon Pay, Mobikwik  | Instant payment                                      |
+| **EMI**          | Credit Card EMI                       | 3, 6, 9, 12-month options (Pro/Premium annual plans) |
+| **Pay Later**    | Simpl, LazyPay                        | Buy now, pay later options                           |
 
 **For International Users (USD):**
 
-| Payment Method | Supported | Notes |
-|----------------|-----------|-------|
-| **Credit Cards** | Visa, Mastercard, Amex | International cards |
-| **Debit Cards** | Visa, Mastercard | Must be enabled for international transactions |
-| **PayPal** | Coming Soon | Planned for future release |
+| Payment Method   | Supported              | Notes                                          |
+| ---------------- | ---------------------- | ---------------------------------------------- |
+| **Credit Cards** | Visa, Mastercard, Amex | International cards                            |
+| **Debit Cards**  | Visa, Mastercard       | Must be enabled for international transactions |
+| **PayPal**       | Coming Soon            | Planned for future release                     |
 
 **Recurring Payments:**
+
 - Subscriptions use **auto-debit** for recurring charges
 - Supported for: Cards (domestic & international), UPI Autopay, eNACH, eMandate
 - You'll receive email reminders 3 days before each charge
 
 **Payment Security:**
+
 - All payments are processed through **Razorpay** (PCI-DSS Level 1 compliant)
 - Card details are never stored on our servers
 - 3D Secure (OTP) verification for added security
@@ -3005,27 +3013,29 @@ export function handleRazorpayError(error: any): string {
 **Yes!** We offer USD pricing for international users.
 
 **How currency is determined:**
+
 1. **Automatic detection**: Based on your IP address location
 2. **Manual selection**: You can choose your preferred currency at checkout
 
 **USD Pricing:**
 
-| Plan | Monthly | Yearly (2 months free) |
-|------|---------|------------------------|
-| Pro | $9.99/month | $99.90/year |
-| Premium | $19.99/month | $199.90/year |
+| Plan    | Monthly      | Yearly (2 months free) |
+| ------- | ------------ | ---------------------- |
+| Pro     | $9.99/month  | $99.90/year            |
+| Premium | $19.99/month | $199.90/year           |
 
 **Important Notes for International Payments:**
 
-| Aspect | Details |
-|--------|---------|
-| **Currency conversion** | No conversion fees from our side. Your bank may charge forex fees. |
-| **Card requirements** | Card must be enabled for international transactions |
-| **Billing address** | International address accepted |
-| **Invoices** | Generated in USD with international format |
-| **Taxes** | No GST for international transactions. Local taxes may apply based on your country. |
+| Aspect                  | Details                                                                             |
+| ----------------------- | ----------------------------------------------------------------------------------- |
+| **Currency conversion** | No conversion fees from our side. Your bank may charge forex fees.                  |
+| **Card requirements**   | Card must be enabled for international transactions                                 |
+| **Billing address**     | International address accepted                                                      |
+| **Invoices**            | Generated in USD with international format                                          |
+| **Taxes**               | No GST for international transactions. Local taxes may apply based on your country. |
 
 **Switching Currency:**
+
 - You can change currency only when creating a new subscription
 - Existing subscriptions cannot switch currency mid-cycle
 - Cancel current subscription and re-subscribe with preferred currency
@@ -3041,22 +3051,24 @@ We accept payments from **100+ countries**. Some countries may have restrictions
 
 **How Pausing Works:**
 
-| Aspect | Details |
-|--------|---------|
+| Aspect                      | Details                                                   |
+| --------------------------- | --------------------------------------------------------- |
 | **When pause takes effect** | End of current billing cycle (you keep access until then) |
-| **Maximum pause duration** | 3 billing cycles |
-| **Access during pause** | Downgraded to Free plan limits |
-| **Content** | All content preserved, no deletion |
-| **Resumption** | Manual or automatic after pause period |
-| **Billing** | No charges during pause period |
+| **Maximum pause duration**  | 3 billing cycles                                          |
+| **Access during pause**     | Downgraded to Free plan limits                            |
+| **Content**                 | All content preserved, no deletion                        |
+| **Resumption**              | Manual or automatic after pause period                    |
+| **Billing**                 | No charges during pause period                            |
 
 **How to pause:**
+
 1. Go to **Settings > Subscription**
 2. Click **Pause Subscription**
 3. Select pause duration (1-3 cycles)
 4. Confirm pause
 
 **During pause period:**
+
 - Account functions like Free plan
 - Collaborator access becomes read-only (if over limit)
 - AI features disabled
@@ -3064,6 +3076,7 @@ We accept payments from **100+ countries**. Some countries may have restrictions
 - All content remains intact
 
 **Resuming your subscription:**
+
 - Click **Resume Subscription** in Settings
 - Or subscription auto-resumes after pause period ends
 - Full premium access restored immediately
@@ -3071,15 +3084,16 @@ We accept payments from **100+ countries**. Some countries may have restrictions
 
 **Pause vs Cancel:**
 
-| Feature | Pause | Cancel |
-|---------|-------|--------|
-| Content preserved | Yes | Yes |
-| Subscription saved | Yes | No (must re-subscribe) |
-| Auto-resume option | Yes | No |
-| Same pricing guaranteed | Yes | No (price may change) |
-| Maximum duration | 3 cycles | Permanent |
+| Feature                 | Pause    | Cancel                 |
+| ----------------------- | -------- | ---------------------- |
+| Content preserved       | Yes      | Yes                    |
+| Subscription saved      | Yes      | No (must re-subscribe) |
+| Auto-resume option      | Yes      | No                     |
+| Same pricing guaranteed | Yes      | No (price may change)  |
+| Maximum duration        | 3 cycles | Permanent              |
 
 **Limitations:**
+
 - Cannot pause during first billing cycle
 - Cannot pause if payment is overdue
 - Annual plans: Pause extends end date (no refund for pause period)
@@ -3107,14 +3121,14 @@ We accept payments from **100+ countries**. Some countries may have restrictions
 
 #### What happens if my payment fails?
 
-| Day | Action |
-|-----|--------|
-| Day 0 | Payment fails, you're notified via email |
-| Day 1-3 | Razorpay retries payment automatically |
-| Day 3 | Warning notification, subscription marked as "pending" |
-| Day 7 | Final retry attempt |
-| Day 7+ | Subscription marked as "halted", access limited |
-| Day 14 | Subscription cancelled, downgraded to Free |
+| Day     | Action                                                 |
+| ------- | ------------------------------------------------------ |
+| Day 0   | Payment fails, you're notified via email               |
+| Day 1-3 | Razorpay retries payment automatically                 |
+| Day 3   | Warning notification, subscription marked as "pending" |
+| Day 7   | Final retry attempt                                    |
+| Day 7+  | Subscription marked as "halted", access limited        |
+| Day 14  | Subscription cancelled, downgraded to Free             |
 
 **To resolve:** Update your payment method or ensure sufficient balance.
 
@@ -3129,6 +3143,7 @@ Yes! Invoices are automatically generated for every payment.
 #### Is there a free trial?
 
 Currently, we don't offer a free trial. However:
+
 - **Free plan** gives you access to core features
 - **7-day refund policy** acts as a risk-free trial period
 - Upgrade when you need premium features
@@ -3142,3 +3157,261 @@ Currently, we don't offer a free trial. However:
 - [Razorpay Webhooks](https://razorpay.com/docs/webhooks/)
 - [Razorpay Test Mode](https://razorpay.com/docs/payments/payments/test-mode/)
 - [Razorpay Node.js SDK](https://github.com/razorpay/razorpay-node)
+
+---
+
+# CoinOrder Payment Feature — Security & Improvement Review
+
+## Overall Assessment
+
+The architecture is **solid** — atomic DB transitions, `timingSafeEqual` for HMAC, `withTransaction` for ledger consistency, and a proper idempotency guard. However, there are **several security gaps and code-quality issues** that should be addressed before going to production.
+
+---
+
+## 🔴 Critical Security Issues
+
+### 1. Webhook Endpoint Is Unauthenticated & Has No Rate Limit
+
+**File:** [`coinOrder.route.ts`](file:///Users/mac/Desktop/dhruv/story_chain_be/src/features/coinOrder/routes/coinOrder.route.ts#L56-L66)
+
+The `/webhook/razorpay` route has **no `preHandler`** at all. While the HMAC check inside the service is correct, anyone can call this endpoint and trigger the full parsing + DB lookup path before the signature check even runs. You should add a rate-limiter specifically on this route.
+
+```diff
+  fastify.post(
+    CoinOrderApiRoutes.WebHook,
+    {
+      config: { rawBody: true },
++     // Limit webhook calls: Razorpay retries at most a few dozen times per event
++     // This prevents DoS on the DB lookup path before the signature check
++     rateLimit: { max: 100, timeWindow: '1 minute' },
+      schema: { ... },
+    },
+    CoinOrderController.verifyWebHook
+  );
+```
+
+---
+
+### 2. Missing `signature` Null/Empty Guard Before HMAC Comparison
+
+**File:** [`coinOrder.controller.ts`](file:///Users/mac/Desktop/dhruv/story_chain_be/src/features/coinOrder/controllers/coinOrder.controller.ts#L47-L48)
+
+If `x-razorpay-signature` header is missing, `signature` is `undefined`. Passing `undefined` to `Buffer.from(razorpaySignatureHeader, 'hex')` will throw a misleading `TypeError`, not your clean `ApiError.unauthorized`.
+
+```diff
+  const signature = req.headers['x-razorpay-signature'] as string;
++ if (!signature) {
++   throw ApiError.unauthorized('MISSING_SIGNATURE', 'Missing Razorpay signature header');
++ }
+```
+
+---
+
+### 3. Webhook Payload Is Parsed Without Size Limit or Schema Validation
+
+**File:** [`coinOrder.service.ts`](file:///Users/mac/Desktop/dhruv/story_chain_be/src/features/coinOrder/services/coinOrder.service.ts#L209-L210)
+
+```ts
+const event = JSON.parse(rawBody.toString('utf8'));
+const eventType: string = event.event;
+```
+
+- **No size guard** — a huge `rawBody` can OOM-kill the process.
+- **No schema validation** — `event.payload.payment.entity` is accessed with zero guards. A malformed payload will throw a runtime `TypeError` that propagates as an unhandled 500, or worse, silently break out of the `switch`.
+
+```ts
+// Add before the switch:
+if (rawBody.length > 1_048_576) {
+  // 1 MB hard limit
+  throw ApiError.badRequest('PAYLOAD_TOO_LARGE', 'Webhook payload exceeds size limit');
+}
+
+const event = JSON.parse(rawBody.toString('utf8'));
+if (!event?.event || !event?.payload?.payment?.entity) {
+  this.logger.warn('[Webhook] Malformed payload structure — rejected');
+  return { received: true }; // Still 200 so Razorpay doesn't retry
+}
+```
+
+---
+
+### 4. `razorpayOrderId` Cross-Validation Missing in `verifyPayment`
+
+**File:** [`coinOrder.service.ts`](file:///Users/mac/Desktop/dhruv/story_chain_be/src/features/coinOrder/services/coinOrder.service.ts#L106-L113)
+
+You look up the order with `{ _id: coinOrderId, userId }` but **never verify** that the `razorpayOrderId` in the request body matches the stored `order.razorpayOrderId`. A user with a valid `coinOrderId` could substitute another payment's `razorpayOrderId`+`razorpayPaymentId`+`signature` and pass the HMAC check (since the signature only needs to be internally consistent, not tied to a specific order in your DB).
+
+```diff
+  // After fetching the order:
++ if (order.razorpayOrderId !== razorpayOrderId) {
++   this.logger.warn(`[verifyPayment] razorpayOrderId mismatch for order ${coinOrderId}`);
++   throw ApiError.badRequest('ORDER_MISMATCH', 'Payment details do not match the order');
++ }
+```
+
+---
+
+## 🟠 High-Priority Improvements
+
+### 5. `bundleSlug` Not Validated for Format in Schema
+
+**File:** [`coinOrder.schema.ts`](file:///Users/mac/Desktop/dhruv/story_chain_be/src/schema/request/coinOrder.schema.ts#L3-L7)
+
+`bundleSlug` accepts any string including empty strings or injection-like patterns:
+
+```diff
+  bundleSlug: z
+-   .string({ required_error: 'Bundle slug is required' }),
++   .string({ required_error: 'Bundle slug is required' })
++   .trim()
++   .min(1, 'Bundle slug cannot be empty')
++   .max(100, 'Bundle slug is too long')
++   .regex(/^[a-z0-9-_]+$/, 'Bundle slug contains invalid characters'),
+```
+
+---
+
+### 6. `verifyPayment` Does Not Check `razorpaySignature` Pattern
+
+**File:** [`coinOrder.schema.ts`](file:///Users/mac/Desktop/dhruv/story_chain_be/src/schema/request/coinOrder.schema.ts#L24-L28)
+
+The signature is always a 64-character lowercase hex string. Accepting arbitrary strings wastes HMAC computation time on clearly invalid inputs:
+
+```diff
+  razorpaySignature: z
+    .string(...)
+    .trim()
+-   .min(1, '...'),
++   .min(64, 'Invalid signature format')
++   .max(64, 'Invalid signature format')
++   .regex(/^[a-f0-9]{64}$/, 'Signature must be a valid HMAC hex string'),
+```
+
+Similarly, `razorpayOrderId` should match Razorpay's `order_*` format and `razorpayPaymentId` should match `pay_*`.
+
+---
+
+### 7. `order.status === PENDING` Not Re-Validated Before Signature Check
+
+**File:** [`coinOrder.service.ts`](file:///Users/mac/Desktop/dhruv/story_chain_be/src/features/coinOrder/services/coinOrder.service.ts#L122-L139)
+
+You check `PAID` and `FAILED` statuses, but you don't have a guard for `REFUNDED`. If a refunded order somehow ends up back in verify-payment flow, it would proceed to the DB transaction and attempt to credit coins again.
+
+```diff
++ if (order.status === CoinOrderStatus.REFUNDED) {
++   throw ApiError.badRequest('ORDER_REFUNDED', 'This order has been refunded and cannot be verified');
++ }
+```
+
+---
+
+### 8. Webhook `payment.failed` Does Not Validate `failureReason` Length
+
+**File:** [`coinOrder.service.ts`](file:///Users/mac/Desktop/dhruv/story_chain_be/src/features/coinOrder/services/coinOrder.service.ts#L290-L293)
+
+`payment.error_description` from Razorpay is external data and could theoretically be very long. Your model caps `failureReason` at 300 chars, but there's no truncation guard in the service layer — Mongoose will throw a `ValidationError` at the DB level, which becomes an unhandled 500.
+
+```diff
+  const failureReason: string =
+    payment.error_description ?? payment.error_code ?? 'Unknown failure';
++ const safeFailureReason = String(failureReason).slice(0, 300);
+
+- await this.coinOrderRepo.markAsFailed(razorpayOrderId, failureReason);
++ await this.coinOrderRepo.markAsFailed(razorpayOrderId, safeFailureReason);
+```
+
+---
+
+## 🟡 Medium-Priority / Code Quality
+
+### 9. `order._id` Passed as ID Type — Ensure String Compatibility
+
+**File:** [`coinOrder.service.ts`](file:///Users/mac/Desktop/dhruv/story_chain_be/src/features/coinOrder/services/coinOrder.service.ts#L173)
+
+```ts
+coinOrderId: order._id,
+```
+
+`order` comes from `.lean<ICoinOrder>()` where `_id` is typed as `ID`. If `ID` is `string | Types.ObjectId`, this is ambiguous. The `coinTxRepo.appendLedgerEntry` may store it inconsistently (as `ObjectId` in one path, as `string` in another via the webhook). Use `String(order._id)` or `order._id.toString()` for consistency.
+
+---
+
+### 10. `createOrder` Does Not Lock Against Duplicate Bundle+User Orders
+
+**File:** [`coinOrder.service.ts`](file:///Users/mac/Desktop/dhruv/story_chain_be/src/features/coinOrder/services/coinOrder.service.ts#L29-L100)
+
+If a user double-taps "Buy", two Razorpay orders and two DB coin orders will be created. Consider checking for an existing `pending` order for the same `userId + bundleSlug` before creating a new Razorpay order, or at least log a warning.
+
+---
+
+### 11. Sensitive Data Logged in Plaintext
+
+**File:** [`coinOrder.service.ts`](file:///Users/mac/Desktop/dhruv/story_chain_be/src/features/coinOrder/services/coinOrder.service.ts#L85)
+
+```ts
+this.logInfo(`CoinOrder created: ${coinOrder._id} | Razorpay: ${rzpOrder.id}`);
+```
+
+This is fine. But make sure `razorpaySignature` is **never** logged anywhere (check your log aggregator). Currently it isn't — but a future dev adding debug logging could accidentally expose it.
+
+> **Recommendation**: Add a JSDoc comment on `razorpaySignature` in the type interface explicitly marking it as PII / never-log.
+
+---
+
+### 12. `balanceBefore` Calculation Is Susceptible to Race (Minor)
+
+**File:** [`coinOrder.service.ts`](file:///Users/mac/Desktop/dhruv/story_chain_be/src/features/coinOrder/services/coinOrder.service.ts#L161-L162)
+
+```ts
+const balanceAfter = updatedWallet.balance;
+const balanceBefore = balanceAfter - order.totalCoins;
+```
+
+If `walletRepo.creditCoins` does an atomic `$inc`, `balanceBefore` is correct. But if ever refactored to a find-then-set pattern, this would be wrong. Consider having `creditCoins` return both `{ before, after }` for resilience.
+
+---
+
+### 13. `findByRazorpayOrderId` Has No Index Usage Comment
+
+**File:** [`coinOrder.repository.ts`](file:///Users/mac/Desktop/dhruv/story_chain_be/src/features/coinOrder/repositories/coinOrder.repository.ts#L62-L64)
+
+`razorpayOrderId` has `unique: true` on the schema (implicitly indexed) — good. But add a lean() type annotation and make sure it can't be used as a general-purpose lookup without the index:
+
+```ts
+return this.model
+  .findOne({ razorpayOrderId })
+  .select('-razorpaySignature') // never return signature in read paths
+  .lean<ICoinOrder>()
+  .exec();
+```
+
+---
+
+## ✅ What Is Already Done Well
+
+| Area                      | What's Good                                                               |
+| ------------------------- | ------------------------------------------------------------------------- |
+| **HMAC verification**     | `timingSafeEqual` prevents timing attacks on both payment & webhook paths |
+| **Race-condition guard**  | Atomic `{ status: 'pending' }` filter in `markAsPaid` is correct          |
+| **Webhook idempotency**   | Checks `PAID` before attempting DB write in webhook handler               |
+| **MongoDB transactions**  | `withTransaction` wraps wallet credit + ledger entry atomically           |
+| **Credential switching**  | TEST vs LIVE key selection by `NODE_ENV` in `RazorpayService`             |
+| **Raw body preservation** | `fastify-raw-body` + `encoding: false` for correct HMAC on webhook        |
+| **Signature comparison**  | `timingSafeEqual` used correctly in `verifyWebhookSignature`              |
+
+---
+
+## Priority Fix Summary
+
+| #   | Severity    | File                      | Fix                                                   |
+| --- | ----------- | ------------------------- | ----------------------------------------------------- |
+| 4   | 🔴 Critical | `coinOrder.service.ts`    | Cross-validate `razorpayOrderId` vs stored order      |
+| 2   | 🔴 Critical | `coinOrder.controller.ts` | Guard against missing signature header                |
+| 3   | 🔴 Critical | `coinOrder.service.ts`    | Validate webhook payload structure + add size limit   |
+| 1   | 🔴 Critical | `coinOrder.route.ts`      | Add rate limiter to webhook route                     |
+| 7   | 🟠 High     | `coinOrder.service.ts`    | Guard `REFUNDED` status in `verifyPayment`            |
+| 5   | 🟠 High     | `coinOrder.schema.ts`     | Add format validation to `bundleSlug`                 |
+| 6   | 🟠 High     | `coinOrder.schema.ts`     | Add hex pattern + length check to `razorpaySignature` |
+| 8   | 🟠 High     | `coinOrder.service.ts`    | Truncate `failureReason` before DB write              |
+| 9   | 🟡 Medium   | `coinOrder.service.ts`    | Use `String(order._id)` for ledger entry consistency  |
+| 10  | 🟡 Medium   | `coinOrder.service.ts`    | Debounce/guard duplicate pending orders               |

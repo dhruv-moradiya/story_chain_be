@@ -53,6 +53,9 @@ export async function coinOrderRoutes(fastify: FastifyInstance) {
     CoinOrderController.verifyPayment
   );
 
+  // Fix #4: Rate-limit the webhook endpoint — it has no auth middleware, so anyone
+  // can hammer it before the HMAC check runs. Razorpay retries at most a few dozen
+  // times per event, so 100 req/min is more than enough for legitimate traffic.
   fastify.post(
     CoinOrderApiRoutes.WebHook,
     {
@@ -61,6 +64,8 @@ export async function coinOrderRoutes(fastify: FastifyInstance) {
         description: 'Razorpay webhook receiver — payment.captured / payment.failed',
         tags: ['coin-order'],
       },
+      // @ts-expect-error — @fastify/rate-limit decorates the route options at runtime
+      rateLimit: { max: 100, timeWindow: '1 minute' },
     },
     CoinOrderController.verifyWebHook
   );
