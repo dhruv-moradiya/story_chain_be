@@ -19,6 +19,12 @@ enum CoinTxType {
    */
   PLATFORM_FEE = 'platform_fee',
 
+  /**
+   * Coins distributed from the StoryEarningsPool to a collaborator's wallet.
+   * direction: credit (for the collaborator receiving the payout).
+   */
+  EARNINGS_DISTRIBUTION = 'earnings_distribution',
+
   // Debits
   CHAPTER_UNLOCK = 'chapter_unlock',
   WITHDRAWAL = 'withdrawal',
@@ -33,6 +39,7 @@ const COIN_TX_TYPES = [
   'admin_credit',
   'story_pool_credit',
   'platform_fee',
+  'earnings_distribution',
   'chapter_unlock',
   'withdrawal',
   'admin_debit',

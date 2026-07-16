@@ -76,6 +76,12 @@ class CollaboratorQueryService extends BaseModule implements ICollaboratorQueryS
 
     return null;
   }
+
+  async ensureOwner(slug: string, userId: string) {
+    const isOwner = await this.storyCollaboratorRepo.isOwner(slug, userId);
+
+    return isOwner;
+  }
 }
 
 export { CollaboratorQueryService };

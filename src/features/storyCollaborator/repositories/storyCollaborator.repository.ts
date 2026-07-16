@@ -6,7 +6,7 @@ import { BaseRepository } from '@utils/baseClass';
 import { ClientSession, PipelineStage } from 'mongoose';
 import { IStoryCollaborator, IStoryCollaboratorDoc } from '../types/storyCollaborator.types';
 
-import { StoryCollaboratorStatus } from '../types/storyCollaborator-enum';
+import { StoryCollaboratorRole, StoryCollaboratorStatus } from '../types/storyCollaborator-enum';
 
 export class StoryCollaboratorRepository extends BaseRepository<
   IStoryCollaborator,
@@ -90,5 +90,9 @@ export class StoryCollaboratorRepository extends BaseRepository<
 
   async findUserStories(userId: string) {
     return this.model.find({ userId, status: StoryCollaboratorStatus.ACCEPTED });
+  }
+
+  async isOwner(slug: string, userId: string) {
+    return this.model.exists({ slug, userId, role: StoryCollaboratorRole.OWNER });
   }
 }
