@@ -64,3 +64,42 @@ export const countWordsFromHTML = (html: string): number => {
 
   return cleaned.split(' ').length;
 };
+
+/**
+ * Normalizes plain text for storage.
+ * Safe for titles, descriptions, comments, bios, etc.
+ */
+export function sanitizeText(text: string): string {
+  return (
+    text
+      // Normalize Unicode
+      .normalize('NFKC')
+
+      // Remove control characters (keep \n and \t)
+      // eslint-disable-next-line no-control-regex
+      .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
+
+      // Remove zero-width & invisible characters
+      .replace(/[\u200B-\u200D\u2060\uFEFF]/g, '')
+
+      // Normalize line endings
+      .replace(/\r\n?/g, '\n')
+
+      // Replace tabs with spaces
+      .replace(/\t/g, ' ')
+
+      // Collapse consecutive spaces
+      .replace(/[ ]{2,}/g, ' ')
+
+      // Collapse excessive blank lines
+      .replace(/\n{3,}/g, '\n\n')
+
+      // Trim each line
+      .split('\n')
+      .map((line) => line.trim())
+      .join('\n')
+
+      // Trim the entire string
+      .trim()
+  );
+}

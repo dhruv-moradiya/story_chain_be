@@ -190,6 +190,20 @@ export class StoryRepository extends BaseRepository<IStory, IStoryDoc> {
       .exec();
   }
 
+  /** Increment totalReads counter by story slug */
+  async incrementTotalReads(
+    slug: string,
+    options: IOperationOptions = {}
+  ): Promise<{ acknowledged: boolean; modifiedCount: number; matchedCount: number }> {
+    return this.model
+      .updateOne(
+        { slug },
+        { $inc: { 'stats.totalReads': 1 }, $set: { lastActivityAt: new Date() } },
+        { session: options.session }
+      )
+      .exec();
+  }
+
   async rootChapterExists(slug: string, options: IOperationOptions = {}): Promise<boolean> {
     const story = await this.model
       .findOne({ slug }, { 'stats.totalChapters': 1 }, { session: options.session })

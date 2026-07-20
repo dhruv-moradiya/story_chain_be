@@ -56,6 +56,8 @@ import { WalletRepository } from '@/features/wallet/repositories/wallet.reposito
 import { CoinTransactionRepository } from '@/features/coinTransaction/repositories/coinTransaction.repository';
 import { ChapterUnlockRepository } from '@/features/chapterUnlock/respositories/chapterUnlock.repository';
 import { VoteRepository } from '@/shared/services/vote.repository';
+import { FollowRepository } from '@/features/follow/repositories/follow.repository';
+import { GalleryImageRepository } from '@/features/galleryImage/repositories/galleryImage.repository';
 
 // ═══════════════════════════════════════════
 // FEATURE SERVICES
@@ -98,6 +100,8 @@ import { CoinBundleService } from '@features/coinBundle/services/coinBundle.serv
 import { CoinOrderService } from '@/features/coinOrder/services/coinOrder.service';
 import { VoteService } from '@/shared/services/vote.service';
 import { WalletService } from '@/features/wallet/service/wallet.service';
+import { FollowService } from '@/features/follow/services/follow.service';
+import { GalleryImageService } from '@/features/galleryImage/services/galleryImage.service';
 
 // ═══════════════════════════════════════════
 // CONTROLLERS
@@ -121,6 +125,8 @@ import { PRQueryController } from '@features/pullRequest/controllers/prQuery.con
 import { CoinBundleController } from '@features/coinBundle/controllers/coinBundle.controller';
 import { CoinOrderController } from '@/features/coinOrder/controllers/coinOrder.controller';
 import { WalletController } from '@/features/wallet/controllers/waller.controller';
+import { FollowController } from '@/features/follow/controllers/follow.controller';
+import { GalleryImageController } from '@/features/galleryImage/controllers/galleryImage.controller';
 
 // ═══════════════════════════════════════════
 // MIDDLEWARE FACTORIES
@@ -231,6 +237,8 @@ export function registerServices(): void {
   container.register(TOKENS.CoinTransactionRepository, { useClass: CoinTransactionRepository });
   container.register(TOKENS.ChapterUnlockRepository, { useClass: ChapterUnlockRepository });
   container.register(TOKENS.VoteRepository, { useClass: VoteRepository });
+  container.register(TOKENS.FollowRepository, { useClass: FollowRepository });
+  container.register(TOKENS.GalleryImageRepository, { useClass: GalleryImageRepository });
 
   // ═══════════════════════════════════════════
   // FEATURE SERVICES
@@ -276,6 +284,8 @@ export function registerServices(): void {
   container.register(TOKENS.CoinOrderService, { useClass: CoinOrderService });
   container.register(TOKENS.VoteService, { useClass: VoteService });
   container.register(TOKENS.WalletService, { useClass: WalletService });
+  container.register(TOKENS.FollowService, { useClass: FollowService });
+  container.register(TOKENS.GalleryImageService, { useClass: GalleryImageService });
 
   // ═══════════════════════════════════════════
   // CONTROLLERS
@@ -299,6 +309,8 @@ export function registerServices(): void {
   container.register(TOKENS.CoinBundleController, { useClass: CoinBundleController });
   container.register(TOKENS.CoinOrderController, { useClass: CoinOrderController });
   container.register(TOKENS.WalletController, { useClass: WalletController });
+  container.register(TOKENS.FollowController, { useClass: FollowController });
+  container.register(TOKENS.GalleryImageController, { useClass: GalleryImageController });
 
   // ═══════════════════════════════════════════
   // MIDDLEWARE FACTORIES

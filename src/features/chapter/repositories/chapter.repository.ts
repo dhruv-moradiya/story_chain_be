@@ -174,17 +174,18 @@ export class ChapterRepository extends BaseRepository<IChapter, IChapterDoc> {
 
     return results[0] || null;
   }
+  /** Increment total read count — called on every qualified read */
   async incrementReads(slug: string) {
     return this.model
-      .findOneAndUpdate(
-        { slug },
-        {
-          $inc: {
-            'stats.reads': 1,
-            'stats.uniqueReaders': 1,
-          },
-        }
-      )
+      .findOneAndUpdate({ slug }, { $inc: { 'stats.reads': 1 } })
+      .lean()
+      .exec();
+  }
+
+  /** Increment unique readers — called only the FIRST time a user qualifies for a chapter */
+  async incrementUniqueReaders(slug: string) {
+    return this.model
+      .findOneAndUpdate({ slug }, { $inc: { 'stats.uniqueReaders': 1 } })
       .lean()
       .exec();
   }

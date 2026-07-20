@@ -7,6 +7,7 @@ import {
 import { IReadingHistoryResponse } from '@/types/response/readingHistory.types.js';
 import { BaseModule } from '@/utils/baseClass.js';
 import { ChapterRepository } from '@features/chapter/repositories/chapter.repository.js';
+import { StoryRepository } from '@features/story/repositories/story.repository.js';
 import { inject, singleton } from 'tsyringe';
 import { ReadingHistoryRepository } from '../repositories/readingHistory.repository.js';
 import { IReadingHistoryService } from './interfaces/index.js';
@@ -17,11 +18,14 @@ class ReadingHistoryService extends BaseModule implements IReadingHistoryService
     @inject(TOKENS.ReadingHistoryRepository)
     private readonly readingHistoryRepository: ReadingHistoryRepository,
     @inject(TOKENS.ChapterRepository)
-    private readonly chapterRepository: ChapterRepository
+    private readonly chapterRepository: ChapterRepository,
+    @inject(TOKENS.StoryRepository)
+    private readonly storyRepository: StoryRepository
   ) {
     super();
   }
 
+  // DEPRECATED SERVICE NOW NOT IN USE
   async upsert(input: IRecordHeartBeatDTO): Promise<IReadingHistoryResponse> {
     const { chapterSlug } = input;
 
@@ -130,8 +134,15 @@ class ReadingHistoryService extends BaseModule implements IReadingHistoryService
       );
 
       if (qualifyResult) {
-        // STEP 4 — Increment Chapter stats
-        await this.chapterRepository.incrementReads(input.chapterSlug);
+        // STEP 4 — Increment Chapter & Story stats
+        // qualifyResult is atomic and only true the FIRST time a user qualifies
+        // for this chapter (hasQualifiedRead: false → true), so uniqueReaders
+        // is safely incremented only once per user per chapter.
+        await Promise.all([
+          this.chapterRepository.incrementReads(input.chapterSlug),
+          this.chapterRepository.incrementUniqueReaders(input.chapterSlug),
+          this.storyRepository.incrementTotalReads(input.storySlug),
+        ]);
       }
     }
   }

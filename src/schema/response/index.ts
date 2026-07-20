@@ -104,3 +104,6 @@ export { PullRequestSchema, PullRequestResponses } from './pullRequest.response.
 
 // Coin Bundle
 export { CoinBundleSchema, CoinBundleResponses } from './coinBundle.response.js';
+
+// Gallery Image
+export { GalleryImageSchema, GalleryImageResponses } from './galleryImage.response.js';

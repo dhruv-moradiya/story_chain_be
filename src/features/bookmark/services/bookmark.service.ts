@@ -48,7 +48,7 @@ export class BookmarkService extends BaseModule implements IBookmarkService {
   async getBookmarks(
     userId: string,
     input: TGetBookmarksQueryInput
-  ): Promise<{ docs: any[] } & IPagination> {
+  ): Promise<{ docs: unknown[] } & IPagination> {
     const { query, order, limit, page } = input;
 
     const builder = new BookmarkPipelineBuilder().findByUserId(userId);

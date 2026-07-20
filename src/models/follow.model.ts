@@ -6,13 +6,11 @@ const followSchema = new Schema<IFollowDoc>({
     type: String,
     ref: 'User',
     required: true,
-    index: true,
   },
   followingId: {
     type: String,
     ref: 'User',
     required: true,
-    index: true,
   },
   createdAt: {
     type: Date,

@@ -15,6 +15,7 @@ import { analyticsRoutes } from '@/features/readingHistory/routes/analytics.rout
 import { coinBundleRoutes } from '@/features/coinBundle/routes/coinBundle.routes';
 import { coinOrderRoutes } from '@/features/coinOrder/routes/coinOrder.route';
 import { walletRoutes } from '@/features/wallet/routes/waller.route';
+import { galleryImageRoutes } from '@/features/galleryImage/routes/galleryImage.routes';
 
 enum ApiRoute {
   USERS = '/api/users',
@@ -31,6 +32,7 @@ enum ApiRoute {
   COIN_BUNDLES = '/api/coin-bundles',
   COIN_ORDER = '/api/coin-orders',
   WALLET = '/api/wallet',
+  GALLERY_IMAGES = '/api/gallery-images',
 }
 
 export async function registerRoutes(fastify: FastifyInstance) {
@@ -50,4 +52,5 @@ export async function registerRoutes(fastify: FastifyInstance) {
   fastify.register(coinBundleRoutes, { prefix: ApiRoute.COIN_BUNDLES });
   fastify.register(coinOrderRoutes, { prefix: ApiRoute.COIN_ORDER });
   fastify.register(walletRoutes, { prefix: ApiRoute.WALLET });
+  fastify.register(galleryImageRoutes, { prefix: ApiRoute.GALLERY_IMAGES });
 }

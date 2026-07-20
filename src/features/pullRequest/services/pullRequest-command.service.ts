@@ -24,7 +24,7 @@ import { IPullRequest } from '../types/pullRequest.types';
 import { PRStatus } from '../types/pullRequest-enum';
 
 import { ICreatePRFromAutoSaveDTO, ICreatePRFromDraftDTO } from '@dto/pullRequest.dto';
-import { countWordsFromHTML } from '@/utils/sanitizer';
+import { countWordsFromHTML, sanitizeText } from '@/utils/sanitizer';
 import { createSlug } from '@/utils/helpter';
 import { NotificationService } from '@/features/notification/services/notification.service';
 
@@ -32,9 +32,10 @@ import { NotificationService } from '@/features/notification/services/notificati
 // Helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
-function calculateReadingMinutes(wordCount: number): number {
-  // average reading speed: 200 wpm
-  return Math.ceil(wordCount / 200);
+const WORDS_PER_MINUTE = 200;
+
+export function calculateReadingMinutes(wordCount: number): number {
+  return Math.max(1, Math.ceil(wordCount / WORDS_PER_MINUTE));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -356,8 +357,8 @@ export class PullRequestCommandService extends BaseModule {
       // 7. Create the PullRequest document
       const pr = await this.prRepo.create({
         data: {
-          title: title.trim(),
-          description: description?.trim() ?? '',
+          title: sanitizeText(title),
+          description: sanitizeText(description ?? ''),
           storySlug,
           chapterSlug,
           parentChapterSlug,
@@ -370,7 +371,9 @@ export class PullRequestCommandService extends BaseModule {
           },
           status: PRStatus.OPEN,
           isDraft,
-          ...(isDraft && draftReason ? { draftReason, draftedAt: new Date() } : {}),
+          ...(isDraft && draftReason
+            ? { draftReason: sanitizeText(draftReason), draftedAt: new Date() }
+            : {}),
           autoApprove: this.buildAutoApproveConfig(story),
           approvalsStatus: this.buildApprovalsStatus(story),
           labels: [],
