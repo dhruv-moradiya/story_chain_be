@@ -57,7 +57,11 @@ class StoryPipelineBuilder extends BasePipelineBuilder<StoryPipelineBuilder> {
             {
               $match: {
                 $expr: {
-                  $and: [{ $eq: ['$slug', '$$storySlug'] }, { $eq: ['$userId', userId] }],
+                  $and: [
+                    { $eq: ['$slug', '$$storySlug'] },
+                    { $eq: ['$userId', userId] },
+                    { $eq: ['$status', 'accepted'] },
+                  ],
                 },
               },
             },
@@ -72,7 +76,7 @@ class StoryPipelineBuilder extends BasePipelineBuilder<StoryPipelineBuilder> {
         $match: {
           $or: [
             { creatorId: userId }, // User is the creator
-            { 'isCollaborator.0': { $exists: true } }, // User is a collaborator
+            { 'isCollaborator.0': { $exists: true } }, // User is an accepted collaborator
           ],
         },
       },

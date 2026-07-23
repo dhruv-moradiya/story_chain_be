@@ -303,11 +303,31 @@ class ChapterPipelineBuilder extends BasePipelineBuilder<ChapterPipelineBuilder>
         },
       },
       {
+        $lookup: {
+          from: 'stories',
+          let: { storySlug: '$storySlug' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [{ $eq: ['$slug', '$$storySlug'] }, { $eq: ['$creatorId', userId] }],
+                },
+              },
+            },
+            { $limit: 1 },
+          ],
+          as: 'storyCreator',
+        },
+      },
+      {
         $addFields: {
           isUnlock: {
             $or: [
+              { $lte: [{ $ifNull: ['$coinPrice', 0] }, 0] },
+              { $eq: ['$authorId', userId] },
               { $gt: [{ $size: '$chapterUnlock' }, 0] },
               { $gt: [{ $size: '$storyCollaborator' }, 0] },
+              { $gt: [{ $size: '$storyCreator' }, 0] },
             ],
           },
         },
@@ -316,6 +336,7 @@ class ChapterPipelineBuilder extends BasePipelineBuilder<ChapterPipelineBuilder>
         $project: {
           chapterUnlock: 0,
           storyCollaborator: 0,
+          storyCreator: 0,
         },
       }
     );
