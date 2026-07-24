@@ -9,7 +9,7 @@ import { CollaboratorQueryService } from '@/features/storyCollaborator/services/
 import { ChapterRules } from '@/domain/chapter.rules';
 import { StoryRules } from '@/domain/story.rules';
 import { StoryCollaboratorRules } from '@/domain/storyCollaborator.rules';
-import { IChapterAutoSave } from '../types/chapterAutoSave.types';
+import { ChapterAutoSaveType, IChapterAutoSave } from '../types/chapterAutoSave.types';
 import { ChapterAutoSaveRepository } from '../repositories/chapterAutoSave.repository';
 import { StoryRepository } from '@/features/story/repositories/story.repository';
 
@@ -86,12 +86,12 @@ export class AutoSaveContentService extends BaseModule {
     await this.storyQueryService.getBySlug(storySlug);
 
     // 2. Verify chapter existence based on type
-    if (autoSaveType === 'new_chapter') {
+    if (autoSaveType === ChapterAutoSaveType.NEW_CHAPTER) {
       const parentChapter = await this.chapterQueryService.getBySlug(input.parentChapterSlug);
       if (!ChapterRules.canCreateNewChapter(parentChapter)) {
         this.throwNotFoundError(`Parent chapter with slug ${input.parentChapterSlug} not found.`);
       }
-    } else if (autoSaveType === 'update_chapter') {
+    } else if (autoSaveType === ChapterAutoSaveType.UPDATE) {
       const chapter = await this.chapterQueryService.getBySlug(input.chapterSlug);
       if (!ChapterRules.canUpdateChapter(chapter)) {
         this.throwNotFoundError(`Chapter with slug ${input.chapterSlug} not found.`);
@@ -101,7 +101,7 @@ export class AutoSaveContentService extends BaseModule {
       if (!ChapterRules.canCreateNewChapter(parentChapter)) {
         this.throwNotFoundError(`Parent chapter with slug ${input.parentChapterSlug} not found.`);
       }
-    } else if (autoSaveType === 'root_chapter') {
+    } else if (autoSaveType === ChapterAutoSaveType.ROOT_CHAPTER) {
       const hasRootChapter = await this.storyRepository.rootChapterExists(storySlug);
       if (!StoryRules.canCreateRootChapter(hasRootChapter)) {
         this.throwBadRequest('Root chapter already exists for this story.');
@@ -130,7 +130,7 @@ export class AutoSaveContentService extends BaseModule {
     const { autoSaveType, userId, storySlug, title, content } = input;
 
     switch (autoSaveType) {
-      case 'root_chapter':
+      case ChapterAutoSaveType.ROOT_CHAPTER:
         return {
           autoSaveType,
           userId,
@@ -139,7 +139,7 @@ export class AutoSaveContentService extends BaseModule {
           content,
         };
 
-      case 'new_chapter':
+      case ChapterAutoSaveType.NEW_CHAPTER:
         return {
           autoSaveType,
           userId,
@@ -149,7 +149,7 @@ export class AutoSaveContentService extends BaseModule {
           parentChapterSlug: input.parentChapterSlug,
         };
 
-      case 'update_chapter':
+      case ChapterAutoSaveType.UPDATE:
         return {
           autoSaveType,
           userId,

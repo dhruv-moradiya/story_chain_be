@@ -6,6 +6,7 @@ import { IStory, IStorySettings } from '../types/story.types';
 
 import { StoryStatus } from '../types/story-enum';
 import { PUBLIC_USER_PROJECTION, attachUserStages } from '@/shared/pipelines';
+import { StoryCollaboratorStatus } from '@/features/storyCollaborator/types/storyCollaborator-enum';
 
 class StoryPipelineBuilder extends BasePipelineBuilder<StoryPipelineBuilder> {
   /**
@@ -60,7 +61,7 @@ class StoryPipelineBuilder extends BasePipelineBuilder<StoryPipelineBuilder> {
                   $and: [
                     { $eq: ['$slug', '$$storySlug'] },
                     { $eq: ['$userId', userId] },
-                    { $eq: ['$status', 'accepted'] },
+                    { $eq: ['$status', StoryCollaboratorStatus.ACCEPTED] },
                   ],
                 },
               },

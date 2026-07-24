@@ -21,6 +21,7 @@ export const QUEUE_NAMES = {
   NOTIFICATION: 'notification',
   EMAIL: 'email',
   CHAPTER_COMMENT_VOTE: 'chapter-comment-vote',
+  FAKE_HEAVY: 'fake-heavy',
 } as const;
 
 export type TQueueName = (typeof QUEUE_NAMES)[keyof typeof QUEUE_NAMES];
@@ -111,6 +112,11 @@ export interface IChapterCommentVoteJobDataMap {
 export type IChapterCommentVoteJobData =
   IChapterCommentVoteJobDataMap[keyof IChapterCommentVoteJobDataMap];
 
+export interface IFakeHeavyJobData {
+  timestamp: number;
+  durationMs: number;
+}
+
 /**
  * Maps each queue name to its expected job data type.
  * This ensures type safety when adding/processing jobs.
@@ -119,6 +125,7 @@ export interface IQueueJobDataMap {
   [QUEUE_NAMES.NOTIFICATION]: INotificationJobData;
   [QUEUE_NAMES.EMAIL]: IEmailJobData;
   [QUEUE_NAMES.CHAPTER_COMMENT_VOTE]: IChapterCommentVoteJobDataMap[keyof IChapterCommentVoteJobDataMap];
+  [QUEUE_NAMES.FAKE_HEAVY]: IFakeHeavyJobData;
 }
 
 // ═══════════════════════════════════════════
@@ -173,7 +180,9 @@ export interface IAddJobOptions {
  */
 export interface IScheduledJobOptions {
   /** Cron expression (e.g. "0 * * * *" for every hour) */
-  pattern: string;
+  pattern?: string;
+  /** Millisecond interval for repeat (e.g. 1000 for every second) */
+  every?: number;
   /** Optional timezone for the cron schedule (e.g. "Asia/Kolkata") */
   timezone?: string;
   /** Maximum number of times the job should repeat (undefined = infinite) */

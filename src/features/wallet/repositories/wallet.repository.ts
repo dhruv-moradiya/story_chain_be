@@ -77,4 +77,18 @@ export class WalletRepository extends BaseRepository<IWallet, IWalletDoc> {
   ): Promise<IWallet | null> {
     return this.model.findOne({ userId }, null, { session: options.session ?? undefined });
   }
+
+  async createWallet(userId: string, options: IOperationOptions = {}) {
+    return this.create({
+      data: {
+        userId: userId,
+        balance: 0,
+        totalEarned: 0,
+        totalSpent: 0,
+        totalWithdrawn: 0,
+        pendingWithdrawal: 0,
+      },
+      options,
+    });
+  }
 }

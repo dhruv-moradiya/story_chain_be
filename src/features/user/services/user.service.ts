@@ -8,6 +8,7 @@ import {
   IUserUpdateDTO,
 } from '@dto/user.dto';
 import { PlatformRoleService } from '@features/platformRole/services/platformRole.service';
+import { WalletService } from '@features/wallet/service/wallet.service';
 import { BaseModule } from '@utils/baseClass';
 import { fetchClerkUser } from '@utils/clerk.client';
 import { withTransaction } from '@utils/withTransaction';
@@ -22,7 +23,9 @@ class UserService extends BaseModule implements IUserService {
     @inject(TOKENS.UserRepository)
     private readonly userRepo: UserRepository,
     @inject(TOKENS.PlatformRoleService)
-    private readonly platformRoleService: PlatformRoleService
+    private readonly platformRoleService: PlatformRoleService,
+    @inject(TOKENS.WalletService)
+    private readonly walletService: WalletService
   ) {
     super();
   }
@@ -98,6 +101,8 @@ class UserService extends BaseModule implements IUserService {
         const role = UserRules.determineInitialRole(totalUsers);
 
         await this.platformRoleService.assignRole({ userId: newUser.clerkId, role }, { session });
+
+        await this.walletService.createEmptyWallet(newUser.clerkId, { session });
 
         return newUser;
       });

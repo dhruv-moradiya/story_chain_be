@@ -80,11 +80,13 @@ export class SchedulerService extends BaseModule {
     this.registeredJobs.push({
       queueName,
       jobName,
-      pattern: schedule.pattern,
+      pattern: schedule.pattern ?? `every-${schedule.every}ms`,
       description,
     });
 
-    this.logInfo(`Scheduled job registered: "${jobName}" (${schedule.pattern}) — ${description}`);
+    this.logInfo(
+      `Scheduled job registered: "${jobName}" (${schedule.pattern ?? schedule.every}) — ${description}`
+    );
   }
 
   // ═══════════════════════════════════════════

@@ -49,6 +49,7 @@ export const createApp = async () => {
     QUEUE_NAMES.CHAPTER_COMMENT_VOTE,
     QUEUE_NAMES.EMAIL,
     QUEUE_NAMES.NOTIFICATION,
+    QUEUE_NAMES.FAKE_HEAVY,
   ].map((name) => new BullMQAdapter(queueService.getQueue(name)));
 
   createBullBoard({

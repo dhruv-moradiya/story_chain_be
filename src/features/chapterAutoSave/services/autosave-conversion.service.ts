@@ -6,7 +6,7 @@ import { WRITE_CHAPTER_ROLES } from '@/middlewares/rbac/storyRole.middleware';
 import { CacheService } from '@/infrastructure/cache/cache.service';
 
 import { IChapter } from '@features/chapter/types/chapter.types';
-import { IChapterAutoSave } from '../types/chapterAutoSave.types';
+import { ChapterAutoSaveType, IChapterAutoSave } from '../types/chapterAutoSave.types';
 import { ChapterAutoSaveRepository } from '../repositories/chapterAutoSave.repository';
 import { ChapterStatus } from '@/features/chapter/types/chapter-enum';
 import { StoryQueryService } from '@features/story/services/story-query.service';
@@ -123,15 +123,15 @@ export class AutoSaveConversionService extends BaseModule {
     this.validateContent(autoSave.content);
 
     switch (autoSave.autoSaveType) {
-      case 'root_chapter':
+      case ChapterAutoSaveType.ROOT_CHAPTER:
         return this.createRootChapterFromAutoSave(autoSave, userId, session);
 
-      case 'new_chapter':
+      case ChapterAutoSaveType.NEW_CHAPTER:
         return this.createChildChapterFromAutoSave(autoSave, userId, status, session);
 
-      case 'update_chapter':
+      case ChapterAutoSaveType.UPDATE:
         throw this.throwBadRequest(
-          'Cannot convert update_chapter autosave. Use the chapter update API instead.'
+          'Cannot convert update chapter autosave. Use the chapter update API instead.'
         );
 
       default:

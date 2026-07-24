@@ -173,6 +173,7 @@ export class QueueService extends BaseModule {
     const job = await queue.add(jobName, data, {
       repeat: {
         pattern: schedule.pattern,
+        every: schedule.every,
         tz: schedule.timezone,
         limit: schedule.limit,
         startDate: schedule.startDate,

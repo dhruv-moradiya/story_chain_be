@@ -194,16 +194,16 @@ export class ChapterCreationService extends BaseModule implements IChapterCreati
     const isAuthorOrCoAuthor =
       userRole === StoryCollaboratorRole.OWNER || userRole === StoryCollaboratorRole.CO_AUTHOR;
 
-    // 3. Apply Domain Rules (Authorization & Status)
+    // 3. Apply Domain Rules (Authorization & Status based on story settings: isPublic, allowBranching, requireApproval)
     const creationRule = ChapterRules.canCreateChapter(story, isAuthorOrCoAuthor);
     if (!creationRule.allowed) {
       this.throwUnauthorizedError(creationRule.message!);
     }
 
-    // const publishRule = ChapterRules.canPublishDirectly(story, status, isAuthorOrCoAuthor);
-    // if (!publishRule.allowed) {
-    //   this.throwUnauthorizedError(publishRule.message!);
-    // }
+    const publishRule = ChapterRules.canPublishDirectly(story, status, isAuthorOrCoAuthor);
+    if (!publishRule.allowed) {
+      this.throwForbiddenError(publishRule.message!);
+    }
 
     // 4. Validate and fetch parent
     const parentChapter = await this.getParentAndValidate(parentChapterSlug, storySlug, options);

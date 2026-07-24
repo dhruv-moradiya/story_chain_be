@@ -1,3 +1,4 @@
+import { ChapterStatus } from '@features/chapter/types/chapter-enum';
 import { IChapter } from '@features/chapter/types/chapter.types';
 import { IStory } from '@features/story/types/story.types';
 
@@ -11,17 +12,50 @@ export class ChapterRules {
 
   /**
    * Rule: Check if the user is authorized to create a chapter in the story
+   * Enforces story settings: isPublic & allowBranching
    */
   static canCreateChapter(
     story: IStory,
     isAuthorOrCoAuthor: boolean
   ): { allowed: boolean; message?: string } {
+    if (!story.settings.isPublic && !isAuthorOrCoAuthor) {
+      return {
+        allowed: false,
+        message: 'This story is private. Only collaborators can create chapters.',
+      };
+    }
+
     if (!story.settings.allowBranching && !isAuthorOrCoAuthor) {
       return {
         allowed: false,
-        message: 'You are not authorized to create chapter in this story.',
+        message: 'Branching is not allowed for this story.',
       };
     }
+
+    return { allowed: true };
+  }
+
+  /**
+   * Rule: Check if non-collaborators can publish directly without approval
+   * Enforces story setting: requireApproval
+   */
+  static canPublishDirectly(
+    story: IStory,
+    status: ChapterStatus | string,
+    isAuthorOrCoAuthor: boolean
+  ): { allowed: boolean; message?: string } {
+    if (
+      status === ChapterStatus.PUBLISHED &&
+      story.settings.requireApproval &&
+      !isAuthorOrCoAuthor
+    ) {
+      return {
+        allowed: false,
+        message:
+          'Chapters require approval from the story owner before publishing. Please submit a pull request.',
+      };
+    }
+
     return { allowed: true };
   }
 

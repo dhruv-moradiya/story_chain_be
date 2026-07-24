@@ -179,17 +179,23 @@ class ChapterPipelineBuilder extends BasePipelineBuilder<ChapterPipelineBuilder>
   }
 
   /**
-   * Attaches previous chapters (ancestors) array
+   * Attaches the direct parent chapter (previous chapter) only.
+   * Uses parentChapterSlug so that for A→B→C→D, querying D returns only C.
    */
   attachPreviousChapters(options?: { project?: PipelineStage.Project['$project'] }) {
     this.pipeline.push({
       $lookup: {
         from: 'chapters',
-        let: { ancestorSlugs: '$ancestorSlugs' },
+        let: { parentChapterSlug: '$parentChapterSlug' },
         pipeline: [
           {
             $match: {
-              $expr: { $in: ['$slug', { $ifNull: ['$$ancestorSlugs', []] }] },
+              $expr: {
+                $and: [
+                  { $ne: ['$$parentChapterSlug', null] },
+                  { $eq: ['$slug', '$$parentChapterSlug'] },
+                ],
+              },
             },
           },
           ...(options?.project ? [{ $project: options.project }] : []),
