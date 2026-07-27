@@ -28,6 +28,8 @@ import { countWordsFromHTML, sanitizeText } from '@/utils/sanitizer';
 import { createSlug } from '@/utils/helpter';
 import { NotificationService } from '@/features/notification/services/notification.service';
 
+import { StoryTimelineService } from '@/features/story/services/story-timeline.service';
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────────────────────────────────────
@@ -46,30 +48,37 @@ export function calculateReadingMinutes(wordCount: number): number {
  * Returns whether the user is allowed to open a PR in a given story.
  *
  * Rules:
- * 1. If story.settings.allowBranching = false → only story collaborators can submit PRs.
- * 2. If story.settings.allowBranching = true  → anyone (even non-collaborators) can open a PR.
- * 3. But wait — per scenario 4: if allowBranching = true AND the user is NOT a collaborator,
- *    they still CANNOT create a PR (they are not a collaborator). We block them.
- *    Only existing collaborators (any role ≥ contributor) may open PRs.
- *
- * The permission matrix says "Open a PR: ✓ for all roles" — but that refers to roles in the
- * collaborator system. A user with NO role has no permission at all.
+ * 1. If story.settings.isPublic = false → only story collaborators can submit PRs.
+ * 2. If story.settings.allowBranching = false → only story collaborators can submit PRs.
+ * 3. If story.settings.allowBranching = true & isPublic = true → anyone (including non-collaborator readers) can open a PR.
+ * 4. Existing collaborators (any role >= contributor) may open PRs.
  */
 function canOpenPR(
-  _story: IStory,
+  story: IStory,
   userRole: TStoryCollaboratorRole | null
 ): { allowed: boolean; reason?: string } {
-  // User has no role in the story → not a collaborator at all
-  if (!userRole) {
+  // If story is private, non-collaborators are blocked
+  if (!story.settings.isPublic && !userRole) {
     return {
       allowed: false,
-      reason:
-        'You must be a story collaborator to create a pull request. Ask the story owner for access.',
+      reason: 'This story is private. Only collaborators can create pull requests.',
     };
   }
 
-  // story.settings.allowBranching = true + not a collaborator is already blocked above.
-  // All valid collaborator roles (contributor to owner) can open PRs per the matrix.
+  // User has no explicit role in the story → reader
+  if (!userRole) {
+    if (!story.settings.allowBranching) {
+      return {
+        allowed: false,
+        reason:
+          'Branching is disabled for this story. Only story collaborators can submit pull requests.',
+      };
+    }
+    // Public story with allowBranching = true allows readers to open PRs
+    return { allowed: true };
+  }
+
+  // All valid collaborator roles (contributor to owner) can open PRs
   const minRoleLevel = ROLE_HIERARCHY[StoryCollaboratorRole.CONTRIBUTOR];
   if (ROLE_HIERARCHY[userRole] < minRoleLevel) {
     return {
@@ -104,7 +113,10 @@ export class PullRequestCommandService extends BaseModule {
     private readonly autoSaveRepo: ChapterAutoSaveRepository,
 
     @inject(TOKENS.NotificationService)
-    private readonly notificationService: NotificationService
+    private readonly notificationService: NotificationService,
+
+    @inject(TOKENS.StoryTimelineService)
+    private readonly storyTimelineService: StoryTimelineService
   ) {
     super();
   }
@@ -303,6 +315,14 @@ export class PullRequestCommandService extends BaseModule {
         prTitle: title.trim(),
       });
 
+      // 9. Record PR submission on StoryTimeline
+      await this.storyTimelineService.recordPRSubmitted(
+        storySlug,
+        authorId,
+        { prId: pr._id.toString(), chapterSlug: pr.chapterSlug },
+        { session }
+      );
+
       return pr;
     });
   }
@@ -345,6 +365,14 @@ export class PullRequestCommandService extends BaseModule {
           ? autoSave.chapterSlug
           : createSlug(autoSave.title, { addSuffix: true });
 
+      // Guard: Ensure user can only create one PR per auto-save draft
+      const existingPRForAutoSave = await this.prRepo.findByAutoSaveId(autoSaveId, { session });
+      if (existingPRForAutoSave) {
+        this.throwConflictError(
+          `A pull request has already been created from this auto-save draft.`
+        );
+      }
+
       // 5. Guard: no duplicate open PR for the same chapter (only for update_chapter)
       if (autoSave.autoSaveType === 'update_chapter' && autoSave.chapterSlug) {
         await this.checkNoDuplicateOpenPR(autoSave.chapterSlug, authorId);
@@ -357,6 +385,7 @@ export class PullRequestCommandService extends BaseModule {
       // 7. Create the PullRequest document
       const pr = await this.prRepo.create({
         data: {
+          autoSaveId,
           title: sanitizeText(title),
           description: sanitizeText(description ?? ''),
           storySlug,
@@ -417,6 +446,14 @@ export class PullRequestCommandService extends BaseModule {
         authorName: autoSave.userId.toString(), // we don't have the author's name here, only their ID. The notification processor can look up the name when processing the job.
         prTitle: title.trim(),
       });
+
+      // 9. Record PR submission on StoryTimeline
+      await this.storyTimelineService.recordPRSubmitted(
+        storySlug,
+        authorId,
+        { prId: pr._id.toString(), chapterSlug: pr.chapterSlug },
+        { session }
+      );
 
       return pr;
     });

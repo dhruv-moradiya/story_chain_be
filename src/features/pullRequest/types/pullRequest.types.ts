@@ -21,6 +21,7 @@ export interface IPullRequest {
   chapterSlug: string;
   parentChapterSlug: string;
   authorId: string;
+  autoSaveId?: string;
 
   // PR Type
   prType: TPRType;

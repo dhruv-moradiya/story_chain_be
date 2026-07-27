@@ -7,6 +7,7 @@ import { CollaboratorQueryService } from '@features/storyCollaborator/services/c
 import { PRReviewRepository } from '@features/prReview/repositories/prReview.repository';
 import { PRTimelineRepository } from '@features/prTimeline/repositories/prTimeline.repository';
 import { PullRequestRepository } from '@features/pullRequest/repositories/pullRequest.repository';
+import { StoryTimelineService } from '@/features/story/services/story-timeline.service';
 import { IPullRequest } from '@features/pullRequest/types/pullRequest.types';
 import { IPRReview } from '@features/prReview/types/prReview.types';
 import { PRReviewDecision } from '@features/prReview/types/prReview-enum';
@@ -27,7 +28,10 @@ export class PRReviewService extends BaseModule {
     private readonly timelineRepo: PRTimelineRepository,
 
     @inject(TOKENS.CollaboratorQueryService)
-    private readonly collaboratorQueryService: CollaboratorQueryService
+    private readonly collaboratorQueryService: CollaboratorQueryService,
+
+    @inject(TOKENS.StoryTimelineService)
+    private readonly storyTimelineService: StoryTimelineService
   ) {
     super();
   }
@@ -99,6 +103,23 @@ export class PRReviewService extends BaseModule {
         },
         { session }
       );
+
+      // 9. Record on StoryTimeline
+      if (typedDecision === PRReviewDecision.APPROVE) {
+        await this.storyTimelineService.recordPRApproved(
+          storySlug,
+          reviewerId,
+          { prId: pr._id.toString() },
+          { session }
+        );
+      } else if (typedDecision === PRReviewDecision.CHANGES_REQUESTED) {
+        await this.storyTimelineService.recordPRRejected(
+          storySlug,
+          reviewerId,
+          { prId: pr._id.toString(), reason: summary },
+          { session }
+        );
+      }
 
       return review;
     });

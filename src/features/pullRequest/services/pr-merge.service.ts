@@ -6,6 +6,7 @@ import { PullRequestRules } from '@domain/pullRequest.rules';
 import { CollaboratorQueryService } from '@features/storyCollaborator/services/collaborator-query.service';
 import { ChapterRepository } from '@features/chapter/repositories/chapter.repository';
 import { PRTimelineRepository } from '@features/prTimeline/repositories/prTimeline.repository';
+import { StoryTimelineService } from '@/features/story/services/story-timeline.service';
 import { PullRequestRepository } from '../repositories/pullRequest.repository';
 import { IPullRequest } from '../types/pullRequest.types';
 import { IMergePRDTO } from '@dto/pullRequest.dto';
@@ -23,7 +24,10 @@ export class PRMergeService extends BaseModule {
     private readonly collaboratorQueryService: CollaboratorQueryService,
 
     @inject(TOKENS.ChapterRepository)
-    private readonly chapterRepo: ChapterRepository
+    private readonly chapterRepo: ChapterRepository,
+
+    @inject(TOKENS.StoryTimelineService)
+    private readonly storyTimelineService: StoryTimelineService
   ) {
     super();
   }
@@ -67,7 +71,7 @@ export class PRMergeService extends BaseModule {
         }
       }
 
-      // 6. Timeline event
+      // 6. Timeline event (PR timeline)
       await this.timelineRepo.appendEvent(
         {
           pullRequestId: pr._id,
@@ -76,6 +80,14 @@ export class PRMergeService extends BaseModule {
           performedBy: userId,
           metadata: { mergedAt: new Date().toISOString() },
         },
+        { session }
+      );
+
+      // 7. Record pr_merged on StoryTimeline
+      await this.storyTimelineService.recordPRMerged(
+        storySlug,
+        userId,
+        { prId: pr._id.toString(), chapterSlug: pr.chapterSlug },
         { session }
       );
 

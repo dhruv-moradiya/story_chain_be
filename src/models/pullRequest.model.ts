@@ -44,6 +44,10 @@ const pullRequestSchema = new Schema<IPullRequestDoc>(
       required: true,
       index: true,
     },
+    autoSaveId: {
+      type: String,
+      index: true,
+    },
 
     // PR Type
     prType: {

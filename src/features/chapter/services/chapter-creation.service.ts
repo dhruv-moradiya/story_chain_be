@@ -1,5 +1,10 @@
 import { ChapterRules } from '@/domain/chapter.roles';
-import { StoryQueryService } from '@/features/story/services';
+import {
+  StoryQueryService,
+  StoryStatsService,
+  StoryTimelineService,
+} from '@/features/story/services';
+import { StoryRepository } from '@/features/story/repositories/story.repository';
 import { CollaboratorQueryService } from '@/features/storyCollaborator/services';
 import { StoryCollaboratorRole } from '@/features/storyCollaborator/types/storyCollaborator-enum';
 import { StoryCacheService } from '@/infrastructure/cache/story-cache.service';
@@ -22,12 +27,18 @@ export class ChapterCreationService extends BaseModule implements IChapterCreati
   constructor(
     @inject(TOKENS.ChapterRepository)
     private readonly chapterRepo: ChapterRepository,
+    @inject(TOKENS.StoryRepository)
+    private readonly storyRepo: StoryRepository,
+    @inject(TOKENS.StoryStatsService)
+    private readonly storyStatsService: StoryStatsService,
     @inject(TOKENS.CollaboratorQueryService)
     private readonly collaboratorQueryService: CollaboratorQueryService,
     @inject(TOKENS.StoryQueryService)
     private readonly storyQueryService: StoryQueryService,
     @inject(TOKENS.StoryCacheService)
-    private readonly storyCacheService: StoryCacheService
+    private readonly storyCacheService: StoryCacheService,
+    @inject(TOKENS.StoryTimelineService)
+    private readonly storyTimelineService: StoryTimelineService
   ) {
     super();
   }
@@ -152,8 +163,19 @@ export class ChapterCreationService extends BaseModule implements IChapterCreati
       options
     );
 
-    // 5. Invalidate relevant story cache
-    await this.storyCacheService.invalidateStoryLatestChapters(storySlug);
+    // 5. Update story stats and invalidate relevant story cache
+    await Promise.all([
+      this.storyRepo.incrementTotalChaptersBySlug(storySlug, options),
+      this.storyRepo.incrementTotalBranchesBySlug(storySlug, options),
+      this.storyStatsService.syncUniqueContributors(storySlug, options),
+      this.storyCacheService.invalidateStoryLatestChapters(storySlug),
+      this.storyTimelineService.recordChapterAdded(
+        storySlug,
+        userId,
+        { chapterSlug: chapter.slug, chapterTitle: chapter.title },
+        options
+      ),
+    ]);
 
     return chapter;
   }
@@ -252,8 +274,24 @@ export class ChapterCreationService extends BaseModule implements IChapterCreati
       options
     );
 
-    // 8. Update parent statistics and clean cache
+    // 8. Update parent statistics, story stats, and clean cache
     await this.chapterRepo.incrementBranches(parentChapter.slug, options.session);
+
+    const storyStatsPromises: Promise<unknown>[] = [
+      this.storyRepo.incrementTotalChaptersBySlug(storySlug, options),
+      this.storyStatsService.syncUniqueContributors(storySlug, options),
+      this.storyTimelineService.recordChapterAdded(
+        storySlug,
+        userId,
+        { chapterSlug: chapter.slug, chapterTitle: chapter.title },
+        options
+      ),
+    ];
+    if (branchIndex > 1) {
+      storyStatsPromises.push(this.storyRepo.incrementTotalBranchesBySlug(storySlug, options));
+    }
+    await Promise.all(storyStatsPromises);
+
     await this.storyCacheService.invalidateStoryLatestChapters(storySlug);
 
     return chapter;

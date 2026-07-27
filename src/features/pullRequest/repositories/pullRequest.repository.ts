@@ -28,6 +28,18 @@ export class PullRequestRepository extends BaseRepository<IPullRequest, IPullReq
     });
   }
 
+  findByAutoSaveId(
+    autoSaveId: string,
+    options: IOperationOptions = {}
+  ): Promise<IPullRequest | null> {
+    return this.findOne({
+      filter: {
+        autoSaveId,
+      },
+      options,
+    });
+  }
+
   findOpenByStory(storySlug: string, options: IOperationOptions = {}): Promise<IPullRequest[]> {
     return this.find({
       filter: { storySlug, status: { $in: ['open', 'approved'] } },

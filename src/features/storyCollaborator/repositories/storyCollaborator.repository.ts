@@ -95,4 +95,16 @@ export class StoryCollaboratorRepository extends BaseRepository<
   async isOwner(slug: string, userId: string) {
     return this.model.exists({ slug, userId, role: StoryCollaboratorRole.OWNER });
   }
+
+  /** Get distinct accepted user IDs for a story */
+  async findDistinctAcceptedUserIdsByStorySlug(
+    slug: string,
+    options: IOperationOptions = {}
+  ): Promise<string[]> {
+    const users = await this.model
+      .distinct('userId', { slug, status: StoryCollaboratorStatus.ACCEPTED })
+      .session(options.session ?? null)
+      .exec();
+    return users.map(String);
+  }
 }

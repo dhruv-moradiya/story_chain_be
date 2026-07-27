@@ -36,7 +36,7 @@ export class StoryRepository extends BaseRepository<IStory, IStoryDoc> {
     );
   }
 
-  /** Increment chapters counter */
+  /** Increment chapters counter by ID */
   incrementTotalChapters(
     id: ID
   ): Promise<{ acknowledged: boolean; modifiedCount: number; matchedCount: number }> {
@@ -48,7 +48,21 @@ export class StoryRepository extends BaseRepository<IStory, IStoryDoc> {
       .exec();
   }
 
-  /** Increment branches counter */
+  /** Increment chapters counter by story slug */
+  incrementTotalChaptersBySlug(
+    slug: string,
+    options: IOperationOptions = {}
+  ): Promise<{ acknowledged: boolean; modifiedCount: number; matchedCount: number }> {
+    return this.model
+      .updateOne(
+        { slug },
+        { $inc: { 'stats.totalChapters': 1 }, $set: { lastActivityAt: new Date() } },
+        { session: options.session }
+      )
+      .exec();
+  }
+
+  /** Increment branches counter by ID */
   incrementTotalBranches(
     id: ID
   ): Promise<{ acknowledged: boolean; modifiedCount: number; matchedCount: number }> {
@@ -56,6 +70,35 @@ export class StoryRepository extends BaseRepository<IStory, IStoryDoc> {
       .updateOne(
         { _id: id },
         { $inc: { 'stats.totalBranches': 1 }, $set: { lastActivityAt: new Date() } }
+      )
+      .exec();
+  }
+
+  /** Increment branches counter by story slug */
+  incrementTotalBranchesBySlug(
+    slug: string,
+    options: IOperationOptions = {}
+  ): Promise<{ acknowledged: boolean; modifiedCount: number; matchedCount: number }> {
+    return this.model
+      .updateOne(
+        { slug },
+        { $inc: { 'stats.totalBranches': 1 }, $set: { lastActivityAt: new Date() } },
+        { session: options.session }
+      )
+      .exec();
+  }
+
+  /** Update unique contributors count by story slug */
+  async setUniqueContributorsCount(
+    slug: string,
+    count: number,
+    options: IOperationOptions = {}
+  ): Promise<{ acknowledged: boolean; modifiedCount: number; matchedCount: number }> {
+    return this.model
+      .updateOne(
+        { slug },
+        { $set: { 'stats.uniqueContributors': count } },
+        { session: options.session }
       )
       .exec();
   }

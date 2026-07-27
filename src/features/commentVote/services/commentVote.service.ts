@@ -2,6 +2,9 @@ import { TOKENS } from '@/container';
 import { ICommentVoteDTO } from '@/dto/commentVote.dto';
 import { CommentService } from '@/features/comment/services/comment.service';
 import { CommentVoteRepository } from '@/features/commentVote/repository/commentVote.repository';
+import { ChapterRepository } from '@/features/chapter/repositories/chapter.repository';
+import { StoryRepository } from '@/features/story/repositories/story.repository';
+import { CollaboratorQueryService } from '@/features/storyCollaborator/services/collaborator-query.service';
 import { CommentVoteCacheService } from '@/infrastructure/cache/commentVoteCacheService';
 import { ChapterCommentVoteQueue } from '@/infrastructure/domains/chapterCommentVote.queue';
 import { IOperationOptions } from '@/types';
@@ -17,7 +20,13 @@ export class CommentVoteService extends BaseModule {
     @inject(TOKENS.CommentVoteRepository)
     private readonly commentVoteRepository: CommentVoteRepository,
     @inject(TOKENS.ChapterCommentVoteQueue)
-    private readonly chapterCommentVoteQueue: ChapterCommentVoteQueue
+    private readonly chapterCommentVoteQueue: ChapterCommentVoteQueue,
+    @inject(TOKENS.ChapterRepository)
+    private readonly chapterRepository: ChapterRepository,
+    @inject(TOKENS.StoryRepository)
+    private readonly storyRepository: StoryRepository,
+    @inject(TOKENS.CollaboratorQueryService)
+    private readonly collaboratorQueryService: CollaboratorQueryService
   ) {
     super();
   }
@@ -27,6 +36,23 @@ export class CommentVoteService extends BaseModule {
 
     const comment = await this.commentService.getComment({ commentId });
     if (!comment) this.throwNotFoundError('Comment not found.');
+
+    const chapter = await this.chapterRepository.findBySlug(comment.chapterSlug);
+    if (chapter) {
+      const story = await this.storyRepository.findBySlug(chapter.storySlug);
+      if (story) {
+        const role = await this.collaboratorQueryService.getCollaboratorRole(userId, story.slug);
+        const isCollaboratorOrCreator = role !== null || story.creatorId === userId;
+
+        if (!story.settings.isPublic && !isCollaboratorOrCreator) {
+          this.throwForbiddenError('This story is private. Only collaborators can vote.');
+        }
+
+        if (!story.settings.allowVoting && !isCollaboratorOrCreator) {
+          this.throwForbiddenError('Voting is disabled for this story.');
+        }
+      }
+    }
 
     const { previousVote } = await this.commentVoteCacheService.castVote(commentId, userId, vote);
 

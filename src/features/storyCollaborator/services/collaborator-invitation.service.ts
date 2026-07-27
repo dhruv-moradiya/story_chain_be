@@ -21,6 +21,7 @@ import { CacheService } from '@/infrastructure/cache/cache.service';
 import { CACHE_TTL, CacheKeyBuilder } from '@/infrastructure';
 import { UserRepository } from '@features/user/repositories/user.repository';
 import { StoryTimelineService } from '@features/story/services/story-timeline.service';
+import { StoryStatsService } from '@features/story/services/story-stats.service';
 
 @singleton()
 class CollaboratorInvitationService extends BaseModule implements ICollaboratorInvitationService {
@@ -33,6 +34,8 @@ class CollaboratorInvitationService extends BaseModule implements ICollaboratorI
     private readonly collabQueryService: ICollaboratorQueryService,
     @inject(TOKENS.StoryRepository)
     private readonly storyRepo: StoryRepository,
+    @inject(TOKENS.StoryStatsService)
+    private readonly storyStatsService: StoryStatsService,
     @inject(TOKENS.NotificationService)
     private readonly notificationService: NotificationService,
     @inject(TOKENS.UserRepository)
@@ -172,6 +175,9 @@ class CollaboratorInvitationService extends BaseModule implements ICollaboratorI
     if (!collaborator) {
       this.throwNotFoundError('Collaborator not found or no update was applied.');
     }
+
+    // Sync story's unique contributors count
+    await this.storyStatsService.syncUniqueContributors(slug, options);
 
     // Enqueue accept/reject notification and record timeline entry
     try {

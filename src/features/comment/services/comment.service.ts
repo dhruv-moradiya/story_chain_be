@@ -7,6 +7,9 @@ import {
   IUpdateCommentDTO,
 } from '@/dto/comments.dto';
 import { CommentVoteRepository } from '@/features/commentVote/repository/commentVote.repository';
+import { ChapterRepository } from '@/features/chapter/repositories/chapter.repository';
+import { StoryRepository } from '@/features/story/repositories/story.repository';
+import { CollaboratorQueryService } from '@/features/storyCollaborator/services/collaborator-query.service';
 import { ICommentPaginatedResponse } from '@/types/response/comment.response.types';
 import { ApiError } from '@/utils/apiResponse';
 import { BaseModule } from '@/utils/baseClass';
@@ -22,7 +25,13 @@ class CommentService extends BaseModule implements ICommentCrudService {
   constructor(
     @inject(TOKENS.CommentRepository) private readonly commentRepository: CommentRepository,
     @inject(TOKENS.CommentVoteRepository)
-    private readonly commentVoteRepository: CommentVoteRepository
+    private readonly commentVoteRepository: CommentVoteRepository,
+    @inject(TOKENS.ChapterRepository)
+    private readonly chapterRepository: ChapterRepository,
+    @inject(TOKENS.StoryRepository)
+    private readonly storyRepository: StoryRepository,
+    @inject(TOKENS.CollaboratorQueryService)
+    private readonly collaboratorQueryService: CollaboratorQueryService
   ) {
     super();
   }
@@ -65,7 +74,29 @@ class CommentService extends BaseModule implements ICommentCrudService {
     await this.commentRepository.bulkWrite(bulkOps);
   }
 
-  addComment(input: IAddCommentDTO): Promise<IComment> {
+  async addComment(input: IAddCommentDTO): Promise<IComment> {
+    const chapter = await this.chapterRepository.findBySlug(input.chapterSlug);
+    if (!chapter) {
+      this.throwNotFoundError('Chapter not found.');
+    }
+
+    const story = await this.storyRepository.findBySlug(chapter.storySlug);
+    if (story) {
+      const role = await this.collaboratorQueryService.getCollaboratorRole(
+        input.userId,
+        story.slug
+      );
+      const isCollaboratorOrCreator = role !== null || story.creatorId === input.userId;
+
+      if (!story.settings.isPublic && !isCollaboratorOrCreator) {
+        this.throwForbiddenError('This story is private. Only collaborators can comment.');
+      }
+
+      if (!story.settings.allowComments && !isCollaboratorOrCreator) {
+        this.throwForbiddenError('Comments are disabled for this story.');
+      }
+    }
+
     const sanitizedContent = sanitizeContent(input.content);
     return this.commentRepository.addComment({ ...input, content: sanitizedContent });
   }

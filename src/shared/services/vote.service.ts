@@ -4,6 +4,8 @@ import { TOKENS } from '@/container/tokens';
 import { VoteRepository, IVoteCounts } from './vote.repository';
 import { ChapterRepository } from '@/features/chapter/repositories/chapter.repository';
 import { StoryRepository } from '@/features/story/repositories/story.repository';
+import { CollaboratorQueryService } from '@/features/storyCollaborator/services/collaborator-query.service';
+import { IStory } from '@/features/story/types/story.types';
 import { IOperationOptions } from '@/types';
 
 type VoteType = 'upvote' | 'downvote';
@@ -32,9 +34,32 @@ export class VoteService extends BaseModule {
     @inject(TOKENS.ChapterRepository)
     private readonly chapterRepository: ChapterRepository,
     @inject(TOKENS.StoryRepository)
-    private readonly storyRepository: StoryRepository
+    private readonly storyRepository: StoryRepository,
+    @inject(TOKENS.CollaboratorQueryService)
+    private readonly collaboratorQueryService: CollaboratorQueryService
   ) {
     super();
+  }
+
+  private async checkVotingPermissions(
+    story: IStory,
+    userId: string,
+    options: IOperationOptions = {}
+  ): Promise<void> {
+    const role = await this.collaboratorQueryService.getCollaboratorRole(
+      userId,
+      story.slug,
+      options
+    );
+    const isCollaboratorOrCreator = role !== null || story.creatorId === userId;
+
+    if (!story.settings.isPublic && !isCollaboratorOrCreator) {
+      this.throwForbiddenError('FORBIDDEN', 'This story is private. Only collaborators can vote.');
+    }
+
+    if (!story.settings.allowVoting && !isCollaboratorOrCreator) {
+      this.throwForbiddenError('FORBIDDEN', 'Voting is disabled for this story.');
+    }
   }
 
   // ==================== CHAPTER VOTING ====================
@@ -55,6 +80,11 @@ export class VoteService extends BaseModule {
   ): Promise<IVoteResult> {
     const chapter = await this.chapterRepository.findBySlug(chapterSlug, options);
     if (!chapter) this.throwNotFoundError('CHAPTER_NOT_FOUND', 'Chapter not found');
+
+    const story = await this.storyRepository.findBySlug(chapter.storySlug, options);
+    if (story) {
+      await this.checkVotingPermissions(story, userId, options);
+    }
 
     const voteValue = voteType === 'upvote' ? 1 : -1;
     const filter = { chapterSlug, userId };
@@ -131,6 +161,8 @@ export class VoteService extends BaseModule {
   ): Promise<IVoteResult> {
     const story = await this.storyRepository.findBySlug(storySlug, options);
     if (!story) this.throwNotFoundError('STORY_NOT_FOUND', 'Story not found');
+
+    await this.checkVotingPermissions(story, userId, options);
 
     const voteValue = voteType === 'upvote' ? 1 : -1;
     const filter = { storySlug, userId };

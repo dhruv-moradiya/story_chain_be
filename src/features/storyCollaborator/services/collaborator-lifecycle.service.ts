@@ -7,6 +7,7 @@ import { IOperationOptions } from '@/types';
 import { IStoryCollaborator } from '../types/storyCollaborator.types';
 import { StoryCollaboratorRepository } from '../repositories/storyCollaborator.repository';
 import { StoryRepository } from '@features/story/repositories/story.repository';
+import { StoryTimelineService } from '@/features/story/services/story-timeline.service';
 
 @singleton()
 class CollaboratorLifecycleService extends BaseModule implements ICollaboratorLifecycleService {
@@ -14,7 +15,9 @@ class CollaboratorLifecycleService extends BaseModule implements ICollaboratorLi
     @inject(TOKENS.StoryCollaboratorRepository)
     private readonly storyCollaboratorRepo: StoryCollaboratorRepository,
     @inject(TOKENS.StoryRepository)
-    private readonly storyRepo: StoryRepository
+    private readonly storyRepo: StoryRepository,
+    @inject(TOKENS.StoryTimelineService)
+    private readonly storyTimelineService: StoryTimelineService
   ) {
     super();
   }
@@ -44,6 +47,13 @@ class CollaboratorLifecycleService extends BaseModule implements ICollaboratorLi
     if (!collaborator) {
       this.throwInternalError('Collaborator could not be created due to an unexpected error.');
     }
+
+    await this.storyTimelineService.recordCollaboratorAdded(
+      slug,
+      userId,
+      { targetUserId: userId, role },
+      options
+    );
 
     return collaborator;
   }

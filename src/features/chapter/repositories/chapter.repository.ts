@@ -209,6 +209,18 @@ export class ChapterRepository extends BaseRepository<IChapter, IChapterDoc> {
 
     return !!result;
   }
+
+  /** Get distinct author IDs for a story */
+  async findDistinctAuthorIdsByStorySlug(
+    storySlug: string,
+    options: IOperationOptions = {}
+  ): Promise<string[]> {
+    const authors = await this.model
+      .distinct('authorId', { storySlug })
+      .session(options.session ?? null)
+      .exec();
+    return authors.map(String);
+  }
 }
 
 /**

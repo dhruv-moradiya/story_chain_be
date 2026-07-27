@@ -4,7 +4,6 @@ import zodToJsonSchema from 'zod-to-json-schema';
 import { container } from 'tsyringe';
 import { TOKENS } from '@/container';
 import { type AuthMiddlewareFactory } from '@/middlewares/factories';
-import { RateLimits } from '@/constants/rateLimits';
 import {
   CreatePRFromDraftBodySchema,
   CreatePRFromAutoSaveBodySchema,
@@ -49,13 +48,12 @@ export async function pullRequestRoutes(fastify: FastifyInstance) {
     PullRequestApiRoutes.CreateFromDraft,
     {
       preHandler: [validateAuth],
-      config: { rateLimit: RateLimits.CREATION_HOURLY },
+      // config: { rateLimit: RateLimits.CREATION_HOURLY },
       schema: {
         description:
           'Create a new pull request from an existing draft chapter. ' +
-          'The caller must be an accepted collaborator of the story. ' +
-          'If story.settings.allowBranching = true but the caller has no collaborator role, ' +
-          'the request is rejected.',
+          'If story.settings.allowBranching = false or story.settings.isPublic = false, only collaborators can create PRs. ' +
+          'If story.settings.allowBranching = true & isPublic = true, any authenticated user can open a PR.',
         tags: ['Pull Requests'],
         security: [{ bearerAuth: [] }],
         params: zodToJsonSchema(StorySlugParamSchema),
@@ -72,7 +70,7 @@ export async function pullRequestRoutes(fastify: FastifyInstance) {
     PullRequestApiRoutes.CreateFromAutoSave,
     {
       preHandler: [validateAuth],
-      config: { rateLimit: RateLimits.CREATION_HOURLY },
+      // config: { rateLimit: RateLimits.CREATION_HOURLY },
       schema: {
         description:
           'Create a new pull request from an auto-saved draft. ' +
