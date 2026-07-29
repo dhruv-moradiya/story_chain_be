@@ -133,15 +133,16 @@ class PullRequestPipelineBuilder extends BasePipelineBuilder<PullRequestPipeline
     return this;
   }
 
-  getCurrentUserPRsPreset(_userId: string, page = 1, limit = 20) {
-    return this.matchStatus(['open', 'approved', 'closed', 'merged'])
+  getCurrentUserPRsPreset(userId: string, page = 1, limit = 20) {
+    return this.matchAuthor(userId)
+      .matchStatus(['open', 'approved', 'closed', 'merged'])
       .attachAuthor()
       .attachStory()
       .attachChapter()
       .attachReviewers()
       .sortByCreatedAt(-1)
       .addStage({
-        $unset: ['authorId', 'storySlug', 'chapterSlug', 'parentChapterSlug'],
+        $unset: ['authorId', 'storySlug'],
       })
       .paginate(page, limit)
       .build();

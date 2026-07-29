@@ -8,15 +8,7 @@ enum CharacterRole {
   MINOR = 'minor',
 }
 
-const CHARACTER_ROLES = [
-  'protagonist',
-  'antagonist',
-  'mentor',
-  'ally',
-  'neutral',
-  'supporting',
-  'minor',
-] as const;
+const CHARACTER_ROLES = Object.values(CharacterRole) as [CharacterRole, ...CharacterRole[]];
 
 enum CharacterGender {
   MALE = 'male',
@@ -26,7 +18,7 @@ enum CharacterGender {
   UNSPECIFIED = 'unspecified',
 }
 
-const CHARACTER_GENDERS = ['male', 'female', 'non_binary', 'other', 'unspecified'] as const;
+const CHARACTER_GENDERS = Object.values(CharacterGender) as [CharacterGender, ...CharacterGender[]];
 
 enum CharacterStatus {
   ALIVE = 'alive',
@@ -35,17 +27,25 @@ enum CharacterStatus {
   MISSING = 'missing',
 }
 
-const CHARACTER_STATUSES = ['alive', 'deceased', 'unknown', 'missing'] as const;
+const CHARACTER_STATUSES = Object.values(CharacterStatus) as [
+  CharacterStatus,
+  ...CharacterStatus[],
+];
 
 enum AttributeLevel {
-  NONE = 'none',
-  LOW = 'low',
-  MEDIUM = 'medium',
-  HIGH = 'high',
-  VERY_HIGH = 'very_high',
+  LAVEL_1 = 1,
+  LAVEL_2 = 2,
+  LAVEL_3 = 3,
+  LAVEL_4 = 4,
+  LAVEL_5 = 5,
+  LAVEL_6 = 6,
+  LAVEL_7 = 7,
+  LAVEL_8 = 8,
+  LAVEL_9 = 9,
+  LAVEL_10 = 10,
 }
 
-const ATTRIBUTE_LEVELS = ['none', 'low', 'medium', 'high', 'very_high'] as const;
+const ATTRIBUTE_LEVELS = Object.values(AttributeLevel) as [AttributeLevel, ...AttributeLevel[]];
 
 enum RelationshipType {
   FAMILY = 'family',
@@ -58,16 +58,10 @@ enum RelationshipType {
   OTHER = 'other',
 }
 
-const RELATIONSHIP_TYPES = [
-  'family',
-  'friend',
-  'enemy',
-  'mentor',
-  'ally',
-  'romantic',
-  'rival',
-  'other',
-] as const;
+const RELATIONSHIP_TYPES = Object.values(RelationshipType) as [
+  RelationshipType,
+  ...RelationshipType[],
+];
 
 enum AppearanceRole {
   MAIN = 'main',
@@ -76,7 +70,7 @@ enum AppearanceRole {
   MENTIONED = 'mentioned',
 }
 
-const APPEARANCE_ROLES = ['main', 'supporting', 'cameo', 'mentioned'] as const;
+const APPEARANCE_ROLES = Object.values(AppearanceRole) as [AppearanceRole, ...AppearanceRole[]];
 
 export {
   CharacterRole,

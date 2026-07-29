@@ -1,16 +1,14 @@
-import mongoose, { Schema } from 'mongoose';
-import { ICharacterDoc } from '@features/character/types/character.types';
-import {
-  CHARACTER_ROLES,
-  CHARACTER_GENDERS,
-  CHARACTER_STATUSES,
-  ATTRIBUTE_LEVELS,
-  RELATIONSHIP_TYPES,
-  APPEARANCE_ROLES,
-} from '@features/character/types/character-enum';
 import { ImageAssetSchema } from '@/models/shared/imageAsset.schema';
+import {
+  APPEARANCE_ROLES,
+  CHARACTER_GENDERS,
+  CHARACTER_ROLES,
+  CHARACTER_STATUSES,
+  RELATIONSHIP_TYPES,
+} from '@features/character/types/character-enum';
+import { ICharacterDoc } from '@features/character/types/character.types';
+import mongoose, { Schema } from 'mongoose';
 
-// ── Embedded: Relationship ────────────────────────────────────────────────────
 const relationshipSchema = new Schema(
   {
     toCharacterId: { type: Schema.Types.ObjectId, required: true, ref: 'Character' },
@@ -22,7 +20,6 @@ const relationshipSchema = new Schema(
   { _id: true }
 );
 
-// ── Embedded: Chapter Appearance ──────────────────────────────────────────────
 const chapterAppearanceSchema = new Schema(
   {
     chapterSlug: { type: String, required: true },
@@ -32,7 +29,6 @@ const chapterAppearanceSchema = new Schema(
   { _id: true }
 );
 
-// ── Root Schema ───────────────────────────────────────────────────────────────
 const characterSchema = new Schema<ICharacterDoc>(
   {
     storySlug: { type: String, required: true, ref: 'Story', index: true },
@@ -79,12 +75,12 @@ const characterSchema = new Schema<ICharacterDoc>(
 
     // Attributes (radar chart)
     attributes: {
-      bravery: { type: String, enum: ATTRIBUTE_LEVELS },
-      intelligence: { type: String, enum: ATTRIBUTE_LEVELS },
-      loyalty: { type: String, enum: ATTRIBUTE_LEVELS },
-      cunning: { type: String, enum: ATTRIBUTE_LEVELS },
-      empathy: { type: String, enum: ATTRIBUTE_LEVELS },
-      ambition: { type: String, enum: ATTRIBUTE_LEVELS },
+      bravery: { type: Number, min: 1, max: 10 },
+      intelligence: { type: Number, min: 1, max: 10 },
+      loyalty: { type: Number, min: 1, max: 10 },
+      cunning: { type: Number, min: 1, max: 10 },
+      empathy: { type: Number, min: 1, max: 10 },
+      ambition: { type: Number, min: 1, max: 10 },
     },
 
     // Detail extras

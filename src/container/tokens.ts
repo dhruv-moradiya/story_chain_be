@@ -69,6 +69,7 @@ export const TOKENS = {
   StoryEarningsPoolRepository: Symbol.for('StoryEarningsPoolRepository'),
   FollowRepository: Symbol.for('FollowRepository'),
   GalleryImageRepository: Symbol.for('GalleryImageRepository'),
+  CharacterRepository: Symbol.for('CharacterRepository'),
 
   // ═══════════════════════════════════════════
   // FEATURE SERVICES
@@ -117,6 +118,8 @@ export const TOKENS = {
   WalletService: Symbol.for('WalletService'),
   StoryEarningsPoolService: Symbol.for('StoryEarningsPoolService'),
   GalleryImageService: Symbol.for('GalleryImageService'),
+  CharacterService: Symbol.for('CharacterService'),
+  CoinTransactionService: Symbol.for('CoinTransactionService'),
 
   // ═══════════════════════════════════════════
   // CONTROLLERS
@@ -145,6 +148,8 @@ export const TOKENS = {
   WalletController: Symbol.for('WalletController'),
   StoryEarningsPoolController: Symbol.for('StoryEarningsPoolController'),
   GalleryImageController: Symbol.for('GalleryImageController'),
+  CharacterController: Symbol.for('CharacterController'),
+  CoinTransactionController: Symbol.for('CoinTransactionController'),
 
   // ═══════════════════════════════════════════
   // MIDDLEWARE FACTORIES

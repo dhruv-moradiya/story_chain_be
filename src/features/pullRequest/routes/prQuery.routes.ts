@@ -1,9 +1,8 @@
 import { TOKENS } from '@/container';
 import { AuthMiddlewareFactory } from '@/middlewares/factories';
 import { FastifyInstance } from 'fastify';
-import { PRQueryController } from '../controllers/prQuery.controller';
 import { container } from 'tsyringe';
-import { PullRequestResponses } from '@/schema/response.schema';
+import { PRQueryController } from '../controllers/prQuery.controller';
 
 const PullRequestRoutes = {
   GetCurrentUserPullRequests: '/me',
@@ -22,7 +21,7 @@ export async function prQueryRoutes(fastify: FastifyInstance) {
         description: "Get the current authenticated user's pull requests across all their stories.",
         tags: ['Pull Requests'],
         security: [{ bearerAuth: [] }],
-        response: PullRequestResponses.pullRequestList,
+        // response: PullRequestResponses.pullRequestList,
       },
     },
     ctrl.getCurrentUserPullRequests

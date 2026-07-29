@@ -1,0 +1,49 @@
+import { RateLimits } from '@/constants/rateLimits';
+import { TOKENS } from '@/container';
+import { AuthMiddlewareFactory, PlatformRoleMiddlewareFactory } from '@/middlewares/factories';
+import { FastifyInstance } from 'fastify';
+import { container } from 'tsyringe';
+import { CoinTransactionController } from '../controllers/coinTransaction.controller';
+
+export async function coinTransactionRoutes(fastify: FastifyInstance) {
+  const coinTransactionController = container.resolve<CoinTransactionController>(
+    TOKENS.CoinTransactionController
+  );
+
+  const authFactory = container.resolve<AuthMiddlewareFactory>(TOKENS.AuthMiddlewareFactory);
+  const platformRoleFactory = container.resolve<PlatformRoleMiddlewareFactory>(
+    TOKENS.PlatformRoleMiddlewareFactory
+  );
+
+  const validateAuth = authFactory.createAuthMiddleware();
+  const PlatformRoleGuards = platformRoleFactory.createGuards();
+
+  fastify.get(
+    '/my-purchases',
+    {
+      config: { rateLimit: RateLimits.PUBLIC_READ },
+      schema: {
+        description: 'Get all coin purchases made by the authenticated user',
+        tags: ['Coin Transactions'],
+        security: [{ bearerAuth: [] }],
+        // response: CoinTransactionResponses.coinTransactionList,
+      },
+    },
+    coinTransactionController.getMyPurchases
+  );
+
+  fastify.get(
+    '/',
+    {
+      preHandler: [validateAuth, PlatformRoleGuards.superAdmin],
+      config: { rateLimit: RateLimits.AUTHENTICATED },
+      schema: {
+        description: 'Get all coin transactions (SUPER_ADMIN only)',
+        tags: ['Coin Transactions'],
+        security: [{ bearerAuth: [] }],
+        // response: CoinTransactionResponses.coinTransactionList,
+      },
+    },
+    coinTransactionController.getAllTransactions
+  );
+}

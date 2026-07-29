@@ -89,9 +89,9 @@ const getBundleUploadSignature = () => {
 };
 
 /** Signature URL scoped to a specific character's folder. */
-const getCharacterUploadSignature = (storySlug: string, characterId: string) => {
-  if (!characterId || !storySlug) throw new Error('characterId and storySlug are required');
-  return getSignatureURL(`${storySlug}/characters/${characterId}`);
+const getCharacterUploadSignature = (storySlug: string) => {
+  if (!storySlug) throw new Error('characterId and storySlug are required');
+  return getSignatureURL(`${storySlug}/characters`);
 };
 
 /**
