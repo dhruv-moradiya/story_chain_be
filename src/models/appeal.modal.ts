@@ -1,17 +1,50 @@
 import mongoose, { Schema } from 'mongoose';
+import { IAppealDoc } from '@features/appeal/types/appeal.types';
+import {
+  APPEAL_PRIORITIES,
+  APPEAL_REVIEW_DECISIONS,
+  APPEAL_SCOPES,
+  APPEAL_STATUSES,
+  AppealStatus,
+  AppealPriority,
+} from '@features/appeal/types/appeal-enum';
 
-const appealSchema = new Schema(
+const appealSchema = new Schema<IAppealDoc>(
   {
-    banHistoryId: {
-      type: Schema.Types.ObjectId,
-      ref: 'BanHistory',
+    appealScope: {
+      type: String,
+      enum: APPEAL_SCOPES,
       required: true,
       index: true,
     },
+
+    // Appellant
     userId: {
-      type: Schema.Types.ObjectId,
+      type: String,
       ref: 'User',
       required: true,
+      index: true,
+    },
+
+    // Target (platform scope)
+    banHistoryId: {
+      type: Schema.Types.ObjectId,
+      ref: 'BanHistory',
+      // Required only when appealScope === 'PLATFORM' (enforced via pre-validate)
+      index: true,
+    },
+
+    // Target (story scope)
+    storyBanId: {
+      type: Schema.Types.ObjectId,
+      ref: 'StoryBan',
+      // Required only when appealScope === 'STORY' (enforced via pre-validate)
+      index: true,
+    },
+    storySlug: {
+      type: String,
+      ref: 'Story',
+      // Required only when appealScope === 'STORY'
       index: true,
     },
 
@@ -29,66 +62,79 @@ const appealSchema = new Schema(
     },
     evidenceUrls: [String],
 
-    // Status tracking
+    // Status & priority
     status: {
       type: String,
-      enum: ['PENDING', 'UNDER_REVIEW', 'APPROVED', 'REJECTED', 'ESCALATED'],
-      default: 'PENDING',
+      enum: APPEAL_STATUSES,
+      default: AppealStatus.PENDING,
       index: true,
     },
     priority: {
       type: String,
-      enum: ['LOW', 'NORMAL', 'HIGH', 'URGENT'],
-      default: 'NORMAL',
+      enum: APPEAL_PRIORITIES,
+      default: AppealPriority.NORMAL,
       index: true,
     },
 
-    // Assignment
+    // Assignment (platform scope only)
     assignedTo: {
-      type: Schema.Types.ObjectId,
+      type: String,
       ref: 'User',
       index: true,
     },
     assignedAt: Date,
 
-    // Review
     reviewedBy: {
-      type: Schema.Types.ObjectId,
+      type: String,
       ref: 'User',
     },
     reviewedAt: Date,
     reviewDecision: {
       type: String,
-      enum: ['APPROVE', 'REJECT', 'ESCALATE'],
+      // Past-tense matches the terminal AppealStatus values
+      enum: APPEAL_REVIEW_DECISIONS,
     },
     reviewNotes: String,
     internalNotes: String,
 
     // Escalation
     escalatedTo: {
-      type: Schema.Types.ObjectId,
+      type: String,
       ref: 'User',
     },
     escalatedAt: Date,
     escalationReason: String,
 
-    // Response
+    // Response to appellant
     responseMessage: String,
 
     // Metrics
-    responseTime: Number,
+    responseTimeMs: Number,
     reviewCount: {
       type: Number,
       default: 0,
     },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
-// Indexes
 appealSchema.index({ status: 1, priority: -1, createdAt: 1 });
 appealSchema.index({ assignedTo: 1, status: 1 });
+appealSchema.index({ appealScope: 1, status: 1 });
+appealSchema.index({ userId: 1, banHistoryId: 1, status: 1 }); // open-appeal duplicate check
+appealSchema.index({ userId: 1, storyBanId: 1, status: 1 }); // open-appeal duplicate check
 
-export const Appeal = mongoose.model('Appeal', appealSchema);
+appealSchema.pre('validate', function (next) {
+  const hasPlatform = !!this.banHistoryId;
+  const hasStory = !!this.storyBanId && !!this.storySlug;
+
+  if (this.appealScope === 'PLATFORM' && !hasPlatform) {
+    return next(new Error('banHistoryId is required for PLATFORM appeals'));
+  }
+  if (this.appealScope === 'STORY' && !hasStory) {
+    return next(new Error('storyBanId and storySlug are required for STORY appeals'));
+  }
+  next();
+});
+
+export const Appeal = mongoose.model<IAppealDoc>('Appeal', appealSchema);

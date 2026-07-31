@@ -53,6 +53,13 @@ const STORY_COLLABORATOR_ROLE_CONFIG = {
       canDeleteComments: true,
       canBanFromStory: true,
       canViewStoryAnalytics: true,
+      canDistributeCoins: true,
+      // Moderation: subject to conflict-of-interest check at service layer
+      // (cannot resolve reports where they are the reported party)
+      canResolveReports: true,
+      // Appeals: can approve/reject story-level ban appeals
+      // (cannot decide an appeal for a ban they personally issued)
+      canReviewStoryAppeals: true,
     },
   },
 
@@ -77,6 +84,11 @@ const STORY_COLLABORATOR_ROLE_CONFIG = {
       canDeleteComments: true,
       canBanFromStory: true,
       canViewStoryAnalytics: true,
+      canDistributeCoins: false,
+      // Moderation: subject to conflict-of-interest check at service layer
+      canResolveReports: true,
+      // Appeals: can approve/reject story-level ban appeals
+      canReviewStoryAppeals: true,
     },
   },
 
@@ -101,6 +113,11 @@ const STORY_COLLABORATOR_ROLE_CONFIG = {
       canDeleteComments: true,
       canBanFromStory: true,
       canViewStoryAnalytics: false,
+      canDistributeCoins: false,
+      // Moderation: can resolve/dismiss reports but cannot override owner/co_author decisions
+      canResolveReports: true,
+      // Appeals: cannot approve/reject — only owner and co_author have final say
+      canReviewStoryAppeals: false,
     },
   },
 
@@ -125,6 +142,9 @@ const STORY_COLLABORATOR_ROLE_CONFIG = {
       canDeleteComments: false,
       canBanFromStory: false,
       canViewStoryAnalytics: false,
+      canDistributeCoins: false,
+      canResolveReports: false,
+      canReviewStoryAppeals: false,
     },
   },
 
@@ -149,6 +169,9 @@ const STORY_COLLABORATOR_ROLE_CONFIG = {
       canDeleteComments: false,
       canBanFromStory: false,
       canViewStoryAnalytics: false,
+      canDistributeCoins: false,
+      canResolveReports: false,
+      canReviewStoryAppeals: false,
     },
   },
 } as const;

@@ -12,13 +12,14 @@ export class GalleryImageRepository extends BaseRepository<IGalleryImage, IGalle
 
   async findByStorySlug(
     storySlug: string,
-    query: { category?: string; isMoodboard?: boolean; chapterSlug?: string } = {}
+    query: { category?: string; isMoodboard?: boolean; chapterSlug?: string; albumId?: string } = {}
   ): Promise<IGalleryImage[]> {
     const filter: FilterQuery<IGalleryImageDoc> = { storySlug };
 
     if (query.category) filter.category = query.category;
     if (query.isMoodboard !== undefined) filter.isMoodboard = query.isMoodboard;
     if (query.chapterSlug) filter.chapterSlug = query.chapterSlug;
+    if (query.albumId) filter.albumId = query.albumId;
 
     return this.findMany({
       filter,
@@ -26,8 +27,13 @@ export class GalleryImageRepository extends BaseRepository<IGalleryImage, IGalle
     });
   }
 
+  async createSingle(image: Partial<IGalleryImageDoc>): Promise<IGalleryImage> {
+    const doc = await this.model.create(image);
+    return doc.toObject() as IGalleryImage;
+  }
+
   async bulkCreate(images: Partial<IGalleryImageDoc>[]): Promise<IGalleryImage[]> {
     const inserted = await this.model.insertMany(images, { lean: true });
-    return inserted as IGalleryImage[];
+    return inserted as unknown as IGalleryImage[];
   }
 }

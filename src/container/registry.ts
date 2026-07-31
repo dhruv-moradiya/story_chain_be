@@ -59,6 +59,8 @@ import { VoteRepository } from '@/shared/services/vote.repository';
 import { FollowRepository } from '@/features/follow/repositories/follow.repository';
 import { GalleryImageRepository } from '@/features/galleryImage/repositories/galleryImage.repository';
 import { CharacterRepository } from '@/features/character/repositories/character.repository';
+import { AlbumRepository } from '@/features/album/repositories/album.repository';
+import { ReportRepository } from '@/features/report/repositories/report.repository';
 
 // ═══════════════════════════════════════════
 // FEATURE SERVICES
@@ -105,6 +107,8 @@ import { WalletService } from '@/features/wallet/service/wallet.service';
 import { FollowService } from '@/features/follow/services/follow.service';
 import { GalleryImageService } from '@/features/galleryImage/services/galleryImage.service';
 import { CharacterService } from '@/features/character/services/character.service';
+import { AlbumService } from '@/features/album/services/album.service';
+import { ReportService } from '@features/report/services/report.service';
 
 // ═══════════════════════════════════════════
 // CONTROLLERS
@@ -131,6 +135,8 @@ import { WalletController } from '@/features/wallet/controllers/waller.controlle
 import { FollowController } from '@/features/follow/controllers/follow.controller';
 import { GalleryImageController } from '@/features/galleryImage/controllers/galleryImage.controller';
 import { CharacterController } from '@/features/character/controllers/character.controller';
+import { AlbumController } from '@/features/album/controllers/album.controller';
+import { ReportController } from '@features/report/controllers/report.controller';
 
 // ═══════════════════════════════════════════
 // MIDDLEWARE FACTORIES
@@ -244,6 +250,8 @@ export function registerServices(): void {
   container.register(TOKENS.FollowRepository, { useClass: FollowRepository });
   container.register(TOKENS.GalleryImageRepository, { useClass: GalleryImageRepository });
   container.register(TOKENS.CharacterRepository, { useClass: CharacterRepository });
+  container.register(TOKENS.AlbumRepository, { useClass: AlbumRepository });
+  container.register(TOKENS.ReportRepository, { useClass: ReportRepository });
 
   // ═══════════════════════════════════════════
   // FEATURE SERVICES
@@ -293,6 +301,8 @@ export function registerServices(): void {
   container.register(TOKENS.FollowService, { useClass: FollowService });
   container.register(TOKENS.GalleryImageService, { useClass: GalleryImageService });
   container.register(TOKENS.CharacterService, { useClass: CharacterService });
+  container.register(TOKENS.AlbumService, { useClass: AlbumService });
+  container.register(TOKENS.ReportService, { useClass: ReportService });
 
   // ═══════════════════════════════════════════
   // CONTROLLERS
@@ -319,6 +329,8 @@ export function registerServices(): void {
   container.register(TOKENS.FollowController, { useClass: FollowController });
   container.register(TOKENS.GalleryImageController, { useClass: GalleryImageController });
   container.register(TOKENS.CharacterController, { useClass: CharacterController });
+  container.register(TOKENS.AlbumController, { useClass: AlbumController });
+  container.register(TOKENS.ReportController, { useClass: ReportController });
 
   // ═══════════════════════════════════════════
   // MIDDLEWARE FACTORIES

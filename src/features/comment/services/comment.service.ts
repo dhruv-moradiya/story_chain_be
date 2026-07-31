@@ -144,33 +144,6 @@ class CommentService extends BaseModule implements ICommentCrudService {
 
     return formatPaginatedResponse(docs, totalDocs, page, limit);
   }
-
-  // private formatPaginatedResponse(
-  //   docs: ICommentResponse[],
-  //   totalDocs: number,
-  //   page: number,
-  //   limit: number
-  // ): ICommentPaginatedResponse {
-  //   const totalPages = Math.ceil(totalDocs / limit);
-  //   const pagingCounter = (page - 1) * limit + 1;
-  //   const hasPrevPage = page > 1;
-  //   const hasNextPage = page < totalPages;
-  //   const prevPage = hasPrevPage ? page - 1 : null;
-  //   const nextPage = hasNextPage ? page + 1 : null;
-
-  //   return {
-  //     docs,
-  //     totalDocs,
-  //     limit,
-  //     totalPages,
-  //     page,
-  //     pagingCounter,
-  //     hasPrevPage,
-  //     hasNextPage,
-  //     prevPage,
-  //     nextPage,
-  //   };
-  // }
 }
 
 export { CommentService };

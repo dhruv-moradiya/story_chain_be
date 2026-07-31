@@ -213,20 +213,104 @@ export function globalErrorHandler(isDevelopment: boolean = false) {
 
       const rawErrors = (error as Record<string, unknown>).validation as AjvError[];
 
-      // Parse AJV errors into clean { field, message } objects
-      const fieldErrors = rawErrors.map((ajvErr) => {
-        // instancePath = "/title" → "title", "" → context (e.g. "body")
-        const rawPath = ajvErr.instancePath.replace(/^\//, '').replace(/\//g, '.');
+      // ── Smart anyOf handler (discriminated unions from zod-to-json-schema) ──
+      // When AJV fails on `anyOf`, it reports errors from ALL branches, producing
+      // an unreadable wall of text. We instead:
+      //   1. Find the `anyOf` error to confirm this is a discriminated union.
+      //   2. Look for the discriminator field (e.g. reportType) in the request body.
+      //   3. Find the branch index that matches the submitted discriminator value.
+      //   4. Surface only that branch's errors — or fall back if we can't narrow.
+      const anyOfError = rawErrors.find((e) => e.keyword === 'anyOf');
+      if (anyOfError) {
+        // Try to extract the discriminator key/value from AJV schemaPath hints.
+        // schemaPath for a discriminator const error looks like:
+        //   "#/anyOf/2/properties/reportType/const"
+        const discriminatorErrors = rawErrors.filter(
+          (e) => e.keyword === 'const' && e.schemaPath.includes('/anyOf/')
+        );
 
+        // Try to find the branch index by matching the body's discriminator value.
+        // We parse the branch index from the schemaPath of a `const` error that
+        // does NOT match → meaning that branch expects a different value.
+        // The matching branch is the one NOT present in the const errors list.
+        let matchedBranchIndex: number | null = null;
+        if (discriminatorErrors.length > 0) {
+          const presentBranchIndices = new Set(
+            discriminatorErrors.map((e) => {
+              const m = e.schemaPath.match(/\/anyOf\/(\d+)\//);
+              return m ? parseInt(m[1], 10) : -1;
+            })
+          );
+          // The matching branch index is the one not in the failed-const list.
+          const allBranchIndices = rawErrors
+            .map((e) => {
+              const m = e.schemaPath.match(/\/anyOf\/(\d+)\//);
+              return m ? parseInt(m[1], 10) : -1;
+            })
+            .filter((i) => i >= 0);
+          const uniqueIndices = new Set(allBranchIndices);
+          for (const idx of uniqueIndices) {
+            if (!presentBranchIndices.has(idx)) {
+              matchedBranchIndex = idx;
+              break;
+            }
+          }
+        }
+
+        // Collect errors only from the matching branch (if found).
+        const branchErrors =
+          matchedBranchIndex !== null
+            ? rawErrors.filter((e) => {
+                const m = e.schemaPath.match(/\/anyOf\/(\d+)\//);
+                return m ? parseInt(m[1], 10) === matchedBranchIndex : false;
+              })
+            : [];
+
+        const sourceErrors = branchErrors.length > 0 ? branchErrors : rawErrors;
+
+        // Filter out the top-level `anyOf` error itself — it's not user-actionable.
+        const actionableErrors = sourceErrors.filter((e) => e.keyword !== 'anyOf');
+
+        if (actionableErrors.length > 0) {
+          const fieldErrors = actionableErrors.map((ajvErr) => {
+            const rawPath = ajvErr.instancePath.replace(/^\//, '').replace(/\//g, '.');
+            let field = rawPath || context;
+
+            if (ajvErr.keyword === 'required' && ajvErr.params?.missingProperty) {
+              const missing = String(ajvErr.params.missingProperty).replace(/^\//, '');
+              field = rawPath ? `${rawPath}.${missing}` : missing;
+            }
+
+            const fieldLabel = field.charAt(0).toUpperCase() + field.slice(1);
+            const message = ajvErr.message
+              ? `${fieldLabel} ${ajvErr.message}`
+              : `${fieldLabel} is invalid`;
+
+            return { field, message, code: ajvErr.keyword };
+          });
+
+          const summary = fieldErrors.map((e) => e.message).join(', ');
+          const validationError = new ApiError(
+            'VALIDATION_FAILED',
+            HTTP_STATUS.UNPROCESSABLE_ENTITY.code,
+            fieldErrors.length === 1 ? fieldErrors[0].message : `Validation failed: ${summary}`,
+            { details: { context, errors: fieldErrors } }
+          );
+          return reply.code(validationError.statusCode).send(validationError.toJSON(isDevelopment));
+        }
+      }
+      // ── End anyOf handler ────────────────────────────────────────────────────
+
+      // Standard (non-anyOf) AJV errors
+      const fieldErrors = rawErrors.map((ajvErr) => {
+        const rawPath = ajvErr.instancePath.replace(/^\//, '').replace(/\//g, '.');
         let field = rawPath || context;
 
-        // AJV keyword "required" puts the missing field in params.missingProperty
         if (ajvErr.keyword === 'required' && ajvErr.params?.missingProperty) {
           const missing = String(ajvErr.params.missingProperty).replace(/^\//, '');
           field = rawPath ? `${rawPath}.${missing}` : missing;
         }
 
-        // Capitalise first letter of the field name for a friendlier message
         const fieldLabel = field.charAt(0).toUpperCase() + field.slice(1);
         const message = ajvErr.message
           ? `${fieldLabel} ${ajvErr.message}`
@@ -235,7 +319,6 @@ export function globalErrorHandler(isDevelopment: boolean = false) {
         return { field, message, code: ajvErr.keyword };
       });
 
-      // For a single field error, surface field + message at the top level (mirrors ZodError handler)
       if (fieldErrors.length === 1) {
         const { field, message } = fieldErrors[0];
         const validationError = new ApiError(

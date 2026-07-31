@@ -69,11 +69,14 @@ export const PLATFORM_ROLES = {
       canBanUsers: true,
       canUnbanUsers: true,
       canViewAllReports: true,
+      canResolveReports: true, // Can mark reports as resolved/dismissed
       canDeleteAnyContent: true,
       canReviewAppeals: true,
       canApproveAppeals: true,
       canRejectAppeals: true,
       canEscalateAppeals: true,
+      canIssueWarning: true, // Can issue formal warnings (distinct from bans)
+      canExpireActiveBans: true, // Can manually lift/expire a ban early
       canManageRoles: true,
       canAssignModerators: true,
       canAccessAdminPanel: true,
@@ -90,11 +93,14 @@ export const PLATFORM_ROLES = {
       canBanUsers: true,
       canUnbanUsers: false,
       canViewAllReports: true,
+      canResolveReports: true, // Can resolve/dismiss platform-level reports
       canDeleteAnyContent: true,
       canReviewAppeals: true,
-      canApproveAppeals: false,
+      canApproveAppeals: false, // Cannot approve unbans — separation of powers
       canRejectAppeals: true,
       canEscalateAppeals: true,
+      canIssueWarning: true, // Can issue formal warnings
+      canExpireActiveBans: false, // Cannot lift bans — only APPEAL_MODERATOR / SUPER_ADMIN
       canManageRoles: false,
       canAssignModerators: false,
       canAccessAdminPanel: true,
@@ -108,14 +114,17 @@ export const PLATFORM_ROLES = {
     name: 'Appeal Moderator',
     description: 'Review and decide on ban appeals',
     permissions: {
-      canBanUsers: false,
+      canBanUsers: false, // Cannot issue bans — separation of powers
       canUnbanUsers: true,
-      canViewAllReports: true,
+      canViewAllReports: false, // Scope limited to appeals; can see report linked to an appeal
+      canResolveReports: false, // Not in the report-handling chain
       canDeleteAnyContent: false,
       canReviewAppeals: true,
       canApproveAppeals: true,
       canRejectAppeals: true,
       canEscalateAppeals: true,
+      canIssueWarning: false,
+      canExpireActiveBans: true, // Core purpose: can lift/expire active bans
       canManageRoles: false,
       canAssignModerators: false,
       canAccessAdminPanel: true,
@@ -132,11 +141,14 @@ export const PLATFORM_ROLES = {
       canBanUsers: false,
       canUnbanUsers: false,
       canViewAllReports: false,
+      canResolveReports: false,
       canDeleteAnyContent: false,
       canReviewAppeals: false,
       canApproveAppeals: false,
       canRejectAppeals: false,
       canEscalateAppeals: false,
+      canIssueWarning: false,
+      canExpireActiveBans: false,
       canManageRoles: false,
       canAssignModerators: false,
       canAccessAdminPanel: false,
@@ -164,28 +176,6 @@ export const CHAPTER_LIMITS = {
   },
   BRANCHES: {
     MAX_PER_CHAPTER: 10,
-  },
-} as const;
-
-// ========================================
-// STORY VALIDATION
-// ========================================
-export const STORY_LIMITS = {
-  TITLE: {
-    MIN_LENGTH: 3,
-    MAX_LENGTH: 200,
-  },
-  DESCRIPTION: {
-    MIN_LENGTH: 10,
-    MAX_LENGTH: 2000,
-  },
-  SLUG: {
-    MIN_LENGTH: 3,
-    MAX_LENGTH: 100,
-  },
-  TAGS: {
-    MAX_COUNT: 10,
-    MAX_LENGTH_PER_TAG: 30,
   },
 } as const;
 
@@ -501,21 +491,11 @@ export enum PRType {
   DELETE_CHAPTER = 'delete_chapter',
 }
 
-export enum CollaboratorRole {
-  OWNER = 'OWNER',
-  MODERATOR = 'MODERATOR',
-  REVIEWER = 'REVIEWER',
-  CONTRIBUTOR = 'CONTRIBUTOR',
-}
-
-export enum ReportReason {
-  SPAM = 'SPAM',
-  HARASSMENT = 'HARASSMENT',
-  INAPPROPRIATE_CONTENT = 'INAPPROPRIATE_CONTENT',
-  COPYRIGHT = 'COPYRIGHT',
-  OFF_TOPIC = 'OFF_TOPIC',
-  OTHER = 'OTHER',
-}
+// CollaboratorRole and ReportReason enums are defined in their respective
+// feature directories. Use:
+//   StoryCollaboratorRole from '@features/storyCollaborator/types/storyCollaborator-enum'
+//   ReportReason from '@features/report/types/report-enum'
+// Duplicating them here caused casing conflicts and import confusion.
 
 // ========================================
 // REGEX PATTERNS
@@ -533,7 +513,6 @@ export const PATTERNS = {
 // ========================================
 export default {
   CHAPTER_LIMITS,
-  STORY_LIMITS,
   USER_LIMITS,
   COMMENT_LIMITS,
   PR_LIMITS,

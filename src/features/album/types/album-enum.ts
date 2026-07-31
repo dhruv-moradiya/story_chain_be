@@ -1,6 +1,6 @@
 import {
   GalleryCategory,
-  GALLERY_CATEGORIES,
+  GALLERY_IMAGE_CATEGORIES,
 } from '@features/galleryImage/types/galleryImage-enum';
 
 enum AlbumVisibility {
@@ -11,4 +11,4 @@ enum AlbumVisibility {
 
 const ALBUM_VISIBILITIES = ['public', 'private', 'collaborators_only'] as const;
 
-export { AlbumVisibility, ALBUM_VISIBILITIES, GalleryCategory, GALLERY_CATEGORIES };
+export { AlbumVisibility, ALBUM_VISIBILITIES, GalleryCategory, GALLERY_IMAGE_CATEGORIES };

@@ -363,6 +363,17 @@ enum StoryTimelineAction {
   // Moderation events
   STORY_FLAGGED = 'story_flagged',
   STORY_UNFLAGGED = 'story_unflagged',
+
+  // Gallery Image events
+  GALLERY_IMAGE_ADDED = 'gallery_image_added',
+  GALLERY_IMAGE_UPDATED = 'gallery_image_updated',
+  GALLERY_IMAGE_DELETED = 'gallery_image_deleted',
+
+  // Album events
+  ALBUM_CREATED = 'album_created',
+  ALBUM_UPDATED = 'album_updated',
+  ALBUM_DELETED = 'album_deleted',
+  IMAGES_ADDED_TO_ALBUM = 'images_added_to_album',
 }
 
 const STORY_TIMELINE_ACTIONS = [
@@ -401,6 +412,17 @@ const STORY_TIMELINE_ACTIONS = [
   // Moderation events
   'story_flagged',
   'story_unflagged',
+
+  // Gallery Image events
+  'gallery_image_added',
+  'gallery_image_updated',
+  'gallery_image_deleted',
+
+  // Album events
+  'album_created',
+  'album_updated',
+  'album_deleted',
+  'images_added_to_album',
 ] as const;
 
 export {

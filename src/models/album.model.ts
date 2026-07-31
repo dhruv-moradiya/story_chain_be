@@ -1,17 +1,14 @@
-import mongoose, { Schema } from 'mongoose';
+import { ALBUM_VISIBILITIES } from '@features/album/types/album-enum';
 import { IAlbumDoc } from '@features/album/types/album.types';
-import { ALBUM_VISIBILITIES, GALLERY_CATEGORIES } from '@features/album/types/album-enum';
-import { ImageAssetSchema } from '@/models/shared/imageAsset.schema';
+import mongoose, { Schema } from 'mongoose';
 
 const albumSchema = new Schema<IAlbumDoc>(
   {
     storySlug: { type: String, required: true, ref: 'Story', index: true },
     createdBy: { type: String, required: true, ref: 'User' },
 
-    coverImage: ImageAssetSchema,
     title: { type: String, required: true, maxlength: 60 },
     description: { type: String, maxlength: 200 },
-    category: { type: String, enum: GALLERY_CATEGORIES },
     tags: { type: [String], default: [] },
     visibility: { type: String, enum: ALBUM_VISIBILITIES, default: 'public' },
     sortOrder: { type: Number, default: 0 },

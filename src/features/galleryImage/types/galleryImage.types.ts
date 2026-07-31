@@ -1,12 +1,12 @@
 import { Document, Types } from 'mongoose';
 import { ID } from '@/types';
-import { GALLERY_CATEGORIES, GalleryCategory } from './galleryImage-enum';
+import { GALLERY_IMAGE_CATEGORIES, GalleryCategory } from './galleryImage-enum';
 
 // ========================================
 // DERIVED TYPES
 // ========================================
 
-export type TGalleryCategory = (typeof GALLERY_CATEGORIES)[number];
+export type TGalleryCategory = (typeof GALLERY_IMAGE_CATEGORIES)[number];
 
 // ========================================
 // ROOT MODEL INTERFACE
@@ -25,7 +25,7 @@ export interface IGalleryImage {
   title?: string;
   caption?: string;
   category: TGalleryCategory;
-  tags: string[];
+  tags?: string[];
 
   // Context links
   chapterSlug?: string;
@@ -39,9 +39,13 @@ export interface IGalleryImage {
   updatedAt: Date;
 }
 
-export interface IGalleryImageDoc extends Omit<IGalleryImage, '_id'>, Document {
+export interface IGalleryImageDoc extends Omit<IGalleryImage, '_id' | 'albumId'>, Document {
   _id: Types.ObjectId;
-  albumId?: Types.ObjectId;
+  albumId?: Types.ObjectId | string;
+}
+
+export interface IGalleryImageSignatureResponse {
+  uploadURL: string;
 }
 
 export { GalleryCategory };

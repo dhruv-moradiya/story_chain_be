@@ -317,6 +317,96 @@ class StoryTimelineService extends BaseModule {
   }
 
   // ----------------------
+  // Gallery Image LifeCycle
+  // ----------------------
+  recordGalleryImageAdded(
+    storySlug: string,
+    performedBy: string,
+    metadata?: Record<string, unknown>,
+    options?: IOperationOptions
+  ) {
+    return this.record(
+      { storySlug, action: StoryTimelineAction.GALLERY_IMAGE_ADDED, performedBy, metadata },
+      options
+    );
+  }
+
+  recordGalleryImageUpdated(
+    storySlug: string,
+    performedBy: string,
+    metadata?: Record<string, unknown>,
+    options?: IOperationOptions
+  ) {
+    return this.record(
+      { storySlug, action: StoryTimelineAction.GALLERY_IMAGE_UPDATED, performedBy, metadata },
+      options
+    );
+  }
+
+  recordGalleryImageDeleted(
+    storySlug: string,
+    performedBy: string,
+    metadata?: Record<string, unknown>,
+    options?: IOperationOptions
+  ) {
+    return this.record(
+      { storySlug, action: StoryTimelineAction.GALLERY_IMAGE_DELETED, performedBy, metadata },
+      options
+    );
+  }
+
+  // ----------------------
+  // Album LifeCycle
+  // ----------------------
+  recordAlbumCreated(
+    storySlug: string,
+    performedBy: string,
+    metadata?: Record<string, unknown>,
+    options?: IOperationOptions
+  ) {
+    return this.record(
+      { storySlug, action: StoryTimelineAction.ALBUM_CREATED, performedBy, metadata },
+      options
+    );
+  }
+
+  recordAlbumUpdated(
+    storySlug: string,
+    performedBy: string,
+    metadata?: Record<string, unknown>,
+    options?: IOperationOptions
+  ) {
+    return this.record(
+      { storySlug, action: StoryTimelineAction.ALBUM_UPDATED, performedBy, metadata },
+      options
+    );
+  }
+
+  recordAlbumDeleted(
+    storySlug: string,
+    performedBy: string,
+    metadata?: Record<string, unknown>,
+    options?: IOperationOptions
+  ) {
+    return this.record(
+      { storySlug, action: StoryTimelineAction.ALBUM_DELETED, performedBy, metadata },
+      options
+    );
+  }
+
+  recordImagesAddedToAlbum(
+    storySlug: string,
+    performedBy: string,
+    metadata?: Record<string, unknown>,
+    options?: IOperationOptions
+  ) {
+    return this.record(
+      { storySlug, action: StoryTimelineAction.IMAGES_ADDED_TO_ALBUM, performedBy, metadata },
+      options
+    );
+  }
+
+  // ----------------------
   // Queries
   // ----------------------
 

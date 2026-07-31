@@ -70,6 +70,8 @@ export const TOKENS = {
   FollowRepository: Symbol.for('FollowRepository'),
   GalleryImageRepository: Symbol.for('GalleryImageRepository'),
   CharacterRepository: Symbol.for('CharacterRepository'),
+  AlbumRepository: Symbol.for('AlbumRepository'),
+  ReportRepository: Symbol.for('ReportRepository'),
 
   // ═══════════════════════════════════════════
   // FEATURE SERVICES
@@ -119,6 +121,7 @@ export const TOKENS = {
   StoryEarningsPoolService: Symbol.for('StoryEarningsPoolService'),
   GalleryImageService: Symbol.for('GalleryImageService'),
   CharacterService: Symbol.for('CharacterService'),
+  AlbumService: Symbol.for('AlbumService'),
   CoinTransactionService: Symbol.for('CoinTransactionService'),
 
   // ═══════════════════════════════════════════
@@ -149,6 +152,7 @@ export const TOKENS = {
   StoryEarningsPoolController: Symbol.for('StoryEarningsPoolController'),
   GalleryImageController: Symbol.for('GalleryImageController'),
   CharacterController: Symbol.for('CharacterController'),
+  AlbumController: Symbol.for('AlbumController'),
   CoinTransactionController: Symbol.for('CoinTransactionController'),
 
   // ═══════════════════════════════════════════

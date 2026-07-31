@@ -20,7 +20,8 @@
     "seed:prs:only": "cross-env SEED_TARGET=prs-only tsx seeders/index.ts",
     "seed:pr-reviews": "cross-env SEED_TARGET=pr-reviews tsx seeders/index.ts",
     "seed:pr-votes": "cross-env SEED_TARGET=pr-votes tsx seeders/index.ts",
-    "seed:pr-comments": "cross-env SEED_TARGET=pr-comments tsx seeders/index.ts"
+    "seed:pr-comments": "cross-env SEED_TARGET=pr-comments tsx seeders/index.ts",
+    "seed:reports": "cross-env SEED_TARGET=reports tsx seeders/index.ts"
   },
   "keywords": [
     "fastify",

@@ -6,6 +6,7 @@ import { AuthMiddlewareFactory, StoryRoleMiddlewareFactory } from '@/middlewares
 import { StoryRoleGuards } from '@/middlewares/rbac/storyRole.middleware';
 import { GalleryImageResponses } from '@/schema/response/galleryImage.response';
 import {
+  GalleryImageCreateSchema,
   GalleryImageBulkCreateSchema,
   GalleryImageQuerySchema,
   GalleryImageUpdateSchema,
@@ -15,8 +16,10 @@ import { GalleryImageController } from '../controllers/galleryImage.controller';
 import { RateLimits } from '@/constants/rateLimits';
 
 const GalleryImageApiRoutes = {
+  GenerateSignature: '/slug/:slug/signature',
+  AddImage: '/slug/:slug',
+  BulkUploadImages: '/slug/:slug/bulk',
   GetGallery: '/slug/:slug',
-  UploadImages: '/slug/:slug',
   UpdateImage: '/:imageId',
   DeleteImage: '/:imageId',
 } as const;
@@ -34,30 +37,49 @@ export async function galleryImageRoutes(fastify: FastifyInstance) {
   const validateAuth = authFactory.createAuthMiddleware();
   const loadStoryContext = storyRoleFactory.createLoadContextBySlug();
 
-  // Get all gallery images for a story
-  fastify.get(
-    GalleryImageApiRoutes.GetGallery,
-    {
-      config: { rateLimit: RateLimits.PUBLIC_READ },
-      schema: {
-        description: 'Get all gallery images for a story',
-        tags: ['Gallery Images'],
-        params: zodToJsonSchema(StorySlugSchema),
-        querystring: zodToJsonSchema(GalleryImageQuerySchema),
-        response: GalleryImageResponses.imageList,
-      },
-    },
-    galleryImageController.getGallery
-  );
-
-  // Upload multiple images to a story's gallery
+  // 1. Generate signature URL for Cloudinary upload (collaborators only)
   fastify.post(
-    GalleryImageApiRoutes.UploadImages,
+    GalleryImageApiRoutes.GenerateSignature,
     {
-      preHandler: [validateAuth, loadStoryContext, StoryRoleGuards.canEditStorySettings],
+      preHandler: [validateAuth, loadStoryContext, StoryRoleGuards.isCollaborator],
       config: { rateLimit: RateLimits.WRITE },
       schema: {
-        description: 'Upload multiple images to a story gallery',
+        description: 'Generate signature URL for Cloudinary gallery image upload',
+        tags: ['Gallery Images'],
+        security: [{ bearerAuth: [] }],
+        params: zodToJsonSchema(StorySlugSchema),
+        response: GalleryImageResponses.signatureGenerated,
+      },
+    },
+    galleryImageController.generateSignature
+  );
+
+  // 2. Add single image to gallery (collaborators only)
+  fastify.post(
+    GalleryImageApiRoutes.AddImage,
+    {
+      preHandler: [validateAuth, loadStoryContext, StoryRoleGuards.isCollaborator],
+      config: { rateLimit: RateLimits.WRITE },
+      schema: {
+        description: 'Add an image to a story gallery',
+        tags: ['Gallery Images'],
+        security: [{ bearerAuth: [] }],
+        params: zodToJsonSchema(StorySlugSchema),
+        body: zodToJsonSchema(GalleryImageCreateSchema),
+        response: GalleryImageResponses.imageAdded,
+      },
+    },
+    galleryImageController.addImage
+  );
+
+  // 3. Upload multiple images in bulk (collaborators only)
+  fastify.post(
+    GalleryImageApiRoutes.BulkUploadImages,
+    {
+      preHandler: [validateAuth, loadStoryContext, StoryRoleGuards.isCollaborator],
+      config: { rateLimit: RateLimits.WRITE },
+      schema: {
+        description: 'Upload multiple images in bulk to a story gallery',
         tags: ['Gallery Images'],
         security: [{ bearerAuth: [] }],
         params: zodToJsonSchema(StorySlugSchema),
@@ -68,14 +90,33 @@ export async function galleryImageRoutes(fastify: FastifyInstance) {
     galleryImageController.uploadImages
   );
 
-  // Update a gallery image
+  // 4. Get all gallery images for a story (collaborators only)
+  fastify.get(
+    GalleryImageApiRoutes.GetGallery,
+    {
+      preHandler: [validateAuth, loadStoryContext, StoryRoleGuards.isCollaborator],
+      config: { rateLimit: RateLimits.PUBLIC_READ },
+      schema: {
+        description: 'Get all gallery images for a story',
+        tags: ['Gallery Images'],
+        security: [{ bearerAuth: [] }],
+        params: zodToJsonSchema(StorySlugSchema),
+        querystring: zodToJsonSchema(GalleryImageQuerySchema),
+        response: GalleryImageResponses.imageList,
+      },
+    },
+    galleryImageController.getGallery
+  );
+
+  // 5. Update a gallery image (collaborators only)
   fastify.patch(
     GalleryImageApiRoutes.UpdateImage,
     {
-      preHandler: [validateAuth], // Optionally verify ownership or role
+      preHandler: [validateAuth],
       config: { rateLimit: RateLimits.WRITE },
       schema: {
-        description: 'Update gallery image metadata',
+        description:
+          'Update gallery image metadata (isMoodboard, chapterSlug, albumId, title, caption, category, sortOrder)',
         tags: ['Gallery Images'],
         security: [{ bearerAuth: [] }],
         params: {
@@ -92,14 +133,14 @@ export async function galleryImageRoutes(fastify: FastifyInstance) {
     galleryImageController.updateImage
   );
 
-  // Delete a gallery image
+  // 6. Delete a gallery image (collaborators only)
   fastify.delete(
     GalleryImageApiRoutes.DeleteImage,
     {
-      preHandler: [validateAuth], // Optionally verify ownership or role
+      preHandler: [validateAuth],
       config: { rateLimit: RateLimits.WRITE },
       schema: {
-        description: 'Delete a gallery image',
+        description: 'Delete a gallery image from Cloudinary and database',
         tags: ['Gallery Images'],
         security: [{ bearerAuth: [] }],
         params: {

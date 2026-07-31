@@ -1,8 +1,8 @@
 import { Document, Types } from 'mongoose';
-import { ID, IImageAsset } from '@/types';
+import { ID } from '@/types';
 import {
   ALBUM_VISIBILITIES,
-  GALLERY_CATEGORIES,
+  GALLERY_IMAGE_CATEGORIES,
   AlbumVisibility,
   GalleryCategory,
 } from './album-enum';
@@ -12,7 +12,7 @@ import {
 // ========================================
 
 export type TAlbumVisibility = (typeof ALBUM_VISIBILITIES)[number];
-export type TAlbumCategory = (typeof GALLERY_CATEGORIES)[number];
+export type TAlbumCategory = (typeof GALLERY_IMAGE_CATEGORIES)[number];
 
 // ========================================
 // ROOT MODEL INTERFACE
@@ -23,10 +23,8 @@ export interface IAlbum {
   storySlug: string;
   createdBy: string;
 
-  coverImage?: IImageAsset;
   title: string;
   description?: string;
-  category?: TAlbumCategory;
   tags: string[];
   visibility: TAlbumVisibility;
   sortOrder: number;

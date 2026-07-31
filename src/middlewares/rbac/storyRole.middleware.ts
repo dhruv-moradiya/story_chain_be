@@ -32,6 +32,16 @@ const VIEW_ANALYTICS_ROLES: string[] = [
   StoryCollaboratorRole.CO_AUTHOR,
 ];
 
+// Roles that can moderate story reports / comments
+const MODERATE_STORY_ROLES: string[] = [
+  StoryCollaboratorRole.OWNER,
+  StoryCollaboratorRole.CO_AUTHOR,
+  StoryCollaboratorRole.MODERATOR,
+];
+
+// Roles that can unban users from a story
+const CO_AUTHOR_ROLES: string[] = [StoryCollaboratorRole.OWNER, StoryCollaboratorRole.CO_AUTHOR];
+
 /**
  * Loads the story context by slug (or storySlug) and attaches story role info to the request.
  * This middleware assumes that the user is already authenticated and user info is attached to request.user.
@@ -151,6 +161,53 @@ export const StoryRoleGuards = {
         success: false,
         error: 'Forbidden',
         message: 'You do not have permission to view analytics for this story.',
+      });
+    }
+  },
+
+  /**
+   * Checks if the user is any collaborator or creator of the story.
+   */
+  isCollaborator: async (request: FastifyRequest, reply: FastifyReply) => {
+    const userRole = request.userStoryRole;
+
+    if (!userRole) {
+      return reply.code(HTTP_STATUS.FORBIDDEN.code).send({
+        success: false,
+        error: 'Forbidden',
+        message: 'Only story collaborators can perform this action.',
+      });
+    }
+  },
+
+  /**
+   * Checks if the user can moderate story content/reports.
+   * Allowed roles: OWNER, CO_AUTHOR, MODERATOR
+   */
+  canModerateStory: async (request: FastifyRequest, reply: FastifyReply) => {
+    const userRole = request.userStoryRole;
+
+    if (!userRole || !MODERATE_STORY_ROLES.includes(userRole)) {
+      return reply.code(HTTP_STATUS.FORBIDDEN.code).send({
+        success: false,
+        error: 'Forbidden',
+        message: 'You do not have permission to moderate content for this story.',
+      });
+    }
+  },
+
+  /**
+   * Checks if the user can manage story bans (unban).
+   * Allowed roles: OWNER, CO_AUTHOR
+   */
+  canManageStoryBans: async (request: FastifyRequest, reply: FastifyReply) => {
+    const userRole = request.userStoryRole;
+
+    if (!userRole || !CO_AUTHOR_ROLES.includes(userRole)) {
+      return reply.code(HTTP_STATUS.FORBIDDEN.code).send({
+        success: false,
+        error: 'Forbidden',
+        message: 'You do not have permission to manage bans for this story.',
       });
     }
   },

@@ -7,6 +7,13 @@ enum GalleryCategory {
   OTHER = 'other',
 }
 
-const GALLERY_CATEGORIES = ['location', 'character', 'object', 'event', 'theme', 'other'] as const;
+const GALLERY_IMAGE_CATEGORIES = [
+  'location',
+  'character',
+  'object',
+  'event',
+  'theme',
+  'other',
+] as const;
 
-export { GalleryCategory, GALLERY_CATEGORIES };
+export { GalleryCategory, GALLERY_IMAGE_CATEGORIES };

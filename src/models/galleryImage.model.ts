@@ -1,6 +1,6 @@
 import mongoose, { Schema } from 'mongoose';
 import { IGalleryImageDoc } from '@features/galleryImage/types/galleryImage.types';
-import { GALLERY_CATEGORIES } from '@features/galleryImage/types/galleryImage-enum';
+import { GALLERY_IMAGE_CATEGORIES } from '@features/galleryImage/types/galleryImage-enum';
 
 const galleryImageSchema = new Schema<IGalleryImageDoc>(
   {
@@ -14,8 +14,7 @@ const galleryImageSchema = new Schema<IGalleryImageDoc>(
     // Metadata
     title: { type: String, maxlength: 200 },
     caption: { type: String, maxlength: 500 },
-    category: { type: String, enum: GALLERY_CATEGORIES, default: 'other', index: true },
-    tags: { type: [String], default: [] },
+    category: { type: String, enum: GALLERY_IMAGE_CATEGORIES, default: 'other', index: true },
 
     // Context links
     chapterSlug: { type: String },

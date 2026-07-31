@@ -7,6 +7,7 @@ import { FastifyReply, FastifyRequest } from 'fastify';
 import { inject, singleton } from 'tsyringe';
 import { GalleryImageService } from '../services/galleryImage.service';
 import {
+  TGalleryImageCreateSchema,
   TGalleryImageBulkCreateSchema,
   TGalleryImageQuerySchema,
   TGalleryImageUpdateSchema,
@@ -21,6 +22,39 @@ export class GalleryImageController extends BaseModule {
   ) {
     super();
   }
+
+  generateSignature = catchAsync(
+    async (request: FastifyRequest<{ Params: TStorySlugSchema }>, reply: FastifyReply) => {
+      const { slug } = request.params;
+      const { clerkId: userId } = request.user;
+
+      const result = await this.galleryImageService.generateUploadSignature(slug, userId);
+
+      this.logInfo(`Generated Cloudinary signature for story ${slug} by user ${userId}`);
+
+      return reply
+        .code(HTTP_STATUS.OK.code)
+        .send(ApiResponse.ok(result, 'Cloudinary signature URL generated successfully'));
+    }
+  );
+
+  addImage = catchAsync(
+    async (
+      request: FastifyRequest<{ Params: TStorySlugSchema; Body: TGalleryImageCreateSchema }>,
+      reply: FastifyReply
+    ) => {
+      const { slug } = request.params;
+      const { clerkId: userId } = request.user;
+
+      const newImage = await this.galleryImageService.addImageToGallery(slug, userId, request.body);
+
+      this.logInfo(`Added gallery image to story ${slug} by user ${userId}`);
+
+      return reply
+        .code(HTTP_STATUS.CREATED.code)
+        .send(ApiResponse.created(newImage, 'Image added to gallery successfully'));
+    }
+  );
 
   uploadImages = catchAsync(
     async (
@@ -52,8 +86,9 @@ export class GalleryImageController extends BaseModule {
       reply: FastifyReply
     ) => {
       const { slug } = request.params;
+      const { clerkId: userId } = request.user;
 
-      const images = await this.galleryImageService.getGalleryByStory(slug, request.query);
+      const images = await this.galleryImageService.getGalleryByStory(slug, userId, request.query);
 
       this.logInfo(`Fetched ${images.length} gallery images for story ${slug}`);
 
@@ -69,9 +104,11 @@ export class GalleryImageController extends BaseModule {
       reply: FastifyReply
     ) => {
       const { imageId } = request.params;
+      const { clerkId: userId } = request.user;
 
       const updatedImage = await this.galleryImageService.updateImageMetadata(
         imageId,
+        userId,
         request.body
       );
 
@@ -86,8 +123,9 @@ export class GalleryImageController extends BaseModule {
   deleteImage = catchAsync(
     async (request: FastifyRequest<{ Params: { imageId: string } }>, reply: FastifyReply) => {
       const { imageId } = request.params;
+      const { clerkId: userId } = request.user;
 
-      await this.galleryImageService.removeImage(imageId);
+      await this.galleryImageService.removeImage(imageId, userId);
 
       this.logInfo(`Deleted gallery image ${imageId}`);
 

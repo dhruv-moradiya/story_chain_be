@@ -1,8 +1,17 @@
 import mongoose, { Schema } from 'mongoose';
 import { IReportDoc } from '@features/report/types/report.types';
+import {
+  REPORT_REASONS,
+  REPORT_STATUSES,
+  REPORT_TYPES,
+  REPORT_ACTIONS_TAKEN,
+  ReportStatus,
+  ReportGovernanceLevel,
+} from '@/features/report/types/report-enum';
 
 const reportSchema = new Schema<IReportDoc>(
   {
+    // Who filed it
     reporterId: {
       type: String,
       ref: 'User',
@@ -10,49 +19,85 @@ const reportSchema = new Schema<IReportDoc>(
       index: true,
     },
 
-    // What's being reported
+    //  What is being reported
     reportType: {
       type: String,
       required: true,
-      enum: ['CHAPTER', 'COMMENT', 'USER', 'STORY'],
+      enum: REPORT_TYPES,
     },
     relatedChapterSlug: { type: String, ref: 'Chapter' },
     relatedCommentId: { type: Schema.Types.ObjectId, ref: 'Comment' },
     relatedUserId: { type: String, ref: 'User' },
     relatedStorySlug: { type: String, ref: 'Story' },
 
-    // Report details
+    // Routing
+    // STORY  → story owner/co_author/moderator handles first (not for STORY/USER report types)
+    // PLATFORM → PLATFORM_MODERATOR / SUPER_ADMIN handles
+    // reportType STORY and USER always set this to PLATFORM
+    governanceLevel: {
+      type: String,
+      enum: Object.values(ReportGovernanceLevel),
+      required: true,
+      index: true,
+    },
+
+    // Report content
     reason: {
       type: String,
       required: true,
-      enum: ['SPAM', 'HARASSMENT', 'INAPPROPRIATE_CONTENT', 'COPYRIGHT', 'OFF_TOPIC', 'OTHER'],
+      enum: REPORT_REASONS,
     },
     description: {
       type: String,
       required: true,
+      minlength: 10,
       maxlength: 1000,
     },
 
-    // Moderation
+    // Status & Workflow
     status: {
       type: String,
-      enum: ['PENDING', 'REVIEWED', 'RESOLVED', 'DISMISSED'],
-      default: 'PENDING',
+      enum: REPORT_STATUSES,
+      default: ReportStatus.PENDING,
       index: true,
     },
-    reviewedBy: { type: String, ref: 'User' },
-    reviewedAt: Date,
-    resolution: String,
+
+    // Who first opened the report (PENDING → UNDER_REVIEW)
+    openedBy: { type: String, ref: 'User' },
+    openedAt: Date,
+
+    // Who resolved or dismissed the report (distinct from who opened it)
+    resolvedBy: { type: String, ref: 'User' },
+    resolvedAt: Date,
+    resolution: { type: String, maxlength: 1000 },
+    actionTaken: {
+      type: String,
+      enum: REPORT_ACTIONS_TAKEN,
+    },
+
+    // Escalation
+    escalatedTo: { type: String, ref: 'User' },
+    escalatedAt: Date,
+    escalationReason: { type: String, maxlength: 500 },
+
+    // Resulting ban links (set when a ban is issued from this report)
+    storyBanId: { type: Schema.Types.ObjectId, ref: 'StoryBan' },
+    banHistoryId: { type: Schema.Types.ObjectId, ref: 'BanHistory' },
   },
   {
     timestamps: true,
   }
 );
 
-// Indexes
 reportSchema.index({ status: 1, createdAt: -1 });
+reportSchema.index({ governanceLevel: 1, status: 1, createdAt: -1 });
 reportSchema.index({ reporterId: 1 });
+// Prevent a single user from spamming the same target
+reportSchema.index({ reporterId: 1, relatedChapterSlug: 1 });
+reportSchema.index({ reporterId: 1, relatedCommentId: 1 });
+reportSchema.index({ reporterId: 1, relatedUserId: 1 });
+reportSchema.index({ reporterId: 1, relatedStorySlug: 1 });
 
-const Report = mongoose.model('Report', reportSchema);
+const Report = mongoose.model<IReportDoc>('Report', reportSchema);
 
 export { Report };

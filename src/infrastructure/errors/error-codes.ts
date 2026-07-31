@@ -114,6 +114,9 @@ export const RESOURCE_ERRORS = {
   // Comment
   COMMENT_NOT_FOUND: 'COMMENT_NOT_FOUND',
 
+  // Report
+  ALREADY_REPORTED: 'ALREADY_REPORTED',
+
   // AutoSave
   AUTOSAVE_NOT_FOUND: 'AUTOSAVE_NOT_FOUND',
   AUTOSAVE_EXPIRED: 'AUTOSAVE_EXPIRED',
@@ -280,6 +283,7 @@ export const DEFAULT_ERROR_MESSAGES: Record<ErrorCode, string> = {
   INVITATION_ALREADY_REJECTED: 'Invitation has already been rejected',
   NOTIFICATION_NOT_FOUND: 'Notification not found',
   COMMENT_NOT_FOUND: 'Comment not found',
+  ALREADY_REPORTED: 'You have already reported this content',
   AUTOSAVE_NOT_FOUND: 'Autosave not found',
   AUTOSAVE_EXPIRED: 'Autosave has expired',
   READING_HISTORY_NOT_FOUND: 'Reading history not found',

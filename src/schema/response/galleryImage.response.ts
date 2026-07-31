@@ -1,4 +1,4 @@
-import { GALLERY_CATEGORIES } from '@features/galleryImage/types/galleryImage-enum.js';
+import { GALLERY_IMAGE_CATEGORIES } from '@features/galleryImage/types/galleryImage-enum.js';
 import {
   apiArrayResponse,
   apiResponse,
@@ -20,9 +20,10 @@ export const GalleryImageSchema = {
     publicId: { type: 'string' },
     title: { type: 'string' },
     caption: { type: 'string' },
-    category: { type: 'string', enum: GALLERY_CATEGORIES },
+    category: { type: 'string', enum: GALLERY_IMAGE_CATEGORIES },
     tags: { type: 'array', items: { type: 'string' } },
     chapterSlug: { type: 'string' },
+    albumId: { type: 'string' },
     isMoodboard: { type: 'boolean' },
     sortOrder: { type: 'number' },
     createdAt: { type: 'string', format: 'date-time' },
@@ -31,11 +32,35 @@ export const GalleryImageSchema = {
 };
 
 export const GalleryImageResponses = {
+  signatureGenerated: {
+    200: apiResponse(
+      {
+        type: 'object',
+        properties: {
+          uploadURL: { type: 'string' },
+        },
+      },
+      'Cloudinary signature URL generated successfully'
+    ),
+    401: unauthorizedResponse(),
+    403: forbiddenResponse('Only story collaborators can generate signature URLs'),
+    404: notFoundResponse('Story not found'),
+    500: internalErrorResponse(),
+  },
+  imageAdded: {
+    201: apiResponse(GalleryImageSchema, 'Image added to gallery successfully'),
+    400: badRequestResponse('Invalid image data'),
+    401: unauthorizedResponse(),
+    403: forbiddenResponse('Only story collaborators can add images to gallery'),
+    404: notFoundResponse('Story not found'),
+    422: validationErrorResponse('Validation failed'),
+    500: internalErrorResponse(),
+  },
   imagesUploaded: {
     201: apiArrayResponse(GalleryImageSchema, 'Images uploaded successfully'),
     400: badRequestResponse('Invalid image data'),
     401: unauthorizedResponse(),
-    403: forbiddenResponse('You do not have access to upload images to this story'),
+    403: forbiddenResponse('Only story collaborators can upload images to gallery'),
     404: notFoundResponse('Story not found'),
     422: validationErrorResponse('Validation failed'),
     500: internalErrorResponse(),
@@ -43,7 +68,7 @@ export const GalleryImageResponses = {
   imageList: {
     200: apiArrayResponse(GalleryImageSchema, 'List of gallery images retrieved successfully'),
     401: unauthorizedResponse(),
-    403: forbiddenResponse('You do not have access to view this story gallery'),
+    403: forbiddenResponse('Only story collaborators can view this story gallery'),
     404: notFoundResponse('Story not found'),
     500: internalErrorResponse(),
   },
@@ -51,14 +76,14 @@ export const GalleryImageResponses = {
     200: apiResponse(GalleryImageSchema, 'Gallery image updated successfully'),
     400: badRequestResponse('Invalid update data'),
     401: unauthorizedResponse(),
-    403: forbiddenResponse('You do not have access to update this image'),
+    403: forbiddenResponse('Only story collaborators can update this image'),
     404: notFoundResponse('Image not found'),
     500: internalErrorResponse(),
   },
   imageDeleted: {
     200: apiResponse({ type: 'object' }, 'Gallery image deleted successfully'),
     401: unauthorizedResponse(),
-    403: forbiddenResponse('You do not have access to delete this image'),
+    403: forbiddenResponse('Only story collaborators can delete this image'),
     404: notFoundResponse('Image not found'),
     500: internalErrorResponse(),
   },

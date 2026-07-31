@@ -6,9 +6,15 @@ import { seedPullRequests } from './pull-request.seeder';
 import { runPRReviewSeeder, seedPRReviews } from './pr-review.seeder';
 import { runPRVoteSeeder, seedPRVotes } from './pr-vote.seeder';
 import { runPRCommentSeeder, seedPRComments } from './pr-comment.seeder';
+import { runReportSeeder } from './reports.seeder';
 import { env } from '../src/config/env';
 
 // ─── Runners ──────────────────────────────────────────────────────────────────
+
+async function seedReportsOnly() {
+  console.log('[Seeder] ── Seeding Reports ──────────────────────────────────');
+  await runReportSeeder({ clearExisting: false, reportsCount: 25 });
+}
 
 async function seedCommentsOnly() {
   console.log('[Seeder] ── Seeding Comments ────────────────────────────────');
@@ -138,9 +144,13 @@ async function main() {
       await seedPRCommentsOnly();
       break;
 
+    case 'reports':
+      await seedReportsOnly();
+      break;
+
     default:
       console.error(
-        '[Seeder] ❌ SEED_TARGET not set. Use: "comments" | "votes" | "reading-history" | "prs" | "prs-only" | "pr-reviews" | "pr-votes" | "pr-comments".'
+        '[Seeder] ❌ SEED_TARGET not set. Use: "reports" | "comments" | "votes" | "reading-history" | "prs" | "prs-only" | "pr-reviews" | "pr-votes" | "pr-comments".'
       );
       process.exit(1);
   }

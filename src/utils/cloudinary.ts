@@ -94,6 +94,12 @@ const getCharacterUploadSignature = (storySlug: string) => {
   return getSignatureURL(`${storySlug}/characters`);
 };
 
+/** Signature URL scoped to a specific story's gallery folder. */
+const getGalleryImageUploadSignature = (storySlug: string) => {
+  if (!storySlug) throw new Error('storySlug is required');
+  return getSignatureURL(`stories/${storySlug}/gallery`);
+};
+
 /**
  * Given a Cloudinary public_id (returned by the client after a successful upload),
  * builds both the original and thumbnail URLs so you can persist them in the DB.
@@ -161,6 +167,7 @@ export {
   getStoryUploadSignature,
   getBundleUploadSignature,
   getCharacterUploadSignature,
+  getGalleryImageUploadSignature,
   getCloudinaryImageUrls,
   deleteCloudinaryAsset,
 };
