@@ -15,6 +15,10 @@ export class PlatformRoleRepository extends BaseRepository<IPlatformRole, IPlatf
     return PlatformRole.findOne({ userId });
   }
 
+  async findByUserIds(userIds: string[]) {
+    return PlatformRole.find({ userId: { $in: userIds } });
+  }
+
   async createOrUpdate(data: IPlatformRole, options?: { session?: ClientSession }) {
     return PlatformRole.findOneAndUpdate(
       { userId: data.userId },

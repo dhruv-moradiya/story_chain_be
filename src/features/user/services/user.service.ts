@@ -2,6 +2,7 @@ import { TOKENS } from '@container/tokens';
 import type { User } from '@clerk/fastify';
 import { UserRules } from '@domain/user.rules';
 import {
+  IBanUserDTO,
   ISearchUserByUsernameDTO,
   ISessionCreateDTO,
   IUserCreateDTO,
@@ -11,11 +12,17 @@ import { PlatformRoleService } from '@features/platformRole/services/platformRol
 import { WalletService } from '@features/wallet/service/wallet.service';
 import { BaseModule } from '@utils/baseClass';
 import { fetchClerkUser } from '@utils/clerk.client';
+import { formatPaginatedResponse } from '@/utils/helpter';
+import { UserTransformer } from '@transformer/user.transformer';
+import { TGetUsersListQuerySchema } from '@/schema/request/user.schema';
+import { IUserPaginatedResponse } from '@/types/response/user.response.types';
 import { withTransaction } from '@utils/withTransaction';
 import { inject, singleton } from 'tsyringe';
 import { IUserService } from '../interfaces';
 import { UserRepository } from '../repositories/user.repository';
 import { IConnectedAccount, IUser, TAuthProvider } from '../types/user.types';
+import { BanHistoryRepository } from '@/features/banHistory/repositories/banHistory.repository';
+import { BanType } from '@/features/banHistory/types/banHistory-enum';
 
 @singleton()
 class UserService extends BaseModule implements IUserService {
@@ -25,7 +32,9 @@ class UserService extends BaseModule implements IUserService {
     @inject(TOKENS.PlatformRoleService)
     private readonly platformRoleService: PlatformRoleService,
     @inject(TOKENS.WalletService)
-    private readonly walletService: WalletService
+    private readonly walletService: WalletService,
+    @inject(TOKENS.BanHistoryRepository)
+    private readonly banHistoryRepo: BanHistoryRepository
   ) {
     super();
   }
@@ -196,6 +205,89 @@ class UserService extends BaseModule implements IUserService {
     const { username } = input;
 
     return this.userRepo.findByUsername(username);
+  }
+
+  async getPaginatedUsers(query: TGetUsersListQuerySchema): Promise<IUserPaginatedResponse> {
+    const { page = 1, limit = 10, search } = query;
+
+    const { users, totalDocs } = await this.userRepo.findPaginatedUsers({
+      page,
+      limit,
+      search,
+    });
+
+    const docs = users.map((user) => UserTransformer.paginatedUserData(user));
+
+    return formatPaginatedResponse(docs, totalDocs, page, limit);
+  }
+
+  async banUser(input: IBanUserDTO) {
+    const { userId, reviewerId, reason, durationDays } = input;
+
+    const user = await this.userRepo.findByClerkId(userId);
+    if (!user) {
+      this.throwNotFoundError('NOT_FOUND', 'User not found.');
+    }
+
+    if (!user.isActive) {
+      this.throwConflictError('CONFLICT', 'User is already inactive or banned.');
+    }
+
+    return withTransaction('Banning user', async (session) => {
+      const banType = durationDays ? BanType.TEMPORARY : BanType.PERMANENT;
+      const expiresAt = durationDays
+        ? new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000)
+        : undefined;
+
+      const banHistory = await this.banHistoryRepo.create({
+        data: {
+          userId,
+          bannedBy: reviewerId,
+          reason,
+          banType,
+          durationDays,
+          expiresAt,
+          isActive: true,
+        },
+        options: { session },
+      });
+
+      await this.userRepo.updateByClerkId(userId, { isActive: false });
+
+      return banHistory;
+    });
+  }
+
+  async unbanUser(input: { userId: string; reviewerId: string; reason?: string }) {
+    const { userId, reviewerId, reason } = input;
+
+    const user = await this.userRepo.findByClerkId(userId);
+    if (!user) {
+      this.throwNotFoundError('NOT_FOUND', 'User not found.');
+    }
+
+    if (user.isActive) {
+      this.throwConflictError('CONFLICT', 'User is not banned or is already active.');
+    }
+
+    return withTransaction('Unbanning user', async (session) => {
+      await this.banHistoryRepo.findOneAndUpdate({
+        filter: { userId, isActive: true },
+        update: {
+          $set: {
+            isActive: false,
+            liftedAt: new Date(),
+            liftedBy: reviewerId,
+            liftedReason: reason || 'Unbanned by admin',
+          },
+        },
+        options: { session },
+      });
+
+      await this.userRepo.updateByClerkId(userId, { isActive: true });
+
+      return { success: true };
+    });
   }
 }
 

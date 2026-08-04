@@ -91,12 +91,6 @@ const userSchema = new Schema<IUserDoc>(
       type: Boolean,
       default: true,
     },
-    isBanned: {
-      type: Boolean,
-      default: false,
-    },
-    banReason: String,
-    bannedUntil: Date,
 
     // Timestamps
     lastActive: {

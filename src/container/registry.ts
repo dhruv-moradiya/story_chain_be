@@ -61,6 +61,7 @@ import { GalleryImageRepository } from '@/features/galleryImage/repositories/gal
 import { CharacterRepository } from '@/features/character/repositories/character.repository';
 import { AlbumRepository } from '@/features/album/repositories/album.repository';
 import { ReportRepository } from '@/features/report/repositories/report.repository';
+import { BanHistoryRepository } from '@/features/banHistory/repositories/banHistory.repository';
 
 // ═══════════════════════════════════════════
 // FEATURE SERVICES
@@ -109,6 +110,7 @@ import { GalleryImageService } from '@/features/galleryImage/services/galleryIma
 import { CharacterService } from '@/features/character/services/character.service';
 import { AlbumService } from '@/features/album/services/album.service';
 import { ReportService } from '@features/report/services/report.service';
+import { CoinTransactionService } from '@/features/coinTransaction/service/CoinTransaction.service';
 
 // ═══════════════════════════════════════════
 // CONTROLLERS
@@ -137,6 +139,7 @@ import { GalleryImageController } from '@/features/galleryImage/controllers/gall
 import { CharacterController } from '@/features/character/controllers/character.controller';
 import { AlbumController } from '@/features/album/controllers/album.controller';
 import { ReportController } from '@features/report/controllers/report.controller';
+import { CoinTransactionController } from '@/features/coinTransaction/controllers/coinTransaction.controller';
 
 // ═══════════════════════════════════════════
 // MIDDLEWARE FACTORIES
@@ -252,6 +255,7 @@ export function registerServices(): void {
   container.register(TOKENS.CharacterRepository, { useClass: CharacterRepository });
   container.register(TOKENS.AlbumRepository, { useClass: AlbumRepository });
   container.register(TOKENS.ReportRepository, { useClass: ReportRepository });
+  container.register(TOKENS.BanHistoryRepository, { useClass: BanHistoryRepository });
 
   // ═══════════════════════════════════════════
   // FEATURE SERVICES
@@ -303,6 +307,7 @@ export function registerServices(): void {
   container.register(TOKENS.CharacterService, { useClass: CharacterService });
   container.register(TOKENS.AlbumService, { useClass: AlbumService });
   container.register(TOKENS.ReportService, { useClass: ReportService });
+  container.register(TOKENS.CoinTransactionService, { useClass: CoinTransactionService });
 
   // ═══════════════════════════════════════════
   // CONTROLLERS
@@ -331,6 +336,7 @@ export function registerServices(): void {
   container.register(TOKENS.CharacterController, { useClass: CharacterController });
   container.register(TOKENS.AlbumController, { useClass: AlbumController });
   container.register(TOKENS.ReportController, { useClass: ReportController });
+  container.register(TOKENS.CoinTransactionController, { useClass: CoinTransactionController });
 
   // ═══════════════════════════════════════════
   // MIDDLEWARE FACTORIES

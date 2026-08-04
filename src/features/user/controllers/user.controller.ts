@@ -1,17 +1,20 @@
-import { FastifyReply, FastifyRequest } from 'fastify';
+import { TClerkUserIdParamsSchema } from '@/schema/request/commonRequest.schema';
 import { HTTP_STATUS } from '@constants/httpStatus';
+import { TOKENS } from '@container/tokens';
+import {
+  TBanUserSchema,
+  TGetUserByIdSchema,
+  TGetUserByUsernameSchema,
+  TGetUsersListQuerySchema,
+  TSearchUserByUsernameSchema,
+} from '@schema/request/user.schema';
+import { UserTransformer } from '@transformer/user.transformer';
 import { ApiResponse } from '@utils/apiResponse';
 import { BaseModule } from '@utils/baseClass';
 import { catchAsync } from '@utils/catchAsync';
-import {
-  TSearchUserByUsernameSchema,
-  TGetUserByIdSchema,
-  TGetUserByUsernameSchema,
-} from '@schema/request/user.schema';
-import { UserService } from '../services/user.service';
-import { UserTransformer } from '@transformer/user.transformer';
+import { FastifyReply, FastifyRequest } from 'fastify';
 import { inject, singleton } from 'tsyringe';
-import { TOKENS } from '@container/tokens';
+import { UserService } from '../services/user.service';
 
 @singleton()
 class UserController extends BaseModule {
@@ -86,6 +89,42 @@ class UserController extends BaseModule {
               : `${users.length} user${users.length > 1 ? 's' : ''} found.`
           )
         );
+    }
+  );
+
+  getUsersList = catchAsync(
+    async (
+      request: FastifyRequest<{ Querystring: TGetUsersListQuerySchema }>,
+      reply: FastifyReply
+    ) => {
+      const query = request.query;
+
+      const result = await this.userService.getPaginatedUsers(query);
+
+      return reply
+        .code(HTTP_STATUS.OK.code)
+        .send(ApiResponse.fetched(result, 'Users list fetched successfully'));
+    }
+  );
+
+  banUser = catchAsync(
+    async (
+      request: FastifyRequest<{ Params: TClerkUserIdParamsSchema; Body: TBanUserSchema }>,
+      reply: FastifyReply
+    ) => {
+      const reviewerId = request.user.clerkId;
+      const { userId } = request.params;
+      const { reason, durationDays } = request.body;
+      const result = await this.userService.banUser({
+        reviewerId,
+        userId,
+        reason,
+        durationDays,
+      });
+
+      return reply
+        .code(HTTP_STATUS.OK.code)
+        .send(ApiResponse.fetched(result, 'User banned successfully'));
     }
   );
 }

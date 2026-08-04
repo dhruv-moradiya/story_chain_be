@@ -9,7 +9,7 @@ enum AuthProvider {
 
 const AUTH_PROVIDER = ['email', 'google', 'github', 'discord'] as const;
 
-const CONNECTED_ACCOUNTS: TOAuthProvider[] = [
+const CONNECTED_ACCOUNTS: readonly TOAuthProvider[] = [
   AuthProvider.GOOGLE,
   AuthProvider.GITHUB,
   AuthProvider.DISCORD,
@@ -27,7 +27,7 @@ enum Badge {
   QUALITY_CURATOR = 'QUALITY_CURATOR',
 }
 
-const ALL_BADGES: Badge[] = [
+const ALL_BADGES: readonly Badge[] = [
   Badge.STORY_STARTER,
   Badge.BRANCH_CREATOR,
   Badge.TOP_CONTRIBUTOR,

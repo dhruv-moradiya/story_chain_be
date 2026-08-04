@@ -60,7 +60,12 @@ export {
 // ═══════════════════════════════════════════
 
 // User
-export { UserSchema, UserPublicSchema, UserResponses } from './user.response.js';
+export {
+  UserSchema,
+  PaginatedUserDataSchema,
+  UserPublicSchema,
+  UserResponses,
+} from './user.response.js';
 
 // Story
 export {
@@ -107,3 +112,6 @@ export { CoinBundleSchema, CoinBundleResponses } from './coinBundle.response.js'
 
 // Gallery Image
 export { GalleryImageSchema, GalleryImageResponses } from './galleryImage.response.js';
+
+// Coin Transaction
+export { CoinTransactionSchema, CoinTransactionResponses } from './coinTransaction.response.js';

@@ -96,12 +96,31 @@ const SessionCreateDTO = z.object({
   lastActiveAt: z.date(),
 });
 
+// Get Users List Query Schema
+const GetUsersListQuerySchema = z.object({
+  page: z.coerce.number().min(1).default(1),
+  limit: z.coerce.number().min(1).max(100).default(10),
+  search: z.string().optional(),
+});
+
+const BanUserSchema = z.object({
+  reason: z.string(),
+  durationDays: z.number().min(1).max(100).optional(),
+});
+
+const UnbanUserSchema = z.object({
+  reason: z.string().optional(),
+});
+
 // Type exports
 type TSearchUserByUsernameSchema = z.infer<typeof SearchUserByUsernameSchema>;
 type TGetUserByIdSchema = z.infer<typeof GetUserByIdSchema>;
 type TGetUserByUsernameSchema = z.infer<typeof GetUserByUsernameSchema>;
 type TUpdateUserProfileSchema = z.infer<typeof UpdateUserProfileSchema>;
 type TUpdateUserPreferencesSchema = z.infer<typeof UpdateUserPreferencesSchema>;
+type TGetUsersListQuerySchema = z.infer<typeof GetUsersListQuerySchema>;
+type TBanUserSchema = z.infer<typeof BanUserSchema>;
+type TUnbanUserSchema = z.infer<typeof UnbanUserSchema>;
 
 export {
   UserIdSchema,
@@ -109,18 +128,24 @@ export {
   SearchUserByUsernameSchema,
   GetUserByIdSchema,
   GetUserByUsernameSchema,
+  GetUsersListQuerySchema,
   UpdateUserProfileSchema,
   UpdateUserPreferencesSchema,
   UserCreateDTO,
   UserUpdateDTO,
   ConnectedAccountSchema,
   SessionCreateDTO,
+  BanUserSchema,
+  UnbanUserSchema,
 };
 
 export type {
   TSearchUserByUsernameSchema,
   TGetUserByIdSchema,
   TGetUserByUsernameSchema,
+  TGetUsersListQuerySchema,
   TUpdateUserProfileSchema,
   TUpdateUserPreferencesSchema,
+  TBanUserSchema,
+  TUnbanUserSchema,
 };

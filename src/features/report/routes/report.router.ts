@@ -15,6 +15,7 @@ import {
   PaginatedReportQueryParamsSchema,
   PlatformBanUserSchema,
   PlatformResolveReportSchema,
+  PlatformUnbanUserSchema,
   ReportIdParamsSchema,
   ResolveStoryReportSchema,
   StoryReportParamsSchema,
@@ -44,6 +45,7 @@ const ReportRoutes = {
   AdminUpdateReportStatus: '/admin/reports/:reportId/status',
   AdminResolveReport: '/admin/reports/:reportId/resolve',
   AdminBanUser: '/admin/users/:userId/ban',
+  AdminUnbanUser: '/admin/users/:userId/unban',
 } as const;
 
 export async function reportRoutes(fastify: FastifyInstance) {
@@ -258,5 +260,21 @@ export async function reportRoutes(fastify: FastifyInstance) {
       },
     },
     reportController.banUserGlobally
+  );
+
+  fastify.post(
+    ReportRoutes.AdminUnbanUser,
+    {
+      preHandler: [validateAuth, platformGuards.canUnban],
+      config: { rateLimit: RateLimits.WRITE },
+      schema: {
+        description: 'Remove a global platform ban for a user',
+        tags: ['Platform Admin - Moderation'],
+        security: [{ bearerAuth: [] }],
+        params: zodToJsonSchema(UserIdParamsSchema),
+        body: zodToJsonSchema(PlatformUnbanUserSchema),
+      },
+    },
+    reportController.unbanUserGlobally
   );
 }

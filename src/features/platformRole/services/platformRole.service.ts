@@ -37,6 +37,13 @@ export class PlatformRoleService {
     });
   }
 
+  async getRolesByUserIds(userIds: string[]): Promise<Map<string, PlatformRole>> {
+    const roles = await this.repo.findByUserIds(userIds);
+    const map = new Map<string, PlatformRole>();
+    roles.forEach((r) => map.set(r.userId, r.role as PlatformRole));
+    return map;
+  }
+
   async deleteRole(userId: string): Promise<void> {
     try {
       await this.repo.deleteByUserId(userId);

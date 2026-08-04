@@ -72,6 +72,7 @@ export const TOKENS = {
   CharacterRepository: Symbol.for('CharacterRepository'),
   AlbumRepository: Symbol.for('AlbumRepository'),
   ReportRepository: Symbol.for('ReportRepository'),
+  BanHistoryRepository: Symbol.for('BanHistoryRepository'),
 
   // ═══════════════════════════════════════════
   // FEATURE SERVICES

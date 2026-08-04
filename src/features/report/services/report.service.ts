@@ -2,6 +2,7 @@ import { inject, singleton } from 'tsyringe';
 import { TOKENS } from '@container/tokens';
 import { BaseModule } from '@utils/baseClass';
 import { AppError } from '@infrastructure/errors/app-error';
+import { UserService } from '@features/user/services/user.service';
 import { ReportRepository } from '../repositories/report.repository';
 import {
   IReport,
@@ -26,7 +27,9 @@ import { FilterQuery } from 'mongoose';
 export class ReportService extends BaseModule {
   constructor(
     @inject(TOKENS.ReportRepository)
-    private readonly reportRepository: ReportRepository
+    private readonly reportRepository: ReportRepository,
+    @inject(TOKENS.UserService)
+    private readonly userService: UserService
   ) {
     super();
   }
@@ -300,9 +303,35 @@ export class ReportService extends BaseModule {
       durationDays: input.durationDays,
     });
 
+    await this.userService.banUser({
+      userId: input.userId,
+      reviewerId,
+      reason: input.reason,
+      durationDays: input.durationDays,
+    });
+
     return {
       message: `User ${input.userId} has been banned globally.`,
       bannedUserId: input.userId,
+    };
+  }
+
+  async unbanUserGlobally(
+    reviewerId: string,
+    userId: string,
+    reason?: string
+  ): Promise<{ message: string; unbannedUserId: string }> {
+    this.logInfo('User unbanned globally', { reviewerId, unbannedUserId: userId, reason });
+
+    await this.userService.unbanUser({
+      userId,
+      reviewerId,
+      reason,
+    });
+
+    return {
+      message: `User ${userId} has been unbanned globally.`,
+      unbannedUserId: userId,
     };
   }
 }

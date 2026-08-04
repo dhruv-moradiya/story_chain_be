@@ -99,6 +99,10 @@ export const PlatformBanUserSchema = z.object({
   evidenceUrls: z.array(z.string().url()).optional(),
 });
 
+export const PlatformUnbanUserSchema = z.object({
+  reason: z.string().trim().optional(),
+});
+
 export const UserIdParamsSchema = z.object({
   userId: z.string().min(1, 'User ID is required'),
 });
@@ -114,4 +118,5 @@ export type TStoryUserBanParamsInput = z.infer<typeof StoryUserBanParamsSchema>;
 export type TUpdateReportStatusInput = z.infer<typeof UpdateReportStatusSchema>;
 export type TPlatformResolveReportInput = z.infer<typeof PlatformResolveReportSchema>;
 export type TPlatformBanUserInput = z.infer<typeof PlatformBanUserSchema>;
+export type TPlatformUnbanUserInput = z.infer<typeof PlatformUnbanUserSchema>;
 export type TUserIdParamsInput = z.infer<typeof UserIdParamsSchema>;

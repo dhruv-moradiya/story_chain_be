@@ -44,9 +44,6 @@ interface IUser {
   preferences: IUserPreferences;
 
   isActive: boolean;
-  isBanned: boolean;
-  banReason?: string;
-  bannedUntil?: Date;
 
   lastActive: Date;
   createdAt: Date;

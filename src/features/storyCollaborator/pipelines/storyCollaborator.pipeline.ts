@@ -1,8 +1,6 @@
 import { BasePipelineBuilder } from '@/shared/pipelines/base.pipeline.builder';
 
 class StoryCollaboratorPipelineBuilder extends BasePipelineBuilder<StoryCollaboratorPipelineBuilder> {
-  // ─── Private reusable joins ───────────────────────────────────────────────
-
   /**
    * Reusable $lookup that joins user profile fields from the `users` collection.
    * @param asField  - The output array field name
@@ -33,14 +31,10 @@ class StoryCollaboratorPipelineBuilder extends BasePipelineBuilder<StoryCollabor
     });
   }
 
-  // ─── Match stages ─────────────────────────────────────────────────────────
-
   /** Matches collaborator documents by story slug. */
   matchStoryBySlug(slug: string) {
     return this.matchField('slug', slug);
   }
-
-  // ─── Populate stages ──────────────────────────────────────────────────────
 
   /** Joins collaborator user profile and converts the result array to a single object. */
   populatedCollaboratorUser() {

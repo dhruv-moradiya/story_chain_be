@@ -1,6 +1,8 @@
 import { TPlatformRole } from '@/features/platformRole/types/platformRole.types';
 import {
   ICurrentUserResponse,
+  IFullUserResponse,
+  IPaginatedUserData,
   IPublicUserResponseWithEmail,
   IUserProfileResponse,
   IUserSearchItemResponse,
@@ -24,9 +26,6 @@ export class UserTransformer {
       stats: input.stats,
       preferences: input.preferences,
       isActive: input.isActive,
-      isBanned: input.isBanned,
-      banReason: input.banReason,
-      bannedUntil: input.bannedUntil,
       lastActive: input.lastActive,
       createdAt: input.createdAt,
       updatedAt: input.updatedAt,
@@ -57,6 +56,86 @@ export class UserTransformer {
       badges: input.badges,
       stats: input.stats,
       createdAt: input.createdAt,
+    };
+  }
+
+  static paginatedUserData(input: IUser): IPaginatedUserData {
+    return {
+      clerkId: input.clerkId,
+      username: input.username,
+      email: input.email,
+      bio: input.bio ?? '',
+      avatarUrl: input.avatarUrl ?? '',
+      xp: input.xp ?? 0,
+      level: input.level ?? 1,
+      badges: (input.badges ?? []).map((badge) => String(badge)),
+      stats: {
+        storiesCreated: input.stats?.storiesCreated ?? 0,
+        chaptersWritten: input.stats?.chaptersWritten ?? 0,
+        totalUpvotes: input.stats?.totalUpvotes ?? 0,
+        totalDownvotes: input.stats?.totalDownvotes ?? 0,
+        branchesCreated: input.stats?.branchesCreated ?? 0,
+      },
+      preferences: {
+        emailNotifications: input.preferences?.emailNotifications ?? true,
+        pushNotifications: input.preferences?.pushNotifications ?? true,
+        theme: input.preferences?.theme ?? 'auto',
+      },
+      isActive: input.isActive ?? true,
+      lastActive: input.lastActive,
+      createdAt: input.createdAt,
+      updatedAt: input.updatedAt,
+      connectedAccounts: (input.connectedAccounts ?? []).map((acc) => ({
+        provider: acc.provider,
+        providerAccountId: acc.providerAccountId,
+        email: acc.email,
+        username: acc.username,
+        avatarUrl: acc.avatarUrl,
+        connectedAt: acc.connectedAt,
+      })),
+      primaryAuthMethod: input.primaryAuthMethod ?? 'email',
+      emailVerified: input.emailVerified ?? false,
+    };
+  }
+
+  static fullUserResponse(input: IUser & { role?: TPlatformRole }): IFullUserResponse {
+    return {
+      clerkId: input.clerkId,
+      username: input.username,
+      email: input.email,
+      role: input.role ?? 'USER',
+      bio: input.bio ?? '',
+      avatarUrl: input.avatarUrl ?? '',
+      xp: input.xp ?? 0,
+      level: input.level ?? 1,
+      badges: input.badges ?? [],
+      stats: {
+        storiesCreated: input.stats?.storiesCreated ?? 0,
+        chaptersWritten: input.stats?.chaptersWritten ?? 0,
+        totalUpvotes: input.stats?.totalUpvotes ?? 0,
+        totalDownvotes: input.stats?.totalDownvotes ?? 0,
+        branchesCreated: input.stats?.branchesCreated ?? 0,
+      },
+      preferences: {
+        emailNotifications: input.preferences?.emailNotifications ?? true,
+        pushNotifications: input.preferences?.pushNotifications ?? true,
+        theme: input.preferences?.theme ?? 'auto',
+      },
+      isActive: input.isActive ?? true,
+      lastActive: input.lastActive,
+      authProvider: input.authProvider ?? 'email',
+      connectedAccounts: (input.connectedAccounts ?? []).map((acc) => ({
+        provider: acc.provider,
+        providerAccountId: acc.providerAccountId,
+        email: acc.email,
+        username: acc.username,
+        avatarUrl: acc.avatarUrl,
+        connectedAt: acc.connectedAt,
+      })),
+      primaryAuthMethod: input.primaryAuthMethod ?? 'email',
+      emailVerified: input.emailVerified ?? false,
+      createdAt: input.createdAt,
+      updatedAt: input.updatedAt,
     };
   }
 }

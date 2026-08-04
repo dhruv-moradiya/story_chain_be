@@ -15,10 +15,18 @@ type IUserUpdateDTO = z.infer<typeof UserUpdateDTO>;
 type ISessionCreateDTO = z.infer<typeof SessionCreateDTO>;
 type IConnectedAccount = z.infer<typeof ConnectedAccountSchema>;
 
+type IBanUserDTO = {
+  userId: string;
+  reviewerId: string;
+  reason: string;
+  durationDays?: number;
+};
+
 export type {
   IUserCreateDTO,
   IUserUpdateDTO,
   ISessionCreateDTO,
   ISearchUserByUsernameDTO,
   IConnectedAccount,
+  IBanUserDTO,
 };

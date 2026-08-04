@@ -7,6 +7,11 @@ export interface IUserRepository {
   findByEmail(email: string): Promise<IUser | null>;
   findByUsername(username: string): Promise<IUser[]>;
   findOneByUsername(username: string): Promise<IUser | null>;
+  findPaginatedUsers(options: {
+    page: number;
+    limit: number;
+    search?: string;
+  }): Promise<{ users: IUser[]; totalDocs: number }>;
   updateByClerkId(id: string, update: UpdateQuery<IUser>): Promise<IUser | null>;
   updateXP(clerkId: string, updates: UpdateQuery<IUser>): Promise<IUser | null>;
   addBadge(clerkId: string, badge: string): Promise<IUser | null>;

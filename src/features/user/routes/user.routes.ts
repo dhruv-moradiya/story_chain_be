@@ -1,19 +1,22 @@
-import { FastifyInstance } from 'fastify';
+import { RateLimits } from '@/constants/rateLimits';
+import { TOKENS } from '@/container';
+import { PlatformRoleMiddlewareFactory, type AuthMiddlewareFactory } from '@/middlewares/factories';
+import { ClerkUserIdParamsSchema } from '@/schema/request/commonRequest.schema';
+import type {} from '@fastify/rate-limit';
 import { validateWebhook } from '@middleware/validateRequest';
-import zodToJsonSchema from 'zod-to-json-schema';
 import {
-  SearchUserByUsernameSchema,
+  BanUserSchema,
   GetUserByIdSchema,
   GetUserByUsernameSchema,
+  GetUsersListQuerySchema,
+  SearchUserByUsernameSchema,
 } from '@schema/request/user.schema';
 import { UserResponses } from '@schema/response.schema';
+import { FastifyInstance } from 'fastify';
 import { container } from 'tsyringe';
-import { TOKENS } from '@/container';
+import zodToJsonSchema from 'zod-to-json-schema';
 import { type UserController } from '../controllers/user.controller';
 import { type UserWebhookController } from '../controllers/user.webhook.controller';
-import { type AuthMiddlewareFactory } from '@/middlewares/factories';
-import { RateLimits } from '@/constants/rateLimits';
-import type {} from '@fastify/rate-limit';
 
 // User API Routes - following chapterAutoSave pattern
 const UserApiRoutes = {
@@ -23,6 +26,9 @@ const UserApiRoutes = {
   // Current User
   GetMe: '/me',
 
+  // User List (Paginated)
+  List: '/list',
+
   // User by ID
   GetById: '/id/:userId',
 
@@ -31,6 +37,9 @@ const UserApiRoutes = {
 
   // Search
   Search: '/search',
+
+  BanUser: '/ban',
+  UnbanUser: '/unban',
 } as const;
 
 export { UserApiRoutes };
@@ -40,11 +49,15 @@ export async function userRoutes(fastify: FastifyInstance) {
   const userWebhookController = container.resolve<UserWebhookController>(
     TOKENS.UserWebhookController
   );
+  const platformRoleFactory = container.resolve<PlatformRoleMiddlewareFactory>(
+    TOKENS.PlatformRoleMiddlewareFactory
+  );
 
   const authMiddlewareFactory = container.resolve<AuthMiddlewareFactory>(
     TOKENS.AuthMiddlewareFactory
   );
   const validateAuth = authMiddlewareFactory.createAuthMiddleware();
+  const PlatformRoleGuards = platformRoleFactory.createGuards();
 
   // Clerk Webhook
   fastify.post(
@@ -75,6 +88,23 @@ export async function userRoutes(fastify: FastifyInstance) {
       },
     },
     userController.getCurrentUserDetails
+  );
+
+  // Get paginated list of users
+  fastify.get(
+    UserApiRoutes.List,
+    {
+      preHandler: [validateAuth, PlatformRoleGuards.superAdmin],
+      config: { rateLimit: RateLimits.PUBLIC_READ },
+      schema: {
+        description: 'Get paginated list of users with full details',
+        tags: ['Users'],
+        security: [{ bearerAuth: [] }],
+        querystring: zodToJsonSchema(GetUsersListQuerySchema),
+        response: UserResponses.paginatedUserList,
+      },
+    },
+    userController.getUsersList
   );
 
   // Get user by ID
@@ -126,5 +156,22 @@ export async function userRoutes(fastify: FastifyInstance) {
       },
     },
     userController.searchUserByUsername
+  );
+
+  fastify.post(
+    UserApiRoutes.BanUser,
+    {
+      preHandler: [validateAuth, PlatformRoleGuards.superAdmin],
+      config: { rateLimit: RateLimits.WRITE },
+      schema: {
+        description: 'Ban a user',
+        tags: ['Users'],
+        security: [{ bearerAuth: [] }],
+        params: zodToJsonSchema(ClerkUserIdParamsSchema),
+        body: zodToJsonSchema(BanUserSchema),
+        // response: UserResponses.userProfile,
+      },
+    },
+    userController.banUser
   );
 }

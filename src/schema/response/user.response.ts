@@ -1,4 +1,4 @@
-import { apiResponse, apiArrayResponse, errorResponse } from './helpers';
+import { apiResponse, apiArrayResponse, apiPaginatedResponse, errorResponse } from './helpers';
 
 // ===============================
 // USER DATA SCHEMAS
@@ -55,9 +55,6 @@ export const UserSchema = {
       },
     },
     isActive: { type: 'boolean' },
-    isBanned: { type: 'boolean' },
-    banReason: { type: 'string' },
-    bannedUntil: { type: 'string', format: 'date-time' },
     lastActive: { type: 'string', format: 'date-time' },
     createdAt: { type: 'string', format: 'date-time' },
     updatedAt: { type: 'string', format: 'date-time' },
@@ -65,6 +62,121 @@ export const UserSchema = {
       type: 'string',
       enum: ['USER', 'APPEAL_MODERATOR', 'PLATFORM_MODERATOR', 'SUPER_ADMIN'],
     },
+  },
+};
+
+export const FullUserSchema = {
+  type: 'object',
+  properties: {
+    clerkId: { type: 'string' },
+    username: { type: 'string' },
+    email: { type: 'string' },
+    role: {
+      type: 'string',
+      enum: ['USER', 'APPEAL_MODERATOR', 'PLATFORM_MODERATOR', 'SUPER_ADMIN'],
+    },
+    bio: { type: 'string' },
+    avatarUrl: { type: 'string' },
+    xp: { type: 'number' },
+    level: { type: 'number' },
+    badges: {
+      type: 'array',
+      items: { type: 'string' },
+    },
+    stats: {
+      type: 'object',
+      properties: {
+        storiesCreated: { type: 'number' },
+        chaptersWritten: { type: 'number' },
+        totalUpvotes: { type: 'number' },
+        totalDownvotes: { type: 'number' },
+        branchesCreated: { type: 'number' },
+      },
+    },
+    preferences: {
+      type: 'object',
+      properties: {
+        emailNotifications: { type: 'boolean' },
+        pushNotifications: { type: 'boolean' },
+        theme: { type: 'string', enum: ['light', 'dark', 'auto'] },
+      },
+    },
+    isActive: { type: 'boolean' },
+    lastActive: { type: 'string', format: 'date-time' },
+    authProvider: { type: 'string' },
+    connectedAccounts: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          provider: { type: 'string' },
+          providerAccountId: { type: 'string' },
+          email: { type: 'string' },
+          username: { type: 'string' },
+          avatarUrl: { type: 'string' },
+          connectedAt: { type: 'string', format: 'date-time' },
+        },
+      },
+    },
+    primaryAuthMethod: { type: 'string' },
+    emailVerified: { type: 'boolean' },
+    createdAt: { type: 'string', format: 'date-time' },
+    updatedAt: { type: 'string', format: 'date-time' },
+  },
+};
+
+export const PaginatedUserDataSchema = {
+  type: 'object',
+  properties: {
+    clerkId: { type: 'string' },
+    username: { type: 'string' },
+    email: { type: 'string' },
+    bio: { type: 'string' },
+    avatarUrl: { type: 'string' },
+    xp: { type: 'number' },
+    level: { type: 'number' },
+    badges: {
+      type: 'array',
+      items: { type: 'string' },
+    },
+    stats: {
+      type: 'object',
+      properties: {
+        storiesCreated: { type: 'number' },
+        chaptersWritten: { type: 'number' },
+        totalUpvotes: { type: 'number' },
+        totalDownvotes: { type: 'number' },
+        branchesCreated: { type: 'number' },
+      },
+    },
+    preferences: {
+      type: 'object',
+      properties: {
+        emailNotifications: { type: 'boolean' },
+        pushNotifications: { type: 'boolean' },
+        theme: { type: 'string', enum: ['light', 'dark', 'auto'] },
+      },
+    },
+    isActive: { type: 'boolean' },
+    lastActive: { type: 'string', format: 'date-time' },
+    createdAt: { type: 'string', format: 'date-time' },
+    updatedAt: { type: 'string', format: 'date-time' },
+    connectedAccounts: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          provider: { type: 'string' },
+          providerAccountId: { type: 'string' },
+          email: { type: 'string' },
+          username: { type: 'string' },
+          avatarUrl: { type: 'string' },
+          connectedAt: { type: 'string', format: 'date-time' },
+        },
+      },
+    },
+    primaryAuthMethod: { type: 'string' },
+    emailVerified: { type: 'boolean' },
   },
 };
 
@@ -93,4 +205,7 @@ export const UserResponses = {
     404: errorResponse('User not found'),
   },
   userList: { 200: apiArrayResponse(UserPublicSchema, 'List of matching users') },
+  paginatedUserList: {
+    200: apiPaginatedResponse(PaginatedUserDataSchema, 'Paginated list of users data'),
+  },
 };

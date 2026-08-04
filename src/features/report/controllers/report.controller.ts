@@ -12,12 +12,14 @@ import {
   TPaginatedReportQueryParamsInput,
   TPlatformBanUserInput,
   TPlatformResolveReportInput,
+  TPlatformUnbanUserInput,
   TReportIdParamsInput,
   TResolveStoryReportInput,
   TStoryReportParamsInput,
   TStorySlugParamsInput,
   TStoryUserBanParamsInput,
   TUpdateReportStatusInput,
+  TUserIdParamsInput,
 } from '@/schema/request/report.schema';
 
 @singleton()
@@ -232,6 +234,22 @@ export class ReportController extends BaseModule {
       return reply
         .code(HTTP_STATUS.OK.code)
         .send(ApiResponse.success(result, 'OK', 'User banned globally successfully.', 'CREATED'));
+    }
+  );
+
+  unbanUserGlobally = catchAsync(
+    async (
+      request: FastifyRequest<{ Params: TUserIdParamsInput; Body: TPlatformUnbanUserInput }>,
+      reply: FastifyReply
+    ) => {
+      const reviewerId = request.user.clerkId;
+      const { userId } = request.params;
+      const { reason } = request.body;
+      const result = await this.reportService.unbanUserGlobally(reviewerId, userId, reason);
+
+      return reply
+        .code(HTTP_STATUS.OK.code)
+        .send(ApiResponse.success(result, 'OK', 'User unbanned globally successfully.', 'UPDATED'));
     }
   );
 }
