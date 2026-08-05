@@ -3,7 +3,9 @@ import { TOKENS } from '@container/tokens';
 import { BaseModule } from '@utils/baseClass';
 import { AppError } from '@infrastructure/errors/app-error';
 import { UserService } from '@features/user/services/user.service';
+import { StoryBanRepository } from '@features/storyBan/repositories/storyBan.repository';
 import { ReportRepository } from '../repositories/report.repository';
+import { ReportResolutionService } from './report-resolution.service';
 import {
   IReport,
   IReportDoc,
@@ -28,6 +30,10 @@ export class ReportService extends BaseModule {
   constructor(
     @inject(TOKENS.ReportRepository)
     private readonly reportRepository: ReportRepository,
+    @inject(TOKENS.StoryBanRepository)
+    private readonly storyBanRepository: StoryBanRepository,
+    @inject(TOKENS.ReportResolutionService)
+    private readonly reportResolutionService: ReportResolutionService,
     @inject(TOKENS.UserService)
     private readonly userService: UserService
   ) {
@@ -108,18 +114,15 @@ export class ReportService extends BaseModule {
   }
 
   async getUserReportById(reporterId: string, reportId: string): Promise<IPopulatedReportDetails> {
-    // Condition 1: Check report existence
     const rawReport = await this.reportRepository.findReportById(reportId);
     if (!rawReport) {
       throw AppError.notFound('NOT_FOUND', 'Report not found.');
     }
 
-    // Condition 2: Check reporter ownership permission
     if (rawReport.reporterId !== reporterId) {
       throw AppError.forbidden('FORBIDDEN', 'You do not have permission to view this report.');
     }
 
-    // Condition 3: Fetch fully populated report using pipeline builder preset
     const populatedReport = await this.reportRepository.findUserReportDetailsWithPipeline(
       reporterId,
       reportId
@@ -129,7 +132,6 @@ export class ReportService extends BaseModule {
       throw AppError.notFound('NOT_FOUND', 'Report details not found.');
     }
 
-    // Condition 4: Diff status handling & logging
     switch (populatedReport.status) {
       case ReportStatus.PENDING:
         this.logInfo('User accessed pending report details', { reportId, reporterId });
@@ -176,28 +178,7 @@ export class ReportService extends BaseModule {
     reviewerId: string,
     input: TResolveStoryReportInput
   ): Promise<IReport> {
-    const report = await this.reportRepository.findReportById(reportId);
-    if (!report) {
-      throw AppError.notFound('NOT_FOUND', 'Report not found.');
-    }
-
-    if (report.relatedStorySlug && report.relatedStorySlug !== storySlug) {
-      throw new AppError('INVALID_INPUT', 400, {
-        message: 'Report does not belong to this story.',
-      });
-    }
-
-    const updated = await this.reportRepository.resolveReport(reportId, {
-      status: input.status,
-      resolution: input.resolution,
-      resolvedBy: reviewerId,
-    });
-
-    if (!updated) {
-      throw AppError.notFound('NOT_FOUND', 'Report could not be updated.');
-    }
-
-    return updated;
+    return this.reportResolutionService.resolveStoryReport(storySlug, reportId, reviewerId, input);
   }
 
   async banUserFromStory(
@@ -209,6 +190,14 @@ export class ReportService extends BaseModule {
       storySlug,
       reviewerId,
       bannedUserId: input.userId,
+      reason: input.reason,
+    });
+
+    await this.storyBanRepository.banUserFromStory({
+      storySlug,
+      userId: input.userId,
+      bannedBy: reviewerId,
+      bannedByRole: 'moderator',
       reason: input.reason,
     });
 
@@ -224,6 +213,8 @@ export class ReportService extends BaseModule {
     userId: string
   ): Promise<{ message: string; storySlug: string; unbannedUserId: string }> {
     this.logInfo('User unbanned from story', { storySlug, unbannedUserId: userId });
+
+    await this.storyBanRepository.unbanUserFromStory(storySlug, userId);
 
     return {
       message: `User ${userId} has been unbanned from story ${storySlug}.`,
@@ -279,17 +270,7 @@ export class ReportService extends BaseModule {
     reviewerId: string,
     input: TPlatformResolveReportInput
   ): Promise<IReport> {
-    const updated = await this.reportRepository.resolveReport(reportId, {
-      status: ReportStatus.RESOLVED,
-      resolution: input.resolution,
-      resolvedBy: reviewerId,
-    });
-
-    if (!updated) {
-      throw AppError.notFound('NOT_FOUND', 'Report not found.');
-    }
-
-    return updated;
+    return this.reportResolutionService.resolveAdminReport(reportId, reviewerId, input);
   }
 
   async banUserGlobally(

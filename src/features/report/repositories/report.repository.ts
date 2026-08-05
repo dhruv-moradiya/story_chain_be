@@ -195,7 +195,14 @@ export class ReportRepository extends BaseRepository<IReport, IReportDoc> {
 
   async resolveReport(
     reportId: string,
-    payload: { status: string; resolution: string; resolvedBy: string }
+    payload: {
+      status: string;
+      resolution: string;
+      resolvedBy: string;
+      actionTaken?: string;
+      storyBanId?: string;
+      banHistoryId?: string;
+    }
   ): Promise<IReport | null> {
     return this.findOneAndUpdate({
       filter: { _id: reportId },
@@ -204,6 +211,9 @@ export class ReportRepository extends BaseRepository<IReport, IReportDoc> {
         resolution: payload.resolution,
         resolvedBy: payload.resolvedBy,
         resolvedAt: new Date(),
+        ...(payload.actionTaken && { actionTaken: payload.actionTaken }),
+        ...(payload.storyBanId && { storyBanId: payload.storyBanId }),
+        ...(payload.banHistoryId && { banHistoryId: payload.banHistoryId }),
       },
     });
   }

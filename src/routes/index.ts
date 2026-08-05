@@ -20,6 +20,7 @@ import { characterRoutes } from '@/features/character/routes/character.routes';
 import { albumRoutes } from '@/features/album/routes/album.routes';
 import { reportRoutes } from '@/features/report/routes/report.router';
 import { coinTransactionRoutes } from '@/features/coinTransaction/routes/coinTransaction.routes';
+import { storyBanRoutes } from '@/features/storyBan/routes/storyBan.routes';
 
 enum ApiRoute {
   USERS = '/api/users',
@@ -41,6 +42,7 @@ enum ApiRoute {
   ALBUMS = '/api/albums',
   REPORTS = '/api/reports',
   Transactions = '/api/transactions',
+  STORY_BANS = '/api/story-bans',
 }
 
 export async function registerRoutes(fastify: FastifyInstance) {
@@ -65,4 +67,5 @@ export async function registerRoutes(fastify: FastifyInstance) {
   fastify.register(albumRoutes, { prefix: ApiRoute.ALBUMS });
   fastify.register(reportRoutes, { prefix: ApiRoute.REPORTS });
   fastify.register(coinTransactionRoutes, { prefix: ApiRoute.Transactions });
+  fastify.register(storyBanRoutes, { prefix: ApiRoute.STORY_BANS });
 }

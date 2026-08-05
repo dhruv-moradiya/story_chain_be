@@ -1,11 +1,29 @@
 import { Badge } from '@/features/user/types/user-enum';
 import { TPlatformRole } from '@/features/platformRole/types/platformRole.types';
+import { TBanType } from '@/features/banHistory/types/banHistory.types';
 import {
   IConnectedAccount,
   IUserPreferences,
   IUserStats,
   TAuthProvider,
 } from '@/features/user/types/user.types';
+
+// Public User Response (for search results, collaborator views)
+interface IPublicUserResponse {
+  clerkId: string;
+  username: string;
+  avatarUrl: string;
+}
+
+// Ban Details Response
+interface IBanDetailsResponse {
+  bannedBy: IPublicUserResponse;
+  reason: string;
+  durationDays?: number;
+  banType: TBanType;
+  expiresAt?: Date | string;
+  createdAt: Date | string;
+}
 
 // Current User Response
 interface ICurrentUserResponse {
@@ -21,16 +39,11 @@ interface ICurrentUserResponse {
   stats: IUserStats;
   preferences: IUserPreferences;
   isActive: boolean;
+  isBanned: boolean;
+  banDetails: IBanDetailsResponse | null;
   lastActive: Date;
   createdAt: Date;
   updatedAt: Date;
-}
-
-// Public User Response (for search results, collaborator views)
-interface IPublicUserResponse {
-  clerkId: string;
-  username: string;
-  avatarUrl: string;
 }
 
 interface IPublicUserResponseWithEmail extends IPublicUserResponse {
@@ -136,6 +149,7 @@ interface IUserPaginatedResponse {
 
 export type {
   ICurrentUserResponse,
+  IBanDetailsResponse,
   IPublicUserResponse,
   IPublicUserResponseWithEmail,
   IUserSearchItemResponse,

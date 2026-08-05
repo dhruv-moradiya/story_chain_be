@@ -120,4 +120,46 @@ export class CoinTransactionPipelineBuilder extends BasePipelineBuilder<CoinTran
       .sortByCreatedAt(-1)
       .paginate(options.page, options.limit);
   }
+
+  getUserTransactionsPreset(options: {
+    userId: string;
+    type?: TCoinTxType;
+    direction?: TCoinTxDirection;
+    search?: string;
+  }) {
+    return this.matchUserId(options.userId)
+      .when(!!options.type, (b) => b.matchType(options.type!))
+      .when(!!options.direction, (b) => b.matchDirection(options.direction!))
+      .attachUser()
+      .attachOrder()
+      .when(!!options.search, (b) => b.matchSearch(options.search))
+      .sortByCreatedAt(-1);
+  }
+}
+
+export class FinancialSummaryPipelineBuilder extends BasePipelineBuilder<FinancialSummaryPipelineBuilder> {
+  matchUserId(userId: string) {
+    this.pipeline.push({ $match: { userId } });
+    return this;
+  }
+
+  matchPaidOrders() {
+    this.pipeline.push({ $match: { status: 'paid' } });
+    return this;
+  }
+
+  groupOrderSummary() {
+    this.pipeline.push({
+      $group: {
+        _id: null,
+        totalCoinsPurchased: { $sum: '$totalCoins' },
+        totalAmountSpent: { $sum: '$finalAmount' },
+      },
+    });
+    return this;
+  }
+
+  getPaidOrdersSummaryPreset(userId: string) {
+    return this.matchUserId(userId).matchPaidOrders().groupOrderSummary();
+  }
 }

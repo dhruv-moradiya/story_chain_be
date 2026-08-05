@@ -1,8 +1,12 @@
 import {
   TGetAllCoinTransactionsQuerySchema,
   TGetMyCoinPurchasesQuerySchema,
+  TGetUserTransactionsQuerySchema,
 } from '@/schema/request/coinTransaction.schema';
-import { ICoinTransactionPaginatedResponse } from '@/types/response/coinTransaction.response.types';
+import {
+  ICoinTransactionPaginatedResponse,
+  IUserTransactionsWithSummaryResponse,
+} from '@/types/response/coinTransaction.response.types';
 
 export interface ICoinTransactionService {
   getMyPurchases(
@@ -12,4 +16,8 @@ export interface ICoinTransactionService {
   getAllTransactions(
     query: TGetAllCoinTransactionsQuerySchema
   ): Promise<ICoinTransactionPaginatedResponse>;
+  getUserTransactions(
+    userId: string,
+    query: TGetUserTransactionsQuerySchema
+  ): Promise<IUserTransactionsWithSummaryResponse>;
 }

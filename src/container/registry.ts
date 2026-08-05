@@ -62,6 +62,7 @@ import { CharacterRepository } from '@/features/character/repositories/character
 import { AlbumRepository } from '@/features/album/repositories/album.repository';
 import { ReportRepository } from '@/features/report/repositories/report.repository';
 import { BanHistoryRepository } from '@/features/banHistory/repositories/banHistory.repository';
+import { StoryBanRepository } from '@/features/storyBan/repositories/storyBan.repository';
 
 // ═══════════════════════════════════════════
 // FEATURE SERVICES
@@ -110,6 +111,8 @@ import { GalleryImageService } from '@/features/galleryImage/services/galleryIma
 import { CharacterService } from '@/features/character/services/character.service';
 import { AlbumService } from '@/features/album/services/album.service';
 import { ReportService } from '@features/report/services/report.service';
+import { ReportResolutionService } from '@features/report/services/report-resolution.service';
+import { StoryBanService } from '@features/storyBan/services/storyBan.service';
 import { CoinTransactionService } from '@/features/coinTransaction/service/CoinTransaction.service';
 
 // ═══════════════════════════════════════════
@@ -139,6 +142,7 @@ import { GalleryImageController } from '@/features/galleryImage/controllers/gall
 import { CharacterController } from '@/features/character/controllers/character.controller';
 import { AlbumController } from '@/features/album/controllers/album.controller';
 import { ReportController } from '@features/report/controllers/report.controller';
+import { StoryBanController } from '@features/storyBan/controllers/storyBan.controller';
 import { CoinTransactionController } from '@/features/coinTransaction/controllers/coinTransaction.controller';
 
 // ═══════════════════════════════════════════
@@ -256,6 +260,7 @@ export function registerServices(): void {
   container.register(TOKENS.AlbumRepository, { useClass: AlbumRepository });
   container.register(TOKENS.ReportRepository, { useClass: ReportRepository });
   container.register(TOKENS.BanHistoryRepository, { useClass: BanHistoryRepository });
+  container.register(TOKENS.StoryBanRepository, { useClass: StoryBanRepository });
 
   // ═══════════════════════════════════════════
   // FEATURE SERVICES
@@ -307,12 +312,15 @@ export function registerServices(): void {
   container.register(TOKENS.CharacterService, { useClass: CharacterService });
   container.register(TOKENS.AlbumService, { useClass: AlbumService });
   container.register(TOKENS.ReportService, { useClass: ReportService });
+  container.register(TOKENS.ReportResolutionService, { useClass: ReportResolutionService });
+  container.register(TOKENS.StoryBanService, { useClass: StoryBanService });
   container.register(TOKENS.CoinTransactionService, { useClass: CoinTransactionService });
 
   // ═══════════════════════════════════════════
   // CONTROLLERS
   // ═══════════════════════════════════════════
   container.register(TOKENS.UserController, { useClass: UserController });
+
   container.register(TOKENS.UserWebhookController, { useClass: UserWebhookController });
   container.register(TOKENS.StoryController, { useClass: StoryController });
   container.register(TOKENS.ChapterController, { useClass: ChapterController });
@@ -336,6 +344,7 @@ export function registerServices(): void {
   container.register(TOKENS.CharacterController, { useClass: CharacterController });
   container.register(TOKENS.AlbumController, { useClass: AlbumController });
   container.register(TOKENS.ReportController, { useClass: ReportController });
+  container.register(TOKENS.StoryBanController, { useClass: StoryBanController });
   container.register(TOKENS.CoinTransactionController, { useClass: CoinTransactionController });
 
   // ═══════════════════════════════════════════

@@ -73,6 +73,7 @@ export const TOKENS = {
   AlbumRepository: Symbol.for('AlbumRepository'),
   ReportRepository: Symbol.for('ReportRepository'),
   BanHistoryRepository: Symbol.for('BanHistoryRepository'),
+  StoryBanRepository: Symbol.for('StoryBanRepository'),
 
   // ═══════════════════════════════════════════
   // FEATURE SERVICES
@@ -105,6 +106,9 @@ export const TOKENS = {
   FollowService: Symbol.for('FollowService'),
   NotificationService: Symbol.for('NotificationService'),
   ReportService: Symbol.for('ReportService'),
+  ReportResolutionService: Symbol.for('ReportResolutionService'),
+  StoryBanService: Symbol.for('StoryBanService'),
+
   ReadingHistoryService: Symbol.for('ReadingHistoryService'),
   AnalyticsService: Symbol.for('AnalyticsService'),
   SessionService: Symbol.for('SessionService'),
@@ -140,6 +144,8 @@ export const TOKENS = {
   FollowController: Symbol.for('FollowController'),
   NotificationController: Symbol.for('NotificationController'),
   ReportController: Symbol.for('ReportController'),
+  StoryBanController: Symbol.for('StoryBanController'),
+
   ReadingHistoryController: Symbol.for('ReadingHistoryController'),
   AnalyticsController: Symbol.for('AnalyticsController'),
   SessionController: Symbol.for('SessionController'),

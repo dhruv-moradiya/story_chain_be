@@ -1,5 +1,7 @@
 import { TPlatformRole } from '@/features/platformRole/types/platformRole.types';
+import { IBanHistoryPopulated } from '@/features/banHistory/types/banHistory.types';
 import {
+  IBanDetailsResponse,
   ICurrentUserResponse,
   IFullUserResponse,
   IPaginatedUserData,
@@ -11,8 +13,22 @@ import { IUser } from '@features/user/types/user.types';
 
 export class UserTransformer {
   static currentUserResponse(
-    input: IUser & { role: TPlatformRole }
-  ): ICurrentUserResponse & { role: TPlatformRole } {
+    input: IUser & { role: TPlatformRole },
+    activeBan?: IBanHistoryPopulated | null
+  ): ICurrentUserResponse {
+    const isBanned = Boolean(activeBan && activeBan.isActive);
+    const banDetails: IBanDetailsResponse | null =
+      activeBan && isBanned
+        ? {
+            bannedBy: activeBan.bannedBy,
+            reason: activeBan.reason,
+            durationDays: activeBan.durationDays,
+            banType: activeBan.banType,
+            expiresAt: activeBan.expiresAt,
+            createdAt: activeBan.createdAt,
+          }
+        : null;
+
     return {
       clerkId: input.clerkId,
       username: input.username,
@@ -26,6 +42,8 @@ export class UserTransformer {
       stats: input.stats,
       preferences: input.preferences,
       isActive: input.isActive,
+      isBanned,
+      banDetails,
       lastActive: input.lastActive,
       createdAt: input.createdAt,
       updatedAt: input.updatedAt,

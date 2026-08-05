@@ -1,6 +1,7 @@
 import { Document, Types } from 'mongoose';
 import { ID } from '@/types';
 import { STORY_BAN_ISSUER_ROLES } from './storyBan-enum';
+import { IPublicUserResponse } from '@/types/response/user.response.types';
 
 type TStoryBanIssuerRole = (typeof STORY_BAN_ISSUER_ROLES)[number];
 
@@ -33,4 +34,8 @@ interface IStoryBanDoc extends Document, IStoryBan {
   _id: Types.ObjectId;
 }
 
-export type { IStoryBan, IStoryBanDoc, TStoryBanIssuerRole };
+interface IStoryBanPopulated extends Omit<IStoryBan, 'bannedBy'> {
+  bannedBy: IPublicUserResponse;
+}
+
+export type { IStoryBan, IStoryBanDoc, IStoryBanPopulated, TStoryBanIssuerRole };

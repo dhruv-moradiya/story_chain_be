@@ -1,8 +1,9 @@
 import { Document, Types } from 'mongoose';
 import { ID } from '@/types';
-import { BAN_TYPES } from './banHistory-enum';
+import { IPublicUserResponse } from '@/types/response/user.response.types';
+import { BanType } from './banHistory-enum';
 
-type TBanType = (typeof BAN_TYPES)[number];
+type TBanType = (typeof BanType)[keyof typeof BanType];
 
 interface IBanHistory {
   _id: ID;
@@ -34,4 +35,8 @@ interface IBanHistoryDoc extends Document, IBanHistory {
   _id: Types.ObjectId;
 }
 
-export type { IBanHistory, IBanHistoryDoc, TBanType };
+interface IBanHistoryPopulated extends Omit<IBanHistory, 'bannedBy'> {
+  bannedBy: IPublicUserResponse;
+}
+
+export type { IBanHistory, IBanHistoryDoc, IBanHistoryPopulated, TBanType };

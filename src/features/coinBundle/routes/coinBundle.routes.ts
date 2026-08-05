@@ -68,7 +68,7 @@ export async function coinBundleRoutes(fastify: FastifyInstance) {
   fastify.get(
     CoinBundleApiRoutes.AdminList,
     {
-      preHandler: superAdminHandlers,
+      // preHandler: superAdminHandlers,
       config: { rateLimit: RateLimits.AUTHENTICATED },
       schema: {
         description:

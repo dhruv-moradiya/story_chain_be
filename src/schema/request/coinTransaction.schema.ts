@@ -18,5 +18,12 @@ export const GetAllCoinTransactionsQuerySchema = z.object({
   search: z.string().optional(),
 });
 
+export const GetUserTransactionsQuerySchema = z.object({
+  type: z.enum(COIN_TX_TYPES).optional(),
+  direction: z.enum(COIN_TX_DIRECTIONS).optional(),
+  search: z.string().optional(),
+});
+
 export type TGetMyCoinPurchasesQuerySchema = z.infer<typeof GetMyCoinPurchasesQuerySchema>;
 export type TGetAllCoinTransactionsQuerySchema = z.infer<typeof GetAllCoinTransactionsQuerySchema>;
+export type TGetUserTransactionsQuerySchema = z.infer<typeof GetUserTransactionsQuerySchema>;

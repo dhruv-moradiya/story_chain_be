@@ -1,6 +1,8 @@
 import { BaseRepository } from '@/utils/baseClass';
 import { singleton } from 'tsyringe';
 import { CoinTransaction } from '@models/coinTransaction.model';
+import { Wallet } from '@models/wallet.model';
+import { CoinOrder } from '@models/coinOrder.model';
 import {
   ICoinTransaction,
   ICoinTransactionDoc,
@@ -10,8 +12,14 @@ import {
 import { IAppendLedgerEntryDTO } from '@/dto/coinTransaction.dto';
 import { IOperationOptions } from '@/types';
 import { FilterQuery } from 'mongoose';
-import { CoinTransactionPipelineBuilder } from '../pipelines/coinTransaction.pipeline';
-import { ICoinOrderSummaryResponse } from '@/types/response/coinTransaction.response.types';
+import {
+  CoinTransactionPipelineBuilder,
+  FinancialSummaryPipelineBuilder,
+} from '../pipelines/coinTransaction.pipeline';
+import {
+  ICoinOrderSummaryResponse,
+  IUserWalletFinancialSummary,
+} from '@/types/response/coinTransaction.response.types';
 import { IPublicUserResponseWithEmail } from '@/types/response/user.response.types';
 
 export interface IPopulatedCoinTransaction extends ICoinTransaction {
@@ -129,6 +137,50 @@ export class CoinTransactionRepository extends BaseRepository<
       totalPages,
       page,
       limit,
+    };
+  }
+
+  async findUserTransactions(
+    userId: string,
+    options: {
+      type?: TCoinTxType;
+      direction?: TCoinTxDirection;
+      search?: string;
+    } = {}
+  ): Promise<IPopulatedCoinTransaction[]> {
+    const { type, direction, search } = options;
+
+    const builder = new CoinTransactionPipelineBuilder().getUserTransactionsPreset({
+      userId,
+      type,
+      direction,
+      search,
+    });
+
+    return this.model.aggregate<IPopulatedCoinTransaction>(builder.build()).exec();
+  }
+
+  async getUserFinancialSummary(userId: string): Promise<IUserWalletFinancialSummary> {
+    const summaryBuilder = new FinancialSummaryPipelineBuilder().getPaidOrdersSummaryPreset(userId);
+
+    const [wallet, orderSummary] = await Promise.all([
+      Wallet.findOne({ userId }).lean().exec(),
+      CoinOrder.aggregate<{
+        totalCoinsPurchased: number;
+        totalAmountSpent: number;
+      }>(summaryBuilder.build()).exec(),
+    ]);
+
+    const orderStats = orderSummary[0];
+
+    return {
+      currentCoinBalance: wallet?.balance ?? 0,
+      totalCoinsPurchased: orderStats?.totalCoinsPurchased ?? 0,
+      totalCoinsSpent: wallet?.totalSpent ?? 0,
+      totalAmountSpent: (orderStats?.totalAmountSpent ?? 0) / 100,
+
+      totalWithdrawn: wallet?.totalWithdrawn ?? 0,
+      pendingWithdrawals: wallet?.pendingWithdrawal ?? 0,
     };
   }
 }

@@ -19,9 +19,7 @@ export class WalletController extends BaseModule {
 
   getUserBalance = catchAsync(async (request: FastifyRequest, reply: FastifyReply) => {
     const userId = request.user.clerkId;
-    this.logDebug('User id: ', { userId });
 
-    this.logDebug("LET'SEE");
     const wallet = await this.walletService.getWalletByUserId(userId);
 
     if (!wallet) {

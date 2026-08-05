@@ -4,12 +4,14 @@ import { AuthMiddlewareFactory, PlatformRoleMiddlewareFactory } from '@/middlewa
 import {
   GetAllCoinTransactionsQuerySchema,
   GetMyCoinPurchasesQuerySchema,
+  GetUserTransactionsQuerySchema,
 } from '@/schema/request/coinTransaction.schema';
 import { CoinTransactionResponses } from '@/schema/response/coinTransaction.response';
 import { FastifyInstance } from 'fastify';
 import { container } from 'tsyringe';
 import zodToJsonSchema from 'zod-to-json-schema';
 import { CoinTransactionController } from '../controllers/coinTransaction.controller';
+import { ClerkUserIdParamsSchema } from '@/schema/request/commonRequest.schema';
 
 export async function coinTransactionRoutes(fastify: FastifyInstance) {
   const coinTransactionController = container.resolve<CoinTransactionController>(
@@ -23,6 +25,22 @@ export async function coinTransactionRoutes(fastify: FastifyInstance) {
 
   const validateAuth = authFactory.createAuthMiddleware();
   const PlatformRoleGuards = platformRoleFactory.createGuards();
+
+  fastify.get(
+    '/',
+    {
+      preHandler: [validateAuth, PlatformRoleGuards.superAdmin],
+      config: { rateLimit: RateLimits.AUTHENTICATED },
+      schema: {
+        description: 'Get all coin transactions (SUPER_ADMIN only)',
+        tags: ['Coin Transactions'],
+        security: [{ bearerAuth: [] }],
+        querystring: zodToJsonSchema(GetAllCoinTransactionsQuerySchema),
+        response: CoinTransactionResponses.coinTransactionList,
+      },
+    },
+    coinTransactionController.getAllTransactions
+  );
 
   fastify.get(
     '/my-purchases',
@@ -41,18 +59,20 @@ export async function coinTransactionRoutes(fastify: FastifyInstance) {
   );
 
   fastify.get(
-    '/',
+    '/:userId',
     {
       preHandler: [validateAuth, PlatformRoleGuards.superAdmin],
       config: { rateLimit: RateLimits.AUTHENTICATED },
       schema: {
-        description: 'Get all coin transactions (SUPER_ADMIN only)',
+        description:
+          'Get user transaction list and wallet financial summary by userId (SUPER_ADMIN only)',
         tags: ['Coin Transactions'],
         security: [{ bearerAuth: [] }],
-        querystring: zodToJsonSchema(GetAllCoinTransactionsQuerySchema),
-        response: CoinTransactionResponses.coinTransactionList,
+        params: zodToJsonSchema(ClerkUserIdParamsSchema),
+        querystring: zodToJsonSchema(GetUserTransactionsQuerySchema),
+        response: CoinTransactionResponses.userTransactionsWithSummary,
       },
     },
-    coinTransactionController.getAllTransactions
+    coinTransactionController.getUserTransaction
   );
 }

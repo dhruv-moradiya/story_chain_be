@@ -6,8 +6,12 @@ import { ICoinTransactionService } from '../interfaces/coinTransaction.service.i
 import {
   TGetAllCoinTransactionsQuerySchema,
   TGetMyCoinPurchasesQuerySchema,
+  TGetUserTransactionsQuerySchema,
 } from '@/schema/request/coinTransaction.schema';
-import { ICoinTransactionPaginatedResponse } from '@/types/response/coinTransaction.response.types';
+import {
+  ICoinTransactionPaginatedResponse,
+  IUserTransactionsWithSummaryResponse,
+} from '@/types/response/coinTransaction.response.types';
 import { CoinTransactionTransformer } from '@/transformer/coinTransaction.transformer';
 import { formatPaginatedResponse } from '@/utils/helpter';
 
@@ -53,5 +57,28 @@ export class CoinTransactionService extends BaseModule implements ICoinTransacti
     const docs = transactions.map((tx) => CoinTransactionTransformer.toResponseItem(tx));
 
     return formatPaginatedResponse(docs, totalDocs, page, limit);
+  }
+
+  async getUserTransactions(
+    userId: string,
+    query: TGetUserTransactionsQuerySchema
+  ): Promise<IUserTransactionsWithSummaryResponse> {
+    const { type, direction, search } = query;
+
+    const [summary, transactions] = await Promise.all([
+      this.coinTxRepo.getUserFinancialSummary(userId),
+      this.coinTxRepo.findUserTransactions(userId, {
+        type,
+        direction,
+        search,
+      }),
+    ]);
+
+    const docs = transactions.map((tx) => CoinTransactionTransformer.toResponseItem(tx));
+
+    return {
+      summary,
+      transactions: docs,
+    };
   }
 }

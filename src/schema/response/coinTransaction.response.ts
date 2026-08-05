@@ -1,4 +1,4 @@
-import { apiPaginatedResponse } from './helpers';
+import { apiPaginatedResponse, apiResponse } from './helpers';
 import {
   COIN_TX_DIRECTIONS,
   COIN_TX_TYPES,
@@ -57,8 +57,46 @@ export const CoinTransactionSchema = {
   },
 };
 
+export const WalletFinancialSummarySchema = {
+  type: 'object',
+  properties: {
+    currentCoinBalance: { type: 'number' },
+    totalCoinsPurchased: { type: 'number' },
+    totalCoinsSpent: { type: 'number' },
+    totalAmountSpent: { type: 'number' },
+    totalWithdrawn: { type: 'number' },
+    pendingWithdrawals: { type: 'number' },
+  },
+  required: [
+    'currentCoinBalance',
+    'totalCoinsPurchased',
+    'totalCoinsSpent',
+    'totalAmountSpent',
+    'totalWithdrawn',
+    'pendingWithdrawals',
+  ],
+};
+
+export const UserTransactionsWithSummarySchema = {
+  type: 'object',
+  properties: {
+    summary: WalletFinancialSummarySchema,
+    transactions: {
+      type: 'array',
+      items: CoinTransactionSchema,
+    },
+  },
+  required: ['summary', 'transactions'],
+};
+
 export const CoinTransactionResponses = {
   coinTransactionList: {
     200: apiPaginatedResponse(CoinTransactionSchema, 'Paginated list of coin transactions'),
+  },
+  userTransactionsWithSummary: {
+    200: apiResponse(
+      UserTransactionsWithSummarySchema,
+      'User transaction list with wallet & financial summary'
+    ),
   },
 };

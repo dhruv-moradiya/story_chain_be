@@ -39,3 +39,17 @@ export interface ICoinTransactionPaginatedResponse {
   prevPage: number | null;
   nextPage: number | null;
 }
+
+export interface IUserWalletFinancialSummary {
+  currentCoinBalance: number;
+  totalCoinsPurchased: number;
+  totalCoinsSpent: number;
+  totalAmountSpent: number;
+  totalWithdrawn: number;
+  pendingWithdrawals: number;
+}
+
+export interface IUserTransactionsWithSummaryResponse {
+  summary: IUserWalletFinancialSummary;
+  transactions: ICoinTransactionResponse[];
+}

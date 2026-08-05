@@ -23,6 +23,7 @@ import { UserRepository } from '../repositories/user.repository';
 import { IConnectedAccount, IUser, TAuthProvider } from '../types/user.types';
 import { BanHistoryRepository } from '@/features/banHistory/repositories/banHistory.repository';
 import { BanType } from '@/features/banHistory/types/banHistory-enum';
+import { IBanHistoryPopulated } from '@/features/banHistory/types/banHistory.types';
 
 @singleton()
 class UserService extends BaseModule implements IUserService {
@@ -199,6 +200,10 @@ class UserService extends BaseModule implements IUserService {
 
   async getUserByUsername(username: string): Promise<IUser | null> {
     return this.userRepo.findOneByUsername(username);
+  }
+
+  async getUserActiveBan(userId: string): Promise<IBanHistoryPopulated | null> {
+    return this.banHistoryRepo.findActiveBanByUserId(userId);
   }
 
   async searchUserByUsername(input: ISearchUserByUsernameDTO): Promise<IUser[]> {

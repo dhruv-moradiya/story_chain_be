@@ -89,6 +89,7 @@ export async function storyRoutes(fastify: FastifyInstance) {
   const validateAuth = authFactory.createAuthMiddleware();
   const PlatformRoleGuards = platformRoleFactory.createGuards();
   const loadStoryContext = storyRoleFactory.createLoadContextBySlug();
+  const checkStoryBan = storyRoleFactory.createCheckStoryBan();
 
   // ===============================
   // SUPER_ADMIN ROUTES
@@ -407,7 +408,7 @@ export async function storyRoutes(fastify: FastifyInstance) {
   fastify.get(
     StoryApiRoutes.GetStoryOverviewBySlug,
     {
-      preHandler: [validateAuth],
+      preHandler: [validateAuth, checkStoryBan],
       config: { rateLimit: RateLimits.PUBLIC_READ },
       schema: {
         description: 'Get story overview by slug',

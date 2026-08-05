@@ -55,7 +55,28 @@ export const UserSchema = {
       },
     },
     isActive: { type: 'boolean' },
+    isBanned: { type: 'boolean' },
+    banDetails: {
+      type: ['object', 'null'],
+      nullable: true,
+      properties: {
+        bannedBy: {
+          type: 'object',
+          properties: {
+            clerkId: { type: 'string' },
+            username: { type: 'string' },
+            avatarUrl: { type: 'string' },
+          },
+        },
+        reason: { type: 'string' },
+        durationDays: { type: 'number', nullable: true },
+        banType: { type: 'string', enum: ['TEMPORARY', 'PERMANENT'] },
+        expiresAt: { type: 'string', format: 'date-time', nullable: true },
+        createdAt: { type: 'string', format: 'date-time' },
+      },
+    },
     lastActive: { type: 'string', format: 'date-time' },
+
     createdAt: { type: 'string', format: 'date-time' },
     updatedAt: { type: 'string', format: 'date-time' },
     role: {

@@ -27,8 +27,9 @@ class UserController extends BaseModule {
 
   getCurrentUserDetails = catchAsync(async (request: FastifyRequest, reply: FastifyReply) => {
     const user = await request.user;
+    const activeBan = await this.userService.getUserActiveBan(user.clerkId);
 
-    const responseData = UserTransformer.currentUserResponse(user);
+    const responseData = UserTransformer.currentUserResponse(user, activeBan);
 
     return reply
       .code(HTTP_STATUS.OK.code)
