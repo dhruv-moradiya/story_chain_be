@@ -12,6 +12,9 @@ import { inject, singleton } from 'tsyringe';
 import { ReadingHistoryRepository } from '../repositories/readingHistory.repository.js';
 import { IReadingHistoryService } from './interfaces/index.js';
 
+import { EventBusService } from '@infrastructure/events/event-bus.service.js';
+import { APP_EVENTS } from '@infrastructure/events/event-bus.types.js';
+
 @singleton()
 class ReadingHistoryService extends BaseModule implements IReadingHistoryService {
   constructor(
@@ -20,7 +23,9 @@ class ReadingHistoryService extends BaseModule implements IReadingHistoryService
     @inject(TOKENS.ChapterRepository)
     private readonly chapterRepository: ChapterRepository,
     @inject(TOKENS.StoryRepository)
-    private readonly storyRepository: StoryRepository
+    private readonly storyRepository: StoryRepository,
+    @inject(TOKENS.EventBusService)
+    private readonly eventBus: EventBusService
   ) {
     super();
   }
@@ -143,6 +148,14 @@ class ReadingHistoryService extends BaseModule implements IReadingHistoryService
           this.chapterRepository.incrementUniqueReaders(input.chapterSlug),
           this.storyRepository.incrementTotalReads(input.storySlug),
         ]);
+
+        this.eventBus.emit(APP_EVENTS.CHAPTER_READ, {
+          userId: input.userId,
+          storySlug: input.storySlug,
+          chapterSlug: input.chapterSlug,
+          readDurationSeconds: chapter.totalReadTime,
+          completed: true,
+        });
       }
     }
   }

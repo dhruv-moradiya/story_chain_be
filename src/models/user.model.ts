@@ -54,6 +54,8 @@ const userSchema = new Schema<IUserDoc>(
         type: String,
         enum: [
           'STORY_STARTER',
+          'PROLIFIC_CREATOR',
+          'STORY_MASTER',
           'BRANCH_CREATOR',
           'TOP_CONTRIBUTOR',
           'MOST_UPVOTED',

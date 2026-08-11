@@ -17,6 +17,8 @@ import { CacheService } from '@infrastructure/cache/cache.service';
 import { QueueService } from '@infrastructure/queue/queue.service';
 import { WorkerService } from '@infrastructure/queue/worker.service';
 import { SchedulerService } from '@infrastructure/scheduler/scheduler.service';
+import { EventBusService } from '@infrastructure/events/event-bus.service';
+import { GamificationEventListener } from '@infrastructure/events/listeners/gamification.listener';
 import { NotificationWorker } from '@features/notification/workers/notification.worker';
 import { StoryCacheService } from '@infrastructure/cache/story-cache.service';
 import { CommentVoteCacheService } from '@infrastructure/cache/commentVoteCacheService';
@@ -63,6 +65,7 @@ import { AlbumRepository } from '@/features/album/repositories/album.repository'
 import { ReportRepository } from '@/features/report/repositories/report.repository';
 import { BanHistoryRepository } from '@/features/banHistory/repositories/banHistory.repository';
 import { StoryBanRepository } from '@/features/storyBan/repositories/storyBan.repository';
+import { XpTransactionRepository } from '@/features/xpTransaction/repositories/xpTransaction.repository';
 
 // ═══════════════════════════════════════════
 // FEATURE SERVICES
@@ -114,6 +117,8 @@ import { ReportService } from '@features/report/services/report.service';
 import { ReportResolutionService } from '@features/report/services/report-resolution.service';
 import { StoryBanService } from '@features/storyBan/services/storyBan.service';
 import { CoinTransactionService } from '@/features/coinTransaction/service/CoinTransaction.service';
+import { XpTransactionService } from '@/features/xpTransaction/services/xpTransaction.service';
+import { GamificationService } from '@/features/gamification/services/gamification.service';
 
 // ═══════════════════════════════════════════
 // CONTROLLERS
@@ -200,6 +205,16 @@ export function registerServices(): void {
     { lifecycle: Lifecycle.Singleton }
   );
   container.register(
+    TOKENS.EventBusService,
+    { useClass: EventBusService },
+    { lifecycle: Lifecycle.Singleton }
+  );
+  container.register(
+    TOKENS.GamificationEventListener,
+    { useClass: GamificationEventListener },
+    { lifecycle: Lifecycle.Singleton }
+  );
+  container.register(
     TOKENS.NotificationWorker,
     { useClass: NotificationWorker },
     { lifecycle: Lifecycle.Singleton }
@@ -261,6 +276,7 @@ export function registerServices(): void {
   container.register(TOKENS.ReportRepository, { useClass: ReportRepository });
   container.register(TOKENS.BanHistoryRepository, { useClass: BanHistoryRepository });
   container.register(TOKENS.StoryBanRepository, { useClass: StoryBanRepository });
+  container.register(TOKENS.XpTransactionRepository, { useClass: XpTransactionRepository });
 
   // ═══════════════════════════════════════════
   // FEATURE SERVICES
@@ -315,6 +331,8 @@ export function registerServices(): void {
   container.register(TOKENS.ReportResolutionService, { useClass: ReportResolutionService });
   container.register(TOKENS.StoryBanService, { useClass: StoryBanService });
   container.register(TOKENS.CoinTransactionService, { useClass: CoinTransactionService });
+  container.register(TOKENS.XpTransactionService, { useClass: XpTransactionService });
+  container.register(TOKENS.GamificationService, { useClass: GamificationService });
 
   // ═══════════════════════════════════════════
   // CONTROLLERS

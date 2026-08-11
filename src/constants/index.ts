@@ -7,6 +7,7 @@ import {
   XP_TIMING,
   XP_TIMING_LABELS,
   XP_DAILY_CAPS,
+  EXEMPT_FROM_DAILY_GLOBAL_CAP,
   XP_WEEKLY_CAPS,
   XP_DAILY_ACTION_LIMITS,
   XP_QUALITY_GATES,
@@ -24,6 +25,8 @@ import {
   checkBadgeEligibility,
   getChapterSurvivalMultiplier,
   calculateChapterSurvivalXP,
+  XpRewardReason,
+  XpSourceType,
 } from './gamification';
 
 // Re-export everything from gamification as named exports so callers
@@ -33,12 +36,15 @@ export {
   XP_TIMING,
   XP_TIMING_LABELS,
   XP_DAILY_CAPS,
+  EXEMPT_FROM_DAILY_GLOBAL_CAP,
   XP_WEEKLY_CAPS,
   XP_DAILY_ACTION_LIMITS,
   XP_QUALITY_GATES,
   XP_DIMINISHING_RETURNS,
   XP_GUARDS,
   XP_SOURCE_TYPES,
+  XpRewardReason,
+  XpSourceType,
   LEVEL_THRESHOLDS,
   BADGES,
   BADGE_CATEGORY,

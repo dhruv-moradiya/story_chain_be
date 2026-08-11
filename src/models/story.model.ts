@@ -124,6 +124,13 @@ const storySchema = new Schema<IStoryDoc>(
       ref: 'GalleryImage',
       default: [],
     },
+
+    // Gamification Milestones
+    milestonesAwarded: {
+      reads100: { type: Boolean, default: false },
+      reads1000: { type: Boolean, default: false },
+      reads10000: { type: Boolean, default: false },
+    },
   },
   { timestamps: true }
 );

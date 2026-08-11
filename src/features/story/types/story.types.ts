@@ -78,6 +78,13 @@ interface IStory {
   worldId?: ID;
   moodboardImageIds: ID[];
 
+  // Gamification Milestones
+  milestonesAwarded?: {
+    reads100: boolean;
+    reads1000: boolean;
+    reads10000: boolean;
+  };
+
   createdAt: Date;
   updatedAt: Date;
 }

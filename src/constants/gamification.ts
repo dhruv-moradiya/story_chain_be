@@ -1,7 +1,10 @@
-// ============================================================
-// STORYCHAIN — GAMIFICATION CONSTANTS
-// Single source of truth for XP, Levels, Badges, Caps, Timing
-// ============================================================
+import {
+  XpRewardReason,
+  XpSourceType,
+  XP_SOURCE_TYPES_LIST,
+} from '@features/xpTransaction/types/xpTransaction-enum.js';
+
+export { XpRewardReason, XpSourceType };
 
 // ============================================================
 // SECTION 1: XP REWARDS
@@ -99,10 +102,12 @@ export const XP_TIMING_LABELS: Record<keyof typeof XP_TIMING, string> = {
 // SECTION 3: DAILY XP CAPS
 // Maximum XP a user can earn from each SOURCE CATEGORY per day.
 // Tracked via XpTransaction collection (reason + createdAt index).
-// The GLOBAL cap is the hard ceiling across ALL categories.
+// The GLOBAL cap is the hard ceiling across daily micro-actions.
 // ============================================================
 export const XP_DAILY_CAPS = {
-  // Hard ceiling — no matter what, you can't earn more than this in 24h.
+  // Hard ceiling for daily repeatable micro-actions (upvotes, comments, PR reviews, etc.).
+  // NOTE: Major deferred milestones (e.g. Story 100, 1,000, 10,000 unique read milestones)
+  // are EXEMPT from this daily cap because they are already strictly capped to once per story tier.
   GLOBAL: 150,
 
   // From chapter upvotes received on your chapters.
@@ -117,6 +122,12 @@ export const XP_DAILY_CAPS = {
   // From reviewing PRs (REVIEW_PR).
   FROM_PR_REVIEWS: 30, // = 3 reviews × 10 XP each (hard max 3/day)
 } as const;
+
+// XP sources that are EXEMPT from the global daily XP cap (XP_DAILY_CAPS.GLOBAL).
+// Major one-time achievements like Story Read Milestones are capped per story/tier, not per day.
+export const EXEMPT_FROM_DAILY_GLOBAL_CAP: readonly (XPSourceType | XpSourceType)[] = [
+  XpSourceType.STORY_MILESTONE,
+] as const;
 
 // ============================================================
 // SECTION 4: WEEKLY XP CAPS
@@ -435,20 +446,7 @@ export const GAMIFICATION_JOBS = {
 // ============================================================
 // SECTION 13: XP SOURCE TYPES (used in XpTransaction.sourceType)
 // ============================================================
-export const XP_SOURCE_TYPES = [
-  'story_milestone',
-  'chapter_survival',
-  'chapter_score_bonus',
-  'chapter_vote',
-  'pr_approved',
-  'pr_rejected',
-  'pr_review',
-  'comment_written',
-  'comment_received',
-  'follow_received',
-  'valid_report',
-  'penalty_spam',
-] as const;
+export const XP_SOURCE_TYPES = XP_SOURCE_TYPES_LIST;
 
 export type XPSourceType = (typeof XP_SOURCE_TYPES)[number];
 
@@ -458,9 +456,9 @@ export type XPSourceType = (typeof XP_SOURCE_TYPES)[number];
 //
 //  Action                     | XP          | Type     | Daily Cap | Weekly Cap | Timing
 // ----------------------------|-------------|----------|-----------|------------|------------------------
-//  Story hits 100 reads       | +50         | Deferred | —         | —          | On read-milestone event
-//  Story hits 1,000 reads     | +200        | Deferred | —         | —          | On read-milestone event
-//  Story hits 10,000 reads    | +1,000      | Deferred | —         | —          | On read-milestone event
+//  Story hits 100 reads       | +50         | Deferred | Exempt    | —          | On read-milestone event
+//  Story hits 1,000 reads     | +200        | Deferred | Exempt    | —          | On read-milestone event
+//  Story hits 10,000 reads    | +1,000      | Deferred | Exempt    | —          | On read-milestone event
 //  Chapter survival bonus     | +3 to +15   | Deferred | —         | +100/week  | 7 days after publish
 //  Chapter score ≥ 10         | +20         | Deferred | —         | —          | 24h after score reached
 //  Chapter score ≥ 50         | +50         | Deferred | —         | —          | 24h after score reached
@@ -478,5 +476,5 @@ export type XPSourceType = (typeof XP_SOURCE_TYPES)[number];
 //  Valid report confirmed     | +5          | Deferred | —         | —          | On moderator action
 //  Story spam confirmed       | −30         | Instant  | —         | —          | On moderator action
 //  Chapter spam confirmed     | −20         | Instant  | —         | —          | On moderator action
-//  Global daily ceiling       | n/a         | —        | +150/day  | —          | Rolling 24h window
+//  Global daily ceiling       | n/a         | —        | +150/day  | —          | Rolling 24h (Micro-actions only; Milestones exempt)
 // ============================================================

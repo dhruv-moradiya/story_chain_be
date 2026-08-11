@@ -1,6 +1,6 @@
 # 🎮 StoryChain Gamification Architecture
 
-> **Last Updated:** July 2026
+> **Last Updated:** Aug 2026
 > **Scope:** XP System · Level Progression · Badge Awards · Anti-Abuse Design
 
 ---
@@ -16,6 +16,7 @@
 7. [Gamification Flow (End-to-End)](#gamification-flow-end-to-end)
 8. [Constants & Configuration Reference](#constants--configuration-reference)
 9. [Implementation Checklist](#implementation-checklist)
+10. [Loopholes, Edge Cases & Security Hardening](#loopholes-edge-cases--security-hardening)
 
 ---
 
@@ -80,7 +81,9 @@ Story #4+ this week: 0 XP
 
 ### Pillar 3 — 🗓️ Daily & Weekly Hard Caps
 
-A user cannot earn more than a fixed amount of XP per day or per week from any single action category, regardless of how many times they perform it.
+A user cannot earn more than a fixed amount of XP per day or per week from repeatable daily micro-actions (votes, comments, PR reviews, etc.).
+
+> 💡 **Milestone Exemption:** One-off deferred achievements (such as Story Read Milestones: +50, +200, +1,000 XP) are **EXEMPT from the daily global cap**. Because they are strictly capped at _once per story tier_ and gated by deduplicated qualifying reads, a viral story hitting 10,000 reads in days will receive its full milestone XP (+1,000 XP) without being truncated by the daily micro-action cap.
 
 ### Pillar 4 — 🌐 Community Validation (XP sourced from others, not self)
 
@@ -192,7 +195,9 @@ PRs already have community validation built in (they must be approved). But PR s
 | PR approvals received             | —          | +200 XP/week |
 | Chapter survival bonus            | —          | +100 XP/week |
 
-**Global daily XP cap:** A user can earn at most **+150 XP in any single day** from all sources combined. This is the ultimate hard ceiling.
+**Global daily XP cap:** A user can earn at most **+150 XP in any single day** from daily repeatable micro-actions combined (chapter upvotes, comments written, comments received, PR reviews).
+
+> 💡 **Exemption for Story Milestones:** Story read milestones (`+50`, `+200`, `+1,000` XP) are **EXEMPT from the +150 XP/day global daily cap**. Since milestones are one-off awards per story tier (gated by unique reader deduplication), a viral story hitting 10,000 reads in 5 days will receive its full milestone XP (+1,000 XP) without being truncated by the daily micro-action cap.
 
 ---
 
@@ -599,7 +604,7 @@ export const XP_REWARDS = {
 export const XP_CAPS = {
   // Daily caps per source category
   DAILY: {
-    GLOBAL: 150, // Max XP from ALL sources in one day
+    GLOBAL: 150, // Max XP from daily micro-actions (Story read milestones are EXEMPT)
     FROM_CHAPTER_UPVOTES: 20, // Upvotes received on your chapters
     FROM_COMMENTS_WRITTEN: 10, // XP from comments you write
     FROM_COMMENTS_RECEIVED: 30, // XP from comments others leave on your content
@@ -759,3 +764,85 @@ milestonesAwarded: {
 6. **Idempotency for badges** — Always `$addToSet`, never `$push`.
 7. **Async for heavy jobs** — All deferred XP goes through BullMQ; never block the HTTP response for gamification.
 8. **Penalize confirmed bad behavior** — Rejected PRs (−5 XP) and moderator-confirmed spam (−30 XP for story, −20 XP for chapter) create real cost for abuse.
+
+---
+
+## Loopholes, Edge Cases & Security Hardening
+
+This section documents 8 critical loopholes identified in the gamification system, along with their exploitation vectors and technical security countermeasures.
+
+### 🔴 Loophole 1: Self-Voting & Alt-Account Vote Farming
+
+- **Exploit Vector:** An author creates 5–10 alt accounts to upvote their own chapters. This generates up to +20 XP/day for the author (`CHAPTER_UPVOTED`) and artificially inflates chapter net scores to trigger `CHAPTER_SCORE_BONUS_10` (+20 XP) and `CHAPTER_SCORE_BONUS_50` (+50 XP).
+- **Countermeasures:**
+  1. **Strict Self-Vote Block:** Enforce `voterId !== chapterAuthorId` at both API and service layers.
+  2. **Voter Account Age Gate:** Upvotes from accounts created `< 7 days` ago earn 0 XP for the author and do NOT count towards net score bonus thresholds.
+  3. **IP/Fingerprint Deduplication:** Disallow XP awards if voter and author share the same IP address or client fingerprint within 30 days.
+
+---
+
+### 🔴 Loophole 2: PR Approval Collusion Loophole
+
+- **Exploit Vector:** User A creates a story. User B (an alt account or friend) submits 5 trivial PRs (e.g. changing a single typo). User A approves all 5 PRs after waiting 1 hour. User B earns 5 × 40 = 200 XP/week (hitting the weekly PR approval cap).
+- **Countermeasures:**
+  1. **PR Quality Gate:** PRs must modify at least **100 characters / 20 words** of meaningful content to be eligible for approval XP.
+  2. **Story Maturity Gate:** Approving PRs on a story with `< 20` unique readers awards **0 XP** to both author and reviewer.
+  3. **Account Independence:** Disallow PR approval XP if PR author and story owner share IP, client fingerprint, or if PR author account age `< 48 hours`.
+
+---
+
+### 🔴 Loophole 3: Comment XP Farming on Own Content
+
+- **Exploit Vector:** Authors post repetitive comments on their own chapters to trigger `RECEIVE_COMMENT` (+3 XP/comment, up to +30 XP/day) or post short repetitive comments across various stories to farm `COMMENT_SHORT` (+2 XP) and `COMMENT_LONG` (+5 XP).
+- **Countermeasures:**
+  1. **Self-Comment Exclusion:** An author receives **0 XP** for comments posted on their own stories or chapters (`commenterId === contentAuthorId`).
+  2. **Per-Pair Daily Cap:** Limit `RECEIVE_COMMENT` XP to max **1 comment per unique commenter per story per day**.
+  3. **Semantic / Exact Duplicate Filter:** Reject XP for comments that match exact text previously posted by the same user within 24 hours.
+
+---
+
+### 🔴 Loophole 4: "Zombie" Chapter 7-Day Survival Farming
+
+- **Exploit Vector:** A user writes 4 empty/low-effort stub chapters per week and uses 5 guest browser sessions or VPNs to generate 5 unique reads per chapter. After 7 days, all 4 chapters pass the `uniqueReaders >= 5` gate, yielding 34 XP/week (~136 XP/month) for zero real community engagement.
+- **Countermeasures:**
+  1. **Verified Reader Requirement:** Require at least **3 out of the 5 unique readers** to be authenticated logged-in accounts older than 3 days.
+  2. **Word Count Quality Gate:** Chapters must contain at least **300 words** to qualify for the 7-day survival bonus.
+
+---
+
+### 🔴 Loophole 5: Griefing via PR Rejection Penalties & Downvote Attacks
+
+- **Exploit Vector:**
+  - _Griefing Vector:_ A malicious story owner invites open contributions, then systematically rejects legitimate PRs to deduct −5 XP per rejection from contributors.
+  - _Downvote Attack:_ Competitors create alt accounts to downvote rival chapters, draining author XP or blocking score-based badges (`COMMUNITY_FAVORITE`, `MOST_UPVOTED`).
+- **Countermeasures:**
+  1. **PR Rejection Penalty Scope:** The `PR_REJECTED` penalty (−5 XP) applies **ONLY** when a PR is flagged by a moderator or marked as "Spam / Malicious", NOT on standard editorial rejections by story owners.
+  2. **Downvote Floor & Age Gate:** Downvotes from accounts `< 3 days old` do NOT deduct XP from content authors. Total author XP is hard-floored at 0 (`XP_GUARDS.MIN_XP_EVER = 0`).
+
+---
+
+### 🔴 Loophole 6: Follow Farming via Fresh Bot Accounts
+
+- **Exploit Vector:** A user creates 10 bot accounts per week and follows their main account to farm `GET_FOLLOWED` (+5 XP/follow), maxing out the +50 XP/week follow cap.
+- **Countermeasures:**
+  1. **Follower Level / Age Gate:** `GET_FOLLOWED` (+5 XP) is credited ONLY if the follower account is **Level 2 or higher** OR account age is **≥ 7 days**. Fresh Level 1 accounts grant +0 XP to the recipient.
+
+---
+
+### 🔴 Loophole 7: Veteran Writer Badge Idle Farming
+
+- **Exploit Vector:** An account created 365 days ago logs in once, writes 10 short comments over 5 days (earning 50 XP), and triggers the `VETERAN_WRITER` badge without maintaining real engagement.
+- **Countermeasures:**
+  1. **Sustained Engagement Gate:** `VETERAN_WRITER` badge requires:
+     - Account age `≥ 365 days`
+     - User level `≥ Level 4` (Storyteller)
+     - At least **150 XP earned across at least 3 distinct active months** in the past 12 months.
+
+---
+
+### 🔴 Loophole 8: Proxy/Bot Traffic Farming for the +1,000 XP Viral Milestone
+
+- **Exploit Vector:** Because `STORY_MILESTONE_10000_READS` awards +1,000 XP (and is exempt from the daily cap), attackers use proxy lists or click-farm bots to spoof 10,000 guest IP reads over several days to claim the massive milestone.
+- **Countermeasures:**
+  1. **Registered Reader Verification Gate:** Out of the 10,000 total unique readers, at least **50 readers must be authenticated registered users** (`userId != null`).
+  2. **Automated Fraud Anomaly Queue:** If read velocity exceeds 1,000 reads/hour or guest-to-registered ratio exceeds 98%, flag the milestone for automated security review before crediting the +1,000 XP.

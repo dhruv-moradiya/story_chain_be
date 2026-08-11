@@ -12,3 +12,4 @@ export * from './cache/index.js';
 export * from './errors/index.js';
 export * from './queue/index.js';
 export * from './scheduler/index.js';
+export * from './events/index.js';

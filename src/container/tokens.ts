@@ -24,6 +24,8 @@ export const TOKENS = {
   QueueService: Symbol.for('QueueService'),
   WorkerService: Symbol.for('WorkerService'),
   SchedulerService: Symbol.for('SchedulerService'),
+  EventBusService: Symbol.for('EventBusService'),
+  GamificationEventListener: Symbol.for('GamificationEventListener'),
   NotificationWorker: Symbol.for('NotificationWorker'),
   InviteTokenService: Symbol.for('InviteTokenService'),
   NotificationFactoryService: Symbol.for('NotificationFactoryService'),
@@ -74,6 +76,7 @@ export const TOKENS = {
   ReportRepository: Symbol.for('ReportRepository'),
   BanHistoryRepository: Symbol.for('BanHistoryRepository'),
   StoryBanRepository: Symbol.for('StoryBanRepository'),
+  XpTransactionRepository: Symbol.for('XpTransactionRepository'),
 
   // ═══════════════════════════════════════════
   // FEATURE SERVICES
@@ -128,6 +131,8 @@ export const TOKENS = {
   CharacterService: Symbol.for('CharacterService'),
   AlbumService: Symbol.for('AlbumService'),
   CoinTransactionService: Symbol.for('CoinTransactionService'),
+  XpTransactionService: Symbol.for('XpTransactionService'),
+  GamificationService: Symbol.for('GamificationService'),
 
   // ═══════════════════════════════════════════
   // CONTROLLERS
