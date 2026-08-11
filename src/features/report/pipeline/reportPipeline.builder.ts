@@ -602,14 +602,14 @@ export class ReportPipelineBuilder extends BasePipelineBuilder<ReportPipelineBui
 
     return this.byReporter(reporterId)
       .when(!!status, (b) => b.byStatus(status!))
+      .sortByCreatedAt(-1)
+      .paginate(page, limit)
       .attachTargetUser()
       .attachStory()
       .attachChapter()
       .attachComment()
       .attachPolymorphicTarget()
-      .cleanPopulatedFields()
-      .sortByCreatedAt(-1)
-      .paginate(page, limit);
+      .cleanPopulatedFields();
   }
 
   /**
@@ -625,13 +625,13 @@ export class ReportPipelineBuilder extends BasePipelineBuilder<ReportPipelineBui
     return this.byStory(storySlug)
       .byGovernanceLevel(ReportGovernanceLevel.STORY)
       .when(!!status, (b) => b.byStatus(status!))
+      .sortByCreatedAt(-1)
+      .paginate(page, limit)
       .attachReporter()
       .attachChapter()
       .attachComment()
       .attachPolymorphicTarget()
-      .cleanPopulatedFields()
-      .sortByCreatedAt(-1)
-      .paginate(page, limit);
+      .cleanPopulatedFields();
   }
 
   /**
@@ -654,6 +654,8 @@ export class ReportPipelineBuilder extends BasePipelineBuilder<ReportPipelineBui
       .when(!!reportType, (b) => b.byReportType(reportType!))
       .when(!!reason, (b) => b.byReason(reason!))
       .when(!!governanceLevel, (b) => b.byGovernanceLevel(governanceLevel!))
+      .sortByCreatedAt(-1)
+      .paginate(page, limit)
       .attachReporter(USER_WITH_EMAIL_PROJECTION)
       .attachTargetUser(USER_WITH_EMAIL_PROJECTION)
       .attachStory()
@@ -663,9 +665,7 @@ export class ReportPipelineBuilder extends BasePipelineBuilder<ReportPipelineBui
       .attachResolvedByUser()
       .attachEscalatedToUser()
       .attachPolymorphicTarget()
-      .cleanPopulatedFields()
-      .sortByCreatedAt(-1)
-      .paginate(page, limit);
+      .cleanPopulatedFields();
   }
 
   /**

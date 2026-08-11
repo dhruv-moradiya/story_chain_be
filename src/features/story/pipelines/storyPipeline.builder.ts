@@ -458,6 +458,230 @@ class StoryPipelineBuilder extends BasePipelineBuilder<StoryPipelineBuilder> {
       .removeFields(['createdAt', 'updatedAt', 'creatorId', '_id'])
       .attachTotalStoryReadTime();
   }
+
+  getAdminStoriesTablePreset(
+    params: {
+      skip?: number;
+      limit?: number;
+      status?: string;
+      search?: string;
+      sortOrder?: 'asc' | 'desc';
+      sortBy?: string;
+    } = {}
+  ) {
+    const {
+      skip = 0,
+      limit = 10,
+      status,
+      search,
+      sortOrder = 'desc',
+      sortBy = 'createdAt',
+    } = params;
+
+    const matchStage: Record<string, unknown> = {};
+    if (status) {
+      matchStage.status = status;
+    }
+    if (search) {
+      matchStage.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { slug: { $regex: search, $options: 'i' } },
+      ];
+    }
+
+    if (Object.keys(matchStage).length > 0) {
+      this.pipeline.push({ $match: matchStage });
+    }
+
+    const sortDirection = sortOrder === 'asc' ? 1 : -1;
+    const sortField = sortBy || 'createdAt';
+
+    this.pipeline.push(
+      { $sort: { [sortField]: sortDirection } },
+      { $skip: skip },
+      { $limit: limit },
+
+      // Lookup Creator
+      {
+        $lookup: {
+          from: 'users',
+          let: { creatorId: '$creatorId' },
+          pipeline: [
+            { $match: { $expr: { $eq: ['$clerkId', '$$creatorId'] } } },
+            {
+              $project: {
+                clerkId: 1,
+                username: 1,
+                avatarUrl: 1,
+                email: 1,
+              },
+            },
+          ],
+          as: 'creator',
+        },
+      },
+      { $unwind: { path: '$creator', preserveNullAndEmptyArrays: true } },
+      // Lookup Collaborators with user info
+      {
+        $lookup: {
+          from: 'storycollaborators',
+          let: { storySlug: '$slug' },
+          pipeline: [
+            { $match: { $expr: { $eq: ['$slug', '$$storySlug'] } } },
+            {
+              $lookup: {
+                from: 'users',
+                let: { collabUserId: '$userId' },
+                pipeline: [
+                  { $match: { $expr: { $eq: ['$clerkId', '$$collabUserId'] } } },
+                  {
+                    $project: {
+                      clerkId: 1,
+                      username: 1,
+                      avatarUrl: 1,
+                      email: 1,
+                    },
+                  },
+                ],
+                as: 'user',
+              },
+            },
+            { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
+            {
+              $project: {
+                _id: 1,
+                role: 1,
+                status: 1,
+                user: 1,
+              },
+            },
+          ],
+          as: 'collaborators',
+        },
+      },
+
+      // Lookup Story Pool
+      {
+        $lookup: {
+          from: 'storyearningspools',
+          let: { storySlug: '$slug' },
+          pipeline: [
+            { $match: { $expr: { $eq: ['$storySlug', '$$storySlug'] } } },
+            {
+              $project: {
+                _id: 1,
+                storySlug: 1,
+                storyOwnerId: 1,
+                balance: 1,
+                totalReceived: 1,
+                totalDistributed: 1,
+                createdAt: 1,
+                updatedAt: 1,
+              },
+            },
+          ],
+          as: 'storyPool',
+        },
+      },
+      { $unwind: { path: '$storyPool', preserveNullAndEmptyArrays: true } },
+      // Lookup Chapter Statistics
+      {
+        $lookup: {
+          from: 'chapters',
+          let: { storySlug: '$slug' },
+          pipeline: [
+            { $match: { $expr: { $eq: ['$storySlug', '$$storySlug'] } } },
+            {
+              $group: {
+                _id: null,
+                totalChapters: { $sum: 1 },
+                publishedChapters: {
+                  $sum: { $cond: [{ $eq: ['$status', 'published'] }, 1, 0] },
+                },
+                draftChapters: {
+                  $sum: { $cond: [{ $eq: ['$status', 'draft'] }, 1, 0] },
+                },
+                rootChapters: {
+                  $sum: { $cond: [{ $eq: ['$depth', 0] }, 1, 0] },
+                },
+                totalReads: { $sum: '$stats.reads' },
+                totalComments: { $sum: '$stats.comments' },
+              },
+            },
+          ],
+          as: 'chapterSummary',
+        },
+      },
+      { $unwind: { path: '$chapterSummary', preserveNullAndEmptyArrays: true } },
+      // Lookup Pull Request Summary
+      {
+        $lookup: {
+          from: 'pullrequests',
+          let: { storySlug: '$slug' },
+          pipeline: [
+            { $match: { $expr: { $eq: ['$storySlug', '$$storySlug'] } } },
+            {
+              $group: {
+                _id: null,
+                totalPullRequests: { $sum: 1 },
+                pendingPullRequests: {
+                  $sum: { $cond: [{ $eq: ['$status', 'OPEN'] }, 1, 0] },
+                },
+                mergedPullRequests: {
+                  $sum: { $cond: [{ $eq: ['$status', 'MERGED'] }, 1, 0] },
+                },
+                rejectedPullRequests: {
+                  $sum: { $cond: [{ $eq: ['$status', 'REJECTED'] }, 1, 0] },
+                },
+              },
+            },
+          ],
+          as: 'pullRequestSummary',
+        },
+      },
+      { $unwind: { path: '$pullRequestSummary', preserveNullAndEmptyArrays: true } },
+      // Formatting
+      {
+        $addFields: {
+          chapterDetails: {
+            totalChapters: {
+              $ifNull: ['$chapterSummary.totalChapters', { $ifNull: ['$stats.totalChapters', 0] }],
+            },
+            publishedChapters: { $ifNull: ['$chapterSummary.publishedChapters', 0] },
+            draftChapters: { $ifNull: ['$chapterSummary.draftChapters', 0] },
+            rootChapters: { $ifNull: ['$chapterSummary.rootChapters', 0] },
+            totalReads: {
+              $ifNull: ['$chapterSummary.totalReads', { $ifNull: ['$stats.totalReads', 0] }],
+            },
+            totalComments: { $ifNull: ['$chapterSummary.totalComments', 0] },
+          },
+          pullRequestDetails: {
+            totalPRs: { $ifNull: ['$pullRequestSummary.totalPullRequests', 0] },
+            pendingPRs: { $ifNull: ['$pullRequestSummary.pendingPullRequests', 0] },
+            mergedPRs: { $ifNull: ['$pullRequestSummary.mergedPullRequests', 0] },
+            rejectedPRs: { $ifNull: ['$pullRequestSummary.rejectedPullRequests', 0] },
+          },
+          storyPool: {
+            $ifNull: [
+              '$storyPool',
+              {
+                balance: 0,
+                totalReceived: 0,
+                totalDistributed: 0,
+              },
+            ],
+          },
+        },
+      },
+      {
+        $project: {
+          chapterSummary: 0,
+          pullRequestSummary: 0,
+        },
+      }
+    );
+    return this.build();
+  }
 }
 
 export { StoryPipelineBuilder };

@@ -12,6 +12,7 @@ import { ChapterStatsSchema } from './chapter.response.js';
 import { ImageSchema, UserSummarySchema } from './common.js';
 import {
   apiArrayResponse,
+  apiPaginatedResponse,
   apiResponse,
   badRequestResponse,
   conflictResponse,
@@ -22,6 +23,7 @@ import {
   unauthorizedResponse,
   validationErrorResponse,
 } from './helpers.js';
+
 import { votesSchema } from './index.js';
 
 // ═══════════════════════════════════════════
@@ -226,6 +228,7 @@ export const StorySettingsWithImagesSchema = {
       ...ImageSchema,
       nullable: true,
     },
+    status: { type: 'string', enum: STORY_STATUSES },
   },
 };
 
@@ -277,6 +280,91 @@ export const UserStoryRoleSchema = {
   properties: {
     role: { type: 'string', enum: [...STORY_COLLABORATOR_ROLES, 'reader'] },
     roleStatus: { type: ['string', 'null'], enum: [...STORY_COLLABORATOR_STATUSES, null] },
+  },
+};
+
+export const AdminStoryTableItemSchema = {
+  type: 'object',
+  properties: {
+    _id: { type: 'string' },
+    title: { type: 'string' },
+    slug: { type: 'string' },
+    description: { type: 'string' },
+    coverImage: ImageSchema,
+    cardImage: ImageSchema,
+    creatorId: { type: 'string' },
+    creator: {
+      type: 'object',
+      properties: {
+        clerkId: { type: 'string' },
+        username: { type: 'string' },
+        avatarUrl: { type: 'string' },
+        email: { type: 'string' },
+      },
+    },
+    status: { type: 'string', enum: STORY_STATUSES },
+    settings: StorySettingsSchema,
+    stats: StoryStatsSchema,
+    tags: { type: 'array', items: { type: 'string' } },
+    trendingScore: { type: 'number' },
+    lastActivityAt: { type: 'string', format: 'date-time' },
+    publishedAt: { type: 'string', format: 'date-time' },
+    createdAt: { type: 'string', format: 'date-time' },
+    updatedAt: { type: 'string', format: 'date-time' },
+    collaborators: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          _id: { type: 'string' },
+          role: { type: 'string', enum: STORY_COLLABORATOR_ROLES },
+          status: { type: 'string', enum: STORY_COLLABORATOR_STATUSES },
+          user: {
+            type: 'object',
+            properties: {
+              clerkId: { type: 'string' },
+              username: { type: 'string' },
+              avatarUrl: { type: 'string' },
+              email: { type: 'string' },
+            },
+          },
+        },
+      },
+    },
+
+    storyPool: {
+      type: 'object',
+      properties: {
+        _id: { type: 'string' },
+        storySlug: { type: 'string' },
+        storyOwnerId: { type: 'string' },
+        balance: { type: 'number' },
+        totalReceived: { type: 'number' },
+        totalDistributed: { type: 'number' },
+        createdAt: { type: 'string', format: 'date-time' },
+        updatedAt: { type: 'string', format: 'date-time' },
+      },
+    },
+    chapterDetails: {
+      type: 'object',
+      properties: {
+        totalChapters: { type: 'number' },
+        publishedChapters: { type: 'number' },
+        draftChapters: { type: 'number' },
+        rootChapters: { type: 'number' },
+        totalReads: { type: 'number' },
+        totalComments: { type: 'number' },
+      },
+    },
+    pullRequestDetails: {
+      type: 'object',
+      properties: {
+        totalPRs: { type: 'number' },
+        pendingPRs: { type: 'number' },
+        mergedPRs: { type: 'number' },
+        rejectedPRs: { type: 'number' },
+      },
+    },
   },
 };
 
@@ -391,6 +479,15 @@ export const StoryResponses = {
     401: unauthorizedResponse(),
     403: forbiddenResponse('You do not have access to this story timeline'),
     404: notFoundResponse('Story not found'),
+    500: internalErrorResponse(),
+  },
+  adminStoryList: {
+    200: apiPaginatedResponse(
+      AdminStoryTableItemSchema,
+      'Admin story table list fetched successfully'
+    ),
+    401: unauthorizedResponse(),
+    403: forbiddenResponse('Super admin access required'),
     500: internalErrorResponse(),
   },
 };

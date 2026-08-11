@@ -277,6 +277,8 @@ const StoryUpdateSettingSchema = z.object({
 
   contentRating: ContentRatingEnum.default('general'),
 
+  status: z.enum(STORY_STATUSES).optional(),
+
   // converImage: z
   //   .object({
   //     url: z
@@ -327,6 +329,17 @@ type TStorySearchSchema = z.infer<typeof StorySearchSchema>;
 type TStoryCreateSchema = z.infer<typeof StoryCreateSchema>;
 type TStoryUpdateSchema = z.infer<typeof StoryUpdateSchema>;
 type TStoryAddChapterSchema = z.infer<typeof StoryAddChapterSchema>;
+const AdminStoryTableQuerySchema = z.object({
+  page: z.coerce.number().min(1).default(1),
+  limit: z.coerce.number().min(1).max(100).default(10),
+  status: z.enum(STORY_STATUSES).optional(),
+  search: z.string().optional(),
+  sortOrder: z.enum(['asc', 'desc']).default('desc').optional(),
+  sortBy: z.string().default('createdAt').optional(),
+});
+
+type TAdminStoryTableQuerySchema = z.infer<typeof AdminStoryTableQuerySchema>;
+
 type TStoryAddChapterBySlugSchema = z.infer<typeof StoryAddChapterBySlugSchema>;
 type TStoryUpdateChapterTitleSchema = z.infer<typeof StoryUpdateChapterTitleSchema>;
 type TStoryUpdateChapterContentSchema = z.infer<typeof StoryUpdateChapterContentSchema>;
@@ -351,6 +364,7 @@ export {
   StoryUpdateCoverImageSchema,
   StoryUpdateCardImageSchema,
   StoryFieldsQuerySchema,
+  AdminStoryTableQuerySchema,
 };
 
 export type {
@@ -368,4 +382,5 @@ export type {
   TStoryUpdateCoverImageSchema,
   TStoryUpdateCardImageSchema,
   TStoryFieldsQuerySchema,
+  TAdminStoryTableQuerySchema,
 };

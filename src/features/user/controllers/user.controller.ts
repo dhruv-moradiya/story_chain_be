@@ -3,6 +3,7 @@ import { HTTP_STATUS } from '@constants/httpStatus';
 import { TOKENS } from '@container/tokens';
 import {
   TBanUserSchema,
+  TGetUserByClerkIdSchema,
   TGetUserByIdSchema,
   TGetUserByUsernameSchema,
   TGetUsersListQuerySchema,
@@ -105,6 +106,20 @@ class UserController extends BaseModule {
       return reply
         .code(HTTP_STATUS.OK.code)
         .send(ApiResponse.fetched(result, 'Users list fetched successfully'));
+    }
+  );
+
+  getUserDetailPageByClerkId = catchAsync(
+    async (request: FastifyRequest<{ Params: TGetUserByClerkIdSchema }>, reply: FastifyReply) => {
+      const { clerkId } = request.params;
+
+      const data = await this.userService.getUserDetailPageDataByClerkId(clerkId);
+
+      this.logInfo(`Fetched user detail page data for clerkId ${clerkId}`);
+
+      return reply
+        .code(HTTP_STATUS.OK.code)
+        .send(ApiResponse.fetched(data, 'User detail page data fetched successfully'));
     }
   );
 

@@ -13,8 +13,6 @@ import {
 } from '../src/features/report/types/report-enum';
 import { env } from '../src/config/env';
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
 function getRandomElement<T>(array: T[]): T {
   return array[Math.floor(Math.random() * array.length)];
 }
@@ -28,8 +26,6 @@ function getRandomDateWithin(daysBack: number): Date {
 function addHours(date: Date, hours: number): Date {
   return new Date(date.getTime() + hours * 60 * 60 * 1000);
 }
-
-// ─── Realistic Datasets (No Faker) ──────────────────────────────────────────
 
 const USER_REPORTS_DATA = [
   {
@@ -198,8 +194,6 @@ const ESCALATIONS = [
   'Escalated due to suspected coordinated spam ring operating across multiple user accounts.',
 ];
 
-// ─── Seeder Logic ────────────────────────────────────────────────────────────
-
 export interface ISeedReportsOptions {
   clearExisting?: boolean;
   reportsCount?: number;
@@ -220,7 +214,9 @@ export async function seedReports(options: ISeedReportsOptions = {}): Promise<nu
   const userIds = users.map((u) => u.clerkId);
 
   if (userIds.length < 2) {
-    console.warn('[ReportSeeder] Need at least 2 users in the database to file reports — skipping.');
+    console.warn(
+      '[ReportSeeder] Need at least 2 users in the database to file reports — skipping.'
+    );
     return 0;
   }
 
@@ -292,7 +288,10 @@ export async function seedReports(options: ISeedReportsOptions = {}): Promise<nu
         if (stories.length === 0) break;
         // Target a story not created by reporter
         const eligibleStories = stories.filter((s) => s.creatorId !== reporterId);
-        const targetStory = eligibleStories.length > 0 ? getRandomElement(eligibleStories) : getRandomElement(stories);
+        const targetStory =
+          eligibleStories.length > 0
+            ? getRandomElement(eligibleStories)
+            : getRandomElement(stories);
 
         const comboKey = `${reporterId}:${targetStory.slug}`;
         if (seededStoryReports.has(comboKey)) break;
@@ -313,7 +312,10 @@ export async function seedReports(options: ISeedReportsOptions = {}): Promise<nu
       case ReportType.CHAPTER: {
         if (chapters.length === 0) break;
         const eligibleChapters = chapters.filter((c) => c.authorId !== reporterId);
-        const targetChapter = eligibleChapters.length > 0 ? getRandomElement(eligibleChapters) : getRandomElement(chapters);
+        const targetChapter =
+          eligibleChapters.length > 0
+            ? getRandomElement(eligibleChapters)
+            : getRandomElement(chapters);
 
         const comboKey = `${reporterId}:${targetChapter.slug}`;
         if (seededChapterReports.has(comboKey)) break;
@@ -335,7 +337,10 @@ export async function seedReports(options: ISeedReportsOptions = {}): Promise<nu
       case ReportType.COMMENT: {
         if (comments.length === 0) break;
         const eligibleComments = comments.filter((cm) => cm.userId !== reporterId);
-        const targetComment = eligibleComments.length > 0 ? getRandomElement(eligibleComments) : getRandomElement(comments);
+        const targetComment =
+          eligibleComments.length > 0
+            ? getRandomElement(eligibleComments)
+            : getRandomElement(comments);
 
         const commentIdStr = targetComment._id.toString();
         const comboKey = `${reporterId}:${commentIdStr}`;
@@ -421,13 +426,12 @@ export async function runReportSeeder(options: ISeedReportsOptions = {}) {
   await seedReports(options);
 }
 
-// ─── Direct Script Execution ──────────────────────────────────────────────────
 if (require.main === module) {
   (async () => {
     try {
       await mongoose.connect(env.MONGODB_URI);
       console.log('[ReportSeeder] Connected to MongoDB.');
-      await runReportSeeder({ clearExisting: false, reportsCount: 25 });
+      await runReportSeeder({ clearExisting: true, reportsCount: 200 });
       await mongoose.disconnect();
       console.log('[ReportSeeder] Finished and disconnected.');
     } catch (err) {

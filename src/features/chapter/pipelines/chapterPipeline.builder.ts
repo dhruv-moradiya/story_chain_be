@@ -364,6 +364,42 @@ class ChapterPipelineBuilder extends BasePipelineBuilder<ChapterPipelineBuilder>
       .orderAncestorsBySlug()
       .buildDisplayNumber();
   }
+
+  /**
+   * Preset for fetching all chapters authored by a user with story title attached.
+   */
+  getAuthorChaptersPreset(authorId: string) {
+    this.pipeline.push(
+      { $match: { authorId } },
+      {
+        $lookup: {
+          from: 'stories',
+          localField: 'storySlug',
+          foreignField: 'slug',
+          as: 'story',
+        },
+      },
+      { $unwind: { path: '$story', preserveNullAndEmptyArrays: true } },
+      { $sort: { createdAt: -1 } },
+      {
+        $project: {
+          _id: 1,
+          title: 1,
+          slug: 1,
+          storySlug: 1,
+          storyTitle: '$story.title',
+          chapterNumber: 1,
+          depth: 1,
+          status: 1,
+          votes: 1,
+          stats: 1,
+          createdAt: 1,
+          updatedAt: 1,
+        },
+      }
+    );
+    return this.build();
+  }
 }
 
 export { ChapterPipelineBuilder };

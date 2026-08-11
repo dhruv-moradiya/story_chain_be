@@ -35,6 +35,14 @@ const GetUserByUsernameSchema = z.object({
   username: UsernameSchema,
 });
 
+// Get User By Clerk Id Schema
+const GetUserByClerkIdSchema = z.object({
+  clerkId: z.string({
+    required_error: 'clerkId is required.',
+    invalid_type_error: 'clerkId must be a string.',
+  }),
+});
+
 // Update User Profile Schema
 const UpdateUserProfileSchema = z.object({
   bio: z.string().max(500, 'Bio cannot exceed 500 characters.').optional(),
@@ -116,6 +124,7 @@ const UnbanUserSchema = z.object({
 type TSearchUserByUsernameSchema = z.infer<typeof SearchUserByUsernameSchema>;
 type TGetUserByIdSchema = z.infer<typeof GetUserByIdSchema>;
 type TGetUserByUsernameSchema = z.infer<typeof GetUserByUsernameSchema>;
+type TGetUserByClerkIdSchema = z.infer<typeof GetUserByClerkIdSchema>;
 type TUpdateUserProfileSchema = z.infer<typeof UpdateUserProfileSchema>;
 type TUpdateUserPreferencesSchema = z.infer<typeof UpdateUserPreferencesSchema>;
 type TGetUsersListQuerySchema = z.infer<typeof GetUsersListQuerySchema>;
@@ -128,6 +137,7 @@ export {
   SearchUserByUsernameSchema,
   GetUserByIdSchema,
   GetUserByUsernameSchema,
+  GetUserByClerkIdSchema,
   GetUsersListQuerySchema,
   UpdateUserProfileSchema,
   UpdateUserPreferencesSchema,
@@ -143,6 +153,7 @@ export type {
   TSearchUserByUsernameSchema,
   TGetUserByIdSchema,
   TGetUserByUsernameSchema,
+  TGetUserByClerkIdSchema,
   TGetUsersListQuerySchema,
   TUpdateUserProfileSchema,
   TUpdateUserPreferencesSchema,

@@ -1,6 +1,12 @@
 import { IChapter } from '@/features/chapter/types/chapter.types';
 import { IOperationOptions } from '@/types';
-import { IStoryOverviewResponse, IUserStories } from '@/types/response/story.response.types';
+import {
+  IPaginatedAdminStoryTable,
+  IStoryOverviewResponse,
+  IUserStories,
+} from '@/types/response/story.response.types';
+
+import { TAdminStoryTableQuerySchema } from '@/schema/request/story.schema';
 import { IStory, IStorySettingsWithImages } from '../../types/story.types';
 
 interface IStoryTreeResult {
@@ -41,6 +47,11 @@ interface IStoryQueryService {
     fields?: string[],
     options?: IOperationOptions
   ): Promise<IStory[]>;
+  // Super Admin queries
+  getAdminStoriesTable(
+    query?: Partial<TAdminStoryTableQuerySchema>,
+    options?: IOperationOptions
+  ): Promise<IPaginatedAdminStoryTable>;
 }
 
 export type { IStoryQueryService, IStoryTreeResult };

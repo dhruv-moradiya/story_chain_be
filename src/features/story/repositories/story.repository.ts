@@ -3,8 +3,11 @@ import { singleton } from 'tsyringe';
 import { Story } from '@models/story.model';
 import { ID, IOperationOptions } from '@/types';
 import { BaseRepository } from '@utils/baseClass';
-import { IStory, IStoryDoc } from '../types/story.types';
+import { IStory, IStoryDoc, TStoryStatus } from '../types/story.types';
 import { StoryStatus } from '../types/story-enum';
+import { StoryPipelineBuilder } from '../pipelines/storyPipeline.builder';
+import { IAdminStoryTableItem } from '@/types/response/story.response.types';
+import { TAdminStoryTableQuerySchema } from '@/schema/request/story.schema';
 
 @singleton()
 export class StoryRepository extends BaseRepository<IStory, IStoryDoc> {
@@ -182,12 +185,24 @@ export class StoryRepository extends BaseRepository<IStory, IStoryDoc> {
   async updateStorySettingBySlug(
     slug: string,
     update: Partial<IStory['settings']>,
+    status?: TStoryStatus,
     options: IOperationOptions = {}
   ): Promise<IStory | null> {
+    const setPayload: Record<string, unknown> = {
+      settings: update,
+    };
+
+    if (status !== undefined) {
+      setPayload.status = status;
+      if (status === StoryStatus.PUBLISHED) {
+        setPayload.publishedAt = new Date();
+      }
+    }
+
     return this.model
       .findOneAndUpdate(
         { slug },
-        { $set: { settings: update } },
+        { $set: setPayload },
         { new: true, session: options.session ?? null }
       )
       .lean()
@@ -276,5 +291,42 @@ export class StoryRepository extends BaseRepository<IStory, IStoryDoc> {
       .limit(10)
       .lean()
       .exec();
+  }
+
+  /**
+   * Fetches paginated stories list with full details for admin table using StoryPipelineBuilder.
+   */
+  async getAdminStoriesTable(
+    query: Partial<TAdminStoryTableQuerySchema> = {},
+    options: IOperationOptions = {}
+  ): Promise<{ docs: IAdminStoryTableItem[]; totalDocs: number }> {
+    const { page = 1, limit = 10, status, search, sortOrder, sortBy } = query;
+    const skip = (page - 1) * limit;
+
+    const matchFilter: Record<string, unknown> = {};
+    if (status) {
+      matchFilter.status = status;
+    }
+    if (search) {
+      matchFilter.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { slug: { $regex: search, $options: 'i' } },
+      ];
+    }
+
+    const totalDocs = await this.model.countDocuments(matchFilter).session(options.session ?? null);
+
+    const pipeline = new StoryPipelineBuilder().getAdminStoriesTablePreset({
+      skip,
+      limit,
+      status,
+      search,
+      sortOrder,
+      sortBy,
+    });
+
+    const docs = await this.aggregateStories<IAdminStoryTableItem>(pipeline, options);
+
+    return { docs, totalDocs };
   }
 }

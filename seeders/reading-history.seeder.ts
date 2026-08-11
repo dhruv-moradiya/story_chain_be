@@ -4,8 +4,7 @@ import { ReadingHistory } from '../src/models/readingHistory.model';
 import { Story } from '../src/models/story.model';
 import { Chapter } from '../src/models/chapter.model';
 import { User } from '../src/models/user.model';
-
-// ─── Types ────────────────────────────────────────────────────────────────────
+import { env } from '../src/config/env';
 
 interface ChapterReadEntry {
   chapterSlug: string;
@@ -15,226 +14,362 @@ interface ChapterReadEntry {
   hasQualifiedRead: boolean;
 }
 
-interface StoryChapterMap {
-  storySlug: string;
-  chapters: { slug: string; isEnding: boolean }[];
-}
+export interface ReadingHistorySeedOptions {
+  /** Target number of reading histories per chapter. Default: 200 (or parsed from CLI --total_feed) */
+  totalFeed?: number;
 
-interface ReadingHistorySeedOptions {
   /** Max number of stories to seed history for. Default: all published */
   storyLimit?: number;
-
-  /** Fraction of the user pool that reads any given story (0–1). Default: 0.3 */
-  readerParticipationRate?: number;
-
-  /** How many chapters of a story a user typically reads before stopping (0–1 as fraction of total). Default: 0.6 */
-  chapterCompletionRate?: number;
 
   /** Wipe all ReadingHistory docs first. Default: false */
   clearExisting?: boolean;
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-/** Generate a realistic per-chapter read time in seconds (30s – 12min). */
-function fakeReadTime(): number {
-  return faker.number.int({ min: 30, max: 720 });
-}
+// ─── CLI Argument Parser ──────────────────────────────────────────────────────
 
 /**
- * Simulate a user's reading path through a story's chapters.
- * Returns an ordered subset that respects tree depth — a user can only
- * read a chapter after reading its parent.
+ * Parse --total_feed or --total-feed from process.argv or environment variables.
+ * Supported formats:
+ *   --total_feed=200
+ *   --total_feed 200
+ *   --total_feed = 200
+ *   --total-feed=200
+ *   --total-feed 200
+ *   SEED_TOTAL_FEED=200
  */
-function buildReadPath(
-  chapters: { slug: string; isEnding: boolean; parentChapterSlug: string | null }[],
-  completionRate: number
-): { slug: string; isEnding: boolean }[] {
-  if (!chapters.length) return [];
+export function parseTotalFeedArg(defaultVal: number = 200): number {
+  const args = process.argv.slice(2);
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
 
-  // Build a parent → children map for tree traversal
-  const childMap = new Map<string | null, string[]>();
-  for (const ch of chapters) {
-    const parent = ch.parentChapterSlug ?? null;
-    if (!childMap.has(parent)) childMap.set(parent, []);
-    childMap.get(parent)!.push(ch.slug);
+    // Format: --total_feed=200 or --total-feed=200
+    if (arg.startsWith('--total_feed=') || arg.startsWith('--total-feed=')) {
+      const parts = arg.split('=');
+      const valStr = parts[1]?.trim();
+      if (valStr) {
+        const val = parseInt(valStr, 10);
+        if (!isNaN(val) && val > 0) return val;
+      }
+    }
+
+    // Format: --total_feed or --total-feed followed by 200 or = 200
+    if (arg === '--total_feed' || arg === '--total-feed') {
+      if (i + 1 < args.length) {
+        if (args[i + 1] === '=') {
+          if (i + 2 < args.length) {
+            const val = parseInt(args[i + 2], 10);
+            if (!isNaN(val) && val > 0) return val;
+          }
+        } else {
+          const val = parseInt(args[i + 1], 10);
+          if (!isNaN(val) && val > 0) return val;
+        }
+      }
+    }
   }
 
-  const chapterBySlug = new Map(chapters.map((c) => [c.slug, c]));
-  const maxChapters = Math.max(1, Math.ceil(chapters.length * completionRate));
-
-  // Walk the tree depth-first, randomly picking one branch at each fork
-  const path: { slug: string; isEnding: boolean }[] = [];
-  let currentSlug: string | null = null; // null = look for roots
-
-  while (path.length < maxChapters) {
-    const children = childMap.get(currentSlug) ?? [];
-    if (!children.length) break;
-
-    // Pick one random child branch
-    const nextSlug = faker.helpers.arrayElement(children);
-    const chapter = chapterBySlug.get(nextSlug)!;
-    path.push({ slug: chapter.slug, isEnding: chapter.isEnding });
-    currentSlug = nextSlug;
+  if (process.env.SEED_TOTAL_FEED) {
+    const val = parseInt(process.env.SEED_TOTAL_FEED, 10);
+    if (!isNaN(val) && val > 0) return val;
   }
 
-  return path;
+  if (process.env.TOTAL_FEED) {
+    const val = parseInt(process.env.TOTAL_FEED, 10);
+    if (!isNaN(val) && val > 0) return val;
+  }
+
+  return defaultVal;
 }
 
-/** Build the chaptersRead subdoc array from a read path. */
-function buildChaptersRead(
-  path: { slug: string; isEnding: boolean }[],
-  sessionStart: Date
-): { entries: ChapterReadEntry[]; totalReadTime: number; endingChapters: string[] } {
-  let cursor = new Date(sessionStart);
-  let totalReadTime = 0;
-  const endingChapters: string[] = [];
+export function parseClearExistingArg(): boolean {
+  const args = process.argv.slice(2);
+  return args.some(
+    (arg) => arg === '--clear' || arg === '--clear-existing' || arg === '--clearExisting'
+  );
+}
 
-  const entries: ChapterReadEntry[] = path.map(({ slug, isEnding }) => {
-    const readTime = fakeReadTime();
-    totalReadTime += readTime;
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
-    const heartbeat = new Date(cursor.getTime() + readTime * 1000);
-    cursor = heartbeat;
-
-    // Qualified read = user spent at least 60s on the chapter
-    const hasQualifiedRead = readTime >= 60;
-
-    if (isEnding && hasQualifiedRead) endingChapters.push(slug);
-
-    return {
-      chapterSlug: slug,
-      totalReadTime: readTime,
-      lastHeartbeatAt: heartbeat,
-      activeSessionId: null, // no active session in seeded data
-      hasQualifiedRead,
-    };
-  });
-
-  return { entries, totalReadTime, endingChapters };
+/** Generate a realistic per-chapter read time in seconds (60s – 480s / 1 to 8 minutes). */
+function fakeReadTime(): number {
+  return faker.number.int({ min: 60, max: 480 });
 }
 
 // ─── Core Seeder ─────────────────────────────────────────────────────────────
 
 export async function seedReadingHistories(options: ReadingHistorySeedOptions = {}) {
-  const {
-    storyLimit,
-    readerParticipationRate = 0.3,
-    chapterCompletionRate = 0.6,
-    clearExisting = false,
-  } = options;
+  const totalFeed = options.totalFeed ?? parseTotalFeedArg(200);
+  const clearExisting = options.clearExisting ?? parseClearExistingArg();
+  const { storyLimit } = options;
 
   if (clearExisting) {
     await ReadingHistory.deleteMany({});
-    console.log('[ReadingHistorySeeder] Cleared existing reading histories.');
+    console.log('[ReadingHistorySeeder] 🧹 Cleared existing reading histories.');
   }
 
-  // ── 1. Fetch stories + their published chapters ───────────────────────────
+  // 1. Fetch stories + users
   const storyQuery = Story.find({ status: 'published' });
   if (storyLimit) storyQuery.limit(storyLimit);
 
   const [stories, users] = await Promise.all([
-    storyQuery.select('slug').lean(),
+    storyQuery.select('slug title').lean(),
     User.find({ isBanned: false }).select('clerkId').lean(),
   ]);
 
-  if (!stories.length || !users.length) {
-    console.warn('[ReadingHistorySeeder] No stories or users found — skipping.');
-    return { totalInserted: 0, totalSkipped: 0 };
-  }
-
-  // Fetch chapters grouped by story (only published chapters)
-  const allChapters = await Chapter.find({
-    storySlug: { $in: stories.map((s) => s.slug) },
-    status: 'published',
-  })
-    .select('slug storySlug parentChapterSlug isEnding')
-    .lean();
-
-  // Group chapters by storySlug
-  const chaptersByStory = new Map<
-    string,
-    StoryChapterMap['chapters'] & { parentChapterSlug: string | null }[]
-  >();
-  for (const ch of allChapters) {
-    if (!chaptersByStory.has(ch.storySlug)) chaptersByStory.set(ch.storySlug, []);
-    chaptersByStory.get(ch.storySlug)!.push({
-      slug: ch.slug,
-      isEnding: ch.isEnding ?? false,
-      parentChapterSlug: ch.parentChapterSlug ?? null,
-    });
+  if (!stories.length) {
+    console.warn('[ReadingHistorySeeder] ⚠️ No published stories found — skipping.');
+    return { totalInserted: 0, totalSkippedStories: 0, processedChapters: 0 };
   }
 
   const userIds = users.map((u) => u.clerkId);
-  const maxReaders = Math.max(1, Math.floor(userIds.length * readerParticipationRate));
+
+  // 2. Fetch all published chapters for these stories
+  const storySlugs = stories.map((s) => s.slug);
+  const chapters = await Chapter.find({
+    storySlug: { $in: storySlugs },
+    status: 'published',
+  })
+    .select('slug storySlug parentChapterSlug ancestorSlugs isEnding')
+    .lean();
+
+  if (!chapters.length) {
+    console.warn('[ReadingHistorySeeder] ⚠️ No published chapters found — skipping.');
+    return { totalInserted: 0, totalSkippedStories: stories.length, processedChapters: 0 };
+  }
+
+  // Group chapters by storySlug
+  const chaptersByStory = new Map<string, typeof chapters>();
+  for (const ch of chapters) {
+    if (!chaptersByStory.has(ch.storySlug)) {
+      chaptersByStory.set(ch.storySlug, []);
+    }
+    chaptersByStory.get(ch.storySlug)!.push(ch);
+  }
 
   console.log(
-    `[ReadingHistorySeeder] Seeding for ${stories.length} stories` +
-      ` × up to ${maxReaders} readers each...`
+    `[ReadingHistorySeeder] 🚀 Seeding ${totalFeed} reading histories for each chapter across ${stories.length} stories (${chapters.length} chapters total)...`
   );
 
-  // ── 2. Build and upsert reading history docs ─────────────────────────────
-  const BATCH_SIZE = 100;
+  const BATCH_SIZE = 500;
   let totalInserted = 0;
-  let totalSkipped = 0;
+  let totalSkippedStories = 0;
+  let processedChapters = 0;
   const batch: object[] = [];
 
+  let synthUserCounter = 1;
+
   for (const story of stories) {
-    const chapters = chaptersByStory.get(story.slug) ?? [];
-    if (!chapters.length) {
-      totalSkipped++;
+    const storyChapters = chaptersByStory.get(story.slug) ?? [];
+    if (!storyChapters.length) {
+      totalSkippedStories++;
       continue;
     }
 
-    // Random subset of readers for this story
-    const readerCount = faker.number.int({ min: 1, max: maxReaders });
-    const readers = faker.helpers.arrayElements(userIds, readerCount);
+    // Keep track of used userIds for this story to enforce unique (userId, storySlug)
+    const usedUsersForStory = new Set<string>();
 
-    for (const userId of readers) {
-      const sessionStart = faker.date.past({ years: 1 });
-      const readPath = buildReadPath(chapters, chapterCompletionRate);
-
-      if (!readPath.length) continue;
-
-      const { entries, totalReadTime, endingChapters } = buildChaptersRead(readPath, sessionStart);
-
-      const lastChapter = readPath[readPath.length - 1];
-
-      batch.push({
-        userId,
-        storySlug: story.slug,
-        currentChapterSlug: lastChapter.slug,
-        chaptersRead: entries,
-        lastReadAt: entries[entries.length - 1].lastHeartbeatAt,
-        totalStoryReadTime: totalReadTime,
-        completedEndingChapters: endingChapters,
-        completedPaths: endingChapters.length,
-      });
-
-      totalInserted++;
+    if (!clearExisting) {
+      const existingHistories = await ReadingHistory.find({ storySlug: story.slug })
+        .select('userId')
+        .lean();
+      for (const h of existingHistories) {
+        usedUsersForStory.add(h.userId);
+      }
     }
 
-    // Flush batch
-    if (batch.length >= BATCH_SIZE) {
+    for (const ch of storyChapters) {
+      processedChapters++;
+
+      // Ordered chapter slugs from root down to current chapter
+      const ancestorList = Array.isArray(ch.ancestorSlugs) ? ch.ancestorSlugs : [];
+      const pathSlugs = [...ancestorList, ch.slug];
+
+      for (let i = 0; i < totalFeed; i++) {
+        // Pick a unique user ID for this story doc
+        let userId: string | null = null;
+
+        if (userIds.length > 0) {
+          const availableUsers = userIds.filter((id) => !usedUsersForStory.has(id));
+          if (availableUsers.length > 0) {
+            userId = faker.helpers.arrayElement(availableUsers);
+          }
+        }
+
+        if (!userId) {
+          const slugPrefix = story.slug.substring(0, 10).replace(/[^a-zA-Z0-9]/g, '');
+          userId = `user_rh_seed_${slugPrefix}_${synthUserCounter++}_${faker.string.alphanumeric(6)}`;
+        }
+
+        usedUsersForStory.add(userId);
+
+        // Build chaptersRead entries for path from root down to ch
+        const sessionStart = faker.date.past({ years: 1 });
+        let cursor = new Date(sessionStart);
+        let totalReadTime = 0;
+        const endingChapters: string[] = [];
+
+        const chaptersReadEntries: ChapterReadEntry[] = pathSlugs.map((chapterSlug) => {
+          const readTime = fakeReadTime();
+          totalReadTime += readTime;
+          const heartbeat = new Date(cursor.getTime() + readTime * 1000);
+          cursor = heartbeat;
+          const hasQualifiedRead = readTime >= 60;
+
+          if (chapterSlug === ch.slug && ch.isEnding && hasQualifiedRead) {
+            endingChapters.push(chapterSlug);
+          }
+
+          return {
+            chapterSlug,
+            totalReadTime: readTime,
+            lastHeartbeatAt: heartbeat,
+            activeSessionId: null,
+            hasQualifiedRead,
+          };
+        });
+
+        const lastHeartbeat =
+          chaptersReadEntries[chaptersReadEntries.length - 1]?.lastHeartbeatAt ?? new Date();
+
+        batch.push({
+          userId,
+          storySlug: story.slug,
+          currentChapterSlug: ch.slug,
+          chaptersRead: chaptersReadEntries,
+          lastReadAt: lastHeartbeat,
+          totalStoryReadTime: totalReadTime,
+          completedEndingChapters: endingChapters,
+          completedPaths: endingChapters.length,
+        });
+
+        totalInserted++;
+
+        if (batch.length >= BATCH_SIZE) {
+          await ReadingHistory.insertMany(batch, { ordered: false });
+          batch.length = 0;
+        }
+      }
+    }
+
+    if (batch.length > 0) {
       await ReadingHistory.insertMany(batch, { ordered: false });
       batch.length = 0;
     }
+
+    // Query all reading history documents for this story to aggregate complete chapter & story stats
+    const allStoryHistories = await ReadingHistory.find({ storySlug: story.slug }).lean();
+
+    const aggregateChapterStats = new Map<
+      string,
+      {
+        reads: number;
+        uniqueUsers: Set<string>;
+        totalReadTime: number;
+        completions: number;
+        dropOffs: number;
+      }
+    >();
+
+    for (const ch of storyChapters) {
+      aggregateChapterStats.set(ch.slug, {
+        reads: 0,
+        uniqueUsers: new Set<string>(),
+        totalReadTime: 0,
+        completions: 0,
+        dropOffs: 0,
+      });
+    }
+
+    for (const rh of allStoryHistories) {
+      for (const entry of rh.chaptersRead) {
+        const cStats = aggregateChapterStats.get(entry.chapterSlug);
+        if (cStats) {
+          cStats.reads += 1;
+          cStats.uniqueUsers.add(rh.userId);
+          cStats.totalReadTime += entry.totalReadTime;
+          if (entry.hasQualifiedRead) {
+            cStats.completions += 1;
+          }
+        }
+      }
+      const targetCStats = aggregateChapterStats.get(rh.currentChapterSlug);
+      if (targetCStats) {
+        targetCStats.dropOffs += 1;
+      }
+    }
+
+    // Update chapter statistics in DB for this story
+    const chapterBulkOps = [];
+    let storyTotalReads = 0;
+
+    for (const [slug, stats] of aggregateChapterStats.entries()) {
+      storyTotalReads += stats.reads;
+      const reads = stats.reads;
+      const uniqueReaders = stats.uniqueUsers.size;
+      const totalReadTime = stats.totalReadTime;
+      const avgReadTime = reads > 0 ? Math.round(totalReadTime / reads) : 0;
+      const completions = stats.completions;
+      const dropOffs = stats.dropOffs;
+      const completionRate = reads > 0 ? Math.round((completions / reads) * 100) : 0;
+      const engagementScore = Math.min(
+        100,
+        Math.round(completionRate * 0.7 + Math.min(avgReadTime / 3, 100) * 0.3)
+      );
+
+      chapterBulkOps.push({
+        updateOne: {
+          filter: { slug },
+          update: {
+            $set: {
+              'stats.reads': reads,
+              'stats.uniqueReaders': uniqueReaders,
+              'stats.totalReadTime': totalReadTime,
+              'stats.avgReadTime': avgReadTime,
+              'stats.completions': completions,
+              'stats.dropOffs': dropOffs,
+              'stats.completionRate': completionRate,
+              'stats.engagementScore': engagementScore,
+            },
+          },
+        },
+      });
+    }
+
+    if (chapterBulkOps.length > 0) {
+      await Chapter.bulkWrite(chapterBulkOps);
+    }
+
+    // Update story statistics in DB
+    await Story.updateOne(
+      { slug: story.slug },
+      { $set: { 'stats.totalReads': storyTotalReads } }
+    );
   }
 
-  // Flush remaining
-  if (batch.length) {
-    await ReadingHistory.insertMany(batch, { ordered: false });
-  }
-
-  return { totalInserted, totalSkipped };
+  return { totalInserted, totalSkippedStories, processedChapters };
 }
 
-// ─── Entry point ─────────────────────────────────────────────────────────────
-
 export async function runReadingHistorySeeder(options: ReadingHistorySeedOptions = {}) {
-  const { totalInserted, totalSkipped } = await seedReadingHistories(options);
-  console.log(
-    `[ReadingHistorySeeder] ✅ Inserted ${totalInserted} reading histories` +
-      (totalSkipped ? ` (${totalSkipped} stories skipped — no chapters).` : '.')
+  const { totalInserted, totalSkippedStories, processedChapters } = await seedReadingHistories(
+    options
   );
+  console.log(
+    `[ReadingHistorySeeder] ✅ Successfully inserted ${totalInserted} reading histories & updated chapter/story stats across ${processedChapters} chapters` +
+      (totalSkippedStories ? ` (${totalSkippedStories} stories skipped — no chapters).` : '.')
+  );
+}
+
+if (require.main === module) {
+  (async () => {
+    try {
+      await mongoose.connect(env.MONGODB_URI);
+      console.log('[ReadingHistorySeeder] Connected to MongoDB.');
+      await runReadingHistorySeeder();
+      await mongoose.disconnect();
+      console.log('[ReadingHistorySeeder] Finished and disconnected.');
+    } catch (err) {
+      console.error('[ReadingHistorySeeder] Error during seeding:', err);
+      process.exit(1);
+    }
+  })();
 }

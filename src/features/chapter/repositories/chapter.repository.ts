@@ -13,6 +13,7 @@ import { IChapter, IChapterDoc } from '../types/chapter.types';
 import { BaseRepository } from '@utils/baseClass';
 import { IOperationOptions } from '@/types';
 import { ChapterStatus } from '../types/chapter-enum';
+import { ChapterPipelineBuilder } from '../pipelines/chapterPipeline.builder';
 
 @singleton()
 export class ChapterRepository extends BaseRepository<IChapter, IChapterDoc> {
@@ -220,6 +221,15 @@ export class ChapterRepository extends BaseRepository<IChapter, IChapterDoc> {
       .session(options.session ?? null)
       .exec();
     return authors.map(String);
+  }
+
+  /** Get chapters authored by user with story title attached using ChapterPipelineBuilder */
+  async findChaptersByAuthorIdWithStory<T = unknown>(
+    authorId: string,
+    options: IOperationOptions = {}
+  ): Promise<T[]> {
+    const pipeline = new ChapterPipelineBuilder().getAuthorChaptersPreset(authorId);
+    return this.aggregateChapters<T>(pipeline, options);
   }
 }
 

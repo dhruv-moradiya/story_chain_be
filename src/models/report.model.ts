@@ -89,9 +89,14 @@ const reportSchema = new Schema<IReportDoc>(
   }
 );
 
+reportSchema.index({ createdAt: -1 });
 reportSchema.index({ status: 1, createdAt: -1 });
 reportSchema.index({ governanceLevel: 1, status: 1, createdAt: -1 });
-reportSchema.index({ reporterId: 1 });
+reportSchema.index({ reportType: 1, status: 1, createdAt: -1 });
+reportSchema.index({ reason: 1, status: 1, createdAt: -1 });
+reportSchema.index({ relatedStorySlug: 1, governanceLevel: 1, status: 1, createdAt: -1 });
+reportSchema.index({ reporterId: 1, status: 1, createdAt: -1 });
+
 // Prevent a single user from spamming the same target
 reportSchema.index({ reporterId: 1, relatedChapterSlug: 1 });
 reportSchema.index({ reporterId: 1, relatedCommentId: 1 });

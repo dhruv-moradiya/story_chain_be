@@ -211,6 +211,98 @@ export const UserPublicSchema = {
   },
 };
 
+export const UserDetailPageSchema = {
+  type: 'object',
+  properties: {
+    user: {
+      type: 'object',
+      properties: {
+        clerkId: { type: 'string' },
+        username: { type: 'string' },
+        email: { type: 'string' },
+        bio: { type: 'string' },
+        avatarUrl: { type: 'string' },
+        level: { type: 'number' },
+        levelTitle: { type: 'string' },
+        xp: { type: 'number' },
+        nextLevelXp: { type: 'number' },
+        stats: {
+          type: 'object',
+          properties: {
+            storiesCreated: { type: 'number' },
+            chaptersWritten: { type: 'number' },
+            totalUpvotes: { type: 'number' },
+            totalDownvotes: { type: 'number' },
+            branchesCreated: { type: 'number' },
+          },
+        },
+        isActive: { type: 'boolean' },
+        lastActive: { type: 'string', format: 'date-time' },
+        createdAt: { type: 'string', format: 'date-time' },
+      },
+    },
+    stories: {
+      type: 'array',
+    },
+    achievements: {
+      type: 'object',
+      properties: {
+        badges: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              id: { type: 'string' },
+              name: { type: 'string' },
+              description: { type: 'string' },
+              icon: { type: 'string' },
+              isUnlocked: { type: 'boolean' },
+            },
+          },
+        },
+        level: { type: 'number' },
+        levelTitle: { type: 'string' },
+        xp: { type: 'number' },
+        nextLevelXp: { type: 'number' },
+      },
+    },
+    chaptersWritten: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          _id: { type: 'string' },
+          title: { type: 'string' },
+          slug: { type: 'string' },
+          storySlug: { type: 'string' },
+          storyTitle: { type: 'string' },
+          chapterNumber: { type: 'number' },
+          depth: { type: 'number' },
+          status: { type: 'string' },
+          votes: {
+            type: 'object',
+            properties: {
+              upvotes: { type: 'number' },
+              downvotes: { type: 'number' },
+              score: { type: 'number' },
+            },
+          },
+          stats: {
+            type: 'object',
+            properties: {
+              reads: { type: 'number' },
+              comments: { type: 'number' },
+              childBranches: { type: 'number' },
+            },
+          },
+          createdAt: { type: 'string', format: 'date-time' },
+          updatedAt: { type: 'string', format: 'date-time' },
+        },
+      },
+    },
+  },
+};
+
 // ===============================
 // USER RESPONSE OBJECTS
 // ===============================
@@ -228,5 +320,9 @@ export const UserResponses = {
   userList: { 200: apiArrayResponse(UserPublicSchema, 'List of matching users') },
   paginatedUserList: {
     200: apiPaginatedResponse(PaginatedUserDataSchema, 'Paginated list of users data'),
+  },
+  userDetailPage: {
+    200: apiResponse(UserDetailPageSchema, 'User detail page data fetched successfully'),
+    404: errorResponse('User not found'),
   },
 };

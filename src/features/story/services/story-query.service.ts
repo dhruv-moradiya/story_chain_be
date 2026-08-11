@@ -12,11 +12,15 @@ import { ChapterRepository } from '@/features/chapter/repositories/chapter.repos
 import { type IUserService } from '@/features/user/interfaces';
 import { CACHE_TTL, CacheKeyBuilder } from '@/infrastructure';
 import { CacheService } from '@/infrastructure/cache/cache.service';
+import { formatPaginatedResponse } from '@/utils/helpter';
 import {
+  IPaginatedAdminStoryTable,
   IStoryOverviewResponse,
   IUserStories,
   IUserStoryRole,
 } from '@/types/response/story.response.types';
+import { TAdminStoryTableQuerySchema } from '@/schema/request/story.schema';
+
 import { StoryPipelineBuilder } from '../pipelines/storyPipeline.builder';
 import { StoryRepository } from '../repositories/story.repository';
 import { StoryStatus } from '../types/story-enum';
@@ -40,6 +44,18 @@ class StoryQueryService extends BaseModule implements IStoryQueryService {
 
   async getAllStories(options: IOperationOptions = {}): Promise<IStory[]> {
     return this.storyRepo.findAll(options);
+  }
+
+  /**
+   * Get all stories with full admin details for Super Admin table (paginated).
+   */
+  async getAdminStoriesTable(
+    query: Partial<TAdminStoryTableQuerySchema> = {},
+    options: IOperationOptions = {}
+  ): Promise<IPaginatedAdminStoryTable> {
+    const { page = 1, limit = 10 } = query;
+    const { docs, totalDocs } = await this.storyRepo.getAdminStoriesTable(query, options);
+    return formatPaginatedResponse(docs, totalDocs, page, limit);
   }
 
   /**
@@ -205,6 +221,7 @@ class StoryQueryService extends BaseModule implements IStoryQueryService {
           settings: story.settings,
           coverImage: story.coverImage,
           cardImage: story.cardImage,
+          status: story.status,
         };
       },
       { ttlKey: 'STORY_SETTINGS' }

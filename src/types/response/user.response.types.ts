@@ -7,6 +7,7 @@ import {
   IUserStats,
   TAuthProvider,
 } from '@/features/user/types/user.types';
+import { IStory } from '@/features/story/types/story.types';
 
 // Public User Response (for search results, collaborator views)
 interface IPublicUserResponse {
@@ -147,6 +148,66 @@ interface IUserPaginatedResponse {
   nextPage: number | null;
 }
 
+interface IUserBadgeDetail {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  isUnlocked: boolean;
+}
+
+interface IUserAchievementsResponse {
+  badges: IUserBadgeDetail[];
+  level: number;
+  levelTitle: string;
+  xp: number;
+  nextLevelXp: number;
+}
+
+interface IUserChapterWrittenItem {
+  _id: string;
+  title: string;
+  slug: string;
+  storySlug: string;
+  storyTitle?: string;
+  chapterNumber?: number;
+  depth: number;
+  status: string;
+  votes?: {
+    upvotes: number;
+    downvotes: number;
+    score: number;
+  };
+  stats?: {
+    reads: number;
+    comments: number;
+    childBranches: number;
+  };
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}
+
+interface IUserDetailPageResponse {
+  user: {
+    clerkId: string;
+    username: string;
+    email: string;
+    bio?: string;
+    avatarUrl?: string;
+    level: number;
+    levelTitle: string;
+    xp: number;
+    nextLevelXp: number;
+    stats: IUserStats;
+    isActive: boolean;
+    lastActive: Date | string;
+    createdAt: Date | string;
+  };
+  stories: IStory[];
+  achievements: IUserAchievementsResponse;
+  chaptersWritten: IUserChapterWrittenItem[];
+}
+
 export type {
   ICurrentUserResponse,
   IBanDetailsResponse,
@@ -158,4 +219,8 @@ export type {
   IFullUserResponse,
   IPaginatedUserData,
   IUserPaginatedResponse,
+  IUserBadgeDetail,
+  IUserAchievementsResponse,
+  IUserChapterWrittenItem,
+  IUserDetailPageResponse,
 };

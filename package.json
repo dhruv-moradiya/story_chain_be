@@ -16,6 +16,7 @@
     "prepare": "husky",
     "seed:comments": "cross-env SEED_TARGET=comments tsx seeders/index.ts",
     "seed:votes": "cross-env SEED_TARGET=votes tsx seeders/index.ts",
+    "seed:reading-history": "cross-env SEED_TARGET=reading-history tsx seeders/index.ts",
     "seed:prs": "cross-env SEED_TARGET=prs tsx seeders/index.ts",
     "seed:prs:only": "cross-env SEED_TARGET=prs-only tsx seeders/index.ts",
     "seed:pr-reviews": "cross-env SEED_TARGET=pr-reviews tsx seeders/index.ts",

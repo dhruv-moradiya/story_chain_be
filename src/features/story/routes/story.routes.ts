@@ -11,6 +11,7 @@ import {
 } from '@/middlewares/factories';
 import { ChapterResponses, CollaboratorResponses, StoryResponses } from '@schema/response.schema';
 import {
+  AdminStoryTableQuerySchema,
   StoryAddChapterBySlugSchema,
   StoryCreateInviteLinkSchema,
   StoryCreateSchema,
@@ -20,6 +21,7 @@ import {
   StoryUpdateCoverImageSchema,
   StoryUpdateSettingSchema,
 } from '@schema/request/story.schema';
+
 import { type StoryController } from '../controllers/story.controller';
 import { type StoryCollaboratorController } from '@features/storyCollaborator/controllers/storyCollaborator.controller';
 import { RateLimits } from '@/constants/rateLimits';
@@ -36,6 +38,7 @@ const StoryApiRoutes = {
 
   // SUPER_ADMIN only
   GetAllStories: '/all',
+  GetAdminStoriesTable: '/admin/stories',
   CreateBulkStories: '/bulk-create',
 
   // QUERY
@@ -95,20 +98,39 @@ export async function storyRoutes(fastify: FastifyInstance) {
   // SUPER_ADMIN ROUTES
   // ===============================
 
-  // List all stories - SUPER_ADMIN only
+  // List all stories with full details - SUPER_ADMIN only
   fastify.get(
     StoryApiRoutes.GetAllStories,
     {
       preHandler: [validateAuth, PlatformRoleGuards.superAdmin],
       config: { rateLimit: RateLimits.AUTHENTICATED },
       schema: {
-        description: 'List all stories (SUPER_ADMIN only)',
+        description: 'List all stories with full details (SUPER_ADMIN only)',
         tags: ['Stories'],
         security: [{ bearerAuth: [] }],
-        response: StoryResponses.storyList,
+        querystring: zodToJsonSchema(AdminStoryTableQuerySchema),
+        response: StoryResponses.adminStoryList,
       },
     },
     storyController.getAllStories
+  );
+
+  // List stories table with full details (collaborators, story pool, chapter details, PR details) - SUPER_ADMIN only
+  fastify.get(
+    StoryApiRoutes.GetAdminStoriesTable,
+    {
+      preHandler: [validateAuth, PlatformRoleGuards.superAdmin],
+      config: { rateLimit: RateLimits.AUTHENTICATED },
+      schema: {
+        description:
+          'List all stories with full details including collaborators, story pool, chapter details, and PR details for admin table (SUPER_ADMIN only)',
+        tags: ['Stories'],
+        security: [{ bearerAuth: [] }],
+        querystring: zodToJsonSchema(AdminStoryTableQuerySchema),
+        response: StoryResponses.adminStoryList,
+      },
+    },
+    storyController.getAdminStoriesTable
   );
 
   // Bulk create stories - SUPER_ADMIN only
@@ -140,7 +162,7 @@ export async function storyRoutes(fastify: FastifyInstance) {
     StoryApiRoutes.Create,
     {
       preHandler: [validateAuth],
-      config: { rateLimit: RateLimits.CREATION_HOURLY },
+      // config: { rateLimit: RateLimits.CREATION_HOURLY },
       schema: {
         description: 'Create a new story',
         tags: ['Stories'],

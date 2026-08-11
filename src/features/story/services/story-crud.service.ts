@@ -160,21 +160,57 @@ class StoryCrudService extends BaseModule implements IStoryCrudService {
   }
 
   async updateSettingsBySlug(input: IStoryUpdateSettingDTO): Promise<IStory> {
-    const { slug, userId, ...update } = input;
+    const { slug, userId, status, ...settingsUpdate } = input;
 
     // Derive which top-level fields changed for the timeline metadata
-    const changedFields = Object.keys(update);
+    const changedFields = Object.keys(input).filter((k) => k !== 'slug' && k !== 'userId');
 
     return await withTransaction('Updating story settings', async (session) => {
       const options = { session };
 
-      const story = await this.storyRepo.updateStorySettingBySlug(slug, update, options);
+      if (status !== undefined) {
+        const existingStory = await this.storyRepo.findBySlug(slug, options);
+        if (!existingStory) {
+          this.throwNotFoundError(
+            'STORY_NOT_FOUND',
+            'Unable to update settings: the story does not exist.'
+          );
+        }
+
+        if (
+          existingStory.status !== status &&
+          !StoryRules.isValidStatusTransition(existingStory.status, status)
+        ) {
+          this.throwBadRequest(
+            'INVALID_STATUS_TRANSITION',
+            `Invalid status transition from '${existingStory.status}' to '${status}'.`
+          );
+        }
+      }
+
+      const story = await this.storyRepo.updateStorySettingBySlug(
+        slug,
+        settingsUpdate,
+        status,
+        options
+      );
 
       if (!story) {
         this.throwNotFoundError(
           'STORY_NOT_FOUND',
           'Unable to update settings: the story does not exist.'
         );
+      }
+
+      if (status !== undefined) {
+        const STATUS_ACTION_MAP = {
+          published: () => this.storyTimelineService.recordStoryPublished(slug, userId, options),
+          archived: () => this.storyTimelineService.recordStoryArchived(slug, userId, options),
+          deleted: () => this.storyTimelineService.recordStoryDeleted(slug, userId, options),
+        } as const;
+
+        const recordAction = STATUS_ACTION_MAP[status as keyof typeof STATUS_ACTION_MAP];
+        if (recordAction) await recordAction();
       }
 
       await this.storyTimelineService.recordSettingsUpdated(

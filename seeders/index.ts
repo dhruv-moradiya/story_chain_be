@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import { runCommentSeeder } from './comment.seeder';
 import { runCommentVoteSeeder } from './comment-vote.seeder';
-import { runReadingHistorySeeder } from './reading-history.seeder';
+import { runReadingHistorySeeder, parseTotalFeedArg } from './reading-history.seeder';
 import { seedPullRequests } from './pull-request.seeder';
 import { runPRReviewSeeder, seedPRReviews } from './pr-review.seeder';
 import { runPRVoteSeeder, seedPRVotes } from './pr-vote.seeder';
@@ -9,20 +9,18 @@ import { runPRCommentSeeder, seedPRComments } from './pr-comment.seeder';
 import { runReportSeeder } from './reports.seeder';
 import { env } from '../src/config/env';
 
-// ─── Runners ──────────────────────────────────────────────────────────────────
-
 async function seedReportsOnly() {
-  console.log('[Seeder] ── Seeding Reports ──────────────────────────────────');
-  await runReportSeeder({ clearExisting: false, reportsCount: 25 });
+  console.log('-=-=-=-=-=-=-=-=-=-=-=- [Seeder] Seeding Reports -=-=-=-=-=-=-=-=-=-=-=-');
+  await runReportSeeder({ clearExisting: true, reportsCount: 20000 });
 }
 
 async function seedCommentsOnly() {
-  console.log('[Seeder] ── Seeding Comments ────────────────────────────────');
+  console.log('-=-=-=-=-=-=-=-=-=-=-=- [Seeder] Seeding Comments -=-=-=-=-=-=-=-=-=-=-=-');
   await runCommentSeeder({ chapterLimit: 20, clearExisting: false });
 }
 
 async function seedVotesOnly() {
-  console.log('[Seeder] ── Seeding CommentVotes ───────────────────────────');
+  console.log('-=-=-=-=-=-=-=-=-=-=-=- [Seeder] Seeding CommentVotes -=-=-=-=-=-=-=-=-=-=-=-');
   await runCommentVoteSeeder({
     voterParticipationRate: 0.6,
     upvoteBias: 0.75,
@@ -31,11 +29,12 @@ async function seedVotesOnly() {
 }
 
 async function seedReadingHistoryOnly() {
-  console.log('[Seeder] ── Seeding ReadingHistory ─────────────────────────');
+  const totalFeed = parseTotalFeedArg(200);
+  console.log(
+    `-=-=-=-=-=-=-=-=-=-=-=- [Seeder] Seeding ReadingHistory (total_feed = ${totalFeed}) -=-=-=-=-=-=-=-=-=-=-=-`
+  );
   await runReadingHistorySeeder({
-    storyLimit: 20,
-    readerParticipationRate: 0.3,
-    chapterCompletionRate: 0.6,
+    totalFeed,
     clearExisting: false,
   });
 }
@@ -48,21 +47,21 @@ async function seedReadingHistoryOnly() {
  * the DB and are guaranteed to target only freshly created docs.
  */
 async function seedPRsOnly() {
-  console.log('[Seeder] ── Seeding PullRequests ───────────────────────────');
+  console.log('-=-=-=-=-=-=-=-=-=-=-=- [Seeder] Seeding PullRequests -=-=-=-=-=-=-=-=-=-=-=-');
   const seededPRs = await seedPullRequests({
     storyLimit: 20,
     prsPerStory: { min: 2, max: 6 },
     clearExisting: false,
   });
-  console.log(`[Seeder]    → ${seededPRs.length} PRs created.`);
+  console.log(`[Seeder] → ${seededPRs.length} PRs created.`);
 
-  console.log('[Seeder] ── Seeding PRReviews ──────────────────────────────');
+  console.log('-=-=-=-=-=-=-=-=-=-=-=- [Seeder] Seeding PRReviews -=-=-=-=-=-=-=-=-=-=-=-');
   await seedPRReviews({ pullRequests: seededPRs, reviewersPerPR: { min: 1, max: 3 } });
 
-  console.log('[Seeder] ── Seeding PRVotes ────────────────────────────────');
+  console.log('-=-=-=-=-=-=-=-=-=-=-=- [Seeder] Seeding PRVotes -=-=-=-=-=-=-=-=-=-=-=-');
   await seedPRVotes({ pullRequests: seededPRs, voterParticipationRate: 0.35, upvoteBias: 0.7 });
 
-  console.log('[Seeder] ── Seeding PRComments ─────────────────────────────');
+  console.log('-=-=-=-=-=-=-=-=-=-=-=- [Seeder] Seeding PRComments -=-=-=-=-=-=-=-=-=-=-=-');
   await seedPRComments({
     pullRequests: seededPRs,
     commentsPerPR: { min: 1, max: 8 },
@@ -71,34 +70,35 @@ async function seedPRsOnly() {
 }
 
 async function seedPullRequestsOnly() {
-  console.log('[Seeder] ── Seeding PullRequests (Only) ───────────────────');
+  console.log(
+    '-=-=-=-=-=-=-=-=-=-=-=- [Seeder] Seeding PullRequests (Only) -=-=-=-=-=-=-=-=-=-=-=-'
+  );
   const seededPRs = await seedPullRequests({
     storyLimit: 20,
     prsPerStory: { min: 2, max: 6 },
     clearExisting: false,
   });
-  console.log(`[Seeder]    → ${seededPRs.length} PRs created.`);
+  console.log(`[Seeder] → ${seededPRs.length} PRs created.`);
 }
 
 async function seedPRReviewsOnly() {
-  console.log('[Seeder] ── Seeding PRReviews ──────────────────────────────');
+  console.log('-=-=-=-=-=-=-=-=-=-=-=- [Seeder] Seeding PRReviews -=-=-=-=-=-=-=-=-=-=-=-');
   await runPRReviewSeeder({ reviewersPerPR: { min: 1, max: 3 } });
 }
 
 async function seedPRVotesOnly() {
-  console.log('[Seeder] ── Seeding PRVotes ────────────────────────────────');
+  console.log('-=-=-=-=-=-=-=-=-=-=-=- [Seeder] Seeding PRVotes -=-=-=-=-=-=-=-=-=-=-=-');
   await runPRVoteSeeder({ voterParticipationRate: 0.35, upvoteBias: 0.7 });
 }
 
 async function seedPRCommentsOnly() {
-  console.log('[Seeder] ── Seeding PRComments ─────────────────────────────');
+  console.log('-=-=-=-=-=-=-=-=-=-=-=- [Seeder] Seeding PRComments -=-=-=-=-=-=-=-=-=-=-=-');
   await runPRCommentSeeder({
     commentsPerPR: { min: 1, max: 8 },
     replyDepth: 2,
   });
 }
 
-// ─── Entry point ──────────────────────────────────────────────────────────────
 // Usage (package.json scripts):
 //   npm run seed:comments         →  SEED_TARGET=comments
 //   npm run seed:votes            →  SEED_TARGET=votes

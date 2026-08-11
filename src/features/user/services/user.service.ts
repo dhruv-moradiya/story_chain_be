@@ -15,7 +15,20 @@ import { fetchClerkUser } from '@utils/clerk.client';
 import { formatPaginatedResponse } from '@/utils/helpter';
 import { UserTransformer } from '@transformer/user.transformer';
 import { TGetUsersListQuerySchema } from '@/schema/request/user.schema';
-import { IUserPaginatedResponse } from '@/types/response/user.response.types';
+import {
+  IUserChapterWrittenItem,
+  IUserDetailPageResponse,
+  IUserPaginatedResponse,
+} from '@/types/response/user.response.types';
+import {
+  BADGES,
+  BadgeId,
+  calculateLevel,
+  getLevelTitle,
+  getXPForNextLevel,
+} from '@/constants/gamification';
+import { StoryRepository } from '@/features/story/repositories/story.repository';
+import { ChapterRepository } from '@/features/chapter/repositories/chapter.repository';
 import { withTransaction } from '@utils/withTransaction';
 import { inject, singleton } from 'tsyringe';
 import { IUserService } from '../interfaces';
@@ -30,6 +43,10 @@ class UserService extends BaseModule implements IUserService {
   constructor(
     @inject(TOKENS.UserRepository)
     private readonly userRepo: UserRepository,
+    @inject(TOKENS.StoryRepository)
+    private readonly storyRepo: StoryRepository,
+    @inject(TOKENS.ChapterRepository)
+    private readonly chapterRepo: ChapterRepository,
     @inject(TOKENS.PlatformRoleService)
     private readonly platformRoleService: PlatformRoleService,
     @inject(TOKENS.WalletService)
@@ -224,6 +241,70 @@ class UserService extends BaseModule implements IUserService {
     const docs = users.map((user) => UserTransformer.paginatedUserData(user));
 
     return formatPaginatedResponse(docs, totalDocs, page, limit);
+  }
+
+  async getUserDetailPageDataByClerkId(clerkId: string): Promise<IUserDetailPageResponse> {
+    const user = await this.userRepo.findByClerkId(clerkId);
+
+    if (!user) {
+      this.throwNotFoundError('USER_NOT_FOUND', 'User not found.');
+    }
+
+    const [stories, chaptersWritten] = await Promise.all([
+      this.storyRepo.findByCreatorId(clerkId),
+      this.chapterRepo.findChaptersByAuthorIdWithStory<IUserChapterWrittenItem>(clerkId),
+    ]);
+
+    const allBadgeKeys = Object.keys(BADGES) as BadgeId[];
+    const userBadgeSet = new Set(user.badges || []);
+
+    const badgesList = allBadgeKeys.map((key) => {
+      const badgeDef = BADGES[key];
+      return {
+        id: badgeDef.id,
+        name: badgeDef.name,
+        description: badgeDef.description,
+        icon: badgeDef.icon,
+        isUnlocked: userBadgeSet.has(badgeDef.id as any),
+      };
+    });
+
+    const level = calculateLevel(user.xp || 0);
+    const levelTitle = getLevelTitle(level);
+    const nextLevelXp = getXPForNextLevel(user.xp || 0);
+
+    return {
+      user: {
+        clerkId: user.clerkId,
+        username: user.username,
+        email: user.email,
+        bio: user.bio,
+        avatarUrl: user.avatarUrl,
+        level,
+        levelTitle,
+        xp: user.xp || 0,
+        nextLevelXp,
+        stats: user.stats || {
+          storiesCreated: 0,
+          chaptersWritten: 0,
+          totalUpvotes: 0,
+          totalDownvotes: 0,
+          branchesCreated: 0,
+        },
+        isActive: user.isActive,
+        lastActive: user.lastActive,
+        createdAt: user.createdAt,
+      },
+      stories,
+      achievements: {
+        badges: badgesList,
+        level,
+        levelTitle,
+        xp: user.xp || 0,
+        nextLevelXp,
+      },
+      chaptersWritten,
+    };
   }
 
   async banUser(input: IBanUserDTO) {

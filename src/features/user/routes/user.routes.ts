@@ -6,6 +6,7 @@ import type {} from '@fastify/rate-limit';
 import { validateWebhook } from '@middleware/validateRequest';
 import {
   BanUserSchema,
+  GetUserByClerkIdSchema,
   GetUserByIdSchema,
   GetUserByUsernameSchema,
   GetUsersListQuerySchema,
@@ -34,6 +35,9 @@ const UserApiRoutes = {
 
   // User by Username
   GetByUsername: '/username/:username',
+
+  // User Detail by Clerk ID
+  GetDetailByClerkId: '/clerk/:clerkId',
 
   // Search
   Search: '/search',
@@ -139,6 +143,24 @@ export async function userRoutes(fastify: FastifyInstance) {
       },
     },
     userController.getUserByUsername
+  );
+
+  // Get user detail page data by Clerk ID
+  fastify.get(
+    UserApiRoutes.GetDetailByClerkId,
+    {
+      preHandler: [validateAuth],
+      config: { rateLimit: RateLimits.PUBLIC_READ },
+      schema: {
+        description:
+          "Get user's full detail page data by Clerk ID (user profile, stories, achievements, chapters written)",
+        tags: ['Users'],
+        security: [{ bearerAuth: [] }],
+        params: zodToJsonSchema(GetUserByClerkIdSchema),
+        response: UserResponses.userDetailPage,
+      },
+    },
+    userController.getUserDetailPageByClerkId
   );
 
   // Search users by username

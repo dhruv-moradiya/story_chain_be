@@ -4,10 +4,13 @@ import {
 } from '@/features/storyCollaborator/types/storyCollaborator.types';
 import {
   IStory,
+  IStorySettings,
+  IStoryStats,
   TStoryContentRating,
   TStoryGenre,
   TStoryStatus,
 } from '@features/story/types/story.types';
+
 import { ILatestChaptersResponse } from './chapter.response.types';
 
 // FOR STORY CARD DASHBORD
@@ -117,4 +120,97 @@ export interface IExploreStory {
   cardImage?: { url: string; publicId: string };
   genres: TStoryGenre[];
   createdAt: string;
+}
+
+// =====================
+// ADMIN STORY TABLE
+// =====================
+
+export interface IAdminStoryCreator {
+  clerkId: string;
+  username: string;
+  avatarUrl?: string;
+  email: string;
+}
+
+export interface IAdminStoryCollaborator {
+  _id?: string;
+  role: TStoryCollaboratorRole;
+  status: TStoryCollaboratorStatus;
+  user?: {
+    clerkId: string;
+    username: string;
+    avatarUrl?: string;
+    email: string;
+  };
+}
+
+export interface IAdminStoryPool {
+  _id?: string;
+  storySlug?: string;
+  storyOwnerId?: string;
+  balance: number;
+  totalReceived: number;
+  totalDistributed: number;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
+}
+
+export interface IAdminStoryChapterDetails {
+  totalChapters: number;
+  publishedChapters: number;
+  draftChapters: number;
+  rootChapters: number;
+  totalReads: number;
+  totalComments: number;
+}
+
+export interface IAdminStoryPullRequestDetails {
+  totalPRs: number;
+  pendingPRs: number;
+  mergedPRs: number;
+  rejectedPRs: number;
+}
+
+export interface IAdminStoryTableItem {
+  _id: string;
+  title: string;
+  slug: string;
+  description: string;
+  coverImage?: {
+    url: string;
+    publicId: string;
+  };
+  cardImage?: {
+    url: string;
+    publicId: string;
+  };
+  creatorId: string;
+  creator?: IAdminStoryCreator;
+  status: TStoryStatus;
+  settings: IStorySettings;
+  stats: IStoryStats;
+  tags: string[];
+  trendingScore: number;
+  lastActivityAt: Date | string;
+  publishedAt: Date | string;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+  collaborators: IAdminStoryCollaborator[];
+  storyPool: IAdminStoryPool;
+  chapterDetails: IAdminStoryChapterDetails;
+  pullRequestDetails: IAdminStoryPullRequestDetails;
+}
+
+export interface IPaginatedAdminStoryTable {
+  docs: IAdminStoryTableItem[];
+  totalDocs: number;
+  limit: number;
+  totalPages: number;
+  page: number;
+  pagingCounter: number;
+  hasPrevPage: boolean;
+  hasNextPage: boolean;
+  prevPage: number | null;
+  nextPage: number | null;
 }

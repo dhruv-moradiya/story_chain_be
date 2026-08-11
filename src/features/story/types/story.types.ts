@@ -90,6 +90,7 @@ interface IStorySettingsWithImages {
   settings: IStorySettings;
   coverImage?: IStory['coverImage'];
   cardImage?: IStory['cardImage'];
+  status: TStoryStatus;
 }
 
 // ─── Story Timeline ──────────────────────────────────────────────────────────

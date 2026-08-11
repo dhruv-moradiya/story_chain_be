@@ -3,6 +3,7 @@ import { TOKENS } from '@container/tokens';
 import { IStoryUpdateCardImageBySlugDTO, IStoryUpdateSettingDTO } from '@dto/story.dto';
 import {
   StoryFieldsQuerySchema,
+  TAdminStoryTableQuerySchema,
   TStoryAddChapterSchema,
   TStoryCreateSchema,
   TStoryFieldsQuerySchema,
@@ -12,6 +13,7 @@ import {
   TStoryUpdateCoverImageSchema,
   TStoryUpdateSettingSchema,
 } from '@schema/request/story.schema';
+
 import { ApiResponse } from '@utils/apiResponse';
 import { BaseModule } from '@utils/baseClass';
 import { catchAsync } from '@utils/catchAsync';
@@ -121,13 +123,31 @@ export class StoryController extends BaseModule {
   // QUERY OPERATIONS
   // =====================
 
-  getAllStories = catchAsync(async (_request: FastifyRequest, reply: FastifyReply) => {
-    const stories = await this.storyQueryService.getAllStories();
-    this.logInfo(`Fetched all stories`);
-    return reply
-      .code(HTTP_STATUS.OK.code)
-      .send(ApiResponse.fetched(stories, 'All stories fetched successfully'));
-  });
+  getAllStories = catchAsync(
+    async (
+      request: FastifyRequest<{ Querystring: TAdminStoryTableQuerySchema }>,
+      reply: FastifyReply
+    ) => {
+      const result = await this.storyQueryService.getAdminStoriesTable(request.query);
+      this.logInfo(`Fetched all stories for admin table`);
+      return reply
+        .code(HTTP_STATUS.OK.code)
+        .send(ApiResponse.fetched(result, 'All stories fetched successfully for admin table'));
+    }
+  );
+
+  getAdminStoriesTable = catchAsync(
+    async (
+      request: FastifyRequest<{ Querystring: TAdminStoryTableQuerySchema }>,
+      reply: FastifyReply
+    ) => {
+      const result = await this.storyQueryService.getAdminStoriesTable(request.query);
+      this.logInfo(`Fetched stories table with full details for super admin`);
+      return reply
+        .code(HTTP_STATUS.OK.code)
+        .send(ApiResponse.fetched(result, 'Admin stories fetched successfully with full details'));
+    }
+  );
 
   getStoryBySlug = catchAsync(
     async (
