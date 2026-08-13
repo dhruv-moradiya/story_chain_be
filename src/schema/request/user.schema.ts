@@ -1,3 +1,4 @@
+import { PlatformRole } from '@/features/platformRole/types/platformRole.types';
 import { z } from 'zod';
 
 // User ID Schema
@@ -109,6 +110,8 @@ const GetUsersListQuerySchema = z.object({
   page: z.coerce.number().min(1).default(1),
   limit: z.coerce.number().min(1).max(100).default(10),
   search: z.string().optional(),
+  sortBy: z.string().default('createdAt').optional(),
+  sortOrder: z.enum(['asc', 'desc']).default('desc').optional(),
 });
 
 const BanUserSchema = z.object({
@@ -118,6 +121,15 @@ const BanUserSchema = z.object({
 
 const UnbanUserSchema = z.object({
   reason: z.string().optional(),
+});
+
+const ChangeUserRoleSchema = z.object({
+  role: z.enum([
+    PlatformRole.SUPER_ADMIN,
+    PlatformRole.PLATFORM_MODERATOR,
+    PlatformRole.APPEAL_MODERATOR,
+    PlatformRole.USER,
+  ]),
 });
 
 // Type exports
@@ -130,33 +142,36 @@ type TUpdateUserPreferencesSchema = z.infer<typeof UpdateUserPreferencesSchema>;
 type TGetUsersListQuerySchema = z.infer<typeof GetUsersListQuerySchema>;
 type TBanUserSchema = z.infer<typeof BanUserSchema>;
 type TUnbanUserSchema = z.infer<typeof UnbanUserSchema>;
+type TChangeUserRoleSchema = z.infer<typeof ChangeUserRoleSchema>;
 
 export {
-  UserIdSchema,
-  UsernameSchema,
-  SearchUserByUsernameSchema,
+  BanUserSchema,
+  ChangeUserRoleSchema,
+  ConnectedAccountSchema,
+  GetUserByClerkIdSchema,
   GetUserByIdSchema,
   GetUserByUsernameSchema,
-  GetUserByClerkIdSchema,
   GetUsersListQuerySchema,
-  UpdateUserProfileSchema,
-  UpdateUserPreferencesSchema,
-  UserCreateDTO,
-  UserUpdateDTO,
-  ConnectedAccountSchema,
+  SearchUserByUsernameSchema,
   SessionCreateDTO,
-  BanUserSchema,
   UnbanUserSchema,
+  UpdateUserPreferencesSchema,
+  UpdateUserProfileSchema,
+  UserCreateDTO,
+  UserIdSchema,
+  UserUpdateDTO,
+  UsernameSchema,
 };
 
 export type {
-  TSearchUserByUsernameSchema,
+  TBanUserSchema,
+  TGetUserByClerkIdSchema,
   TGetUserByIdSchema,
   TGetUserByUsernameSchema,
-  TGetUserByClerkIdSchema,
   TGetUsersListQuerySchema,
-  TUpdateUserProfileSchema,
-  TUpdateUserPreferencesSchema,
-  TBanUserSchema,
+  TSearchUserByUsernameSchema,
   TUnbanUserSchema,
+  TUpdateUserPreferencesSchema,
+  TUpdateUserProfileSchema,
+  TChangeUserRoleSchema,
 };

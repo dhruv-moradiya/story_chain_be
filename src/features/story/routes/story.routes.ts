@@ -20,6 +20,7 @@ import {
   StoryUpdateCardImageSchema,
   StoryUpdateCoverImageSchema,
   StoryUpdateSettingSchema,
+  StoryUpdateStatusSchema,
 } from '@schema/request/story.schema';
 
 import { type StoryController } from '../controllers/story.controller';
@@ -52,6 +53,7 @@ const StoryApiRoutes = {
 
   // UPDATE STORY STATUS
   PublishBySlug: '/slug/:slug/publish',
+  UpdateStatusBySlug: '/slug/:slug/status',
 
   // UPDATE STORY METADATA
   UpdateSettingsBySlug: '/slug/:slug/settings',
@@ -283,10 +285,26 @@ export async function storyRoutes(fastify: FastifyInstance) {
         tags: ['Stories'],
         security: [{ bearerAuth: [] }],
         params: zodToJsonSchema(StorySlugSchema),
-        response: StoryResponses.storyPublished,
       },
     },
     storyController.publishStoryBySlug
+  );
+
+  // Change story status by slug
+  fastify.patch(
+    StoryApiRoutes.UpdateStatusBySlug,
+    {
+      preHandler: [validateAuth, loadStoryContext, StoryRoleGuards.canPublishStory],
+      config: { rateLimit: RateLimits.CRITICAL },
+      schema: {
+        description: 'Change story status by slug',
+        tags: ['Stories'],
+        security: [{ bearerAuth: [] }],
+        params: zodToJsonSchema(StorySlugSchema),
+        body: zodToJsonSchema(StoryUpdateStatusSchema),
+      },
+    },
+    storyController.changeStoryStatusBySlug
   );
 
   // Get story tree by slug
@@ -437,7 +455,6 @@ export async function storyRoutes(fastify: FastifyInstance) {
         tags: ['Stories'],
         security: [{ bearerAuth: [] }],
         params: zodToJsonSchema(StorySlugSchema),
-        response: StoryResponses.storyOverview,
       },
     },
     storyController.getStoryOverviewBySlug

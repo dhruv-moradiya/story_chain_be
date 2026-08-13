@@ -78,4 +78,75 @@ export class UserPipelineBuilder extends BasePipelineBuilder<UserPipelineBuilder
     this.pipeline.push({ $sort: { createdAt: order } });
     return this;
   }
+
+  sortByUserField(sortBy: string = 'createdAt', sortOrder: 'asc' | 'desc' = 'desc') {
+    const sortDirection = sortOrder === 'asc' ? 1 : -1;
+
+    if (sortBy === 'role') {
+      this.pipeline.push(
+        {
+          $lookup: {
+            from: 'platformroles',
+            localField: 'clerkId',
+            foreignField: 'userId',
+            as: 'roleInfo',
+          },
+        },
+        {
+          $addFields: {
+            role: {
+              $ifNull: [{ $arrayElemAt: ['$roleInfo.role', 0] }, 'USER'],
+            },
+          },
+        },
+        {
+          $sort: { role: sortDirection, createdAt: -1 },
+        }
+      );
+      return this;
+    }
+
+    const validSortFields = [
+      'createdAt',
+      'updatedAt',
+      'username',
+      'email',
+      'xp',
+      'level',
+      'lastActive',
+    ];
+    const sortField = validSortFields.includes(sortBy) ? sortBy : 'createdAt';
+
+    this.pipeline.push({
+      $sort: { [sortField]: sortDirection },
+    });
+
+    return this;
+  }
+
+  facetPaginate(page: number = 1, limit: number = 10) {
+    const skip = Math.max(page - 1, 0) * limit;
+    this.pipeline.push({
+      $facet: {
+        metadata: [{ $count: 'totalDocs' }],
+        data: [{ $skip: skip }, { $limit: limit }],
+      },
+    });
+    return this;
+  }
+
+  getPaginatedUsersPreset(options: {
+    page: number;
+    limit: number;
+    search?: string;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+  }) {
+    const { page = 1, limit = 10, search, sortBy = 'createdAt', sortOrder = 'desc' } = options;
+
+    return this.matchSearch(search)
+      .sortByUserField(sortBy, sortOrder)
+      .projectPaginatedUserData()
+      .facetPaginate(page, limit);
+  }
 }

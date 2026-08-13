@@ -37,6 +37,7 @@ const storySchema = new Schema<IStoryDoc>(
     cardImage: {
       url: String,
       publicId: String,
+      thumbnailUrl: String,
     },
 
     // Creator

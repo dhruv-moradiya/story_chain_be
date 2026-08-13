@@ -8,55 +8,41 @@ cloudinary.config({
 });
 
 /**
- * Thumbnail transformation applied as an eager transformation on upload.
- * Cloudinary will generate this derived version automatically right after
- * the client finishes uploading the original image.
- *
- * w_400,h_300  → resize to 400×300
- * c_fill       → crop to fill the exact dimensions
- * q_auto       → auto-optimize quality
- * f_auto       → auto-choose best format (webp / avif on modern browsers)
+ * Cloudinary Transformation Presets & Quality Modes
  */
-const THUMBNAIL_TRANSFORMATION = 'w_400,h_300,c_fill,q_auto,f_auto';
+const CLOUDINARY_TRANSFORMATIONS = {
+  DEFAULT: 'q_auto,f_auto',
+  AUTO_GOOD: 'q_auto:good,f_auto',
+  AUTO_ECO: 'q_auto:eco,f_auto',
+  AUTO_LOW: 'q_auto:low,f_auto',
+} as const;
+
+type TCloudinaryQualityMode = 'auto' | 'auto:good' | 'auto:eco' | 'auto:low';
+
+/**
+ * Image transformation applied as default eager transformation on upload.
+ */
+const THUMBNAIL_TRANSFORMATION = CLOUDINARY_TRANSFORMATIONS.DEFAULT;
 
 /**
  * Returns signed query-string params for a direct client-side upload to Cloudinary.
- * Includes an `eager` transformation so Cloudinary also stores a thumbnail
+ * Includes an `eager` transformation so Cloudinary also stores a thumbnail/derived
  * variant the moment the upload completes.
  *
- * Pass any folder path you need — the function is not tied to stories.
- *
  * @param folderPath - Cloudinary folder to upload into.
- *   Built-in helpers (`getStoryUploadSignature`, `getBundleUploadSignature`,
- *   `getCharacterUploadSignature`) construct this for you, or you can supply
- *   a fully custom path.
- *
- * @example
- * // Stories
- * getSignatureURL(`stories/${storySlug}`)
- *
- * // Bundles
- * getSignatureURL(`bundles/${bundleId}`)
- *
- * // Characters
- * getSignatureURL(`characters/${characterId}`)
- *
- * // Fully custom path
- * getSignatureURL('marketing/banners/2025')
- *
- * The client should POST these params (plus the file) to:
- *   https://api.cloudinary.com/v1_1/<cloud_name>/image/upload
+ * @param quality - Optional quality mode (e.g. 'auto:eco', 'auto:good'). Uses THUMBNAIL_TRANSFORMATION if not provided.
  */
-const getSignatureURL = (folderPath: string) => {
+const getSignatureURL = (folderPath: string, quality?: TCloudinaryQualityMode) => {
   if (!folderPath) {
     throw new Error('folderPath is required to generate a Cloudinary signature URL');
   }
 
+  const eagerTransformation = quality ? `q_${quality},f_auto` : THUMBNAIL_TRANSFORMATION;
   const timestamp = Math.floor(Date.now() / 1000);
 
   // `eager` must be included in the signature so Cloudinary validates it.
   const paramsToSign = {
-    eager: THUMBNAIL_TRANSFORMATION,
+    eager: eagerTransformation,
     folder: folderPath,
     timestamp,
   };
@@ -68,7 +54,7 @@ const getSignatureURL = (folderPath: string) => {
     `&signature=${signature}` +
     `&api_key=${env.CLOUDINARY_API_KEY}` +
     `&folder=${folderPath}` +
-    `&eager=${encodeURIComponent(THUMBNAIL_TRANSFORMATION)}`
+    `&eager=${encodeURIComponent(eagerTransformation)}`
   );
 };
 
@@ -78,49 +64,49 @@ const getSignatureURL = (folderPath: string) => {
 // ---------------------------------------------------------------------------
 
 /** Signature URL scoped to a specific story's folder. */
-const getStoryUploadSignature = (storySlug: string) => {
+const getStoryUploadSignature = (storySlug: string, quality?: TCloudinaryQualityMode) => {
   if (!storySlug) throw new Error('storySlug is required');
-  return getSignatureURL(`stories/${storySlug}`);
+  return getSignatureURL(`stories/${storySlug}`, quality);
 };
 
 /** Signature URL scoped to a specific bundle's folder. */
-const getBundleUploadSignature = () => {
-  return getSignatureURL(`bundles`);
+const getBundleUploadSignature = (quality?: TCloudinaryQualityMode) => {
+  return getSignatureURL(`bundles`, quality);
 };
 
 /** Signature URL scoped to a specific character's folder. */
-const getCharacterUploadSignature = (storySlug: string) => {
+const getCharacterUploadSignature = (storySlug: string, quality?: TCloudinaryQualityMode) => {
   if (!storySlug) throw new Error('characterId and storySlug are required');
-  return getSignatureURL(`${storySlug}/characters`);
+  return getSignatureURL(`${storySlug}/characters`, quality);
 };
 
 /** Signature URL scoped to a specific story's gallery folder. */
-const getGalleryImageUploadSignature = (storySlug: string) => {
+const getGalleryImageUploadSignature = (storySlug: string, quality?: TCloudinaryQualityMode) => {
   if (!storySlug) throw new Error('storySlug is required');
-  return getSignatureURL(`stories/${storySlug}/gallery`);
+  return getSignatureURL(`stories/${storySlug}/gallery`, quality);
 };
 
 /**
  * Given a Cloudinary public_id (returned by the client after a successful upload),
- * builds both the original and thumbnail URLs so you can persist them in the DB.
+ * builds both the original and thumbnail URLs with configurable quality settings.
  *
  * @example
  * const { originalUrl, thumbnailUrl } = getCloudinaryImageUrls('stories/my-slug/image123');
  */
-const getCloudinaryImageUrls = (publicId: string) => {
+const getCloudinaryImageUrls = (
+  publicId: string,
+  options?: { quality?: TCloudinaryQualityMode; thumbnailQuality?: TCloudinaryQualityMode }
+) => {
   const originalUrl = cloudinary.url(publicId, {
     secure: true,
     fetch_format: 'auto',
-    quality: 'auto',
+    quality: options?.quality || 'auto',
   });
 
   const thumbnailUrl = cloudinary.url(publicId, {
     secure: true,
-    width: 400,
-    height: 300,
-    crop: 'fill',
     fetch_format: 'auto',
-    quality: 'auto',
+    quality: options?.thumbnailQuality || 'auto:eco',
   });
 
   return { originalUrl, thumbnailUrl };
@@ -162,12 +148,41 @@ const deleteCloudinaryAsset = async (
   return result;
 };
 
+/**
+ * Given a Cloudinary public_id or image URL, generates a reduced-quality image URL
+ * supporting different quality modes ('auto', 'auto:good', 'auto:eco', 'auto:low').
+ */
+const getReducedQualityImageUrl = (
+  publicIdOrUrl: string,
+  qualityMode: TCloudinaryQualityMode = 'auto:eco'
+): string => {
+  if (!publicIdOrUrl) return publicIdOrUrl;
+
+  if (!publicIdOrUrl.startsWith('http://') && !publicIdOrUrl.startsWith('https://')) {
+    return cloudinary.url(publicIdOrUrl, {
+      secure: true,
+      fetch_format: 'auto',
+      quality: qualityMode,
+    });
+  }
+
+  if (publicIdOrUrl.includes('/upload/') && !publicIdOrUrl.includes('/q_')) {
+    return publicIdOrUrl.replace('/upload/', `/upload/q_${qualityMode},f_auto/`);
+  }
+
+  return publicIdOrUrl;
+};
+
 export {
+  THUMBNAIL_TRANSFORMATION,
+  CLOUDINARY_TRANSFORMATIONS,
   getSignatureURL,
   getStoryUploadSignature,
   getBundleUploadSignature,
   getCharacterUploadSignature,
   getGalleryImageUploadSignature,
   getCloudinaryImageUrls,
+  getReducedQualityImageUrl,
   deleteCloudinaryAsset,
 };
+export type { TCloudinaryQualityMode };

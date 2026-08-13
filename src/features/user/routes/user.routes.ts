@@ -6,6 +6,7 @@ import type {} from '@fastify/rate-limit';
 import { validateWebhook } from '@middleware/validateRequest';
 import {
   BanUserSchema,
+  ChangeUserRoleSchema,
   GetUserByClerkIdSchema,
   GetUserByIdSchema,
   GetUserByUsernameSchema,
@@ -44,6 +45,9 @@ const UserApiRoutes = {
 
   BanUser: '/ban',
   UnbanUser: '/unban',
+
+  ChangeUserRole: '/change-role/:userId',
+  DropCollections: '/drop-collections',
 } as const;
 
 export { UserApiRoutes };
@@ -191,9 +195,39 @@ export async function userRoutes(fastify: FastifyInstance) {
         security: [{ bearerAuth: [] }],
         params: zodToJsonSchema(ClerkUserIdParamsSchema),
         body: zodToJsonSchema(BanUserSchema),
-        // response: UserResponses.userProfile,
       },
     },
     userController.banUser
+  );
+
+  fastify.post(
+    UserApiRoutes.ChangeUserRole,
+    {
+      preHandler: [validateAuth, PlatformRoleGuards.canManageRoles],
+      config: { rateLimit: RateLimits.WRITE },
+      schema: {
+        description: 'Promote a user to a different role',
+        tags: ['Users'],
+        security: [{ bearerAuth: [] }],
+        params: zodToJsonSchema(ClerkUserIdParamsSchema),
+        body: zodToJsonSchema(ChangeUserRoleSchema),
+      },
+    },
+    userController.changeUserRole
+  );
+
+  fastify.post(
+    UserApiRoutes.DropCollections,
+    {
+      preHandler: [validateAuth, PlatformRoleGuards.superAdmin],
+      config: { rateLimit: RateLimits.WRITE },
+      schema: {
+        description:
+          'Drop all database collections except users and platformRoles (Super Admin only)',
+        tags: ['Users'],
+        security: [{ bearerAuth: [] }],
+      },
+    },
+    userController.dropCollections
   );
 }

@@ -16,12 +16,12 @@ export class StoryRules {
   static isValidStatusTransition(current: TStoryStatus, next: TStoryStatus): boolean {
     const allowedTransitions: Record<TStoryStatus, TStoryStatus[]> = {
       [StoryStatus.DRAFT]: [StoryStatus.PUBLISHED, StoryStatus.ARCHIVED, StoryStatus.DELETED],
-      [StoryStatus.PUBLISHED]: [StoryStatus.ARCHIVED, StoryStatus.DELETED],
-      [StoryStatus.ARCHIVED]: [StoryStatus.DELETED],
+      [StoryStatus.PUBLISHED]: [StoryStatus.DRAFT, StoryStatus.ARCHIVED, StoryStatus.DELETED],
+      [StoryStatus.ARCHIVED]: [StoryStatus.DRAFT, StoryStatus.PUBLISHED, StoryStatus.DELETED],
       [StoryStatus.DELETED]: [],
     };
 
-    return allowedTransitions[current].includes(next);
+    return allowedTransitions[current]?.includes(next) ?? false;
   }
 
   static canAddRootChapter(story: IStory, userId: string): boolean {

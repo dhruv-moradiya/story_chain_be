@@ -12,6 +12,7 @@ import {
   TStorySlugSchema,
   TStoryUpdateCoverImageSchema,
   TStoryUpdateSettingSchema,
+  TStoryUpdateStatusSchema,
 } from '@schema/request/story.schema';
 
 import { ApiResponse } from '@utils/apiResponse';
@@ -245,7 +246,9 @@ export class StoryController extends BaseModule {
       const { slug } = request.params;
 
       const settings = await this.storyQueryService.getStorySettingsBySlug(slug);
+
       this.logInfo(`Fetched story settings for story ${slug}`);
+
       return reply
         .code(HTTP_STATUS.OK.code)
         .send(ApiResponse.fetched(settings, 'Story settings fetched successfully'));
@@ -281,13 +284,33 @@ export class StoryController extends BaseModule {
       const { slug } = request.params;
       const { clerkId: userId } = request.user;
 
-      const publishedStory = await this.storyPublishingService.publish(slug, userId);
+      await this.storyPublishingService.publish(slug, userId);
 
       this.logInfo(`Published story ${slug} by user ${userId}`);
 
       return reply
         .code(HTTP_STATUS.OK.code)
-        .send(ApiResponse.updated(publishedStory, 'Story published successfully'));
+        .send(ApiResponse.updated(true, 'Story published successfully'));
+    }
+  );
+
+  // Change story status by slug
+  changeStoryStatusBySlug = catchAsync(
+    async (
+      request: FastifyRequest<{ Params: TStorySlugSchema; Body: TStoryUpdateStatusSchema }>,
+      reply: FastifyReply
+    ) => {
+      const { slug } = request.params;
+      const { status } = request.body;
+      const { clerkId: userId } = request.user;
+
+      const story = await this.storyPublishingService.changeStatus(slug, userId, status);
+
+      this.logInfo(`Changed status of story ${slug} to ${status} by user ${userId}`);
+
+      return reply
+        .code(HTTP_STATUS.OK.code)
+        .send(ApiResponse.updated(story, `Story status updated to ${status} successfully`));
     }
   );
 

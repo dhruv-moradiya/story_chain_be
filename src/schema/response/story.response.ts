@@ -46,6 +46,7 @@ export const StorySettingsSchema = {
       },
     },
     contentRating: { type: 'string', enum: STORY_CONTENT_RATINGS },
+    monetizationEnabled: { type: 'boolean' },
   },
 };
 

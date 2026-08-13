@@ -77,11 +77,12 @@ export class UserTransformer {
     };
   }
 
-  static paginatedUserData(input: IUser): IPaginatedUserData {
+  static paginatedUserData(input: IUser & { role?: TPlatformRole }): IPaginatedUserData {
     return {
       clerkId: input.clerkId,
       username: input.username,
       email: input.email,
+      role: input.role ?? 'USER',
       bio: input.bio ?? '',
       avatarUrl: input.avatarUrl ?? '',
       xp: input.xp ?? 0,

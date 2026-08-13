@@ -3,6 +3,7 @@ import { HTTP_STATUS } from '@constants/httpStatus';
 import { TOKENS } from '@container/tokens';
 import {
   TBanUserSchema,
+  TChangeUserRoleSchema,
   TGetUserByClerkIdSchema,
   TGetUserByIdSchema,
   TGetUserByUsernameSchema,
@@ -16,6 +17,8 @@ import { catchAsync } from '@utils/catchAsync';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { inject, singleton } from 'tsyringe';
 import { UserService } from '../services/user.service';
+
+// 28fc309c4d24beca62b7904eccf48cf70a93257ede72548c3c3a5c28f80b2b76
 
 @singleton()
 class UserController extends BaseModule {
@@ -143,6 +146,31 @@ class UserController extends BaseModule {
         .send(ApiResponse.fetched(result, 'User banned successfully'));
     }
   );
+
+  changeUserRole = catchAsync(
+    async (
+      request: FastifyRequest<{ Params: TClerkUserIdParamsSchema; Body: TChangeUserRoleSchema }>,
+      reply: FastifyReply
+    ) => {
+      const currentUserId = request.user.clerkId;
+      const { userId } = request.params;
+      const { role } = request.body;
+
+      await this.userService.changeUserRole({ currentUserId, userId, role });
+
+      return reply
+        .code(HTTP_STATUS.OK.code)
+        .send(ApiResponse.fetched(null, 'User role changed successfully'));
+    }
+  );
+
+  dropCollections = catchAsync(async (_request: FastifyRequest, reply: FastifyReply) => {
+    const result = await this.userService.dropCollectionsExceptUsersAndRoles();
+
+    return reply
+      .code(HTTP_STATUS.OK.code)
+      .send(ApiResponse.fetched(result, 'Database collections dropped successfully'));
+  });
 }
 
 export { UserController };

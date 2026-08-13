@@ -4,9 +4,11 @@ import { BaseModule } from '@/utils/baseClass';
 import { TOKENS } from '@/container';
 import { StoryRules } from '@/domain/story.rules';
 
+import { UpdateQuery } from 'mongoose';
 import { IStoryPublishingService } from './interfaces/story-publishing.interface';
 import { StoryRepository } from '../repositories/story.repository';
-import { IStory } from '../types/story.types';
+import { IStory, IStoryDoc, TStoryStatus } from '../types/story.types';
+import { StoryStatus } from '../types/story-enum';
 import { StoryTimelineService } from './story-timeline.service';
 
 @singleton()
@@ -23,7 +25,7 @@ class StoryPublishingService extends BaseModule implements IStoryPublishingServi
   /**
    * Publish a story by slug
    */
-  async publish(slug: string, userId: string): Promise<IStory> {
+  async publish(slug: string, userId: string): Promise<boolean> {
     const story = await this.storyRepo.findBySlug(slug);
 
     if (!story) {
@@ -50,9 +52,7 @@ class StoryPublishingService extends BaseModule implements IStoryPublishingServi
       this.logError('Failed to record story_published timeline event', { error, slug });
     }
 
-    // Return the updated story
-    const updatedStory = await this.storyRepo.findBySlug(slug);
-    return updatedStory!;
+    return true;
   }
 
   /**
@@ -87,6 +87,65 @@ class StoryPublishingService extends BaseModule implements IStoryPublishingServi
     }
 
     return updatedStory;
+  }
+
+  /**
+   * Change story status by target status (draft, published, archived, deleted)
+   */
+  async changeStatus(
+    slug: string,
+    userId: string,
+    targetStatus: StoryStatus | TStoryStatus
+  ): Promise<boolean> {
+    const story = await this.storyRepo.findBySlug(slug);
+
+    if (!story) {
+      this.throwNotFoundError('Story not found');
+    }
+
+    if (!StoryRules.canEditStory(story, userId)) {
+      this.throwForbiddenError('You do not have permission to change this story status.');
+    }
+
+    const nextStatus = targetStatus as TStoryStatus;
+    if (!StoryRules.isValidStatusTransition(story.status, nextStatus)) {
+      this.throwBadRequest(`Invalid status transition from '${story.status}' to '${nextStatus}'.`);
+    }
+
+    if (nextStatus === StoryStatus.PUBLISHED) {
+      await this.publish(slug, userId);
+      await this.storyRepo.findBySlug(slug);
+      return true;
+    }
+
+    const updatePayload: UpdateQuery<IStoryDoc> = {
+      status: nextStatus,
+    };
+
+    if (nextStatus === StoryStatus.DRAFT) {
+      updatePayload.publishedAt = null;
+    }
+
+    const updatedStory = await this.storyRepo.findOneAndUpdate({
+      filter: { slug },
+      update: updatePayload,
+      options: { new: true },
+    });
+
+    if (!updatedStory) {
+      this.throwInternalError('Unable to update story status. Please try again.');
+    }
+
+    // Record timeline entry depending on status
+    try {
+      if (nextStatus === StoryStatus.ARCHIVED) {
+        await this.storyTimelineService.recordStoryArchived(slug, userId);
+      }
+    } catch (error) {
+      this.logError(`Failed to record timeline event for status ${nextStatus}`, { error, slug });
+    }
+
+    return true;
   }
 }
 

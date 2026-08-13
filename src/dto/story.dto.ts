@@ -258,7 +258,6 @@ interface IStoryUpdateSettingDTO {
   allowVoting: boolean;
   genres: TStoryGenre[];
   contentRating: TStoryContentRating;
-  status?: TStoryStatus;
 }
 
 interface IStoryUpdateCoverImageBySlugDTO {
@@ -276,6 +275,7 @@ interface IStoryUpdateCardImageBySlugDTO {
   cardImage: {
     url: string;
     publicId: string;
+    thumbnailUrl: string;
   };
 }
 

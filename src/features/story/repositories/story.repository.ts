@@ -3,7 +3,7 @@ import { singleton } from 'tsyringe';
 import { Story } from '@models/story.model';
 import { ID, IOperationOptions } from '@/types';
 import { BaseRepository } from '@utils/baseClass';
-import { IStory, IStoryDoc, TStoryStatus } from '../types/story.types';
+import { IStory, IStoryDoc } from '../types/story.types';
 import { StoryStatus } from '../types/story-enum';
 import { StoryPipelineBuilder } from '../pipelines/storyPipeline.builder';
 import { IAdminStoryTableItem } from '@/types/response/story.response.types';
@@ -185,19 +185,11 @@ export class StoryRepository extends BaseRepository<IStory, IStoryDoc> {
   async updateStorySettingBySlug(
     slug: string,
     update: Partial<IStory['settings']>,
-    status?: TStoryStatus,
     options: IOperationOptions = {}
   ): Promise<IStory | null> {
     const setPayload: Record<string, unknown> = {
       settings: update,
     };
-
-    if (status !== undefined) {
-      setPayload.status = status;
-      if (status === StoryStatus.PUBLISHED) {
-        setPayload.publishedAt = new Date();
-      }
-    }
 
     return this.model
       .findOneAndUpdate(

@@ -1,8 +1,10 @@
+import mongoose from 'mongoose';
 import { TOKENS } from '@container/tokens';
 import type { User } from '@clerk/fastify';
 import { UserRules } from '@domain/user.rules';
 import {
   IBanUserDTO,
+  IChangeUserRoleDTO,
   ISearchUserByUsernameDTO,
   ISessionCreateDTO,
   IUserCreateDTO,
@@ -37,6 +39,8 @@ import { IConnectedAccount, IUser, TAuthProvider } from '../types/user.types';
 import { BanHistoryRepository } from '@/features/banHistory/repositories/banHistory.repository';
 import { BanType } from '@/features/banHistory/types/banHistory-enum';
 import { IBanHistoryPopulated } from '@/features/banHistory/types/banHistory.types';
+import { PlatformRoleRepository } from '@features/platformRole/repositories/platformRole.repository';
+import { PlatformRole } from '@features/platformRole/types/platformRole.types';
 
 @singleton()
 class UserService extends BaseModule implements IUserService {
@@ -52,7 +56,9 @@ class UserService extends BaseModule implements IUserService {
     @inject(TOKENS.WalletService)
     private readonly walletService: WalletService,
     @inject(TOKENS.BanHistoryRepository)
-    private readonly banHistoryRepo: BanHistoryRepository
+    private readonly banHistoryRepo: BanHistoryRepository,
+    @inject(TOKENS.PlatformRoleRepository)
+    private readonly platformRoleRepo: PlatformRoleRepository
   ) {
     super();
   }
@@ -230,15 +236,23 @@ class UserService extends BaseModule implements IUserService {
   }
 
   async getPaginatedUsers(query: TGetUsersListQuerySchema): Promise<IUserPaginatedResponse> {
-    const { page = 1, limit = 10, search } = query;
+    const { page = 1, limit = 10, search, sortBy, sortOrder } = query;
 
     const { users, totalDocs } = await this.userRepo.findPaginatedUsers({
       page,
       limit,
       search,
+      sortBy,
+      sortOrder,
     });
 
-    const docs = users.map((user) => UserTransformer.paginatedUserData(user));
+    const userClerkIds = users.map((u) => u.clerkId);
+    const rolesMap = await this.platformRoleService.getRolesByUserIds(userClerkIds);
+
+    const docs = users.map((user) => {
+      const role = rolesMap.get(user.clerkId) || PlatformRole.USER;
+      return UserTransformer.paginatedUserData({ ...user, role });
+    });
 
     return formatPaginatedResponse(docs, totalDocs, page, limit);
   }
@@ -374,6 +388,73 @@ class UserService extends BaseModule implements IUserService {
 
       return { success: true };
     });
+  }
+
+  async changeUserRole(input: IChangeUserRoleDTO): Promise<boolean> {
+    const { currentUserId, userId, role } = input;
+
+    // const currentUserRoleDoc = await this.platformRoleRepo.findByUserId(currentUserId);
+
+    // if (!currentUserRoleDoc) {
+    //   this.throwError('FORBIDDEN', 400, 'Current user has no role.');
+    // }
+
+    // const currentUserRole = currentUserRoleDoc.role as PlatformRole;
+
+    // const canManageRoles = PlatformRoleRules.hasPermission(currentUserRole, 'canManageRoles');
+    // if (!canManageRoles) {
+    //   this.throwForbiddenError('FORBIDDEN', 'You do not have permission to manage roles.');
+    // }
+
+    let user = await this.userRepo.findByClerkId(userId);
+    if (!user) {
+      try {
+        user = await this.getOrCreateUser(userId);
+      } catch {
+        this.throwNotFoundError('NOT_FOUND', 'User not found.');
+      }
+    }
+
+    return withTransaction('Changing user role', async (session) => {
+      await this.platformRoleRepo.createOrUpdate(
+        {
+          userId,
+          role,
+          assignedBy: currentUserId,
+          assignedAt: new Date(),
+        },
+        { session }
+      );
+
+      return true;
+    });
+  }
+
+  async dropCollectionsExceptUsersAndRoles(): Promise<{ droppedCollections: string[] }> {
+    const db = mongoose.connection.db;
+    if (!db) {
+      this.throwInternalError('INTERNAL_SERVER_ERROR', 'Database connection not initialized.');
+    }
+
+    const collections = await db.listCollections().toArray();
+    const excluded = ['users', 'platformroles', 'user', 'platformrole'];
+    const droppedCollections: string[] = [];
+
+    for (const collectionInfo of collections) {
+      const collectionName = collectionInfo.name;
+      if (!excluded.includes(collectionName.toLowerCase())) {
+        try {
+          await db.collection(collectionName).drop();
+          droppedCollections.push(collectionName);
+        } catch {
+          await db.collection(collectionName).deleteMany({});
+          droppedCollections.push(collectionName);
+        }
+      }
+    }
+
+    this.logInfo(`[DropCollections] Dropped collections: ${droppedCollections.join(', ')}`);
+    return { droppedCollections };
   }
 }
 

@@ -11,6 +11,8 @@ export interface IUserRepository {
     page: number;
     limit: number;
     search?: string;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
   }): Promise<{ users: IUser[]; totalDocs: number }>;
   updateByClerkId(id: string, update: UpdateQuery<IUser>): Promise<IUser | null>;
   updateXP(clerkId: string, updates: UpdateQuery<IUser>): Promise<IUser | null>;

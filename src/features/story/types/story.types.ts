@@ -59,6 +59,7 @@ interface IStory {
   cardImage?: {
     url: string;
     publicId: string;
+    thumbnailUrl?: string;
   };
 
   creatorId: string;

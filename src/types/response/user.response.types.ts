@@ -118,6 +118,7 @@ interface IPaginatedUserData {
   clerkId: string;
   username: string;
   email: string;
+  role: TPlatformRole;
   bio: string;
   avatarUrl: string;
   xp: number;

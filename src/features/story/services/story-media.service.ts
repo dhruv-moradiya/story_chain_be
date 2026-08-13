@@ -93,7 +93,7 @@ class StoryMediaService extends BaseModule implements IStoryMediaService {
     }
 
     const { getSignatureURL } = await import('@/utils/cloudinary.js');
-    const signatureURL = getSignatureURL(slug);
+    const signatureURL = getSignatureURL(slug, 'auto:low');
 
     return {
       uploadURL: `https://api.cloudinary.com/v1_1/${env.CLOUDINARY_CLOUD_NAME}/image/upload${signatureURL}`,

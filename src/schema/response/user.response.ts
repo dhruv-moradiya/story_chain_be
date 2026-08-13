@@ -152,6 +152,7 @@ export const PaginatedUserDataSchema = {
     clerkId: { type: 'string' },
     username: { type: 'string' },
     email: { type: 'string' },
+    role: { type: 'string' },
     bio: { type: 'string' },
     avatarUrl: { type: 'string' },
     xp: { type: 'number' },

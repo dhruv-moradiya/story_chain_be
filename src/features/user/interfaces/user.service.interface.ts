@@ -1,4 +1,9 @@
-import { ISearchUserByUsernameDTO, ISessionCreateDTO, IUserCreateDTO } from '@dto/user.dto';
+import {
+  IChangeUserRoleDTO,
+  ISearchUserByUsernameDTO,
+  ISessionCreateDTO,
+  IUserCreateDTO,
+} from '@dto/user.dto';
 import { IUser } from '../types/user.types';
 import { TGetUsersListQuerySchema } from '@/schema/request/user.schema';
 import {
@@ -19,4 +24,6 @@ export interface IUserService {
   getPaginatedUsers(query: TGetUsersListQuerySchema): Promise<IUserPaginatedResponse>;
   getUserDetailPageDataByClerkId(clerkId: string): Promise<IUserDetailPageResponse>;
   syncConnectedAccounts(clerkId: string, externalAccounts: User['externalAccounts']): Promise<void>;
+  changeUserRole(input: IChangeUserRoleDTO): Promise<boolean>;
+  dropCollectionsExceptUsersAndRoles(): Promise<{ droppedCollections: string[] }>;
 }

@@ -121,7 +121,7 @@ export async function chapterRoutes(fastify: FastifyInstance) {
     ChapterApiRoutes.Reactions,
     {
       preHandler: [validateAuth],
-      config: { rateLimit: RateLimits.CREATION_HOURLY },
+      config: { rateLimit: RateLimits.REACTION },
       schema: {
         description: 'React to a chapter',
         tags: ['Chapters'],

@@ -13,6 +13,9 @@ export const RateLimits = {
   // High-frequency writes (e.g. auto-save)
   FAST_WRITE: { max: 120, timeWindow: '1 minute' } satisfies RateLimitOptions,
 
+  // Reactions (likes etc.)
+  REACTION: { max: 60, timeWindow: '1 minute' } satisfies RateLimitOptions,
+
   // Sensitive operations (e.g. publishing, invites)
   CRITICAL: { max: 5, timeWindow: '1 minute' } satisfies RateLimitOptions,
 

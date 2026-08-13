@@ -75,6 +75,9 @@ class CollaboratorInvitationService extends BaseModule implements ICollaboratorI
           options: { session },
         });
 
+        console.log('input :>> ', { input });
+        console.log('inviter :>> ', { inviter });
+
         if (
           !inviter ||
           !STORY_COLLABORATOR_ROLE_CONFIG[inviter.role].permissions.canInviteCollaborators

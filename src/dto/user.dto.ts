@@ -5,6 +5,7 @@ import {
   UserUpdateDTO,
   ConnectedAccountSchema,
 } from '@schema/request/user.schema';
+import { TPlatformRole } from '@/features/platformRole/types/platformRole.types';
 
 interface ISearchUserByUsernameDTO {
   username: string;
@@ -22,6 +23,12 @@ type IBanUserDTO = {
   durationDays?: number;
 };
 
+interface IChangeUserRoleDTO {
+  currentUserId: string;
+  userId: string;
+  role: TPlatformRole;
+}
+
 export type {
   IUserCreateDTO,
   IUserUpdateDTO,
@@ -29,4 +36,5 @@ export type {
   ISearchUserByUsernameDTO,
   IConnectedAccount,
   IBanUserDTO,
+  IChangeUserRoleDTO,
 };

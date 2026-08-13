@@ -277,7 +277,7 @@ const StoryUpdateSettingSchema = z.object({
 
   contentRating: ContentRatingEnum.default('general'),
 
-  status: z.enum(STORY_STATUSES).optional(),
+  monetizationEnabled: z.boolean().optional(),
 
   // converImage: z
   //   .object({
@@ -317,6 +317,7 @@ const StoryUpdateCardImageSchema = z.object({
       .url('Invalid URL format')
       .refine((url) => cloudinaryUrlRegex.test(url), 'URL must be a valid Cloudinary URL'),
     publicId: z.string().min(1, 'publicId is required'),
+    thumbnailUrl: z.string().url('Invalid URL format').optional(),
   }),
 });
 
@@ -338,7 +339,16 @@ const AdminStoryTableQuerySchema = z.object({
   sortBy: z.string().default('createdAt').optional(),
 });
 
+const StoryUpdateStatusSchema = z.object({
+  status: z.enum(STORY_STATUSES, {
+    errorMap: () => ({
+      message: 'Invalid status. Allowed values: draft, published, archived, deleted',
+    }),
+  }),
+});
+
 type TAdminStoryTableQuerySchema = z.infer<typeof AdminStoryTableQuerySchema>;
+type TStoryUpdateStatusSchema = z.infer<typeof StoryUpdateStatusSchema>;
 
 type TStoryAddChapterBySlugSchema = z.infer<typeof StoryAddChapterBySlugSchema>;
 type TStoryUpdateChapterTitleSchema = z.infer<typeof StoryUpdateChapterTitleSchema>;
@@ -355,6 +365,7 @@ export {
   StorySearchSchema,
   StoryCreateSchema,
   StoryUpdateSchema,
+  StoryUpdateStatusSchema,
   StoryAddChapterSchema,
   StoryAddChapterBySlugSchema,
   StoryUpdateChapterTitleSchema,
@@ -373,6 +384,7 @@ export type {
   TStorySearchSchema,
   TStoryCreateSchema,
   TStoryUpdateSchema,
+  TStoryUpdateStatusSchema,
   TStoryAddChapterSchema,
   TStoryAddChapterBySlugSchema,
   TStoryUpdateChapterTitleSchema,
