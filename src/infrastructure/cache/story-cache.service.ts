@@ -18,12 +18,11 @@ class StoryCacheService extends BaseModule {
   }
 
   private async setJson<T>(key: string, data: T, ttl: number) {
-    await this.cacheService.set(key, JSON.stringify(data), { ttl });
+    await this.cacheService.set(key, data, { ttl });
   }
 
   private async getJson<T>(key: string): Promise<T | null> {
-    const data = await this.cacheService.get<string>(key);
-    return data ? JSON.parse(data) : null;
+    return this.cacheService.get<T>(key);
   }
 
   async setStoryAggregate(slug: string, data: IStoryAggregateCache) {
