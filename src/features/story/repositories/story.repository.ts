@@ -6,7 +6,7 @@ import { BaseRepository } from '@utils/baseClass';
 import { IStory, IStoryDoc } from '../types/story.types';
 import { StoryStatus } from '../types/story-enum';
 import { StoryPipelineBuilder } from '../pipelines/storyPipeline.builder';
-import { IAdminStoryTableItem } from '@/types/response/story.response.types';
+import { IAdminStoryTableItem, IPublicStoryListItem } from '@/types/response/story.response.types';
 import { TAdminStoryTableQuerySchema } from '@/schema/request/story.schema';
 
 @singleton()
@@ -320,5 +320,17 @@ export class StoryRepository extends BaseRepository<IStory, IStoryDoc> {
     const docs = await this.aggregateStories<IAdminStoryTableItem>(pipeline, options);
 
     return { docs, totalDocs };
+  }
+
+  /**
+   * Find all published story slugs and updatedAt dates for sitemap generation.
+   */
+  async findPublishedStorySlugs(options: IOperationOptions = {}): Promise<IPublicStoryListItem[]> {
+    return this.model
+      .find({ status: StoryStatus.PUBLISHED }, { _id: 0, slug: 1, updatedAt: 1 })
+      .sort({ updatedAt: -1 })
+      .session(options.session ?? null)
+      .lean<IPublicStoryListItem[]>()
+      .exec();
   }
 }

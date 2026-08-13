@@ -6,6 +6,7 @@ import { CACHE_TTL, CacheKeyBuilder } from '.';
 import { IStoryAggregateCache, IStoryCollaboratorCache } from '@/types/cached-data.types';
 import { IStorySettings, IStoryStats } from '@/features/story/types/story.types';
 import { ILatestChaptersResponse } from '@/types/response/chapter.response.types';
+import { IPublicStoryListItem, IPublicStoryMeta } from '@/types/response/story.response.types';
 
 @singleton()
 class StoryCacheService extends BaseModule {
@@ -146,6 +147,63 @@ class StoryCacheService extends BaseModule {
       entity: 'story',
       operation: 'latest-chapters',
       identifiers: { slug },
+    });
+    await this.cacheService.del(key);
+  }
+
+  async setPublicStoryMeta(slug: string, data: IPublicStoryMeta) {
+    const key = CacheKeyBuilder.build({
+      entity: 'story',
+      operation: 'detail',
+      identifiers: { slug },
+      variant: 'public-meta',
+    });
+    await this.setJson(key, data, CACHE_TTL.STORY_OVERVIEW);
+  }
+
+  async getPublicStoryMeta(slug: string): Promise<IPublicStoryMeta | null> {
+    const key = CacheKeyBuilder.build({
+      entity: 'story',
+      operation: 'detail',
+      identifiers: { slug },
+      variant: 'public-meta',
+    });
+    return this.getJson(key);
+  }
+
+  async invalidatePublicStoryMeta(slug: string) {
+    const key = CacheKeyBuilder.build({
+      entity: 'story',
+      operation: 'detail',
+      identifiers: { slug },
+      variant: 'public-meta',
+    });
+    await this.cacheService.del(key);
+  }
+
+  async setPublishedStorySlugs(data: IPublicStoryListItem[]) {
+    const key = CacheKeyBuilder.build({
+      entity: 'story',
+      operation: 'list',
+      variant: 'published-slugs',
+    });
+    await this.setJson(key, data, CACHE_TTL.STORY_LIST_PUBLISHED);
+  }
+
+  async getPublishedStorySlugs(): Promise<IPublicStoryListItem[] | null> {
+    const key = CacheKeyBuilder.build({
+      entity: 'story',
+      operation: 'list',
+      variant: 'published-slugs',
+    });
+    return this.getJson(key);
+  }
+
+  async invalidatePublishedStorySlugs() {
+    const key = CacheKeyBuilder.build({
+      entity: 'story',
+      operation: 'list',
+      variant: 'published-slugs',
     });
     await this.cacheService.del(key);
   }

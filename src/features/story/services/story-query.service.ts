@@ -12,9 +12,12 @@ import { ChapterRepository } from '@/features/chapter/repositories/chapter.repos
 import { type IUserService } from '@/features/user/interfaces';
 import { CACHE_TTL, CacheKeyBuilder } from '@/infrastructure';
 import { CacheService } from '@/infrastructure/cache/cache.service';
+import { StoryCacheService } from '@/infrastructure/cache/story-cache.service';
 import { formatPaginatedResponse } from '@/utils/helpter';
 import {
   IPaginatedAdminStoryTable,
+  IPublicStoryListItem,
+  IPublicStoryMeta,
   IStoryOverviewResponse,
   IUserStories,
   IUserStoryRole,
@@ -32,6 +35,8 @@ class StoryQueryService extends BaseModule implements IStoryQueryService {
   constructor(
     @inject(TOKENS.CacheService)
     private readonly cacheService: CacheService,
+    @inject(TOKENS.StoryCacheService)
+    private readonly storyCacheService: StoryCacheService,
     @inject(TOKENS.StoryRepository)
     private readonly storyRepo: StoryRepository,
     @inject(TOKENS.ChapterRepository)
@@ -136,6 +141,44 @@ class StoryQueryService extends BaseModule implements IStoryQueryService {
    */
   async listStories(options: IOperationOptions = {}): Promise<IStory[]> {
     return this.storyRepo.findAll({ ...options, limit: 50 });
+  }
+
+  /**
+   * Get public story metadata for SEO & social sharing previews (throws if not found or not published)
+   */
+  async getPublicStoryMeta(
+    slug: string,
+    options: IOperationOptions = {}
+  ): Promise<IPublicStoryMeta> {
+    const cached = await this.storyCacheService.getPublicStoryMeta(slug);
+    if (cached) {
+      return cached;
+    }
+
+    const pipeline = new StoryPipelineBuilder().getPublicStoryMetaPreset(slug).build();
+    const results = await this.storyRepo.aggregateStories<IPublicStoryMeta>(pipeline, options);
+
+    if (!results.length) {
+      this.throwNotFoundError('STORY_NOT_FOUND', 'Requested public story metadata not found.');
+    }
+
+    const meta = results[0];
+    await this.storyCacheService.setPublicStoryMeta(slug, meta);
+    return meta;
+  }
+
+  /**
+   * Get all published story slugs and updatedAt dates for sitemap generation
+   */
+  async getPublishedStorySlugs(options: IOperationOptions = {}): Promise<IPublicStoryListItem[]> {
+    const cached = await this.storyCacheService.getPublishedStorySlugs();
+    if (cached) {
+      return cached;
+    }
+
+    const list = await this.storyRepo.findPublishedStorySlugs(options);
+    await this.storyCacheService.setPublishedStorySlugs(list);
+    return list;
   }
 
   /**

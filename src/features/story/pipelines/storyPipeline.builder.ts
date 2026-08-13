@@ -682,6 +682,65 @@ class StoryPipelineBuilder extends BasePipelineBuilder<StoryPipelineBuilder> {
     );
     return this.build();
   }
+
+  getPublicStoryMetaPreset(slug: string) {
+    this.pipeline.push(
+      {
+        $match: {
+          slug,
+          status: StoryStatus.PUBLISHED,
+        },
+      },
+      {
+        $lookup: {
+          from: 'users',
+          let: { clerkId: '$creatorId' },
+          pipeline: [
+            { $match: { $expr: { $eq: ['$clerkId', '$$clerkId'] } } },
+            { $project: { _id: 0, username: 1, clerkId: 1 } },
+          ],
+          as: 'creator',
+        },
+      },
+      {
+        $unwind: { path: '$creator', preserveNullAndEmptyArrays: true },
+      },
+      {
+        $project: {
+          _id: 0,
+          title: 1,
+          slug: 1,
+          description: 1,
+          status: 1,
+          cardImage: {
+            $cond: {
+              if: { $and: ['$cardImage.url', '$cardImage.publicId'] },
+              then: { url: '$cardImage.url', publicId: '$cardImage.publicId' },
+              else: '$$REMOVE',
+            },
+          },
+          coverImage: {
+            $cond: {
+              if: { $and: ['$coverImage.url', '$coverImage.publicId'] },
+              then: { url: '$coverImage.url', publicId: '$coverImage.publicId' },
+              else: '$$REMOVE',
+            },
+          },
+          creator: {
+            username: { $ifNull: ['$creator.username', ''] },
+            clerkId: { $ifNull: ['$creator.clerkId', '$creatorId'] },
+          },
+          settings: {
+            genres: { $ifNull: ['$settings.genres', []] },
+          },
+          stats: {
+            totalChapters: { $ifNull: ['$stats.totalChapters', 0] },
+          },
+        },
+      }
+    );
+    return this;
+  }
 }
 
 export { StoryPipelineBuilder };

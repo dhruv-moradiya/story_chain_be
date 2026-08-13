@@ -369,6 +369,60 @@ export const AdminStoryTableItemSchema = {
   },
 };
 
+export const PublicStoryMetaSchema = {
+  type: 'object',
+  properties: {
+    title: { type: 'string' },
+    slug: { type: 'string' },
+    description: { type: 'string' },
+    status: { type: 'string' },
+    cardImage: {
+      type: 'object',
+      properties: {
+        url: { type: 'string' },
+        publicId: { type: 'string' },
+      },
+    },
+    coverImage: {
+      type: 'object',
+      properties: {
+        url: { type: 'string' },
+        publicId: { type: 'string' },
+      },
+    },
+    creator: {
+      type: 'object',
+      properties: {
+        username: { type: 'string' },
+        clerkId: { type: 'string' },
+      },
+    },
+    settings: {
+      type: 'object',
+      properties: {
+        genres: {
+          type: 'array',
+          items: { type: 'string' },
+        },
+      },
+    },
+    stats: {
+      type: 'object',
+      properties: {
+        totalChapters: { type: 'number' },
+      },
+    },
+  },
+};
+
+export const PublicStoryListItemSchema = {
+  type: 'object',
+  properties: {
+    slug: { type: 'string' },
+    updatedAt: { type: 'string', format: 'date-time' },
+  },
+};
+
 // ═══════════════════════════════════════════
 // STORY RESPONSE OBJECTS
 // ═══════════════════════════════════════════
@@ -489,6 +543,15 @@ export const StoryResponses = {
     ),
     401: unauthorizedResponse(),
     403: forbiddenResponse('Super admin access required'),
+    500: internalErrorResponse(),
+  },
+  publicStoryMeta: {
+    200: apiResponse(PublicStoryMetaSchema, 'Public story metadata retrieved successfully'),
+    404: notFoundResponse('Story not found'),
+    500: internalErrorResponse(),
+  },
+  publishedStoryList: {
+    200: apiArrayResponse(PublicStoryListItemSchema, 'Published story list retrieved successfully'),
     500: internalErrorResponse(),
   },
 };

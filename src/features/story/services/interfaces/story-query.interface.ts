@@ -2,6 +2,8 @@ import { IChapter } from '@/features/chapter/types/chapter.types';
 import { IOperationOptions } from '@/types';
 import {
   IPaginatedAdminStoryTable,
+  IPublicStoryListItem,
+  IPublicStoryMeta,
   IStoryOverviewResponse,
   IUserStories,
 } from '@/types/response/story.response.types';
@@ -26,6 +28,8 @@ interface IStoryQueryService {
   getPublishedStories(options?: IOperationOptions): Promise<IStory[]>;
   getNewStories(options?: IOperationOptions): Promise<IStory[]>;
   listStories(options?: IOperationOptions): Promise<IStory[]>;
+  getPublicStoryMeta(slug: string, options?: IOperationOptions): Promise<IPublicStoryMeta>;
+  getPublishedStorySlugs(options?: IOperationOptions): Promise<IPublicStoryListItem[]>;
 
   // Story tree queries (throws if story not found)
   getStoryTreeBySlug(slug: string, userId: string): Promise<IStoryTreeResult>;

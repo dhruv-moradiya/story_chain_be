@@ -73,6 +73,10 @@ const StoryApiRoutes = {
 
   // EXPLORE
   GetFreshStories: '/fresh-stories',
+
+  // SEO & METADATA (PUBLIC)
+  GetPublicStoryMeta: '/public/:slug/meta',
+  GetPublishedStories: '/public/published',
 } as const;
 
 export { StoryApiRoutes };
@@ -204,6 +208,35 @@ export async function storyRoutes(fastify: FastifyInstance) {
       },
     },
     storyController.getNewStories
+  );
+
+  // Fetch story metadata without authentication (for generateMetadata SEO previews)
+  fastify.get(
+    StoryApiRoutes.GetPublicStoryMeta,
+    {
+      config: { rateLimit: RateLimits.PUBLIC_READ },
+      schema: {
+        description: 'Fetch story metadata without authentication for SEO social sharing previews',
+        tags: ['Stories'],
+        params: zodToJsonSchema(StorySlugSchema),
+        response: StoryResponses.publicStoryMeta,
+      },
+    },
+    storyController.getPublicStoryMeta
+  );
+
+  // Fetch all published story slugs and updatedAt for sitemap generation
+  fastify.get(
+    StoryApiRoutes.GetPublishedStories,
+    {
+      config: { rateLimit: RateLimits.PUBLIC_READ },
+      schema: {
+        description: 'Fetch all published story slugs for sitemap generation',
+        tags: ['Stories'],
+        response: StoryResponses.publishedStoryList,
+      },
+    },
+    storyController.getPublishedStorySlugs
   );
 
   // Get all stories created by the authenticated user

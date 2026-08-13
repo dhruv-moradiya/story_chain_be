@@ -214,3 +214,24 @@ export interface IPaginatedAdminStoryTable {
   prevPage: number | null;
   nextPage: number | null;
 }
+
+// =====================
+// PUBLIC SEO & SITEMAP
+// =====================
+
+export interface IPublicStoryMeta {
+  title: string;
+  slug: string;
+  description: string;
+  status: string;
+  cardImage?: { url: string; publicId: string };
+  coverImage?: { url: string; publicId: string };
+  creator: { username: string; clerkId: string };
+  settings: { genres: string[] };
+  stats: { totalChapters: number };
+}
+
+export interface IPublicStoryListItem {
+  slug: string;
+  updatedAt: string | Date;
+}

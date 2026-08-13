@@ -187,6 +187,27 @@ export class StoryController extends BaseModule {
       .send(ApiResponse.fetched(stories, 'Latest stories fetched successfully'));
   });
 
+  // Fetch story metadata without authentication (for generateMetadata SEO previews)
+  getPublicStoryMeta = catchAsync(
+    async (request: FastifyRequest<{ Params: TStorySlugSchema }>, reply: FastifyReply) => {
+      const { slug } = request.params;
+      const meta = await this.storyQueryService.getPublicStoryMeta(slug);
+      this.logInfo(`Fetched public story meta for slug ${slug}`);
+      return reply
+        .code(HTTP_STATUS.OK.code)
+        .send(ApiResponse.fetched(meta, 'Public story metadata retrieved successfully'));
+    }
+  );
+
+  // Fetch all published story slugs and updatedAt dates for sitemap generation
+  getPublishedStorySlugs = catchAsync(async (_request: FastifyRequest, reply: FastifyReply) => {
+    const result = await this.storyQueryService.getPublishedStorySlugs();
+    this.logInfo(`Fetched ${result.length} published story slugs for sitemap`);
+    return reply
+      .code(HTTP_STATUS.OK.code)
+      .send(ApiResponse.fetched(result, 'Published story slugs fetched successfully'));
+  });
+
   // Get all stories created by the authenticated user.
   getMyStories = catchAsync(async (request: FastifyRequest, reply: FastifyReply) => {
     const { user } = request;
